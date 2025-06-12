@@ -292,8 +292,10 @@ export default function PlayerDetailPage() {
       </div>
     </div>
   )
+  
+  const statTotals = player?.statTotals ?? []
 
-  {player?.statTotals?.length && player.statTotals.length > 0 ? (
+  {statTotals.length > 0 ? (
   <div className="mb-8">
     <h2 className="text-xl font-semibold text-neon-green mb-2">Career & Season Totals</h2>
     <table className="w-full text-sm bg-gray-900 rounded overflow-hidden mb-2">
@@ -305,9 +307,9 @@ export default function PlayerDetailPage() {
         </tr>
       </thead>
       <tbody>
-        {Array.from(new Set(player.statTotals.map(s => s.statType))).map(stat => {
-          const season = player.statTotals.find(s => s.statType === stat && s.scope === 'season')?.totalValue ?? 0
-          const career = player.statTotals.find(s => s.statType === stat && s.scope === 'career')?.totalValue ?? 0
+        {Array.from(new Set(statTotals.map(s => s.statType))).map(stat => {
+          const season = statTotals.find(s => s.statType === stat && s.scope === 'season')?.totalValue ?? 0
+          const career = statTotals.find(s => s.statType === stat && s.scope === 'career')?.totalValue ?? 0
           return (
             <tr key={stat} className="border-t border-gray-700">
               <td className="py-1 px-3">{stat}</td>
