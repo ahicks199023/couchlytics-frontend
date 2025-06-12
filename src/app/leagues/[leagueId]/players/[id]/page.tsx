@@ -1,3 +1,5 @@
+// src/app/leagues/[leagueId]/players/[playerId]/page.tsx
+
 'use client'
 
 import { useParams } from 'next/navigation'
@@ -6,16 +8,16 @@ import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 export default function PlayerDetailPage() {
-  const { leagueId, id } = useParams()
+  const { leagueId, playerId } = useParams()
   const [player, setPlayer] = useState<any>(null)
   const [stats, setStats] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!leagueId || !id || id === 'undefined') return
+    if (!leagueId || !playerId || playerId === 'undefined') return
 
-    fetch(`http://localhost:5000/leagues/${leagueId}/players/${id}`, {
+    fetch(`http://localhost:5000/leagues/${leagueId}/players/${playerId}`, {
       credentials: 'include'
     })
       .then((res) => res.json())
@@ -32,7 +34,7 @@ export default function PlayerDetailPage() {
       })
       .catch(() => setError('Failed to load player.'))
       .finally(() => setLoading(false))
-  }, [leagueId, id])
+  }, [leagueId, playerId])
 
   if (loading) return <p className="text-white p-6">Loading player...</p>
   if (error) return <p className="text-red-500 p-6">{error}</p>
@@ -96,4 +98,5 @@ export default function PlayerDetailPage() {
     </main>
   )
 }
+
 
