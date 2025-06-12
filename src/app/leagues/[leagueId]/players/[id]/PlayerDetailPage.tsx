@@ -323,8 +323,6 @@ export default function PlayerDetailPage() {
   <p className="text-sm text-gray-400 italic">No totals available.</p>   
 )null}
 
-
-
      {filteredLogs.length > 0 && (
        <div className="mb-6">
          <h2 className="text-xl font-semibold text-neon-green mb-2">Game Logs</h2>
