@@ -1,5 +1,7 @@
 // src/app/leagues/[leagueId]/players/[playerId]/page.tsx
 
+'use client'
+
 import { useParams } from 'next/navigation'
 
 export default function PlayerPage() {
@@ -12,3 +14,4 @@ export default function PlayerPage() {
     </div>
   )
 }
+
