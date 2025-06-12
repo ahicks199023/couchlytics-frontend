@@ -293,7 +293,7 @@ export default function PlayerDetailPage() {
     </div>
   )
 
-   {player?.statTotals?.length > 0 ? (
+  {player?.statTotals?.length && player.statTotals.length > 0 ? (
   <div className="mb-8">
     <h2 className="text-xl font-semibold text-neon-green mb-2">Career & Season Totals</h2>
     <table className="w-full text-sm bg-gray-900 rounded overflow-hidden mb-2">
