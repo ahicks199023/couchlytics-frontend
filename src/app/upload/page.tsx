@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import useAuth from '@/hooks/useAuth' // ✅ Fixed casing here
+import useAuth from '@/Hooks/useAuth' // ✅ Fixed casing here
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
