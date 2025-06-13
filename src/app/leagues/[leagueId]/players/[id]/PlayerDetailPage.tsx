@@ -18,12 +18,6 @@ interface StatTotals {
 }
 
 
-interface GameLogEntry {
-  week: number
-  category: string
-  value: number
-}
-
 interface PlayerDetailResponse {
   playerId: number
   name: string
