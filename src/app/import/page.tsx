@@ -25,7 +25,7 @@ export default function ImportHelpPage() {
 
         <h2 className="text-xl font-semibold mt-4">Option 2: Manual Upload</h2>
         <p className="text-gray-400">
-          If you can't use the export option, you can manually upload your league data as a JSON file on the{' '}
+          If you can&apos;t use the export option, you can manually upload your league data as a JSON file on the{' '}
           <a href="/upload" className="underline text-white hover:text-blue-400">Upload Page</a>.
         </p>
       </div>
