@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import ProtectedRoute from '../../components/ProtectedRoute'
+import { fetchFromApi } from '@/lib/api'
 
 type Team = {
   id: number
@@ -27,8 +28,7 @@ export default function LeaguesPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('http://localhost:5000/leagues', { credentials: 'include' })
-      .then(res => res.json())
+    fetchFromApi('/leagues')
       .then(data => {
         setLeagues(data.leagues || [])
         setLoading(false)
@@ -48,11 +48,8 @@ export default function LeaguesPage() {
 
     if (!teamsByLeague[leagueId]) {
       try {
-        const res = await fetch(`http://localhost:5000/teams/${leagueId}`, {
-          credentials: 'include'
-        })
-        const data = await res.json()
-        setTeamsByLeague(prev => ({ ...prev, [leagueId]: data.teams || [] }))
+        const res = await fetchFromApi(`/teams/${leagueId}`)
+        setTeamsByLeague(prev => ({ ...prev, [leagueId]: res.teams || [] }))
       } catch (err) {
         console.error(`Failed to fetch teams for league ${leagueId}`, err)
       }
@@ -70,7 +67,7 @@ export default function LeaguesPage() {
           <div className="my-8 p-4 bg-gray-800 rounded-md">
             <h2 className="text-lg font-semibold mb-2 text-white">Upload League JSON</h2>
             <form
-              action="http://localhost:5000/upload"
+              action={`${process.env.NEXT_PUBLIC_API_BASE}/upload`}
               method="post"
               encType="multipart/form-data"
             >
