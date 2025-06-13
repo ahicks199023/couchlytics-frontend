@@ -51,11 +51,11 @@ export default function LeagueStats({ leagueId }: { leagueId: number }) {
   const categoryLabel = CATEGORY_OPTIONS.find(opt => opt.key === selectedCategory)?.label || 'Stats'
 
   const positions: string[] = Array.from(
-    new Set(allData.map((d: any) => d.position).filter(Boolean))
+    new Set(allData.map((d: any) => d.position as string).filter(Boolean))
   ).sort()
 
   const users: string[] = Array.from(
-    new Set(allData.map((d: any) => d.user).filter(Boolean))
+    new Set(allData.map((d: any) => d.user as string).filter(Boolean))
   ).sort()
 
   let filteredData = allData
