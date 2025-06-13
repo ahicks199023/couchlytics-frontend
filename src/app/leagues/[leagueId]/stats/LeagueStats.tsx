@@ -50,13 +50,13 @@ export default function LeagueStats({ leagueId }: { leagueId: number }) {
   const statKey = selectedCategory === 'teamWins' ? 'wins' : 'value'
   const categoryLabel = CATEGORY_OPTIONS.find(opt => opt.key === selectedCategory)?.label || 'Stats'
 
-  const positions: string[] = Array.from(
-    new Set(allData.map((d: any) => d.position as string).filter(Boolean))
-  ).sort()
+  const positions = Array.from(
+    new Set(allData.map((d: any) => d.position).filter(Boolean))
+  ) as string[]
 
-  const users: string[] = Array.from(
-    new Set(allData.map((d: any) => d.user as string).filter(Boolean))
-  ).sort()
+  const users = Array.from(
+    new Set(allData.map((d: any) => d.user).filter(Boolean))
+  ) as string[]
 
   let filteredData = allData
   if (isPlayerStat && selectedPosition !== 'all') {
