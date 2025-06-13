@@ -29,14 +29,15 @@ type LeagueData = {
 
 export default function LeagueDetailPage() {
   const { leagueId } = useParams()
+  const parsedLeagueId = Number(leagueId)
   const [league, setLeague] = useState<LeagueData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!leagueId) return
+    if (!parsedLeagueId) return
 
-    fetchFromApi(`/leagues/${leagueId}`)
+    fetchFromApi(`/leagues/${parsedLeagueId}`)
       .then(data => {
         setLeague(data)
         setLoading(false)
@@ -46,15 +47,10 @@ export default function LeagueDetailPage() {
         setError('League not found or access denied.')
         setLoading(false)
       })
-  }, [leagueId])
+  }, [parsedLeagueId])
 
-  if (loading) {
-    return <main className="p-6 text-white">Loading league details...</main>
-  }
-
-  if (error || !league) {
-    return <main className="p-6 text-red-400">{error || 'No data found.'}</main>
-  }
+  if (loading) return <main className="p-6 text-white">Loading league details...</main>
+  if (error || !league) return <main className="p-6 text-red-400">{error || 'No data found.'}</main>
 
   return (
     <main className="min-h-screen bg-black text-white p-6">
@@ -70,44 +66,58 @@ export default function LeagueDetailPage() {
 
       <section className="mt-8 mb-8">
         <h2 className="text-2xl font-semibold mb-2">Teams</h2>
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-          {league.teams.map((team) => (
-            <li key={team.id} className="bg-gray-800 p-3 rounded">
-              <strong>{team.name}</strong>
-              <div className="text-sm text-gray-400">User: {team.user}</div>
-            </li>
-          ))}
-        </ul>
+        {league.teams?.length > 0 ? (
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {league.teams.map((team) => (
+              <li key={team.id} className="bg-gray-800 p-3 rounded">
+                <strong>{team.name}</strong>
+                <div className="text-sm text-gray-400">User: {team.user}</div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-500 text-sm italic">No teams available.</p>
+        )}
       </section>
 
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-2">Players</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-sm">
-          {league.players.map((player, i) => (
-            <div key={i} className="bg-gray-900 px-2 py-1 rounded">{player.name}</div>
-          ))}
-        </div>
+        {league.players?.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-sm">
+            {league.players.map((player, i) => (
+              <div key={`${player.name}-${i}`} className="bg-gray-900 px-2 py-1 rounded">
+                {player.name}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-sm italic">No players available.</p>
+        )}
       </section>
 
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-2">Recent Games</h2>
-        <ul className="space-y-2">
-          {league.games.map((game, i) => (
-            <li key={i} className="bg-gray-800 p-3 rounded">
-              {game.homeTeam} vs {game.awayTeam}
-            </li>
-          ))}
-        </ul>
+        {league.games?.length > 0 ? (
+          <ul className="space-y-2">
+            {league.games.map((game, i) => (
+              <li key={`${game.homeTeam}-${game.awayTeam}-${i}`} className="bg-gray-800 p-3 rounded">
+                {game.homeTeam} vs {game.awayTeam}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-500 text-sm italic">No games recorded yet.</p>
+        )}
       </section>
 
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-2">League Stat Leaders</h2>
-        <LeagueStatLeaders leagueId={parseInt(leagueId as string)} />
+        <LeagueStatLeaders leagueId={parsedLeagueId} />
       </section>
 
       <section>
         <h2 className="text-2xl font-semibold mb-2">League Stats</h2>
-        <LeagueStats leagueId={parseInt(leagueId as string)} />
+        <LeagueStats leagueId={parsedLeagueId} />
       </section>
     </main>
   )
