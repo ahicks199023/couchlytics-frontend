@@ -290,74 +290,71 @@ export default function PlayerDetailPage() {
           </tbody>
         </table>
       </div>
+  {/* Stat Totals Section */}
+  {player?.statTotals && player.statTotals.length > 0 ? (
+    <div className="mb-8">
+      <h2 className="text-xl font-semibold text-neon-green mb-2">Career & Season Totals</h2>
+      <table className="w-full text-sm bg-gray-900 rounded overflow-hidden mb-2">
+        <thead>
+          <tr className="text-left border-b border-gray-700">
+            <th className="py-2 px-3">Stat</th>
+            <th className="py-2 px-3">Season</th>
+            <th className="py-2 px-3">Career</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from(new Set(player.statTotals.map(s => s.statType))).map(stat => {
+            const season = player.statTotals.find(s => s.statType === stat && s.scope === 'season')?.totalValue ?? 0
+            const career = player.statTotals.find(s => s.statType === stat && s.scope === 'career')?.totalValue ?? 0
+            return (
+              <tr key={stat} className="border-t border-gray-700">
+                <td className="py-1 px-3">{stat}</td>
+                <td className="py-1 px-3">{season}</td>
+                <td className="py-1 px-3">{career}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
     </div>
-  )
-  
-  const statTotals = player?.statTotals ?? []
+  ) : (
+    <p className="text-sm text-gray-400 italic">No totals available.</p>
+  )}
 
-  {statTotals.length > 0 ? (
-  <div className="mb-8">
-    <h2 className="text-xl font-semibold text-neon-green mb-2">Career & Season Totals</h2>
-    <table className="w-full text-sm bg-gray-900 rounded overflow-hidden mb-2">
-      <thead>
-        <tr className="text-left border-b border-gray-700">
-          <th className="py-2 px-3">Stat</th>
-          <th className="py-2 px-3">Season</th>
-          <th className="py-2 px-3">Career</th>
-        </tr>
-      </thead>
-      <tbody>
-        {Array.from(new Set(statTotals.map(s => s.statType))).map(stat => {
-          const season = statTotals.find(s => s.statType === stat && s.scope === 'season')?.totalValue ?? 0
-          const career = statTotals.find(s => s.statType === stat && s.scope === 'career')?.totalValue ?? 0
-          return (
-            <tr key={stat} className="border-t border-gray-700">
-              <td className="py-1 px-3">{stat}</td>
-              <td className="py-1 px-3">{season}</td>
-              <td className="py-1 px-3">{career}</td>
+  {/* Game Logs Section */}
+  {filteredLogs.length > 0 && (
+    <div className="mb-6">
+      <h2 className="text-xl font-semibold text-neon-green mb-2">Game Logs</h2>
+      <label className="block mb-2">
+        <span className="text-sm text-gray-400">Select Stat Category:</span>
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="w-full bg-gray-800 text-white border border-gray-600 p-2 rounded mt-1"
+        >
+          {uniqueStats.map(stat => (
+            <option key={stat} value={stat}>{stat}</option>
+          ))}
+        </select>
+      </label>
+      <table className="w-full text-sm bg-gray-900 rounded overflow-hidden">
+        <thead>
+          <tr className="text-left border-b border-gray-700">
+            <th className="py-2 px-3">Week</th>
+            <th className="py-2 px-3">{selectedCategory}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredLogs.map((log, i) => (
+            <tr key={i} className="border-t border-gray-700">
+              <td className="py-1 px-3">{log.week}</td>
+              <td className="py-1 px-3">{log.value}</td>
             </tr>
-          )
-        })}
-      </tbody>
-    </table>
-  </div>
-) : (
-  <p className="text-sm text-gray-400 italic">No totals available.</p>   
-) : null}
-
-
-     {filteredLogs.length > 0 && (
-       <div className="mb-6">
-         <h2 className="text-xl font-semibold text-neon-green mb-2">Game Logs</h2>
-         <label className="block mb-2">
-           <span className="text-sm text-gray-400">Select Stat Category:</span>
-           <select
-             value={selectedCategory}
-             onChange={(e) => setSelectedCategory(e.target.value)}
-             className="w-full bg-gray-800 text-white border border-gray-600 p-2 rounded mt-1"
-           >
-             {uniqueStats.map(stat => (
-               <option key={stat} value={stat}>{stat}</option>
-             ))}
-           </select>
-         </label>
-         <table className="w-full text-sm bg-gray-900 rounded overflow-hidden">
-           <thead>
-             <tr className="text-left border-b border-gray-700">
-               <th className="py-2 px-3">Week</th>
-               <th className="py-2 px-3">{selectedCategory}</th>
-             </tr>
-           </thead>
-           <tbody>
-             {filteredLogs.map((log, i) => (
-               <tr key={i} className="border-t border-gray-700">
-                 <td className="py-1 px-3">{log.week}</td>
-                 <td className="py-1 px-3">{log.value}</td>
-               </tr>
-             ))}
-           </tbody>
-         </table>
-       </div>
-     )}
-
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
+)
 }
