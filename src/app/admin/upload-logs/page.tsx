@@ -36,7 +36,7 @@ export default function UploadLogsPage() {
   const limit = 25
 
   useEffect(() => {
-    fetch('http://localhost:5000/me', { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         if (data?.isAdmin) {
@@ -55,7 +55,7 @@ export default function UploadLogsPage() {
     params.append('page', page.toString())
     params.append('limit', limit.toString())
 
-    fetch(`http://localhost:5000/upload-logs?${params.toString()}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/upload-logs?${params.toString()}`, {
       credentials: 'include'
     })
       .then(res => res.json())
