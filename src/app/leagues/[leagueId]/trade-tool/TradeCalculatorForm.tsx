@@ -139,10 +139,9 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
     }
   }
 
-  const useSuggestedTrade = (suggestion: any) => {
+  const applySuggestedTrade = (suggestion: SuggestedTrade) => {
     const selected = givePlayers.find(p => p.id === parseInt(suggestionPlayerId))
     if (!selected) return
-
     setGivePlayers([selected])
     setReceivePlayers(suggestion.playersOffered)
   }
