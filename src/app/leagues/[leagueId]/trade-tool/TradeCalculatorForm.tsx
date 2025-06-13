@@ -324,7 +324,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
                         <button
                           type="button"
                           className="bg-blue-600 text-white px-3 py-1 mt-2 rounded"
-                          onClick={() => useSuggestedTrade(sug)}
+                          onClick={() => applySuggestedTrade(sug)}
                         >
                           Use This Trade
                         </button>
