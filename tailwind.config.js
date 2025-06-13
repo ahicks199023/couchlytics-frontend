@@ -1,7 +1,9 @@
 // tailwind.config.js
 module.exports = {
   content: [
-    "./src/**/*.{js,ts,jsx,tsx}", // ✅ Scans all files inside /src
+    './src/app/**/*.{js,ts,jsx,tsx}',
+    './src/pages/**/*.{js,ts,jsx,tsx}',
+    './src/components/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
@@ -9,28 +11,9 @@ module.exports = {
         'neon-green': '#39FF14',
       },
       ringColor: {
-        'neon-green': '#39FF14', // ✅ This enables `ring-neon-green`
+        'neon-green': '#39FF14', // Enables `ring-neon-green`
       },
     },
   },
   plugins: [],
 };
-
-// tailwind.config.js
-module.exports = {
-  content: [
-    "./src/**/*.{js,ts,jsx,tsx}", // ✅ Scans all files inside /src
-  ],
-  theme: {
-    extend: {
-      colors: {
-        'neon-green': '#39FF14',
-      },
-      ringColor: {
-        'neon-green': '#39FF14', // ✅ This enables `ring-neon-green`
-      },
-    },
-  },
-  plugins: [],
-};
-
