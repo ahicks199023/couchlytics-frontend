@@ -39,7 +39,7 @@ export default function UploadPage() {
     setMessage(null)
 
     try {
-      const res = await fetch('http://localhost:5000/upload', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/upload`, {
         method: 'POST',
         credentials: 'include',
         body: formData,
@@ -87,4 +87,3 @@ export default function UploadPage() {
     </main>
   )
 }
-
