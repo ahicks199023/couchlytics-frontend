@@ -44,7 +44,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white px-6 py-12 flex flex-col items-center text-center">
-      <h1 className="text-4xl sm:text-5xl font-bold mb-6">Welcome to Couch Commish</h1>
+      <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-neon-green">Welcome to Couch Commish</h1>
       <p className="text-lg sm:text-xl max-w-2xl mb-10">
         Your all-in-one Madden league management platform. Track stats, manage uploads, and unlock pro tools like the GM Toolkit and Draft Assistant.
       </p>
@@ -58,7 +58,6 @@ export default function HomePage() {
         </Link>
       </div>
 
-      {/* Feature Section */}
       <section className="w-full max-w-5xl py-8 px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {features.map((feature, idx) => (
           <div key={idx} className="bg-gray-800 p-6 rounded-lg shadow-md hover:bg-gray-700 transition">
@@ -69,7 +68,6 @@ export default function HomePage() {
         ))}
       </section>
 
-      {/* League Showcase Carousel */}
       <section className="w-full max-w-xl mt-12 mb-6 bg-gray-900 p-6 rounded-lg text-left">
         <h2 className="text-2xl font-bold mb-4">Featured League</h2>
         <div className="transition-all duration-500">
