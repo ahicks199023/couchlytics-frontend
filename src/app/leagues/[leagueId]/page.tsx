@@ -7,9 +7,29 @@ import LeagueStats from './stats/LeagueStats'
 import { LeagueStatLeaders } from '@/components/LeagueStatLeaders'
 import { fetchFromApi } from '@/lib/api'
 
+type LeagueData = {
+  league: {
+    id: number
+    name: string
+    seasonYear: number
+  }
+  teams: {
+    id: number
+    name: string
+    user: string
+  }[]
+  players: {
+    name: string
+  }[]
+  games: {
+    homeTeam: string
+    awayTeam: string
+  }[]
+}
+
 export default function LeagueDetailPage() {
   const { leagueId } = useParams()
-  const [league, setLeague] = useState<any>(null)
+  const [league, setLeague] = useState<LeagueData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -32,8 +52,8 @@ export default function LeagueDetailPage() {
     return <main className="p-6 text-white">Loading league details...</main>
   }
 
-  if (error) {
-    return <main className="p-6 text-red-400">{error}</main>
+  if (error || !league) {
+    return <main className="p-6 text-red-400">{error || 'No data found.'}</main>
   }
 
   return (
@@ -51,7 +71,7 @@ export default function LeagueDetailPage() {
       <section className="mt-8 mb-8">
         <h2 className="text-2xl font-semibold mb-2">Teams</h2>
         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-          {league.teams.map((team: any) => (
+          {league.teams.map((team) => (
             <li key={team.id} className="bg-gray-800 p-3 rounded">
               <strong>{team.name}</strong>
               <div className="text-sm text-gray-400">User: {team.user}</div>
@@ -63,7 +83,7 @@ export default function LeagueDetailPage() {
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-2">Players</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-sm">
-          {league.players.map((player: any, i: number) => (
+          {league.players.map((player, i) => (
             <div key={i} className="bg-gray-900 px-2 py-1 rounded">{player.name}</div>
           ))}
         </div>
@@ -72,7 +92,7 @@ export default function LeagueDetailPage() {
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-2">Recent Games</h2>
         <ul className="space-y-2">
-          {league.games.map((game: any, i: number) => (
+          {league.games.map((game, i) => (
             <li key={i} className="bg-gray-800 p-3 rounded">
               {game.homeTeam} vs {game.awayTeam}
             </li>
@@ -92,5 +112,3 @@ export default function LeagueDetailPage() {
     </main>
   )
 }
-
-
