@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import LeagueStats from './stats/LeagueStats'
 import { LeagueStatLeaders } from '@/components/LeagueStatLeaders'
+import { fetchFromApi } from '@/lib/api'
 
 export default function LeagueDetailPage() {
   const { leagueId } = useParams()
@@ -15,10 +16,7 @@ export default function LeagueDetailPage() {
   useEffect(() => {
     if (!leagueId) return
 
-    fetch(`http://localhost:5000/leagues/${leagueId}`, {
-      credentials: 'include',
-    })
-      .then(res => res.ok ? res.json() : Promise.reject(res.status))
+    fetchFromApi(`/leagues/${leagueId}`)
       .then(data => {
         setLeague(data)
         setLoading(false)
@@ -94,3 +92,4 @@ export default function LeagueDetailPage() {
     </main>
   )
 }
+
