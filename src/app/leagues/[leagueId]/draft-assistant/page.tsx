@@ -8,7 +8,7 @@ export default function DraftAssistantPage() {
   const [authorized, setAuthorized] = useState(false)
 
   useEffect(() => {
-    fetch('http://localhost:5000/me', { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
       .then((res) => res.ok ? res.json() : null)
       .then((user) => {
         if (user?.isPremium) {
@@ -18,7 +18,7 @@ export default function DraftAssistantPage() {
         }
       })
       .catch(() => router.push('/upgrade'))
-  }, [])
+  }, [router])
 
   if (!authorized) return null
 
@@ -47,6 +47,10 @@ export default function DraftAssistantPage() {
           <p className="text-sm text-gray-300">Identify hidden gems based on raw attributes and development traits.</p>
         </div>
       </section>
+    </main>
+  )
+}
+
     </main>
   )
 }
