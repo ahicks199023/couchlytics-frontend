@@ -27,7 +27,7 @@ export default function UploadLogDetailPage() {
 
   useEffect(() => {
     if (id) {
-      fetch(`http://localhost:5000/upload-logs?id=${id}`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE}/upload-logs?id=${id}`, {
         credentials: 'include'
       })
         .then(res => res.json())
@@ -93,3 +93,4 @@ export default function UploadLogDetailPage() {
     </main>
   )
 }
+
