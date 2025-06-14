@@ -8,6 +8,7 @@ module.exports = {
     './src/Hooks/**/*.{js,ts,jsx,tsx}',
     './src/layouts/**/*.{js,ts,jsx,tsx}',
     './src/lib/**/*.{js,ts,jsx,tsx}',
+    './public/headshots/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
