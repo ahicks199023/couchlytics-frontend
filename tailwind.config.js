@@ -1,5 +1,6 @@
 // tailwind.config.js
 module.exports = {
+  darkMode: 'class',
   content: [
     './src/app/**/*.{js,ts,jsx,tsx}', // ✅ Picks up anything in /app
     './src/pages/**/*.{js,ts,jsx,tsx}', // If you're also using /pages
