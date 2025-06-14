@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 
 type Player = {
   id: number
@@ -21,6 +22,17 @@ type TradeResult = {
   suggestedTrades?: Player[]
 }
 
+type SuggestedTrade = {
+  targetTeam: number
+  verdict: string
+  tradeValue: number
+  playersOffered: Player[]
+}
+
+type User = {
+  is_premium?: boolean
+}
+
 const mockPlayers: Player[] = [
   { id: 1, name: 'Tyreek Hill', team: 'MIA', position: 'WR', ovr: 97 },
   { id: 2, name: 'Jaylen Waddle', team: 'MIA', position: 'WR', ovr: 93 },
@@ -37,10 +49,9 @@ const getHeadshotUrl = (playerName: string) => {
   return `/headshots/${sanitized}.png`
 }
 
-
 export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) {
   const [teamId, setTeamId] = useState(String(leagueId))
-  const [user, setUser] = useState<{ is_premium?: boolean } | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [includeSuggestions, setIncludeSuggestions] = useState(false)
   const [result, setResult] = useState<TradeResult | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -57,19 +68,11 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
 
   const [suggestionPlayerId, setSuggestionPlayerId] = useState('')
   const [suggestionStrategy, setSuggestionStrategy] = useState('value')
-  
-  type SuggestedTrade = {
-    targetTeam: number
-    verdict: string
-    tradeValue: number
-    playersOffered: Player[]
-  }
-  
   const [suggestedTrades, setSuggestedTrades] = useState<SuggestedTrade[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
 
   useEffect(() => {
-    fetch('${process.env.NEXT_PUBLIC_API_BASE}/me', { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
       .then(async res => {
         if (!res.ok) throw new Error(await res.text())
         return res.json() 
@@ -114,6 +117,8 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
   const verdict = Math.abs(net) <= 10 ? 'Fair' : net > 10 ? 'You Lose' : 'You Win'
 
   const fetchTradeSuggestions = async () => {
+    if (!suggestionPlayerId) return
+    
     setLoadingSuggestions(true)
     setSuggestedTrades([])
 
@@ -129,19 +134,16 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
           strategy: suggestionStrategy
         })
       })
-      if (!res.ok) {
-         const errorText = await res.text()
-         throw new Error(errorText || 'Trade calculation failed')
-      }
+
       if (!res.ok) {
         const errorText = await res.text()
         throw new Error(errorText || 'Suggestion fetch failed')
       }
+
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Something went wrong')
       setSuggestedTrades(data.suggestions || [])
-    } catch (err: any) {
-      console.error('Suggestion Error:', err.message)
+    } catch (err: unknown) {
+      console.error('Suggestion Error:', err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoadingSuggestions(false)
     }
@@ -161,24 +163,28 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trade-calculate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        teamId: parseInt(teamId),
-        trade: {
-        give: givePlayers.map(p => p.id),
-        receive: receivePlayers.map(p => p.id),
-        },
-        includeSuggestions
-      })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          teamId: parseInt(teamId),
+          trade: {
+            give: givePlayers.map(p => p.id),
+            receive: receivePlayers.map(p => p.id),
+          },
+          includeSuggestions
+        })
       })
 
+      if (!res.ok) {
+        const errorText = await res.text()
+        throw new Error(errorText || 'Trade calculation failed')
+      }
+
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Something went wrong')
       setResult(data)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
     }
   }
 
@@ -220,7 +226,17 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
                 {givePlayers.map(p => (
                   <li key={p.id} className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <img src={getHeadshotUrl(p.name)} alt={p.name} className="w-8 h-8 rounded-full bg-white" onError={(e) => (e.currentTarget.src = '/headshots/fallback.png')} />
+                      <Image
+                        src={getHeadshotUrl(p.name)}
+                        alt={p.name}
+                        width={32}
+                        height={32}
+                        className="rounded-full bg-white"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = '/headshots/default.png'
+                        }}
+                      />
                       <span>{p.name} – {p.position} (OVR {p.ovr})</span>
                     </div>
                     <button onClick={() => removeGivePlayer(p.id)} className="text-red-600 hover:underline">✕</button>
@@ -250,7 +266,17 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
                 {receivePlayers.map(p => (
                   <li key={p.id} className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <img src={getHeadshotUrl(p.name)} alt={p.name} className="w-8 h-8 rounded-full bg-white" onError={(e) => (e.currentTarget.src = '/headshots/fallback.png')} />
+                      <Image
+                        src={getHeadshotUrl(p.name)}
+                        alt={p.name}
+                        width={32}
+                        height={32}
+                        className="rounded-full bg-white"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = '/headshots/default.png'
+                        }}
+                      />
                       <span>{p.name} – {p.position} (OVR {p.ovr})</span>
                     </div>
                     <button onClick={() => removeReceivePlayer(p.id)} className="text-red-600 hover:underline">✕</button>
