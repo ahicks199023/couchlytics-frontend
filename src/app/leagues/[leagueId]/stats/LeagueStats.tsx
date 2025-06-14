@@ -7,6 +7,16 @@ import {
   ResponsiveContainer, Cell
 } from 'recharts'
 
+interface StatEntry {
+  position?: string
+  user?: string
+  name: string
+  playerId?: number
+  value: number
+  wins?: number
+  [key: string]: string | number | undefined
+}
+
 const CATEGORY_OPTIONS = [
   { label: 'Passing Yards', key: 'PassingYards' },
   { label: 'Rushing Yards', key: 'RushingYards' },
@@ -15,7 +25,7 @@ const CATEGORY_OPTIONS = [
 ]
 
 export default function LeagueStats({ leagueId }: { leagueId: number }) {
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<Record<string, StatEntry[]>>({})
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all')
@@ -26,8 +36,8 @@ export default function LeagueStats({ leagueId }: { leagueId: number }) {
   useEffect(() => {
     const url =
       selectedWeek === 'all'
-        ? `http://localhost:5000/leagues/${leagueId}/stats`
-        : `http://localhost:5000/leagues/${leagueId}/stats?week=${selectedWeek}`
+        ? `${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/stats`
+        : `${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/stats?week=${selectedWeek}`
 
     fetch(url, { credentials: 'include' })
       .then(res => res.json())
@@ -51,19 +61,19 @@ export default function LeagueStats({ leagueId }: { leagueId: number }) {
   const categoryLabel = CATEGORY_OPTIONS.find(opt => opt.key === selectedCategory)?.label || 'Stats'
 
   const positions = Array.from(
-    new Set(allData.map((d: any) => d.position).filter(Boolean))
+    new Set(allData.map((d: StatEntry) => d.position).filter(Boolean))
   ) as string[]
 
   const users = Array.from(
-    new Set(allData.map((d: any) => d.user).filter(Boolean))
+    new Set(allData.map((d: StatEntry) => d.user).filter(Boolean))
   ) as string[]
 
   let filteredData = allData
   if (isPlayerStat && selectedPosition !== 'all') {
-    filteredData = filteredData.filter((d: any) => d.position === selectedPosition)
+    filteredData = filteredData.filter((d: StatEntry) => d.position === selectedPosition)
   }
   if (selectedUser !== 'all') {
-    filteredData = filteredData.filter((d: any) => d.user === selectedUser)
+    filteredData = filteredData.filter((d: StatEntry) => d.user === selectedUser)
   }
 
   return (
@@ -156,7 +166,7 @@ function StatBlock({
   leagueId
 }: {
   title: string
-  data: any[]
+  data: StatEntry[]
   statKey: string
   leagueId: number
 }) {
@@ -192,7 +202,7 @@ function StatBarChart({
   data,
   statKey
 }: {
-  data: any[]
+  data: StatEntry[]
   statKey: string
 }) {
   if (data.length === 0) return null
