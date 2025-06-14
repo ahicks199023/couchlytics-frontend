@@ -28,14 +28,14 @@ export default function TradeDashboard() {
   useEffect(() => {
     if (!leagueId) return
 
-    fetch(`http://localhost:5000/trades/pending?leagueId=${leagueId}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trades/pending?leagueId=${leagueId}`, {
       credentials: 'include'
     })
       .then(res => res.json())
       .then(setPending)
       .catch(() => toast.error('Failed to fetch pending trades'))
 
-    fetch(`http://localhost:5000/trades/finalized?leagueId=${leagueId}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trades/finalized?leagueId=${leagueId}`, {
       credentials: 'include'
     })
       .then(res => res.json())
@@ -45,7 +45,7 @@ export default function TradeDashboard() {
   }, [leagueId])
 
   const voteOnTrade = async (tradeId: number, vote: 'approve' | 'deny') => {
-    const res = await fetch(`http://localhost:5000/trades/${tradeId}/vote`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trades/${tradeId}/vote`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -140,3 +140,4 @@ export default function TradeDashboard() {
     </div>
   )
 }
+
