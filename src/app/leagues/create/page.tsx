@@ -1,21 +1,23 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function CreateLeaguePage() {
   const [name, setName] = useState('')
   const [seasonYear, setSeasonYear] = useState(new Date().getFullYear())
   const [error, setError] = useState('')
-  const [result, setResult] = useState<any>(null)
-  const router = useRouter()
+  const [result, setResult] = useState<{
+    leagueId: number
+    externalId: string
+    syncUrl: string
+  } | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setResult(null)
 
-    const res = await fetch('http://localhost:5000/leagues/create', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
