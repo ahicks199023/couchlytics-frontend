@@ -20,7 +20,7 @@ export default function NotificationDropdown() {
 
   useEffect(() => {
     const fetchNotifications = async () => {
-      const res = await fetch('http://localhost:5000/notifications', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/notifications`, {
         credentials: 'include'
       })
       const data = await res.json()
@@ -40,7 +40,7 @@ export default function NotificationDropdown() {
   }, [])
 
   const handleMarkRead = async (id: number) => {
-    await fetch(`http://localhost:5000/notifications/${id}/mark-read`, {
+    await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/notifications/${id}/mark-read`, {
       method: 'POST',
       credentials: 'include',
     })
@@ -84,7 +84,7 @@ function Tabs({
 
   useEffect(() => {
     if (tab === 'all') {
-      fetch('http://localhost:5000/notifications?unread=false', {
+      fetch(`${process.env.NEXT_PUBLIC_API_BASE}/notifications?unread=false`, {
         credentials: 'include'
       })
         .then((res) => res.json())
