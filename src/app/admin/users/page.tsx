@@ -10,6 +10,14 @@ type User = {
   isPremium: boolean
 }
 
+const fetchUsers = async () => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/users`, {
+    credentials: 'include',
+  })
+  const data = await res.json()
+  return data
+}
+
 export default function AdminUsersPage() {
   const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
@@ -21,7 +29,7 @@ export default function AdminUsersPage() {
 
   // ✅ Admin check — redirect if not admin
   useEffect(() => {
-    fetch('http://localhost:5000/me', { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
       .then((res) => res.ok ? res.json() : null)
       .then((user) => {
         if (!user?.is_admin) {
@@ -29,24 +37,18 @@ export default function AdminUsersPage() {
         }
       })
       .catch(() => router.push('/'))
-  }, [])
+  }, [router])
 
   const showToast = (message: string) => {
     setToast(message)
     setTimeout(() => setToast(null), 3000)
   }
 
-  const fetchUsers = async () => {
-    const res = await fetch('http://localhost:5000/admin/users', {
-      credentials: 'include',
-    })
-    const data = await res.json()
-    setUsers(data)
-    setFiltered(data)
-  }
-
   useEffect(() => {
-    fetchUsers()
+    fetchUsers().then(data => {
+      setUsers(data)
+      setFiltered(data)
+    })
   }, [])
 
   useEffect(() => {
@@ -74,7 +76,7 @@ export default function AdminUsersPage() {
   }, [search, filterAdmin, filterPremium, users])
 
   const updatePremium = async (email: string, makePremium: boolean) => {
-    const route = `http://localhost:5000/admin/${makePremium ? 'promote' : 'demote'}-user`
+    const route = `${process.env.NEXT_PUBLIC_API_BASE}/admin/${makePremium ? 'promote' : 'demote'}-user`
     const res = await fetch(route, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -84,7 +86,9 @@ export default function AdminUsersPage() {
 
     if (res.ok) {
       showToast(`${makePremium ? 'Promoted' : 'Demoted'}: ${email}`)
-      await fetchUsers()
+      const data = await fetchUsers()
+      setUsers(data)
+      setFiltered(data)
     } else {
       showToast(`Error: ${res.status}`)
     }
