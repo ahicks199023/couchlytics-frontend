@@ -57,11 +57,19 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
 
   const [suggestionPlayerId, setSuggestionPlayerId] = useState('')
   const [suggestionStrategy, setSuggestionStrategy] = useState('value')
-  const [suggestedTrades, setSuggestedTrades] = useState<any[]>([])
+  
+  type SuggestedTrade = {
+    targetTeam: number
+    verdict: string
+    tradeValue: number
+    playersOffered: Player[]
+  }
+  
+  const [suggestedTrades, setSuggestedTrades] = useState<SuggestedTrade[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
 
   useEffect(() => {
-    fetch('http://localhost:5000/me', { credentials: 'include' })
+    fetch('${process.env.NEXT_PUBLIC_API_BASE}/me', { credentials: 'include' })
       .then(async res => {
         if (!res.ok) throw new Error(await res.text())
         return res.json() 
@@ -110,7 +118,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
     setSuggestedTrades([])
 
     try {
-      const res = await fetch('http://localhost:5000/trade-suggestions', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trade-calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -132,17 +140,16 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Something went wrong')
       setSuggestedTrades(data.suggestions || [])
-    } catch (err: any) {
-      console.error('Suggestion Error:', err.message)
+    } catch (err: unknown) {
+      console.error('Suggestion Error:', err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoadingSuggestions(false)
     }
   }
 
-  const useSuggestedTrade = (suggestion: any) => {
+  const applySuggestedTrade = (suggestion: SuggestedTrade) => {
     const selected = givePlayers.find(p => p.id === parseInt(suggestionPlayerId))
     if (!selected) return
-
     setGivePlayers([selected])
     setReceivePlayers(suggestion.playersOffered)
   }
@@ -153,25 +160,25 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
     setResult(null)
 
     try {
-      const res = await fetch('http://localhost:5000/trade-calculate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          teamId: parseInt(teamId),
-          trade: {
-            give: givePlayers.map(p => p.id),
-            receive: receivePlayers.map(p => p.id),
-          },
-          includeSuggestions
-        })
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trade-calculate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        teamId: parseInt(teamId),
+        trade: {
+        give: givePlayers.map(p => p.id),
+        receive: receivePlayers.map(p => p.id),
+        },
+        includeSuggestions
+      })
       })
 
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Something went wrong')
       setResult(data)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
     }
   }
 
@@ -318,14 +325,14 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
                         <p className="font-bold">Opponent Team ID: {sug.targetTeam}</p>
                         <p>Verdict: <strong>{sug.verdict}</strong> — Total Value: {sug.tradeValue}</p>
                         <ul className="list-disc list-inside">
-                          {sug.playersOffered.map((p: any) => (
+                          {sug.playersOffered.map((p: Player) => (
                             <li key={p.id}>{p.name} – {p.position} (OVR {p.ovr})</li>
                           ))}
                         </ul>
                         <button
                           type="button"
                           className="bg-blue-600 text-white px-3 py-1 mt-2 rounded"
-                          onClick={() => useSuggestedTrade(sug)}
+                          onClick={() => applySuggestedTrade(sug)}
                         >
                           Use This Trade
                         </button>
