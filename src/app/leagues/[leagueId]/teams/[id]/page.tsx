@@ -12,7 +12,7 @@ type Player = {
   user: string
   teamId?: number
   teamName?: string
-  [key: string]: any
+  [key: string]: string | number | undefined
 }
 
 const CATEGORY_OPTIONS = [
@@ -24,7 +24,7 @@ const CATEGORY_OPTIONS = [
 
 export default function LeagueStatsPage() {
   const { leagueId } = useParams()
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<Record<string, Player[]>>({})
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all')
@@ -37,8 +37,8 @@ export default function LeagueStatsPage() {
 
     const url =
       selectedWeek === 'all'
-        ? `http://localhost:5000/leagues/${leagueId}/stats`
-        : `http://localhost:5000/leagues/${leagueId}/stats?week=${selectedWeek}`
+        ? `${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/stats`
+        : `${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/stats?week=${selectedWeek}`
 
     fetch(url, { credentials: 'include' })
       .then(res => res.json())
@@ -46,14 +46,14 @@ export default function LeagueStatsPage() {
         const mapped = Object.fromEntries(
           Object.entries(data).map(([key, value]) => {
             switch (key) {
-              case 'passing_yards': return ['passingYards', value]
-              case 'rushing_yards': return ['rushingYards', value]
-              case 'receiving_tds': return ['receivingTDs', value]
-              case 'team_wins': return ['teamWins', value]
-              default: return [key, value]
+              case 'passing_yards': return ['passingYards', value as Player[]]
+              case 'rushing_yards': return ['rushingYards', value as Player[]]
+              case 'receiving_tds': return ['receivingTDs', value as Player[]]
+              case 'team_wins': return ['teamWins', value as Player[]]
+              default: return [key, value as Player[]]
             }
           })
-        )
+        ) as Record<string, Player[]>
         setStats(mapped)
       })
       .catch(err => {
@@ -196,4 +196,5 @@ function StatBarChart({ data, statKey }: { data: Player[], statKey: string }) {
     </div>
   )
 }
+
 
