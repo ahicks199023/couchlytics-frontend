@@ -36,7 +36,7 @@ export default function SyncDashboard() {
 
   const fetchStatus = () => {
     setLoading(true)
-    fetch('http://localhost:5000/admin/sync-status')
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/sync-status`)
       .then(res => res.json())
       .then(setData)
       .finally(() => setLoading(false))
@@ -48,14 +48,10 @@ export default function SyncDashboard() {
 
   const handleForceImport = () => {
     setForceStatus("triggering...")
-    fetch('http://localhost:5000/admin/force-import', { method: 'POST' })
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/force-import`, { method: 'POST' })
       .then(res => res.json())
       .then(res => setForceStatus(res.status || 'done'))
       .catch(() => setForceStatus('error'))
-  }
-
-  const checkFile = (files: LeagueFile[], name: string) => {
-    return files.some(f => f.name === name)
   }
 
   if (loading) return <div className="p-4">Loading sync status...</div>
