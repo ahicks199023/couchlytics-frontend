@@ -25,7 +25,7 @@ export default function TeamsPage() {
 
     const fetchTeams = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/leagues/${leagueId}/teams`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/teams`, {
           credentials: 'include'
         })
 
@@ -36,9 +36,9 @@ export default function TeamsPage() {
 
         const data = await res.json()
         setTeams(data.teams || [])
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Fetch error:', err)
-        setError(err.message || 'Server error')
+        setError((err as Error).message || 'Server error')
       } finally {
         setLoading(false)
       }
