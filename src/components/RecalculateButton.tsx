@@ -9,7 +9,7 @@ export default function RecalculateButton() {
   const handleClick = async () => {
     setLoading(true)
     try {
-      const res = await fetch('http://localhost:5000/admin/recalculate-values', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/recalculate-values`, {
         method: 'POST',
         credentials: 'include'
       })
@@ -20,7 +20,7 @@ export default function RecalculateButton() {
       } else {
         toast.error(data.error || 'Recalculation failed')
       }
-    } catch (err) {
+    } catch {
       toast.error('Server error during recalculation')
     } finally {
       setLoading(false)
@@ -37,3 +37,4 @@ export default function RecalculateButton() {
     </button>
   )
 }
+
