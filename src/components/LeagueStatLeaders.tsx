@@ -19,6 +19,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
+import Image from 'next/image'
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 
@@ -69,6 +70,8 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   const [leaders, setLeaders] = useState<StatLeader[]>([])
   const [view, setView] = useState<'table' | 'chart'>('table')
   const [currentTeamId, setCurrentTeamId] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -90,10 +93,17 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         if (week) query.append('week', week)
 
         const res = await fetch(`/leagues/${leagueId}/stats/leaders?${query.toString()}`)
+        if (!res.ok) {
+          throw new Error('Failed to fetch stat leaders')
+        }
         const data = await res.json()
         setLeaders(data)
+        setError(null)
       } catch (err) {
         console.error('Error fetching leaders:', err)
+        setError(err instanceof Error ? err.message : 'Failed to fetch stat leaders')
+      } finally {
+        setLoading(false)
       }
     }
     fetchLeaders()
@@ -113,6 +123,9 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
       },
     ],
   }
+
+  if (loading) return <p className="text-gray-400">Loading stats...</p>
+  if (error) return <p className="text-red-500">{error}</p>
 
   return (
     <Card className="p-4 w-full">
@@ -189,22 +202,28 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                       <td className="p-2">{idx + 1}</td>
                       <td className="p-2 flex items-center gap-2">
                         {leader.espnId ? (
-                          <img
+                          <Image
                             src={`/headshots/${leader.espnId}.png`}
-                            onError={(e) =>
-                              (e.currentTarget.src = '/headshots/default.png')
-                            }
                             alt={leader.name}
-                            className="w-8 h-8 rounded-full object-cover"
+                            width={32}
+                            height={32}
+                            className="rounded-full"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.src = '/headshots/default.png'
+                            }}
                           />
                         ) : (
-                          <img
+                          <Image
                             src={`https://cdn.madden.tools/player-portraits/${leader.portraitId || '0'}.png`}
-                            onError={(e) =>
-                              (e.currentTarget as HTMLImageElement).src = '/default-avatar.png'
-                            }
                             alt={leader.name}
-                            className="w-8 h-8 rounded-full object-cover"
+                            width={32}
+                            height={32}
+                            className="rounded-full"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.src = '/default-avatar.png'
+                            }}
                           />
                         )}
                         {leader.name}
