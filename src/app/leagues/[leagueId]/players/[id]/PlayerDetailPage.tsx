@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 
 interface GameLogEntry {
@@ -67,59 +68,41 @@ interface PlayerDetailResponse {
 }
 
 export default function PlayerDetailPage() {
-  const { leagueId, id } = useParams()
+  const { leagueId, id } = useParams<{ leagueId: string; id: string }>()
   const currentYear = new Date().getFullYear()
   const [player, setPlayer] = useState<PlayerDetailResponse | null>(null)
-  const [selectedSeason, setSelectedSeason] = useState<number>(currentYear)
+  const [selectedSeason] = useState<number>(currentYear)
   const [selectedCategory, setSelectedCategory] = useState<string>('PassingYards')
-  const [isCommissioner, setIsCommissioner] = useState<boolean>(false)
-  const [name, setName] = useState<string>('')
-  
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-   
 
   const uniqueStats = Array.from(new Set(player?.statTotals?.map(s => s.statType) || []))
   const filteredLogs = player?.gameLogs?.filter(log => log.category === selectedCategory) || []
 
-
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
       .then(res => res.json())
-      .then(data => setIsCommissioner(data.isCommissioner || false))
+      .then(data => {
+        // Only fetch commissioner status if needed
+        if (data.isCommissioner) {
+          // Handle commissioner-specific logic here
+        }
+      })
   }, [])
 
   useEffect(() => {
     if (!leagueId || !id) return
     setLoading(true)
-   fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players/${id}?season=${selectedSeason}`), {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players/${id}?season=${selectedSeason}`, {
       credentials: 'include'
     })
-      .then(res => res.json())
+      .then((res: Response) => res.json())
       .then((data: PlayerDetailResponse) => {
         setPlayer(data)
-        setName(data.name)
       })
       .catch(() => setError('Failed to load player info'))
       .finally(() => setLoading(false))
   }, [leagueId, id, selectedSeason])
-
-  const saveChanges = () => {
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ name })
-    })
-      .then(res => res.json())
-      .then(() => alert('Player updated'))
-      .catch(() => alert('Update failed'))
-  }
-
-  const seasonStatEntries = Object.entries(player?.seasonStats || {})
-  const chartData = player?.gameLogs
-    .filter(log => log.category === selectedCategory)
-    .map(log => ({ week: log.week, value: log.value })) || []
 
   const getRatingsByPosition = (position: string | undefined) => {
     const core: Record<string, number> = {
@@ -215,12 +198,12 @@ export default function PlayerDetailPage() {
     'highMotorTrait',
     'bigHitTrait',
     'stripBallTrait'
-  ].filter((trait) => (player as any)?.[trait] === true)
+  ].filter((trait) => Boolean(player?.[trait as keyof PlayerDetailResponse]))
 
   return (
     <div className="max-w-4xl mx-auto mt-8 bg-gray-800 p-6 rounded shadow text-white">
       {player.espnId && (
-        <img
+        <Image
           src={`/headshots/${player.espnId}.png`}
           onError={(e) => (e.currentTarget.src = '/headshots/default.png')}
           alt={player.name}
