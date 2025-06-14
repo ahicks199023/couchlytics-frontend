@@ -33,6 +33,19 @@ type User = {
   is_premium?: boolean
 }
 
+type TradeData = {
+  teamId: number
+  trade: {
+    give: number[]
+    receive: number[]
+  }
+  includeSuggestions: boolean
+}
+
+type TradeSuggestion = {
+  suggestions: SuggestedTrade[]
+}
+
 const mockPlayers: Player[] = [
   { id: 1, name: 'Tyreek Hill', team: 'MIA', position: 'WR', ovr: 97 },
   { id: 2, name: 'Jaylen Waddle', team: 'MIA', position: 'WR', ovr: 93 },
@@ -140,7 +153,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         throw new Error(errorText || 'Suggestion fetch failed')
       }
 
-      const data = await res.json()
+      const data = await res.json() as TradeSuggestion
       setSuggestedTrades(data.suggestions || [])
     } catch (err: unknown) {
       console.error('Suggestion Error:', err instanceof Error ? err.message : 'Unknown error')
@@ -162,18 +175,20 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
     setResult(null)
 
     try {
+      const tradeData: TradeData = {
+        teamId: parseInt(teamId),
+        trade: {
+          give: givePlayers.map(p => p.id),
+          receive: receivePlayers.map(p => p.id),
+        },
+        includeSuggestions
+      }
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trade-calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          teamId: parseInt(teamId),
-          trade: {
-            give: givePlayers.map(p => p.id),
-            receive: receivePlayers.map(p => p.id),
-          },
-          includeSuggestions
-        })
+        body: JSON.stringify(tradeData)
       })
 
       if (!res.ok) {
@@ -181,7 +196,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         throw new Error(errorText || 'Trade calculation failed')
       }
 
-      const data = await res.json()
+      const data = await res.json() as TradeResult
       setResult(data)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unknown error')
