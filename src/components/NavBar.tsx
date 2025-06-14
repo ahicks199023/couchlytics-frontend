@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import NotificationDropdown from '@/components/NotificationDropdown'
 
@@ -26,9 +27,11 @@ export default function NavBar() {
     <nav className="bg-gray-900 text-white px-6 py-4 flex justify-between items-center relative">
       {/* Logo + Brand */}
       <Link href="/" className="flex items-center space-x-3">
-        <img
+        <Image
           src="/logo.png"
           alt="Couch Commish"
+          width={48}
+          height={48}
           className="h-10 sm:h-12 w-auto"
         />
         <span className="text-xl font-bold">Couch Commish</span>
