@@ -97,7 +97,7 @@ export default function SyncDashboard() {
                     </div>
                     {match && (
                       <a
-                        href={`http://localhost:5000/${match.path}`}
+                        href={`${process.env.NEXT_PUBLIC_API_BASE}/${match.path}`}
                         target="_blank"
                         rel="noreferrer"
                         className="text-sm text-blue-600 hover:underline"
@@ -139,4 +139,6 @@ export default function SyncDashboard() {
     </div>
   )
 }
+
+
 
