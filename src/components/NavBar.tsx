@@ -4,14 +4,19 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import NotificationDropdown from '@/components/NotificationDropdown'
 
+type User = {
+  is_commissioner?: boolean
+  is_admin?: boolean
+}
+
 export default function NavBar() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [isOpen, setIsOpen] = useState(false)
 
   const selectedLeagueId = 1
 
   useEffect(() => {
-    fetch('http://localhost:5000/me', { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setUser(data))
       .catch(() => setUser(null))
@@ -98,3 +103,4 @@ export default function NavBar() {
     </nav>
   )
 }
+
