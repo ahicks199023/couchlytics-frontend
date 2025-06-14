@@ -84,7 +84,7 @@ export default function PlayerDetailPage() {
 
 
   useEffect(() => {
-    fetch('http://localhost:5000/me', { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => setIsCommissioner(data.isCommissioner || false))
   }, [])
@@ -92,7 +92,7 @@ export default function PlayerDetailPage() {
   useEffect(() => {
     if (!leagueId || !id) return
     setLoading(true)
-    fetch(`http://localhost:5000/leagues/${leagueId}/players/${id}?season=${selectedSeason}`, {
+   fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players/${id}?season=${selectedSeason}`), {
       credentials: 'include'
     })
       .then(res => res.json())
@@ -105,7 +105,7 @@ export default function PlayerDetailPage() {
   }, [leagueId, id, selectedSeason])
 
   const saveChanges = () => {
-    fetch(`http://localhost:5000/leagues/${leagueId}/players/${id}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
