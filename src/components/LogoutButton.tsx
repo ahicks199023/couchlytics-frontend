@@ -6,7 +6,7 @@ export default function LogoutButton() {
   const router = useRouter()
 
   const handleLogout = async () => {
-    const res = await fetch('http://localhost:5000/logout', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/logout`, {
       method: 'POST',
       credentials: 'include'
     })
@@ -27,3 +27,4 @@ export default function LogoutButton() {
     </button>
   )
 }
+
