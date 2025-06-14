@@ -50,7 +50,3 @@ export default function DraftAssistantPage() {
     </main>
   )
 }
-
-    </main>
-  )
-}
