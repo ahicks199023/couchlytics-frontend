@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   BarChart,
@@ -44,7 +44,6 @@ type AnalyticsData = {
 const LeagueAnalytics: React.FC = () => {
   const { leagueId } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
-  const navigate = useNavigate()
 
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [search, setSearch] = useState(searchParams.get('search') || '')
