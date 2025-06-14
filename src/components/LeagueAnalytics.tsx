@@ -66,7 +66,7 @@ const LeagueAnalytics: React.FC = () => {
       .then((res) => res.json())
       .then(setData)
       .catch(console.error)
-  }, [leagueId, search, selectedPosition, selectedDevTrait, selectedWeek])
+  }, [leagueId, search, selectedPosition, selectedDevTrait, selectedWeek, setSearchParams])
 
   if (!data) return <p className="p-4">Loading analytics...</p>
 
