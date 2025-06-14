@@ -1,5 +1,3 @@
-// src/app/leagues/[leagueId]/players/[playerId]/page.tsx
-
 'use client'
 
 import { useParams } from 'next/navigation'
@@ -9,15 +7,15 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 
 export default function PlayerDetailPage() {
   const { leagueId, playerId } = useParams()
-  const [player, setPlayer] = useState<any>(null)
-  const [stats, setStats] = useState<any[]>([])
+  const [player, setPlayer] = useState<Player | null>(null)
+  const [stats, setStats] = useState<GameStat[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!leagueId || !playerId || playerId === 'undefined') return
 
-    fetch(`http://localhost:5000/leagues/${leagueId}/players/${playerId}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players/${playerId}`, {
       credentials: 'include'
     })
       .then((res) => res.json())
