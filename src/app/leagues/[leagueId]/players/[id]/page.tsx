@@ -5,6 +5,26 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
+interface Player {
+  name: string
+  position: string
+  teamName?: string
+  user?: string
+  espnId?: string
+  gameLogs?: GameLog[]
+}
+
+interface GameLog {
+  week: number
+  category: string
+  value: number
+}
+
+interface GameStat {
+  label: string
+  value: number
+}
+
 export default function PlayerDetailPage() {
   const { leagueId, playerId } = useParams()
   const [player, setPlayer] = useState<Player | null>(null)
@@ -24,7 +44,7 @@ export default function PlayerDetailPage() {
           ...data,
           teamName: data.teamName
         })
-        const formattedStats = (data.gameLogs || []).map((log: any) => ({
+        const formattedStats = (data.gameLogs || []).map((log: GameLog) => ({
           label: `Week ${log.week} (${log.category})`,
           value: log.value
         }))
