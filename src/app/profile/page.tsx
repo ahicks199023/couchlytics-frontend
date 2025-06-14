@@ -3,10 +3,16 @@
 import { useEffect, useState } from 'react'
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{
+    id: number
+    email: string
+    isAdmin: boolean
+    isCommissioner: boolean
+    isPremium: boolean
+  } | null>(null)
 
   useEffect(() => {
-    fetch('http://localhost:5000/me', { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
         if (data) {
