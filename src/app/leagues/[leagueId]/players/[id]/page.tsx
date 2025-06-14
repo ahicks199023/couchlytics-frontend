@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 interface Player {
@@ -68,11 +69,16 @@ export default function PlayerDetailPage() {
         <h1 className="text-3xl font-bold mb-2 text-neon-green">{player.name}</h1>
 
         {player.espnId && (
-          <img
+          <Image
             src={`/headshots/${player.espnId}.png`}
-            onError={(e) => (e.currentTarget.src = '/headshots/default.png')}
             alt={player.name}
-            className="w-24 h-24 rounded-full object-cover mb-4"
+            width={96}
+            height={96}
+            className="rounded-full object-cover mb-4"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement
+              target.src = '/headshots/default.png'
+            }}
           />
         )}
 
@@ -116,5 +122,4 @@ export default function PlayerDetailPage() {
     </main>
   )
 }
-
 
