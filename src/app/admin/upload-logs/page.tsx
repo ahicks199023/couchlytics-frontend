@@ -34,10 +34,9 @@ export default function UploadLogsPage() {
   const [checkedAuth, setCheckedAuth] = useState(false)
 
   const limit = 25
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000'
 
   useEffect(() => {
-    fetch(`${apiBase}/me`, { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         if (data?.isAdmin) {
@@ -56,7 +55,7 @@ export default function UploadLogsPage() {
     params.append('page', page.toString())
     params.append('limit', limit.toString())
 
-    fetch(`${apiBase}/upload-logs?${params.toString()}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/upload-logs?${params.toString()}`, {
       credentials: 'include'
     })
       .then(res => res.json())
@@ -64,7 +63,7 @@ export default function UploadLogsPage() {
         setLogs(data.logs || [])
         setTotal(data.total || 0)
       })
-  }, [isAdmin, userFilter, page])
+  }, [isAdmin, userFilter, page, limit])
 
   const filteredLogs = logs.filter(log => {
     const q = search.toLowerCase()
@@ -192,14 +191,14 @@ export default function UploadLogsPage() {
             {filteredLogs.map((log) => (
               <tr key={log.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
                 <td className="p-2">
-                  <Link
+                  <a
                     href={`/admin/upload-logs/${log.id}`}
                     className="text-neon-green underline hover:text-lime-400"
                   >
-                    {log.leagueName || '—'}
-                  </Link>
+                    {log.leagueName}
+                  </a>
                 </td>
-                <td className="p-2">{log.seasonYear || '—'}</td>
+                <td className="p-2">{log.seasonYear}</td>
                 <td className="p-2">{log.isOverwrite ? '✅' : '—'}</td>
                 <td className="p-2">
                   {log.skipped.teams.length + log.skipped.players.length + log.skipped.games.length > 0 ? (
@@ -213,8 +212,8 @@ export default function UploadLogsPage() {
                     </details>
                   ) : '—'}
                 </td>
-                <td className="p-2">{log.timestamp || '—'}</td>
-                <td className="p-2">{log.ipAddress || '—'}</td>
+                <td className="p-2">{log.timestamp}</td>
+                <td className="p-2">{log.ipAddress}</td>
               </tr>
             ))}
           </tbody>
