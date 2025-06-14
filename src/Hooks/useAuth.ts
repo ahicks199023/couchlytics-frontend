@@ -14,7 +14,7 @@ export default function useAuth() {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    fetch("http://localhost:5000/me", {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, {
       credentials: "include",
     })
       .then((res) => (res.ok ? res.json() : null))
@@ -32,4 +32,3 @@ export default function useAuth() {
 
   return { user, loading };
 }
-
