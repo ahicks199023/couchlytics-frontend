@@ -35,7 +35,7 @@ export default function UploadLeague() {
       } else {
         setStatus(`❌ Error: ${result.error || 'Upload failed.'}`)
       }
-    } catch (err) {
+    } catch {
       setStatus('❌ Upload error. Check network or server.')
     } finally {
       setLoading(false)
