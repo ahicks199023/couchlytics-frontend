@@ -20,7 +20,7 @@ export default function LeagueOverview() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('http://localhost:5000/leagues/overview', {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/overview`, {
       credentials: 'include'
     })
       .then((res) => {
@@ -84,3 +84,4 @@ export default function LeagueOverview() {
     </main>
   )
 }
+
