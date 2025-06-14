@@ -234,7 +234,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
                         className="rounded-full bg-white"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement
-                          target.src = '/headshots/fallback.png'
+                          target.src = '/headshots/default.png'
                         }}
                       />
                       <span>{p.name} – {p.position} (OVR {p.ovr})</span>
@@ -274,7 +274,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
                         className="rounded-full bg-white"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement
-                          target.src = '/headshots/fallback.png'
+                          target.src = '/headshots/default.png'
                         }}
                       />
                       <span>{p.name} – {p.position} (OVR {p.ovr})</span>
