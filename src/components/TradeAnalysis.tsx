@@ -1,5 +1,6 @@
+import React from 'react'
 import { CheckCircle, AlertCircle, XCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react'
-import { TradeResult } from '@/types/player'
+import { TradeResult } from '../types/player'
 
 interface TradeAnalysisProps {
   result: TradeResult
