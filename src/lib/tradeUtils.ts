@@ -1,4 +1,4 @@
-import { Player } from '@/types/player'
+import { Player } from '../types/player'
 
 // Utility function for calculating player value
 export const calculatePlayerValue = (player: Player): number => {
