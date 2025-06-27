@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import useAuth from '@/Hooks/useAuth' // ✅ Fixed casing here
+import useAuth from '@/Hooks/useAuth'
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -11,10 +11,9 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false)
 
   const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, isAdmin, isCommissioner } = useAuth()
 
-  // ✅ Added safe access for isAdmin/isCommissioner
-  const isAuthorized = user?.isAdmin || user?.isCommissioner
+  const isAuthorized = isAdmin() || isCommissioner()
 
   if (!authLoading && !isAuthorized) {
     return (
