@@ -39,7 +39,7 @@ export default function LeagueDetailPage() {
 
     fetchFromApi(`/leagues/${parsedLeagueId}`)
       .then(data => {
-        setLeague(data)
+        setLeague(data as LeagueData)
         setLoading(false)
       })
       .catch(err => {
