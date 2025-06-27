@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 
 type Player = {
@@ -9,6 +9,12 @@ type Player = {
   team: string
   position: string
   ovr: number
+  espnId?: string
+  teamId?: number
+  user?: string
+  devTrait?: string
+  age?: number
+  yearsPro?: number
 }
 
 type TradeResult = {
@@ -17,20 +23,26 @@ type TradeResult = {
     teamGives: number
     teamReceives: number
     netGain: number
+    explanation?: string
   }
   canAutoApprove: boolean
   suggestedTrades?: Player[]
+  riskLevel?: 'Low' | 'Medium' | 'High'
 }
 
 type SuggestedTrade = {
   targetTeam: number
+  targetTeamName: string
   verdict: string
   tradeValue: number
   playersOffered: Player[]
+  confidence: number
+  reasoning: string
 }
 
 type User = {
   is_premium?: boolean
+  teamId?: number
 }
 
 type TradeData = {
@@ -46,68 +58,177 @@ type TradeSuggestion = {
   suggestions: SuggestedTrade[]
 }
 
-const mockPlayers: Player[] = [
-  { id: 1, name: 'Tyreek Hill', team: 'MIA', position: 'WR', ovr: 97 },
-  { id: 2, name: 'Jaylen Waddle', team: 'MIA', position: 'WR', ovr: 93 },
-  { id: 3, name: 'Raheem Mostert', team: 'MIA', position: 'RB', ovr: 88 },
-  { id: 4, name: 'Josh Allen', team: 'BUF', position: 'QB', ovr: 96 },
-  { id: 5, name: 'Stefon Diggs', team: 'BUF', position: 'WR', ovr: 95 },
-  { id: 6, name: 'Dalvin Cook', team: 'BUF', position: 'RB', ovr: 89 },
-  { id: 7, name: 'CeeDee Lamb', team: 'DAL', position: 'WR', ovr: 94 },
-  { id: 8, name: 'Tony Pollard', team: 'DAL', position: 'RB', ovr: 90 },
-]
-
-const getHeadshotUrl = (playerName: string) => {
-  const sanitized = playerName.toLowerCase().replace(/[^a-z]/g, '')
+const getHeadshotUrl = (player: Player) => {
+  if (player.espnId) {
+    return `/headshots/${player.espnId}.png`
+  }
+  const sanitized = player.name.toLowerCase().replace(/[^a-z]/g, '')
   return `/headshots/${sanitized}.png`
 }
 
+// Enhanced player value calculation
+const calculatePlayerValue = (player: Player): number => {
+  const baseValue = player.ovr || 75
+  
+  // Position multipliers
+  const positionMultipliers: Record<string, number> = {
+    'QB': 1.2,
+    'WR': 1.1,
+    'RB': 1.0,
+    'TE': 0.9,
+    'LT': 0.8,
+    'LG': 0.7,
+    'C': 0.7,
+    'RG': 0.7,
+    'RT': 0.8,
+    'LE': 0.9,
+    'RE': 0.9,
+    'DT': 0.8,
+    'LOLB': 0.9,
+    'MLB': 0.9,
+    'ROLB': 0.9,
+    'CB': 1.0,
+    'FS': 0.9,
+    'SS': 0.9,
+    'K': 0.5,
+    'P': 0.4
+  }
+  
+  const multiplier = positionMultipliers[player.position] || 1.0
+  
+  // Age factor (younger players worth more)
+  let ageFactor = 1.0
+  if (player.age) {
+    if (player.age <= 23) ageFactor = 1.2
+    else if (player.age <= 26) ageFactor = 1.1
+    else if (player.age <= 29) ageFactor = 1.0
+    else if (player.age <= 32) ageFactor = 0.9
+    else ageFactor = 0.7
+  }
+  
+  // Development trait factor
+  let devFactor = 1.0
+  if (player.devTrait) {
+    switch (player.devTrait.toLowerCase()) {
+      case 'superstar': devFactor = 1.3
+      case 'star': devFactor = 1.2
+      case 'normal': devFactor = 1.0
+      case 'slow': devFactor = 0.8
+      default: devFactor = 1.0
+    }
+  }
+  
+  return Math.round(baseValue * multiplier * ageFactor * devFactor)
+}
+
 export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) {
-  const [teamId, setTeamId] = useState(String(leagueId))
   const [user, setUser] = useState<User | null>(null)
+  const [players, setPlayers] = useState<Player[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  // Trade state
   const [includeSuggestions, setIncludeSuggestions] = useState(false)
   const [result, setResult] = useState<TradeResult | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  const [selectedTeam, setSelectedTeam] = useState('')
-  const [selectedPosition, setSelectedPosition] = useState('')
-  const [selectedPlayer, setSelectedPlayer] = useState('')
   const [givePlayers, setGivePlayers] = useState<Player[]>([])
-
-  const [selectedReceiveTeam, setSelectedReceiveTeam] = useState('')
-  const [selectedReceivePosition, setSelectedReceivePosition] = useState('')
-  const [selectedReceivePlayer, setSelectedReceivePlayer] = useState('')
   const [receivePlayers, setReceivePlayers] = useState<Player[]>([])
-
+  
+  // Filters
+  const [selectedTeam, setSelectedTeam] = useState('All')
+  const [selectedPosition, setSelectedPosition] = useState('All')
+  const [selectedPlayer, setSelectedPlayer] = useState('')
+  const [selectedReceiveTeam, setSelectedReceiveTeam] = useState('All')
+  const [selectedReceivePosition, setSelectedReceivePosition] = useState('All')
+  const [selectedReceivePlayer, setSelectedReceivePlayer] = useState('')
+  
+  // Suggestions
   const [suggestionPlayerId, setSuggestionPlayerId] = useState('')
   const [suggestionStrategy, setSuggestionStrategy] = useState('value')
   const [suggestedTrades, setSuggestedTrades] = useState<SuggestedTrade[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
 
+  // Load user and data
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
-      .then(async res => {
-        if (!res.ok) throw new Error(await res.text())
-        return res.json() 
-      })
-      .then(setUser)
-      .catch(() => setUser(null))
-  }, [])
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        
+        // Load user info
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { 
+          credentials: 'include' 
+        })
+        if (userRes.ok) {
+          const userData = await userRes.json()
+          setUser(userData)
+        }
+        
+        // Load league players
+        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players`, {
+          credentials: 'include'
+        })
+        if (playersRes.ok) {
+          const playersData = await playersRes.json()
+          setPlayers(playersData.players || [])
+        }
+        
+      } catch (err) {
+        console.error('Failed to load data:', err)
+        setError('Failed to load league data. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadData()
+  }, [leagueId])
 
-  const getPlayerValue = (p: Player) => p.ovr || 75
-  const getTotalValue = (list: Player[]) => list.reduce((sum, p) => sum + getPlayerValue(p), 0)
+  // Computed values
+  const filteredPlayers = useMemo(() => {
+    return players.filter(p => 
+      (selectedTeam === 'All' || p.team === selectedTeam) &&
+      (selectedPosition === 'All' || p.position === selectedPosition)
+    ).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
+  }, [players, selectedTeam, selectedPosition])
 
-  const teams = ['All', ...new Set(mockPlayers.map(p => p.team))]
-  const positions = (team: string) => ['All', ...new Set(mockPlayers.filter(p => team === 'All' || p.team === team).map(p => p.position))]
-  const players = (team: string, position: string) =>
-    mockPlayers
-      .filter(p => (team === 'All' || p.team === team) && (position === 'All' || p.position === position))
-      .sort((a, b) => getPlayerValue(b) - getPlayerValue(a))
+  const filteredReceivePlayers = useMemo(() => {
+    return players.filter(p => 
+      (selectedReceiveTeam === 'All' || p.team === selectedReceiveTeam) &&
+      (selectedReceivePosition === 'All' || p.position === selectedReceivePosition)
+    ).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
+  }, [players, selectedReceiveTeam, selectedReceivePosition])
 
+  const teamOptions = useMemo(() => {
+    return ['All', ...new Set(players.map(p => p.team))].sort()
+  }, [players])
+
+  const positionOptions = useMemo(() => {
+    return ['All', ...new Set(players.map(p => p.position))].sort()
+  }, [players])
+
+  const giveValue = useMemo(() => 
+    givePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0), 
+    [givePlayers]
+  )
+
+  const receiveValue = useMemo(() => 
+    receivePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0), 
+    [receivePlayers]
+  )
+
+  const netValue = receiveValue - giveValue
+  const tradeVerdict = useMemo(() => {
+    const absNet = Math.abs(netValue)
+    if (absNet <= 15) return 'Fair'
+    if (absNet <= 30) return netValue > 0 ? 'You Win' : 'You Lose'
+    return netValue > 0 ? 'You Win Big' : 'You Lose Big'
+  }, [netValue])
+
+  // Player management functions
   const addGivePlayer = () => {
-    const found = mockPlayers.find(p => p.id === parseInt(selectedPlayer))
+    const found = players.find(p => p.id === parseInt(selectedPlayer))
     if (found && !givePlayers.find(p => p.id === found.id)) {
       setGivePlayers([...givePlayers, found])
+      setSelectedPlayer('')
     }
   }
 
@@ -116,9 +237,10 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
   }
 
   const addReceivePlayer = () => {
-    const found = mockPlayers.find(p => p.id === parseInt(selectedReceivePlayer))
+    const found = players.find(p => p.id === parseInt(selectedReceivePlayer))
     if (found && !receivePlayers.find(p => p.id === found.id)) {
       setReceivePlayers([...receivePlayers, found])
+      setSelectedReceivePlayer('')
     }
   }
 
@@ -126,11 +248,9 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
     setReceivePlayers(receivePlayers.filter(p => p.id !== id))
   }
 
-  const net = getTotalValue(receivePlayers) - getTotalValue(givePlayers)
-  const verdict = Math.abs(net) <= 10 ? 'Fair' : net > 10 ? 'You Lose' : 'You Win'
-
+  // Trade suggestions
   const fetchTradeSuggestions = async () => {
-    if (!suggestionPlayerId) return
+    if (!suggestionPlayerId || !user?.teamId) return
     
     setLoadingSuggestions(true)
     setSuggestedTrades([])
@@ -142,7 +262,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         credentials: 'include',
         body: JSON.stringify({
           leagueId,
-          teamId: parseInt(teamId),
+          teamId: user.teamId,
           playerId: parseInt(suggestionPlayerId),
           strategy: suggestionStrategy
         })
@@ -157,6 +277,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
       setSuggestedTrades(data.suggestions || [])
     } catch (err: unknown) {
       console.error('Suggestion Error:', err instanceof Error ? err.message : 'Unknown error')
+      setError('Failed to fetch trade suggestions')
     } finally {
       setLoadingSuggestions(false)
     }
@@ -169,14 +290,20 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
     setReceivePlayers(suggestion.playersOffered)
   }
 
+  // Submit trade
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user?.teamId) {
+      setError('Unable to determine your team. Please refresh the page.')
+      return
+    }
+    
     setError(null)
     setResult(null)
 
     try {
       const tradeData: TradeData = {
-        teamId: parseInt(teamId),
+        teamId: user.teamId,
         trade: {
           give: givePlayers.map(p => p.id),
           receive: receivePlayers.map(p => p.id),
@@ -203,198 +330,428 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
     }
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-green mx-auto mb-4"></div>
+          <p>Loading trade calculator...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && !players.length) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-neon-green text-black px-4 py-2 rounded hover:bg-green-400"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-black text-white min-h-screen">
-      <div className="p-4 max-w-4xl mx-auto">
-        <h2 className="text-xl font-bold mb-4">Trade Calculator</h2>
+      <div className="p-4 max-w-6xl mx-auto">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-2">Trade Calculator</h2>
+          <p className="text-gray-400">Analyze and evaluate potential trades in your league</p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Team Selection & Inputs */}
-          <div>
-            <label className="block text-sm font-medium">Your Team ID</label>
-            <input
-              type="text"
-              value={teamId}
-              onChange={e => setTeamId(e.target.value)}
-              className="w-full p-2 border rounded text-black"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            {/* Give */}
-            <div className="bg-gray-800 p-4 rounded shadow text-white">
-              <h3 className="font-bold mb-2">Give Players</h3>
-              <select value={selectedTeam} onChange={e => setSelectedTeam(e.target.value)} className="bg-gray-900 text-white border border-gray-700 rounded px-2 py-1 w-full mb-2">
-                {teams.map(team => <option key={team} value={team}>{team}</option>)}
-              </select>
-              <select value={selectedPosition} onChange={e => setSelectedPosition(e.target.value)} className="bg-gray-900 text-white border border-gray-700 rounded px-2 py-1 w-full mb-2">
-                {positions(selectedTeam).map(pos => <option key={pos} value={pos}>{pos}</option>)}
-              </select>
-              <select value={selectedPlayer} onChange={e => setSelectedPlayer(e.target.value)} className="bg-gray-900 text-white border border-gray-700 rounded px-2 py-1 w-full mb-2">
-                <option value="">Select Player</option>
-                {players(selectedTeam, selectedPosition).map(p => (
-                  <option key={p.id} value={p.id}>{p.name} – {p.position} (OVR {p.ovr})</option>
-                ))}
-              </select>
-              <button type="button" onClick={addGivePlayer} className="bg-blue-600 text-white px-4 py-1 rounded">+ Add</button>
-              <ul className="mt-3 space-y-1">
-                {givePlayers.map(p => (
-                  <li key={p.id} className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Image
-                        src={getHeadshotUrl(p.name)}
-                        alt={p.name}
-                        width={32}
-                        height={32}
-                        className="rounded-full bg-white"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.src = '/headshots/default.png'
-                        }}
-                      />
-                      <span>{p.name} – {p.position} (OVR {p.ovr})</span>
-                    </div>
-                    <button onClick={() => removeGivePlayer(p.id)} className="text-red-600 hover:underline">✕</button>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-2 font-medium">Total: {getTotalValue(givePlayers)}</p>
+          {/* Trade Summary */}
+          {(givePlayers.length > 0 || receivePlayers.length > 0) && (
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+              <h3 className="text-lg font-semibold mb-3">Trade Summary</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-medium text-red-400 mb-2">You Give ({giveValue} pts)</h4>
+                  <div className="space-y-2">
+                    {givePlayers.map(p => (
+                      <div key={p.id} className="flex items-center justify-between bg-gray-700 p-2 rounded">
+                        <div className="flex items-center gap-2">
+                          <Image
+                            src={getHeadshotUrl(p)}
+                            alt={p.name}
+                            width={32}
+                            height={32}
+                            className="rounded-full bg-white"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.src = '/default-avatar.png'
+                            }}
+                          />
+                          <span>{p.name} ({p.position})</span>
+                        </div>
+                        <span className="text-sm text-gray-300">{calculatePlayerValue(p)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-medium text-green-400 mb-2">You Receive ({receiveValue} pts)</h4>
+                  <div className="space-y-2">
+                    {receivePlayers.map(p => (
+                      <div key={p.id} className="flex items-center justify-between bg-gray-700 p-2 rounded">
+                        <div className="flex items-center gap-2">
+                          <Image
+                            src={getHeadshotUrl(p)}
+                            alt={p.name}
+                            width={32}
+                            height={32}
+                            className="rounded-full bg-white"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.src = '/default-avatar.png'
+                            }}
+                          />
+                          <span>{p.name} ({p.position})</span>
+                        </div>
+                        <span className="text-sm text-gray-300">{calculatePlayerValue(p)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4 p-3 bg-gray-700 rounded text-center">
+                <p className="text-lg">
+                  <span className="font-medium">Net Value:</span> 
+                  <span className={`ml-2 font-bold ${netValue > 0 ? 'text-green-400' : netValue < 0 ? 'text-red-400' : 'text-yellow-400'}`}>
+                    {netValue > 0 ? '+' : ''}{netValue}
+                  </span>
+                  <span className="ml-4 font-medium">Verdict:</span>
+                  <span className={`ml-2 font-bold ${
+                    tradeVerdict.includes('Win') ? 'text-green-400' : 
+                    tradeVerdict.includes('Lose') ? 'text-red-400' : 'text-yellow-400'
+                  }`}>
+                    {tradeVerdict}
+                  </span>
+                </p>
+              </div>
             </div>
+          )}
 
-            {/* Receive */}
-            <div className="bg-gray-800 p-4 rounded shadow text-white">
-              <h3 className="font-bold mb-2">Receive Players</h3>
-              <select value={selectedReceiveTeam} onChange={e => setSelectedReceiveTeam(e.target.value)} className="bg-gray-900 text-white border border-gray-700 rounded px-2 py-1 w-full mb-2">
-                {teams.map(team => <option key={team} value={team}>{team}</option>)}
-              </select>
-              <select value={selectedReceivePosition} onChange={e => setSelectedReceivePosition(e.target.value)} className="bg-gray-900 text-white border border-gray-700 rounded px-2 py-1 w-full mb-2">
-                {positions(selectedReceiveTeam).map(pos => <option key={pos} value={pos}>{pos}</option>)}
-              </select>
-              <select value={selectedReceivePlayer} onChange={e => setSelectedReceivePlayer(e.target.value)} className="bg-gray-900 text-white border border-gray-700 rounded px-2 py-1 w-full mb-2">
-                <option value="">Select Player</option>
-                {players(selectedReceiveTeam, selectedReceivePosition).map(p => (
-                  <option key={p.id} value={p.id}>{p.name} – {p.position} (OVR {p.ovr})</option>
-                ))}
-              </select>
-              <button type="button" onClick={addReceivePlayer} className="bg-green-600 text-white px-4 py-1 rounded">+ Add</button>
-              <ul className="mt-3 space-y-1">
-                {receivePlayers.map(p => (
-                  <li key={p.id} className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Image
-                        src={getHeadshotUrl(p.name)}
-                        alt={p.name}
-                        width={32}
-                        height={32}
-                        className="rounded-full bg-white"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.src = '/headshots/default.png'
-                        }}
-                      />
-                      <span>{p.name} – {p.position} (OVR {p.ovr})</span>
-                    </div>
-                    <button onClick={() => removeReceivePlayer(p.id)} className="text-red-600 hover:underline">✕</button>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-2 font-medium">Total: {getTotalValue(receivePlayers)}</p>
-            </div>
-          </div>
-
-          {/* Verdict */}
-          <div className="mt-4 text-center">
-            <p className="text-lg">
-              <strong>Net Value:</strong> {net} — <strong>Verdict:</strong> {verdict}
-            </p>
-          </div>
-
-          {/* Suggestions */}
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={includeSuggestions}
-              onChange={e => setIncludeSuggestions(e.target.checked)}
-              disabled={!user?.is_premium}
-            />
-            <label>
-              Include Suggestions (Premium)
-              {!user?.is_premium && <span className="text-sm text-yellow-600 ml-2">(Upgrade to enable)</span>}
-            </label>
-          </div>
-          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Submit</button>
-
-          {includeSuggestions && user?.is_premium && (
-            <div className="mt-6 bg-white text-black p-4 rounded">
-              <h3 className="font-bold mb-2">💡 Trade Suggestion Engine</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <select
-                  value={suggestionPlayerId}
-                  onChange={e => setSuggestionPlayerId(e.target.value)}
-                  className="p-2 border rounded"
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Give Players Section */}
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+              <h3 className="font-bold mb-4 text-red-400">Players You Give</h3>
+              
+              {/* Filters */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <select 
+                  value={selectedTeam} 
+                  onChange={e => setSelectedTeam(e.target.value)} 
+                  className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
                 >
-                  <option value="">Select a player from your team</option>
-                  {givePlayers.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} – {p.position} (OVR {p.ovr})</option>
+                  {teamOptions.map(team => (
+                    <option key={team} value={team}>{team}</option>
                   ))}
                 </select>
-                <select
-                  value={suggestionStrategy}
-                  onChange={e => setSuggestionStrategy(e.target.value)}
-                  className="p-2 border rounded"
+                <select 
+                  value={selectedPosition} 
+                  onChange={e => setSelectedPosition(e.target.value)} 
+                  className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
                 >
-                  <option value="value">Best Value</option>
-                  <option value="fairness">Fairness</option>
-                  <option value="potential">High Potential</option>
+                  {positionOptions.map(pos => (
+                    <option key={pos} value={pos}>{pos}</option>
+                  ))}
                 </select>
-                <button
-                  type="button"
-                  onClick={fetchTradeSuggestions}
-                  className="bg-purple-600 text-white px-4 py-2 rounded"
-                  disabled={!suggestionPlayerId}
+              </div>
+
+              {/* Player Selection */}
+              <div className="mb-4">
+                <select 
+                  value={selectedPlayer} 
+                  onChange={e => setSelectedPlayer(e.target.value)} 
+                  className="w-full bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
                 >
-                  {loadingSuggestions ? 'Loading...' : 'Get Suggestions'}
+                  <option value="">Select Player to Add</option>
+                  {filteredPlayers.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} – {p.position} ({p.team}) - {calculatePlayerValue(p)} pts
+                    </option>
+                  ))}
+                </select>
+                <button 
+                  type="button" 
+                  onClick={addGivePlayer} 
+                  disabled={!selectedPlayer}
+                  className="mt-2 bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add Player
                 </button>
               </div>
 
-              {suggestedTrades.length > 0 && (
-                <div className="mt-4">
-                  <h4 className="font-semibold mb-2">Suggested Trade Packages:</h4>
-                  <ul className="space-y-2">
-                    {suggestedTrades.map((sug, i) => (
-                      <li key={i} className="p-3 bg-gray-100 rounded text-black">
-                        <p className="font-bold">Opponent Team ID: {sug.targetTeam}</p>
-                        <p>Verdict: <strong>{sug.verdict}</strong> — Total Value: {sug.tradeValue}</p>
-                        <ul className="list-disc list-inside">
-                          {sug.playersOffered.map((p: Player) => (
-                            <li key={p.id}>{p.name} – {p.position} (OVR {p.ovr})</li>
-                          ))}
-                        </ul>
-                        <button
-                          type="button"
-                          className="bg-blue-600 text-white px-3 py-1 mt-2 rounded"
-                          onClick={() => applySuggestedTrade(sug)}
-                        >
-                          Use This Trade
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+              {/* Selected Players */}
+              {givePlayers.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-gray-300">Selected Players:</h4>
+                  {givePlayers.map(p => (
+                    <div key={p.id} className="flex items-center justify-between bg-gray-700 p-2 rounded">
+                      <div className="flex items-center gap-2">
+                        <Image
+                          src={getHeadshotUrl(p)}
+                          alt={p.name}
+                          width={24}
+                          height={24}
+                          className="rounded-full bg-white"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = '/default-avatar.png'
+                          }}
+                        />
+                        <span className="text-sm">{p.name} ({p.position})</span>
+                      </div>
+                      <button 
+                        onClick={() => removeGivePlayer(p.id)} 
+                        className="text-red-400 hover:text-red-300 text-sm"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Receive Players Section */}
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+              <h3 className="font-bold mb-4 text-green-400">Players You Receive</h3>
+              
+              {/* Filters */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <select 
+                  value={selectedReceiveTeam} 
+                  onChange={e => setSelectedReceiveTeam(e.target.value)} 
+                  className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
+                >
+                  {teamOptions.map(team => (
+                    <option key={team} value={team}>{team}</option>
+                  ))}
+                </select>
+                <select 
+                  value={selectedReceivePosition} 
+                  onChange={e => setSelectedReceivePosition(e.target.value)} 
+                  className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
+                >
+                  {positionOptions.map(pos => (
+                    <option key={pos} value={pos}>{pos}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Player Selection */}
+              <div className="mb-4">
+                <select 
+                  value={selectedReceivePlayer} 
+                  onChange={e => setSelectedReceivePlayer(e.target.value)} 
+                  className="w-full bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
+                >
+                  <option value="">Select Player to Add</option>
+                  {filteredReceivePlayers.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} – {p.position} ({p.team}) - {calculatePlayerValue(p)} pts
+                    </option>
+                  ))}
+                </select>
+                <button 
+                  type="button" 
+                  onClick={addReceivePlayer} 
+                  disabled={!selectedReceivePlayer}
+                  className="mt-2 bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add Player
+                </button>
+              </div>
+
+              {/* Selected Players */}
+              {receivePlayers.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-gray-300">Selected Players:</h4>
+                  {receivePlayers.map(p => (
+                    <div key={p.id} className="flex items-center justify-between bg-gray-700 p-2 rounded">
+                      <div className="flex items-center gap-2">
+                        <Image
+                          src={getHeadshotUrl(p)}
+                          alt={p.name}
+                          width={24}
+                          height={24}
+                          className="rounded-full bg-white"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = '/default-avatar.png'
+                          }}
+                        />
+                        <span className="text-sm">{p.name} ({p.position})</span>
+                      </div>
+                      <button 
+                        onClick={() => removeReceivePlayer(p.id)} 
+                        className="text-red-400 hover:text-red-300 text-sm"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Trade Suggestions (Premium Feature) */}
+          {user?.is_premium && (
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+              <div className="flex items-center space-x-2 mb-4">
+                <input
+                  type="checkbox"
+                  checked={includeSuggestions}
+                  onChange={e => setIncludeSuggestions(e.target.checked)}
+                  className="rounded"
+                />
+                <label className="font-medium">💡 Enable AI Trade Suggestions</label>
+              </div>
+              
+              {includeSuggestions && givePlayers.length > 0 && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <select
+                      value={suggestionPlayerId}
+                      onChange={e => setSuggestionPlayerId(e.target.value)}
+                      className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2"
+                    >
+                      <option value="">Select a player from your team</option>
+                      {givePlayers.map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} – {p.position}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={suggestionStrategy}
+                      onChange={e => setSuggestionStrategy(e.target.value)}
+                      className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2"
+                    >
+                      <option value="value">Best Value</option>
+                      <option value="fairness">Fairness</option>
+                      <option value="potential">High Potential</option>
+                      <option value="win-now">Win Now</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={fetchTradeSuggestions}
+                      disabled={!suggestionPlayerId || loadingSuggestions}
+                      className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
+                    >
+                      {loadingSuggestions ? 'Loading...' : 'Get Suggestions'}
+                    </button>
+                  </div>
+
+                  {suggestedTrades.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="font-semibold mb-3">AI Trade Suggestions:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {suggestedTrades.map((sug, i) => (
+                          <div key={i} className="p-4 bg-gray-700 rounded border border-gray-600">
+                            <div className="flex justify-between items-start mb-2">
+                              <h5 className="font-medium">{sug.targetTeamName}</h5>
+                              <span className={`text-sm px-2 py-1 rounded ${
+                                sug.verdict.includes('Win') ? 'bg-green-600' : 
+                                sug.verdict.includes('Lose') ? 'bg-red-600' : 'bg-yellow-600'
+                              }`}>
+                                {sug.verdict}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-300 mb-2">
+                              Value: {sug.tradeValue} pts | Confidence: {sug.confidence}%
+                            </p>
+                            <p className="text-xs text-gray-400 mb-3">{sug.reasoning}</p>
+                            <div className="space-y-1 mb-3">
+                              {sug.playersOffered.map((p: Player) => (
+                                <div key={p.id} className="flex items-center gap-2 text-sm">
+                                  <Image
+                                    src={getHeadshotUrl(p)}
+                                    alt={p.name}
+                                    width={20}
+                                    height={20}
+                                    className="rounded-full bg-white"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement
+                                      target.src = '/default-avatar.png'
+                                    }}
+                                  />
+                                  {p.name} ({p.position}) - {calculatePlayerValue(p)} pts
+                                </div>
+                              ))}
+                            </div>
+                            <button
+                              type="button"
+                              className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                              onClick={() => applySuggestedTrade(sug)}
+                            >
+                              Use This Trade
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
+
+          {/* Submit Button */}
+          <div className="text-center">
+            <button 
+              type="submit" 
+              disabled={givePlayers.length === 0 && receivePlayers.length === 0}
+              className="bg-neon-green text-black px-8 py-3 rounded-lg font-semibold hover:bg-green-400 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Analyze Trade
+            </button>
+          </div>
         </form>
 
-        {error && <p className="mt-4 text-red-500">{error}</p>}
+        {/* Error Display */}
+        {error && (
+          <div className="mt-6 p-4 bg-red-900 border border-red-700 rounded-lg">
+            <p className="text-red-200">{error}</p>
+          </div>
+        )}
 
+        {/* Results Display */}
         {result && (
-          <div className="mt-6 bg-gray-100 p-4 rounded text-black">
-            <h3 className="text-lg font-semibold mb-2">Trade Verdict: {result.tradeAssessment.verdict}</h3>
-            <p>Team Gives Value: {result.tradeAssessment.teamGives}</p>
-            <p>Team Receives Value: {result.tradeAssessment.teamReceives}</p>
-            <p>Net Gain: {result.tradeAssessment.netGain}</p>
-            <p className="mt-2 font-medium">Auto-Approve: {result.canAutoApprove ? 'Yes' : 'No'}</p>
+          <div className="mt-6 bg-gray-800 p-6 rounded-lg border border-gray-700">
+            <h3 className="text-xl font-semibold mb-4">Trade Analysis Results</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+              <div className="space-y-2">
+                <p><span className="font-medium">Team Gives Value:</span> {result.tradeAssessment.teamGives}</p>
+                <p><span className="font-medium">Team Receives Value:</span> {result.tradeAssessment.teamReceives}</p>
+                <p><span className="font-medium">Net Gain:</span> {result.tradeAssessment.netGain}</p>
+              </div>
+              <div className="space-y-2">
+                <p><span className="font-medium">Verdict:</span> {result.tradeAssessment.verdict}</p>
+                <p><span className="font-medium">Auto-Approve:</span> {result.canAutoApprove ? 'Yes' : 'No'}</p>
+                {result.riskLevel && (
+                  <p><span className="font-medium">Risk Level:</span> {result.riskLevel}</p>
+                )}
+              </div>
+            </div>
+            
+            {result.tradeAssessment.explanation && (
+              <div className="mt-4 p-3 bg-gray-700 rounded">
+                <h4 className="font-medium mb-2">Analysis:</h4>
+                <p className="text-sm text-gray-300">{result.tradeAssessment.explanation}</p>
+              </div>
+            )}
           </div>
         )}
       </div>
