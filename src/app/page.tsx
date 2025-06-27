@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 
 const features = [
   {
@@ -48,6 +49,14 @@ export default function HomePage() {
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-black via-gray-900 to-gray-800 animate-gradient-x" />
       {/* Hero Section */}
       <section className="w-full max-w-4xl text-center mb-12">
+        <Image
+          src="/logo.png"
+          alt="Couchlytics Logo"
+          width={400}
+          height={400}
+          className="h-32 md:h-40 lg:h-48 w-auto mx-auto mb-6"
+          priority
+        />
         <h1 className="text-5xl sm:text-6xl font-extrabold mb-4 text-neon-green drop-shadow-lg">
           Welcome to Couchlytics
         </h1>
