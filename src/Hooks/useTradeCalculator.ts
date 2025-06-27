@@ -1,0 +1,220 @@
+import { useState, useEffect, useCallback } from 'react'
+import { api } from '@/lib/api'
+import { Player, Team, User, TradeResult, SuggestedTrade, TradeData } from '@/types/player'
+
+// Utility function for calculating player value
+const calculatePlayerValue = (player: Player): number => {
+  let baseValue = player.ovr || 75
+  
+  // Position multipliers
+  const positionMultipliers: Record<string, number> = {
+    'QB': 1.2,
+    'WR': 1.1,
+    'HB': 1.0,
+    'TE': 0.9,
+    'LT': 0.8,
+    'LG': 0.7,
+    'C': 0.7,
+    'RG': 0.7,
+    'RT': 0.8,
+    'LE': 0.9,
+    'RE': 0.9,
+    'DT': 0.8,
+    'LOLB': 0.9,
+    'MLB': 1.0,
+    'ROLB': 0.9,
+    'CB': 1.0,
+    'FS': 0.9,
+    'SS': 0.9,
+    'K': 0.5,
+    'P': 0.4
+  }
+  
+  const multiplier = positionMultipliers[player.position] || 1.0
+  
+  // Age factor (younger players worth more)
+  if (player.age) {
+    const ageFactor = Math.max(0.7, 1.0 - (player.age - 22) * 0.02)
+    baseValue *= ageFactor
+  }
+  
+  // Development trait bonus
+  if (player.devTrait) {
+    const devMultipliers: Record<string, number> = {
+      'Superstar': 1.3,
+      'Star': 1.2,
+      'Normal': 1.0,
+      'Hidden': 1.1
+    }
+    baseValue *= devMultipliers[player.devTrait] || 1.0
+  }
+  
+  return Math.round(baseValue * multiplier)
+}
+
+export const useTradeCalculator = (leagueId: number) => {
+  // State management
+  const [user, setUser] = useState<User | null>(null)
+  const [players, setPlayers] = useState<Player[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  // Trade state
+  const [givePlayers, setGivePlayers] = useState<Player[]>([])
+  const [receivePlayers, setReceivePlayers] = useState<Player[]>([])
+  const [result, setResult] = useState<TradeResult | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  
+  // Suggestions
+  const [suggestedTrades, setSuggestedTrades] = useState<SuggestedTrade[]>([])
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+
+  // Load initial data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        // Load user info
+        const userData = await api.get('/me')
+        setUser(userData)
+        
+        // Load league players
+        const playersData = await api.get(`/leagues/${leagueId}/players`)
+        setPlayers(playersData.players || [])
+        
+        // Load teams
+        const teamsData = await api.get(`/leagues/${leagueId}/teams`)
+        setTeams(teamsData.teams || [])
+        
+      } catch (err) {
+        console.error('Failed to load data:', err)
+        setError('Failed to load league data. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadData()
+  }, [leagueId])
+
+  // Computed values
+  const giveValue = givePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0)
+  const receiveValue = receivePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0)
+  const netValue = receiveValue - giveValue
+  const verdict = Math.abs(netValue) <= 15 ? 'Fair' : netValue > 15 ? 'You Lose' : 'You Win'
+
+  // Event handlers
+  const addPlayer = useCallback((player: Player, toGive: boolean) => {
+    const playerList = toGive ? givePlayers : receivePlayers
+    const setPlayerList = toGive ? setGivePlayers : setReceivePlayers
+    
+    if (!playerList.find(p => p.id === player.id)) {
+      setPlayerList([...playerList, player])
+    }
+  }, [givePlayers, receivePlayers])
+
+  const removePlayer = useCallback((playerId: number, fromGive: boolean) => {
+    const setPlayerList = fromGive ? setGivePlayers : setReceivePlayers
+    setPlayerList(prev => prev.filter(p => p.id !== playerId))
+  }, [])
+
+  const clearTrade = useCallback(() => {
+    setGivePlayers([])
+    setReceivePlayers([])
+    setResult(null)
+    setSuggestedTrades([])
+  }, [])
+
+  const fetchTradeSuggestions = useCallback(async (playerId: string, strategy: string) => {
+    if (!playerId || !user?.teamId) return
+    
+    setLoadingSuggestions(true)
+    setSuggestedTrades([])
+
+    try {
+      const data = await api.post('/trade-calculate', {
+        leagueId,
+        teamId: user.teamId,
+        playerId: parseInt(playerId),
+        strategy
+      })
+      
+      setSuggestedTrades(data.suggestions || [])
+    } catch (err: unknown) {
+      console.error('Suggestion Error:', err instanceof Error ? err.message : 'Unknown error')
+      setError('Failed to load trade suggestions')
+    } finally {
+      setLoadingSuggestions(false)
+    }
+  }, [leagueId, user?.teamId])
+
+  const applySuggestedTrade = useCallback((suggestion: SuggestedTrade, playerId: string) => {
+    const selected = givePlayers.find(p => p.id === parseInt(playerId))
+    if (!selected) return
+    setGivePlayers([selected])
+    setReceivePlayers(suggestion.playersOffered)
+  }, [givePlayers])
+
+  const handleSubmit = useCallback(async (includeSuggestions: boolean) => {
+    if (!user?.teamId) {
+      setError('Please select your team first')
+      return
+    }
+    
+    setSubmitting(true)
+    setError(null)
+    setResult(null)
+
+    try {
+      const tradeData: TradeData = {
+        leagueId,
+        teamId: user.teamId,
+        trade: {
+          give: givePlayers.map(p => p.id),
+          receive: receivePlayers.map(p => p.id),
+        },
+        includeSuggestions
+      }
+
+      const data = await api.post('/trade-calculate', tradeData)
+      setResult(data)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setSubmitting(false)
+    }
+  }, [leagueId, user?.teamId, givePlayers, receivePlayers])
+
+  return {
+    // State
+    user,
+    players,
+    teams,
+    loading,
+    error,
+    givePlayers,
+    receivePlayers,
+    result,
+    submitting,
+    suggestedTrades,
+    loadingSuggestions,
+    
+    // Computed values
+    giveValue,
+    receiveValue,
+    netValue,
+    verdict,
+    
+    // Actions
+    addPlayer,
+    removePlayer,
+    clearTrade,
+    fetchTradeSuggestions,
+    applySuggestedTrade,
+    handleSubmit,
+    setError
+  }
+} 
