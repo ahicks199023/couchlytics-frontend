@@ -29,12 +29,12 @@ export default function NavBar() {
       <Link href="/" className="flex items-center space-x-3">
         <Image
           src="/logo.png"
-          alt="Couch Commish"
-          width={48}
-          height={48}
-          className="h-10 sm:h-12 w-auto"
+          alt="Couchlytics"
+          width={64}
+          height={64}
+          className="h-16 sm:h-20 w-auto"
         />
-        <span className="text-xl font-bold">Couch Commish</span>
+        <span className="text-2xl font-bold">Couchlytics</span>
       </Link>
 
       <div className="flex items-center gap-4">
