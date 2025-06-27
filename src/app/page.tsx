@@ -52,9 +52,9 @@ export default function HomePage() {
         <Image
           src="/logo.png"
           alt="Couchlytics Logo"
-          width={400}
-          height={400}
-          className="h-32 md:h-40 lg:h-48 w-auto mx-auto mb-6"
+          width={600}
+          height={600}
+          className="h-48 md:h-64 lg:h-80 w-auto mx-auto mb-8"
           priority
         />
         <h1 className="text-5xl sm:text-6xl font-extrabold mb-4 text-neon-green drop-shadow-lg">
