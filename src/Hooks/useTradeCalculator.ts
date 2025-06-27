@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Player, Team, User, TradeResult, SuggestedTrade, TradeData } from '@/types/player'
+import { Player, Team, User, TradeResult, SuggestedTrade, TradeData } from '../types/player'
 
 // Utility function for calculating player value
 const calculatePlayerValue = (player: Player): number => {
