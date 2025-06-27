@@ -7,7 +7,7 @@ export default function ImportHelpPage() {
         <h1 className="text-3xl font-bold">Sync Your League</h1>
 
         <p className="text-gray-400">
-          Couch Commish supports direct syncing from the Madden Companion App via the new <strong>Export League Data</strong> feature.
+          Couchlytics supports direct syncing from the Madden Companion App via the new <strong>Export League Data</strong> feature.
         </p>
 
         <h2 className="text-xl font-semibold mt-4">Option 1: Automatic Sync (Recommended)</h2>
