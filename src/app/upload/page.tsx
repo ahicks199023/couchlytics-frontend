@@ -11,7 +11,7 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false)
 
   const router = useRouter()
-  const { user, loading: authLoading, isAdmin, isCommissioner } = useAuth()
+  const { loading: authLoading, isAdmin, isCommissioner } = useAuth()
 
   const isAuthorized = isAdmin() || isCommissioner()
 
