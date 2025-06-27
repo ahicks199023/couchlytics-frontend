@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { User, UserRole, Permission } from "../types/user";
+import { User, UserRole, Permission } from "@/types/user";
 
 export default function useAuth() {
   const [user, setUser] = useState<User | null>(null);
