@@ -26,14 +26,15 @@ export default function NavBar() {
   return (
     <nav className="bg-gray-900 text-white px-6 py-4 flex justify-between items-center relative">
       {/* Logo + Brand */}
-      <Link href="/" className="flex items-center">
+      <Link href="/" className="flex items-center space-x-3">
         <Image
           src="/logo.png"
           alt="Couchlytics"
-          width={300}
-          height={300}
-          className="h-24 md:h-32 lg:h-40 w-auto"
+          width={64}
+          height={64}
+          className="h-12 w-auto"
         />
+        <span className="text-2xl font-bold">Couchlytics</span>
       </Link>
 
       <div className="flex items-center gap-4">
