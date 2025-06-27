@@ -20,6 +20,14 @@ type League = {
   week: number
 }
 
+type LeaguesResponse = {
+  leagues: League[]
+}
+
+type TeamsResponse = {
+  teams: Team[]
+}
+
 export default function LeaguesPage() {
   const [leagues, setLeagues] = useState<League[]>([])
   const [expandedLeagueId, setExpandedLeagueId] = useState<number | null>(null)
@@ -29,8 +37,8 @@ export default function LeaguesPage() {
 
   useEffect(() => {
     fetchFromApi('/leagues')
-      .then(data => {
-        setLeagues(data.leagues || [])
+      .then((data) => {
+        setLeagues((data as LeaguesResponse).leagues || [])
         setLoading(false)
       })
       .catch(err => {
@@ -49,7 +57,7 @@ export default function LeaguesPage() {
     if (!teamsByLeague[leagueId]) {
       try {
         const res = await fetchFromApi(`/teams/${leagueId}`)
-        setTeamsByLeague(prev => ({ ...prev, [leagueId]: res.teams || [] }))
+        setTeamsByLeague(prev => ({ ...prev, [leagueId]: (res as TeamsResponse).teams || [] }))
       } catch (err) {
         console.error(`Failed to fetch teams for league ${leagueId}`, err)
       }
