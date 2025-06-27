@@ -37,7 +37,7 @@ export default function Login() {
   return (
     <div className="max-w-md mx-auto mt-20 p-6 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
       <h2 className="text-2xl font-bold mb-4 text-center text-gray-800 dark:text-gray-100">
-        Couch Commish Login
+        Couchlytics Login
       </h2>
       <form onSubmit={handleLogin}>
         <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
