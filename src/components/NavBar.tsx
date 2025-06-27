@@ -30,9 +30,9 @@ export default function NavBar() {
         <Image
           src="/logo.png"
           alt="Couchlytics"
-          width={200}
-          height={200}
-          className="h-12 w-auto"
+          width={300}
+          height={300}
+          className="h-24 md:h-32 lg:h-40 w-auto"
         />
       </Link>
 
