@@ -59,7 +59,7 @@ export default function SyncDashboard() {
 
   return (
     <div className="p-6 space-y-8">
-      <h1 className="text-2xl font-bold">🛠️ Couch Commish Sync Monitor</h1>
+      <h1 className="text-2xl font-bold">🛠️ Couchlytics Sync Monitor</h1>
 
       <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow space-y-2">
         <p>🕒 Last Import: <strong>{data.lastImportTime}</strong></p>
