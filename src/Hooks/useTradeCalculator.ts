@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { api } from '@/lib/api'
 import { Player, Team, User, TradeResult, SuggestedTrade, TradeData } from '@/types/player'
 
 // Utility function for calculating player value
@@ -78,16 +77,35 @@ export const useTradeCalculator = (leagueId: number) => {
         setError(null)
         
         // Load user info
-        const userData = await api.get('/me')
-        setUser(userData)
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { 
+          credentials: 'include' 
+        })
+        if (userRes.ok) {
+          const userData = await userRes.json()
+          setUser(userData)
+        }
         
         // Load league players
-        const playersData = await api.get(`/leagues/${leagueId}/players`)
-        setPlayers(playersData.players || [])
+        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players`, {
+          credentials: 'include'
+        })
+        if (playersRes.ok) {
+          const playersData = await playersRes.json()
+          setPlayers(playersData.players || [])
+        } else {
+          throw new Error('Failed to load players')
+        }
         
         // Load teams
-        const teamsData = await api.get(`/leagues/${leagueId}/teams`)
-        setTeams(teamsData.teams || [])
+        const teamsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/teams`, {
+          credentials: 'include'
+        })
+        if (teamsRes.ok) {
+          const teamsData = await teamsRes.json()
+          setTeams(teamsData.teams || [])
+        } else {
+          throw new Error('Failed to load teams')
+        }
         
       } catch (err) {
         console.error('Failed to load data:', err)
@@ -135,13 +153,24 @@ export const useTradeCalculator = (leagueId: number) => {
     setSuggestedTrades([])
 
     try {
-      const data = await api.post('/trade-calculate', {
-        leagueId,
-        teamId: user.teamId,
-        playerId: parseInt(playerId),
-        strategy
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trade-calculate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          leagueId,
+          teamId: user.teamId,
+          playerId: parseInt(playerId),
+          strategy
+        })
       })
-      
+
+      if (!res.ok) {
+        const errorText = await res.text()
+        throw new Error(errorText || 'Suggestion fetch failed')
+      }
+
+      const data = await res.json()
       setSuggestedTrades(data.suggestions || [])
     } catch (err: unknown) {
       console.error('Suggestion Error:', err instanceof Error ? err.message : 'Unknown error')
@@ -179,7 +208,19 @@ export const useTradeCalculator = (leagueId: number) => {
         includeSuggestions
       }
 
-      const data = await api.post('/trade-calculate', tradeData)
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trade-calculate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(tradeData)
+      })
+
+      if (!res.ok) {
+        const errorText = await res.text()
+        throw new Error(errorText || 'Trade calculation failed')
+      }
+
+      const data = await res.json() as TradeResult
       setResult(data)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unknown error')
