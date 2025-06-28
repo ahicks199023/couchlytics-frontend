@@ -77,33 +77,4 @@ export interface LeagueMember {
   teamId?: number
   joinedAt: string
   isActive: boolean
-}
-
-export interface OnboardingData {
-  step: 'welcome' | 'profile' | 'league' | 'team' | 'preferences' | 'complete'
-  profile: {
-    firstName: string
-    lastName: string
-    phone?: string
-    timezone?: string
-  }
-  league: {
-    name: string
-    externalId?: string
-    commissionerEmail?: string
-  }
-  team: {
-    name: string
-    city: string
-    abbreviation?: string
-  }
-  preferences: {
-    theme: 'light' | 'dark' | 'auto'
-    notifications: {
-      email: boolean
-      push: boolean
-      tradeAlerts: boolean
-      leagueUpdates: boolean
-    }
-  }
 } 
