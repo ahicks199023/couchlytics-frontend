@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-     "generate:api-types": "openapi-typescript https://api.couchlytics.com/swagger.json --output src/types/api.d.ts"
+     "generate:api-types": "npx openapi-typescript openapi3.json --output src/types/api.d.ts"
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.2.5",
@@ -41,4 +41,3 @@
     "typescript": "^5"
   }
 }
-
