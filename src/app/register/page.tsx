@@ -9,6 +9,7 @@ import { CheckCircle, ArrowRight, ArrowLeft, User, Shield, Users, Settings } fro
 
 const steps = [
   { id: 'account', title: 'Account', icon: User },
+  { id: 'role', title: 'Role', icon: Shield },
   { id: 'league', title: 'League', icon: Users },
   { id: 'team', title: 'Team', icon: Shield },
   { id: 'preferences', title: 'Preferences', icon: Settings },
@@ -25,6 +26,8 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
+    // Role field
+    isCommissioner: false,
     // League fields
     leagueName: '',
     externalId: '',
@@ -83,19 +86,22 @@ export default function RegisterPage() {
           return false
         }
         break
+      case 'role':
+        // Role selection is always valid
+        break
       case 'league':
-        if (!formData.leagueName.trim()) {
-          setError('League name is required')
+        if (formData.isCommissioner && !formData.leagueName.trim()) {
+          setError('League name is required for commissioners')
           return false
         }
         break
       case 'team':
-        if (!formData.teamName.trim()) {
-          setError('Team name is required')
+        if (formData.isCommissioner && !formData.teamName.trim()) {
+          setError('Team name is required for commissioners')
           return false
         }
-        if (!formData.teamCity.trim()) {
-          setError('Team city is required')
+        if (formData.isCommissioner && !formData.teamCity.trim()) {
+          setError('Team city is required for commissioners')
           return false
         }
         break
@@ -138,18 +144,20 @@ export default function RegisterPage() {
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        // League data
-        league: {
+        // Role data
+        isCommissioner: formData.isCommissioner,
+        // League data (only if commissioner)
+        league: formData.isCommissioner ? {
           name: formData.leagueName,
           externalId: formData.externalId || undefined,
           commissionerEmail: formData.commissionerEmail || undefined
-        },
-        // Team data
-        team: {
+        } : undefined,
+        // Team data (only if commissioner)
+        team: formData.isCommissioner ? {
           name: formData.teamName,
           city: formData.teamCity,
           abbreviation: formData.teamAbbreviation || undefined
-        },
+        } : undefined,
         // Preferences data
         preferences: {
           theme: formData.theme,
@@ -267,7 +275,67 @@ export default function RegisterPage() {
           </div>
         )
 
+      case 'role':
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-center mb-4">What brings you to Couchlytics?</h2>
+            <p className="text-gray-400 text-center mb-6">
+              This helps us set up your account with the right permissions and features.
+            </p>
+            
+            <div className="space-y-4">
+              <label className="flex items-start space-x-4 p-4 border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors">
+                <input
+                  type="radio"
+                  name="isCommissioner"
+                  checked={formData.isCommissioner === true}
+                  onChange={() => setFormData(prev => ({ ...prev, isCommissioner: true }))}
+                  className="mt-1"
+                />
+                <div>
+                  <h3 className="font-semibold text-white">I&apos;m a League Commissioner</h3>
+                  <p className="text-sm text-gray-400 mt-1">
+                    I run a Madden league and want to manage teams, players, trades, and league settings.
+                  </p>
+                </div>
+              </label>
+              
+              <label className="flex items-start space-x-4 p-4 border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors">
+                <input
+                  type="radio"
+                  name="isCommissioner"
+                  checked={formData.isCommissioner === false}
+                  onChange={() => setFormData(prev => ({ ...prev, isCommissioner: false }))}
+                  className="mt-1"
+                />
+                <div>
+                  <h3 className="font-semibold text-white">I&apos;m a League Member</h3>
+                  <p className="text-sm text-gray-400 mt-1">
+                    I&apos;m part of a league and want to view stats, analyze trades, and manage my team.
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
+        )
+
       case 'league':
+        if (!formData.isCommissioner) {
+          return (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-center mb-4">Join an Existing League</h2>
+              <p className="text-gray-400 text-center mb-6">
+                You&apos;ll need to be invited by your league commissioner to join their league.
+              </p>
+              <div className="bg-blue-900/20 border border-blue-500 rounded-lg p-4">
+                <p className="text-blue-300 text-sm">
+                  <strong>Note:</strong> After registration, contact your league commissioner to get an invitation to join their league.
+                </p>
+              </div>
+            </div>
+          )
+        }
+        
         return (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-center mb-4">League Information</h2>
@@ -321,6 +389,22 @@ export default function RegisterPage() {
         )
 
       case 'team':
+        if (!formData.isCommissioner) {
+          return (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-center mb-4">Your Team</h2>
+              <p className="text-gray-400 text-center mb-6">
+                You&apos;ll be able to set up your team once you join a league.
+              </p>
+              <div className="bg-blue-900/20 border border-blue-500 rounded-lg p-4">
+                <p className="text-blue-300 text-sm">
+                  <strong>Note:</strong> Team information will be configured after you receive an invitation from your league commissioner.
+                </p>
+              </div>
+            </div>
+          )
+        }
+        
         return (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-center mb-4">Your Team</h2>
@@ -454,8 +538,13 @@ export default function RegisterPage() {
               <h3 className="font-semibold mb-2">Summary:</h3>
               <p><strong>Name:</strong> {formData.firstName} {formData.lastName}</p>
               <p><strong>Email:</strong> {formData.email}</p>
-              <p><strong>League:</strong> {formData.leagueName}</p>
-              <p><strong>Team:</strong> {formData.teamCity} {formData.teamName}</p>
+              <p><strong>Role:</strong> {formData.isCommissioner ? 'Commissioner' : 'League Member'}</p>
+              {formData.isCommissioner && (
+                <>
+                  <p><strong>League:</strong> {formData.leagueName}</p>
+                  <p><strong>Team:</strong> {formData.teamCity} {formData.teamName}</p>
+                </>
+              )}
             </div>
           </div>
         )
@@ -469,10 +558,12 @@ export default function RegisterPage() {
     switch (currentStep) {
       case 'account':
         return formData.firstName && formData.lastName && formData.email && formData.password && formData.password === formData.confirmPassword
+      case 'role':
+        return formData.isCommissioner !== undefined
       case 'league':
-        return formData.leagueName
+        return !formData.isCommissioner || formData.leagueName
       case 'team':
-        return formData.teamName && formData.teamCity
+        return !formData.isCommissioner || (formData.teamName && formData.teamCity)
       case 'preferences':
         return true
       case 'complete':
