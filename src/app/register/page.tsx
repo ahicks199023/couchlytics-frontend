@@ -448,7 +448,7 @@ export default function RegisterPage() {
             </div>
             <h2 className="text-3xl font-bold">Ready to Create Account!</h2>
             <p className="text-gray-600 max-w-md mx-auto">
-              Review your information below and click "Create Account" to complete your registration.
+              Review your information below and click &quot;Create Account&quot; to complete your registration.
             </p>
             <div className="bg-gray-50 rounded-lg p-4 text-left max-w-md mx-auto">
               <h3 className="font-semibold mb-2">Summary:</h3>
