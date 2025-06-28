@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { api } from '@/lib/api'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -64,27 +65,21 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          email: formData.email,
-          password: formData.password
-        })
+      // Use the API utility which automatically converts camelCase to snake_case
+      await api.post('/register', {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password
       })
 
-      const data = await res.json()
-      if (res.ok) {
-        router.push('/login?message=Registration successful! Please log in.')
+      router.push('/login?message=Registration successful! Please log in.')
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message.replace('API error: ', ''))
       } else {
-        setError(data.error || 'Registration failed')
+        setError('Registration failed. Please try again.')
       }
-    } catch {
-      setError('Network error. Please try again.')
     } finally {
       setIsLoading(false)
     }
