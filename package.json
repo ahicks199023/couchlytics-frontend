@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+     "generate:api-types": "openapi-typescript https://api.couchlytics.com/swagger.json --output src/types/api.d.ts"
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.2.5",
@@ -38,9 +39,6 @@
     "eslint-config-next": "15.3.2",
     "tw-animate-css": "^1.3.0",
     "typescript": "^5"
-  }
-  "scripts": {
-  "generate:api-types": "openapi-typescript https://api.couchlytics.com/swagger.json --output src/types/api.d.ts"
   }
 }
 
