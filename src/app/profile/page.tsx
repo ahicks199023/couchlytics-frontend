@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { API_BASE } from '@/lib/config'
 
 export default function ProfilePage() {
   const [user, setUser] = useState<{
@@ -12,7 +13,7 @@ export default function ProfilePage() {
   } | null>(null)
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
+    fetch(`${API_BASE}/me`, { credentials: 'include' })
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
         if (data) {
