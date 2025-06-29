@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import { API_BASE } from '@/lib/config'
 
 type Notification = {
   id: number
@@ -20,7 +21,7 @@ export default function NotificationDropdown() {
 
   useEffect(() => {
     const fetchNotifications = async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/notifications`, {
+      const res = await fetch(`${API_BASE}/notifications`, {
         credentials: 'include'
       })
       const data = await res.json()
@@ -40,7 +41,7 @@ export default function NotificationDropdown() {
   }, [])
 
   const handleMarkRead = async (id: number) => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/notifications/${id}/mark-read`, {
+    await fetch(`${API_BASE}/notifications/${id}/mark-read`, {
       method: 'POST',
       credentials: 'include',
     })
@@ -84,7 +85,7 @@ function Tabs({
 
   useEffect(() => {
     if (tab === 'all') {
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE}/notifications?unread=false`, {
+      fetch(`${API_BASE}/notifications?unread=false`, {
         credentials: 'include'
       })
         .then((res) => res.json())
