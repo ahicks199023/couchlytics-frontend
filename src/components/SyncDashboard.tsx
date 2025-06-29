@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { API_BASE } from '@/lib/config'
 
 type UploadLog = {
   id: number
@@ -36,7 +37,7 @@ export default function SyncDashboard() {
 
   const fetchStatus = () => {
     setLoading(true)
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/sync-status`)
+    fetch(`${API_BASE}/admin/sync-status`)
       .then(res => res.json())
       .then(setData)
       .finally(() => setLoading(false))
@@ -48,7 +49,7 @@ export default function SyncDashboard() {
 
   const handleForceImport = () => {
     setForceStatus("triggering...")
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/force-import`, { method: 'POST' })
+    fetch(`${API_BASE}/admin/force-import`, { method: 'POST' })
       .then(res => res.json())
       .then(res => setForceStatus(res.status || 'done'))
       .catch(() => setForceStatus('error'))
@@ -97,7 +98,7 @@ export default function SyncDashboard() {
                     </div>
                     {match && (
                       <a
-                        href={`${process.env.NEXT_PUBLIC_API_BASE}/${match.path}`}
+                        href={`${API_BASE}/${match.path}`}
                         target="_blank"
                         rel="noreferrer"
                         className="text-sm text-blue-600 hover:underline"
@@ -139,6 +140,3 @@ export default function SyncDashboard() {
     </div>
   )
 }
-
-
-
