@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import { API_BASE } from '@/lib/config'
 
 
 type Team = {
@@ -25,7 +26,7 @@ export default function TeamsPage() {
 
     const fetchTeams = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/teams`, {
+        const res = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, {
           credentials: 'include'
         })
 
