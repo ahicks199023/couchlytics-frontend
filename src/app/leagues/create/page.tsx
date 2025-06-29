@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { API_BASE } from '@/lib/config'
 
 export default function CreateLeaguePage() {
   const [name, setName] = useState('')
@@ -17,7 +18,7 @@ export default function CreateLeaguePage() {
     setError('')
     setResult(null)
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/create`, {
+    const res = await fetch(`${API_BASE}/leagues/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
