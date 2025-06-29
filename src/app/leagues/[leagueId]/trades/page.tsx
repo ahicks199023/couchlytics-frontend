@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { API_BASE } from '@/lib/config'
 
 type Trade = {
   id: number
@@ -28,14 +29,14 @@ export default function TradeDashboard() {
   useEffect(() => {
     if (!leagueId) return
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trades/pending?leagueId=${leagueId}`, {
+    fetch(`${API_BASE}/trades/pending?leagueId=${leagueId}`, {
       credentials: 'include'
     })
       .then(res => res.json())
       .then(setPending)
       .catch(() => toast.error('Failed to fetch pending trades'))
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trades/finalized?leagueId=${leagueId}`, {
+    fetch(`${API_BASE}/trades/finalized?leagueId=${leagueId}`, {
       credentials: 'include'
     })
       .then(res => res.json())
@@ -45,7 +46,7 @@ export default function TradeDashboard() {
   }, [leagueId])
 
   const voteOnTrade = async (tradeId: number, vote: 'approve' | 'deny') => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trades/${tradeId}/vote`, {
+    const res = await fetch(`${API_BASE}/trades/${tradeId}/vote`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
