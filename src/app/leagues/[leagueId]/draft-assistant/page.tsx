@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { API_BASE } from '@/lib/config'
 
 export default function DraftAssistantPage() {
   const router = useRouter()
   const [authorized, setAuthorized] = useState(false)
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
+    fetch(`${API_BASE}/me`, { credentials: 'include' })
       .then((res) => res.ok ? res.json() : null)
       .then((user) => {
         if (user?.isPremium) {
