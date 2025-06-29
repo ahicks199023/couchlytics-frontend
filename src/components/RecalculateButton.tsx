@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { API_BASE } from '@/lib/config'
 
 export default function RecalculateButton() {
   const [loading, setLoading] = useState(false)
@@ -9,7 +10,7 @@ export default function RecalculateButton() {
   const handleClick = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/recalculate-values`, {
+      const res = await fetch(`${API_BASE}/admin/recalculate-values`, {
         method: 'POST',
         credentials: 'include'
       })
