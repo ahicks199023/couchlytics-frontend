@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import NotificationDropdown from '@/components/NotificationDropdown'
+import LogoutButton from '@/components/LogoutButton'
 
 type User = {
   is_commissioner?: boolean
@@ -93,7 +94,7 @@ export default function NavBar() {
                 <Link href={`/leagues/${selectedLeagueId}/trade-tool`} onClick={() => setIsOpen(false)}>Trade Tool</Link>
               )}
               <Link href="/profile" onClick={() => setIsOpen(false)}>Profile</Link>
-              <Link href="/logout" onClick={() => setIsOpen(false)}>Logout</Link>
+              <LogoutButton />
             </>
           ) : (
             <>
