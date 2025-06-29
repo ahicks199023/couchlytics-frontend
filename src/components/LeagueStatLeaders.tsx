@@ -20,6 +20,7 @@ import {
   Legend,
 } from 'chart.js'
 import Image from 'next/image'
+import { API_BASE } from '@/lib/config'
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 
@@ -76,7 +77,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const res = await fetch('/me')
+        const res = await fetch(`${API_BASE}/me`)
         const data = await res.json()
         if (data?.teamId) setCurrentTeamId(data.teamId)
       } catch (err) {
@@ -92,7 +93,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         const query = new URLSearchParams({ statType })
         if (week) query.append('week', week)
 
-        const res = await fetch(`/leagues/${leagueId}/stats/leaders?${query.toString()}`)
+        const res = await fetch(`${API_BASE}/leagues/${leagueId}/stats/leaders?${query.toString()}`)
         if (!res.ok) {
           throw new Error('Failed to fetch stat leaders')
         }
