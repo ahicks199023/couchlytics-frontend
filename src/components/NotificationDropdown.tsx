@@ -16,29 +16,47 @@ type Notification = {
 export default function NotificationDropdown() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [open, setOpen] = useState(false)
+  const [hasUserInteracted, setHasUserInteracted] = useState(false)
   const prevCountRef = useRef(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
+    // Set user interaction flag when component mounts (user has interacted with page)
+    setHasUserInteracted(true)
+  }, [])
+
+  useEffect(() => {
     const fetchNotifications = async () => {
-      const res = await fetch(`${API_BASE}/notifications`, {
-        credentials: 'include'
-      })
-      const data = await res.json()
+      try {
+        const res = await fetch(`${API_BASE}/notifications`, {
+          credentials: 'include'
+        })
+        const data = await res.json()
 
-      if (data.length > prevCountRef.current) {
-        if (audioRef.current) audioRef.current.play()
-        toast('🔔 New trade alert!')
+        if (data.length > prevCountRef.current && hasUserInteracted) {
+          // Only play audio if user has interacted with the page
+          if (audioRef.current) {
+            try {
+              await audioRef.current.play()
+            } catch (error) {
+              // Silently ignore audio play errors
+              console.debug('Audio play failed:', error)
+            }
+          }
+          toast('🔔 New trade alert!')
+        }
+
+        prevCountRef.current = data.length
+        setNotifications(data)
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error)
       }
-
-      prevCountRef.current = data.length
-      setNotifications(data)
     }
 
     fetchNotifications()
     const interval = setInterval(fetchNotifications, 10000)
     return () => clearInterval(interval)
-  }, [])
+  }, [hasUserInteracted])
 
   const handleMarkRead = async (id: number) => {
     await fetch(`${API_BASE}/notifications/${id}/mark-read`, {
