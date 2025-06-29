@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { API_BASE } from '@/lib/config'
 
 interface Player {
   name: string
@@ -36,7 +37,7 @@ export default function PlayerDetailPage() {
   useEffect(() => {
     if (!leagueId || !playerId || playerId === 'undefined') return
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players/${playerId}`, {
+    fetch(`${API_BASE}/leagues/${leagueId}/players/${playerId}`, {
       credentials: 'include'
     })
       .then((res) => res.json())
@@ -122,4 +123,3 @@ export default function PlayerDetailPage() {
     </main>
   )
 }
-
