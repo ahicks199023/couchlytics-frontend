@@ -1,12 +1,13 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { API_BASE } from '@/lib/config'
 
 export default function LogoutButton() {
   const router = useRouter()
 
   const handleLogout = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/logout`, {
+    const res = await fetch(`${API_BASE}/logout`, {
       method: 'POST',
       credentials: 'include'
     })
