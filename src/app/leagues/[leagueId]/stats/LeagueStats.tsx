@@ -6,6 +6,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, Cell
 } from 'recharts'
+import { API_BASE } from '@/lib/config'
 
 interface StatEntry {
   position?: string
@@ -36,8 +37,8 @@ export default function LeagueStats({ leagueId }: { leagueId: number }) {
   useEffect(() => {
     const url =
       selectedWeek === 'all'
-        ? `${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/stats`
-        : `${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/stats?week=${selectedWeek}`
+        ? `${API_BASE}/leagues/${leagueId}/stats`
+        : `${API_BASE}/leagues/${leagueId}/stats?week=${selectedWeek}`
 
     fetch(url, { credentials: 'include' })
       .then(res => res.json())
