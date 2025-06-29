@@ -12,6 +12,7 @@ import {
   Cell,
   Legend
 } from 'recharts'
+import { API_BASE } from '@/lib/config'
 
 type Player = {
   name: string
@@ -62,7 +63,7 @@ const LeagueAnalytics: React.FC = () => {
     setSearchParams(params)
 
     const weekQuery = selectedWeek !== 'All' ? `?week=${selectedWeek}` : ''
-    fetch(`/leagues/${leagueId}/analytics${weekQuery}`)
+    fetch(`${API_BASE}/leagues/${leagueId}/analytics${weekQuery}`)
       .then((res) => res.json())
       .then(setData)
       .catch(console.error)
