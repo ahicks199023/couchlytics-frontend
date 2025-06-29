@@ -5,6 +5,7 @@ import Link from 'next/link'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import RecalculateButton from '@/components/RecalculateButton'
+import { API_BASE } from '@/lib/config'
 
 type UploadLog = {
   id: number
@@ -36,7 +37,7 @@ export default function UploadLogsPage() {
   const limit = 25
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
+    fetch(`${API_BASE}/me`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         if (data?.isAdmin) {
@@ -55,7 +56,7 @@ export default function UploadLogsPage() {
     params.append('page', page.toString())
     params.append('limit', limit.toString())
 
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/upload-logs?${params.toString()}`, {
+    fetch(`${API_BASE}/upload-logs?${params.toString()}`, {
       credentials: 'include'
     })
       .then(res => res.json())
@@ -240,5 +241,3 @@ export default function UploadLogsPage() {
     </main>
   )
 }
-
-
