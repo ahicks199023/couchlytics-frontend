@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Player, Team, User, TradeResult, SuggestedTrade, TradeData } from '@/types/player'
+import { API_BASE } from '@/lib/config'
 
 // Utility function for calculating player value
 const calculatePlayerValue = (player: Player): number => {
@@ -77,7 +78,7 @@ export const useTradeCalculator = (leagueId: number) => {
         setError(null)
         
         // Load user info
-        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { 
+        const userRes = await fetch(`${API_BASE}/me`, { 
           credentials: 'include' 
         })
         if (userRes.ok) {
@@ -86,7 +87,7 @@ export const useTradeCalculator = (leagueId: number) => {
         }
         
         // Load league players
-        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players`, {
+        const playersRes = await fetch(`${API_BASE}/leagues/${leagueId}/players`, {
           credentials: 'include'
         })
         if (playersRes.ok) {
@@ -97,7 +98,7 @@ export const useTradeCalculator = (leagueId: number) => {
         }
         
         // Load teams
-        const teamsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/teams`, {
+        const teamsRes = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, {
           credentials: 'include'
         })
         if (teamsRes.ok) {
@@ -153,7 +154,7 @@ export const useTradeCalculator = (leagueId: number) => {
     setSuggestedTrades([])
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trade-calculate`, {
+      const res = await fetch(`${API_BASE}/trade-calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -208,7 +209,7 @@ export const useTradeCalculator = (leagueId: number) => {
         includeSuggestions
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/trade-calculate`, {
+      const res = await fetch(`${API_BASE}/trade-calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
