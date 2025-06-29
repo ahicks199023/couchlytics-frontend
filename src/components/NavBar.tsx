@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import NotificationDropdown from '@/components/NotificationDropdown'
 import LogoutButton from '@/components/LogoutButton'
+import { API_BASE } from '@/lib/config'
 
 type User = {
   is_commissioner?: boolean
@@ -18,10 +19,32 @@ export default function NavBar() {
   const selectedLeagueId = 1
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setUser(data))
-      .catch(() => setUser(null))
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/me`, { 
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json'
+          }
+        })
+        
+        if (res.ok) {
+          const data = await res.json()
+          setUser(data)
+        } else if (res.status === 401) {
+          // User is not authenticated, this is normal
+          setUser(null)
+        } else {
+          console.error('Failed to fetch user:', res.status)
+          setUser(null)
+        }
+      } catch (error) {
+        console.error('Failed to fetch current user:', error)
+        setUser(null)
+      }
+    }
+
+    fetchUser()
   }, [])
 
   return (
