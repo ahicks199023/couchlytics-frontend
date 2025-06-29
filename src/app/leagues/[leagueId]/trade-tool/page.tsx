@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import TradeCalculatorForm from '@/components/TradeCalculatorForm'
+import { API_BASE } from '@/lib/config'
 
 export default function TradeToolPage() {
   const router = useRouter()
@@ -17,7 +18,7 @@ export default function TradeToolPage() {
 
     const validateAccess = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/league/${leagueId}/is-member`, {
+        const res = await fetch(`${API_BASE}/league/${leagueId}/is-member`, {
           credentials: 'include'
         })
 
@@ -43,7 +44,7 @@ export default function TradeToolPage() {
 
     const fetchLeague = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}`, {
+        const res = await fetch(`${API_BASE}/leagues/${leagueId}`, {
           credentials: 'include'
         })
         const data = await res.json()
