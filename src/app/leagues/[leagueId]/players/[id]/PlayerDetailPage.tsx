@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { API_BASE } from '@/lib/config'
 
 
 interface GameLogEntry {
@@ -80,7 +81,7 @@ export default function PlayerDetailPage() {
   const filteredLogs = player?.gameLogs?.filter(log => log.category === selectedCategory) || []
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
+    fetch(`${API_BASE}/me`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         // Only fetch commissioner status if needed
@@ -93,7 +94,7 @@ export default function PlayerDetailPage() {
   useEffect(() => {
     if (!leagueId || !id) return
     setLoading(true)
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players/${id}?season=${selectedSeason}`, {
+    fetch(`${API_BASE}/leagues/${leagueId}/players/${id}?season=${selectedSeason}`, {
       credentials: 'include'
     })
       .then((res: Response) => res.json())
