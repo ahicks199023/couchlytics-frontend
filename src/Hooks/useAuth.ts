@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { User, UserRole, Permission } from "@/types/user";
+import { API_BASE } from '@/lib/config';
 
 export default function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -7,7 +8,7 @@ export default function useAuth() {
 
   const fetchUser = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, {
+      const response = await fetch(`${API_BASE}/me`, {
         credentials: "include",
       });
       
@@ -49,7 +50,7 @@ export default function useAuth() {
 
   const logout = useCallback(async () => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/logout`, {
+      await fetch(`${API_BASE}/logout`, {
         method: 'POST',
         credentials: 'include',
       });
