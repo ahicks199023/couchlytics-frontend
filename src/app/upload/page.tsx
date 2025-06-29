@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useAuth from '@/Hooks/useAuth'
+import { API_BASE } from '@/lib/config'
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -38,7 +39,7 @@ export default function UploadPage() {
     setMessage(null)
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/upload`, {
+      const res = await fetch(`${API_BASE}/upload`, {
         method: 'POST',
         credentials: 'include',
         body: formData,
