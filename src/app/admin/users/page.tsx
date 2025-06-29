@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { API_BASE } from '@/lib/config'
 
 type User = {
   id: number
@@ -11,7 +12,7 @@ type User = {
 }
 
 const fetchUsers = async () => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/admin/users`, {
+  const res = await fetch(`${API_BASE}/admin/users`, {
     credentials: 'include',
   })
   const data = await res.json()
@@ -29,7 +30,7 @@ export default function AdminUsersPage() {
 
   // ✅ Admin check — redirect if not admin
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
+    fetch(`${API_BASE}/me`, { credentials: 'include' })
       .then((res) => res.ok ? res.json() : null)
       .then((user) => {
         if (!user?.is_admin) {
@@ -76,7 +77,7 @@ export default function AdminUsersPage() {
   }, [search, filterAdmin, filterPremium, users])
 
   const updatePremium = async (email: string, makePremium: boolean) => {
-    const route = `${process.env.NEXT_PUBLIC_API_BASE}/admin/${makePremium ? 'promote' : 'demote'}-user`
+    const route = `${API_BASE}/admin/${makePremium ? 'promote' : 'demote'}-user`
     const res = await fetch(route, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
