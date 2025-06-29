@@ -17,7 +17,7 @@ export default function ImportHelpPage() {
           <li>Go to <strong>League Settings</strong> and choose <strong>Export League Data</strong></li>
           <li>Paste this URL:
             <pre className="bg-gray-800 text-green-400 px-4 py-2 mt-2 rounded text-sm">
-              https://couchlytics.com/api/companion-hook?leagueId=your-league-name
+              https://api.couchlytics.com/api/companion-hook?leagueId=your-league-name
             </pre>
           </li>
           <li>Tap <strong>Export</strong> — your league data will be synced automatically!</li>
