@@ -53,7 +53,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const res = await fetch(`${API_BASE}/me`)
+        const res = await fetch(`${API_BASE}/me`, { credentials: 'include' })
         const data = await res.json()
         if (data?.teamId) setCurrentTeamId(data.teamId)
       } catch (err) {
@@ -69,7 +69,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         const query = new URLSearchParams({ statType })
         if (week) query.append('week', week)
 
-        const res = await fetch(`${API_BASE}/leagues/${leagueId}/stats/leaders?${query.toString()}`)
+        const res = await fetch(`${API_BASE}/leagues/${leagueId}/stats/leaders?${query.toString()}`, { credentials: 'include' })
         if (!res.ok) {
           throw new Error('Failed to fetch stat leaders')
         }
