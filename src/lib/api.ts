@@ -45,10 +45,9 @@ const toSnakeCase = (obj: unknown): unknown => {
 };
 
 export const fetchFromApi = async (path: string, options: RequestInit = {}): Promise<unknown> => {
-  const res = await fetch(`${apiBase}${path}`, {
-    credentials: 'include',
-    ...options
-  });
+  // Always include credentials for authentication (cookies)
+  const mergedOptions: RequestInit = { ...options, credentials: 'include' as RequestCredentials };
+  const res = await fetch(`${apiBase}${path}`, mergedOptions);
   
   if (!res.ok) {
     const errorText = await res.text();
