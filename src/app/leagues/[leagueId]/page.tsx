@@ -9,7 +9,7 @@ import { fetchFromApi } from '@/lib/api'
 
 type LeagueData = {
   league: {
-    id: number
+    leagueId: number
     name: string
     seasonYear: number
   }
@@ -58,7 +58,7 @@ export default function LeagueDetailPage() {
       <p className="text-gray-400 mb-1">Season Year: {league.league.seasonYear}</p>
 
       <Link
-        href={`/leagues/${league.league.id}/analytics`}
+        href={`/leagues/${league.league.leagueId}/analytics`}
         className="inline-block mt-2 text-sm text-blue-400 hover:underline"
       >
         View Analytics →
@@ -122,4 +122,3 @@ export default function LeagueDetailPage() {
     </main>
   )
 }
-
