@@ -81,21 +81,6 @@ export default function LeagueDetailPage() {
       </section>
 
       <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-2">Players</h2>
-        {league.players?.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-sm">
-            {league.players.map((player, i) => (
-              <div key={`${player.name}-${i}`} className="bg-gray-900 px-2 py-1 rounded">
-                {player.name}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 text-sm italic">No players available.</p>
-        )}
-      </section>
-
-      <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-2">Recent Games</h2>
         {league.games?.length > 0 ? (
           <ul className="space-y-2">
