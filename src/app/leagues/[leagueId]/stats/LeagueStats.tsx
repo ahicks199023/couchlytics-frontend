@@ -200,18 +200,23 @@ function StatBarChart({
   data: StatEntry[]
   statKey: string
 }) {
-  if (data.length === 0) return null
+  const chartData = data.slice(0, 10).map((entry, i) => ({
+    name: entry.name || 'Unnamed Player',
+    value: entry[statKey] as number,
+    color: i === 0 ? '#facc15' : '#39FF14'
+  }))
 
   return (
-    <div className="h-64 w-full">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="bg-gray-900 p-4 rounded">
+      <h3 className="text-lg font-bold mb-4 text-neon-green">Top 10 Chart</h3>
+      <ResponsiveContainer width="100%" height={300}>
         <BarChart
-          data={data}
-          layout="vertical"
+          data={chartData}
+          layout="horizontal"
           margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
         >
           <XAxis type="number" stroke="#ccc" />
-          <YAxis type="category" dataKey="name" stroke="#ccc" width={100} />
+          <YAxis type="category" dataKey="name" stroke="#ccc" width={120} />
           <Tooltip
             cursor={{ fill: '#222' }}
             contentStyle={{
@@ -220,12 +225,9 @@ function StatBarChart({
               color: '#fff'
             }}
           />
-          <Bar dataKey={statKey} fill="#39FF14">
-            {data.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={index === 0 ? '#facc15' : '#39FF14'}
-              />
+          <Bar dataKey="value" fill="#39FF14">
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Bar>
         </BarChart>
