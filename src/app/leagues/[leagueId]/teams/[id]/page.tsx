@@ -5,23 +5,56 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { API_BASE } from '@/lib/config'
+import { statOptions, getStatLabel } from '@/constants/statTypes'
 
-type Player = {
+interface Player {
   id: number
   name: string
+  team: string
   position: string
-  user: string
+  ovr: number
   teamId?: number
   teamName?: string
-  [key: string]: string | number | undefined
+  user?: string
+  espnId?: string
+  devTrait?: string
+  age?: number
+  yearsPro?: number
+  speedRating?: number
+  strengthRating?: number
+  awareRating?: number
+  throwPowerRating?: number
+  throwAccRating?: number
+  throwOnRunRating?: number
+  catchRating?: number
+  routeRunShortRating?: number
+  specCatchRating?: number
+  carryRating?: number
+  jukeMoveRating?: number
+  breakTackleRating?: number
+  passBlockRating?: number
+  runBlockRating?: number
+  leadBlockRating?: number
+  tackleRating?: number
+  hitPowerRating?: number
+  blockShedRating?: number
+  manCoverRating?: number
+  zoneCoverRating?: number
+  pressRating?: number
+  college?: string
+  height?: number
+  weight?: number
+  birthDay?: number
+  birthMonth?: number
+  birthYear?: number
+  clutchTrait?: boolean
+  highMotorTrait?: boolean
+  bigHitTrait?: boolean
+  stripBallTrait?: boolean
+  value?: number
+  wins?: number
+  [key: string]: string | number | boolean | undefined
 }
-
-const CATEGORY_OPTIONS = [
-  { label: 'Passing Yards', key: 'passingYards' },
-  { label: 'Rushing Yards', key: 'rushingYards' },
-  { label: 'Receiving TDs', key: 'receivingTDs' },
-  { label: 'Team Wins', key: 'teamWins' }
-]
 
 export default function LeagueStatsPage() {
   const { leagueId } = useParams()
@@ -29,7 +62,7 @@ export default function LeagueStatsPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all')
-  const [selectedCategory, setSelectedCategory] = useState<string>('passingYards')
+  const [selectedCategory, setSelectedCategory] = useState<string>(statOptions[0].value)
   const [selectedPosition, setSelectedPosition] = useState<string>('all')
   const [selectedUser, setSelectedUser] = useState<string>('all')
 
@@ -44,18 +77,7 @@ export default function LeagueStatsPage() {
     fetch(url, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
-        const mapped = Object.fromEntries(
-          Object.entries(data).map(([key, value]) => {
-            switch (key) {
-              case 'passing_yards': return ['passingYards', value as Player[]]
-              case 'rushing_yards': return ['rushingYards', value as Player[]]
-              case 'receiving_tds': return ['receivingTDs', value as Player[]]
-              case 'team_wins': return ['teamWins', value as Player[]]
-              default: return [key, value as Player[]]
-            }
-          })
-        ) as Record<string, Player[]>
-        setStats(mapped)
+        setStats(data)
       })
       .catch(err => {
         console.error(err)
@@ -68,10 +90,10 @@ export default function LeagueStatsPage() {
   if (error) return <p className="text-red-500">{error}</p>
   if (!stats) return null
 
-  const isPlayerStat = selectedCategory !== 'teamWins'
+  const isPlayerStat = selectedCategory !== 'team_wins'
   const allData: Player[] = stats[selectedCategory] || []
-  const statKey = selectedCategory === 'teamWins' ? 'wins' : 'value'
-  const categoryLabel = CATEGORY_OPTIONS.find(opt => opt.key === selectedCategory)?.label || 'Stats'
+  const statKey = selectedCategory === 'team_wins' ? 'wins' : 'value'
+  const categoryLabel = getStatLabel(selectedCategory)
 
   const positions = Array.from(new Set(allData.map(d => d.position).filter(Boolean))).sort()
   const users = Array.from(new Set(allData.map(d => d.user).filter(Boolean))).sort()
@@ -92,12 +114,16 @@ export default function LeagueStatsPage() {
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={selectedWeek}
-            onChange={(e) => setSelectedWeek(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+            onChange={(e) =>
+              setSelectedWeek(e.target.value === 'all' ? 'all' : Number(e.target.value))
+            }
             className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
           >
             <option value="all">All Weeks</option>
             {[...Array(18)].map((_, i) => (
-              <option key={i + 1} value={i + 1}>Week {i + 1}</option>
+              <option key={i + 1} value={i + 1}>
+                Week {i + 1}
+              </option>
             ))}
           </select>
 
@@ -110,12 +136,14 @@ export default function LeagueStatsPage() {
             }}
             className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
           >
-            {CATEGORY_OPTIONS.map(opt => (
-              <option key={opt.key} value={opt.key}>{opt.label}</option>
+            {statOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </select>
 
-          {isPlayerStat && positions.length > 0 && (
+          {isPlayerStat && (
             <select
               value={selectedPosition}
               onChange={(e) => setSelectedPosition(e.target.value)}
@@ -123,7 +151,9 @@ export default function LeagueStatsPage() {
             >
               <option value="all">All Positions</option>
               {positions.map(pos => (
-                <option key={pos} value={pos}>{pos}</option>
+                <option key={pos} value={pos}>
+                  {pos}
+                </option>
               ))}
             </select>
           )}
@@ -136,7 +166,9 @@ export default function LeagueStatsPage() {
             >
               <option value="all">All Users</option>
               {users.map(user => (
-                <option key={user} value={user}>{user}</option>
+                <option key={user} value={user}>
+                  {user}
+                </option>
               ))}
             </select>
           )}
