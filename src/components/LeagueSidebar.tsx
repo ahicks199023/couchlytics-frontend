@@ -10,7 +10,8 @@ const links = [
   { label: 'Home', path: '' },
   { label: 'Analytics', path: 'analytics' },
   { label: 'Trades', path: 'trades' },
-  { label: 'Stats', path: 'stats', prefetch: false }
+  { label: 'Stats', path: 'stats', prefetch: false },
+  { label: 'Players', path: 'players', prefetch: false }
 ]
 
 export default function LeagueSidebar() {
