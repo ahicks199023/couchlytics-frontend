@@ -7,6 +7,7 @@ import {
   ResponsiveContainer, Cell
 } from 'recharts'
 import { API_BASE } from '@/lib/config'
+import { statOptions, getStatLabel } from '@/constants/statTypes'
 
 interface StatEntry {
   position?: string
@@ -18,19 +19,12 @@ interface StatEntry {
   [key: string]: string | number | undefined
 }
 
-const CATEGORY_OPTIONS = [
-  { label: 'Passing Yards', key: 'PassingYards' },
-  { label: 'Rushing Yards', key: 'RushingYards' },
-  { label: 'Receiving TDs', key: 'ReceivingTDs' },
-  { label: 'Team Wins', key: 'teamWins' }
-]
-
 export default function LeagueStats({ leagueId }: { leagueId: number }) {
   const [stats, setStats] = useState<Record<string, StatEntry[]>>({})
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all')
-  const [selectedCategory, setSelectedCategory] = useState<string>('PassingYards')
+  const [selectedCategory, setSelectedCategory] = useState<string>(statOptions[0].value)
   const [selectedPosition, setSelectedPosition] = useState<string>('all')
   const [selectedUser, setSelectedUser] = useState<string>('all')
 
@@ -56,10 +50,10 @@ export default function LeagueStats({ leagueId }: { leagueId: number }) {
   if (error) return <p className="text-red-500">{error}</p>
   if (!stats) return null
 
-  const isPlayerStat = selectedCategory !== 'teamWins'
+  const isPlayerStat = selectedCategory !== 'team_wins'
   const allData = stats[selectedCategory] || []
-  const statKey = selectedCategory === 'teamWins' ? 'wins' : 'value'
-  const categoryLabel = CATEGORY_OPTIONS.find(opt => opt.key === selectedCategory)?.label || 'Stats'
+  const statKey = selectedCategory === 'team_wins' ? 'wins' : 'value'
+  const categoryLabel = getStatLabel(selectedCategory)
 
   const positions = Array.from(
     new Set(allData.map((d: StatEntry) => d.position).filter(Boolean))
@@ -107,14 +101,14 @@ export default function LeagueStats({ leagueId }: { leagueId: number }) {
             }}
             className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
           >
-            {CATEGORY_OPTIONS.map(opt => (
-              <option key={opt.key} value={opt.key}>
+            {statOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
             ))}
           </select>
 
-          {isPlayerStat && positions.length > 0 && (
+          {isPlayerStat && (
             <select
               value={selectedPosition}
               onChange={(e) => setSelectedPosition(e.target.value)}
