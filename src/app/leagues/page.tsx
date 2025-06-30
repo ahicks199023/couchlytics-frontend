@@ -56,7 +56,7 @@ export default function LeaguesPage() {
 
     if (!teamsByLeague[leagueId]) {
       try {
-        const res = await fetchFromApi(`/teams/${leagueId}`)
+        const res = await fetchFromApi(`/leagues/${leagueId}/teams`)
         setTeamsByLeague(prev => ({ ...prev, [leagueId]: (res as TeamsResponse).teams || [] }))
       } catch (err) {
         console.error(`Failed to fetch teams for league ${leagueId}`, err)
