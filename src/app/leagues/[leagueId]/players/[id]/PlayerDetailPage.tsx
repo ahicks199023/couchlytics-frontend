@@ -56,7 +56,7 @@ interface Player {
   [key: string]: string | number | boolean | undefined
 }
 
-export default function LeagueStatsPage() {
+export default function PlayerDetailPage() {
   const { leagueId } = useParams()
   const [stats, setStats] = useState<Record<string, Player[]>>({})
   const [error, setError] = useState<string | null>(null)
@@ -67,8 +67,6 @@ export default function LeagueStatsPage() {
   const [selectedUser, setSelectedUser] = useState<string>('all')
 
   useEffect(() => {
-    if (!leagueId) return
-
     const url =
       selectedWeek === 'all'
         ? `${API_BASE}/leagues/${leagueId}/stats`
@@ -109,7 +107,7 @@ export default function LeagueStatsPage() {
   return (
     <div className="mt-8 bg-gray-800 p-4 rounded">
       <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
-        <h2 className="text-2xl font-semibold text-white">Stat Leaders</h2>
+        <h2 className="text-2xl font-semibold text-white">Player Stat Leaders</h2>
 
         <div className="flex flex-wrap items-center gap-2">
           <select
@@ -175,53 +173,97 @@ export default function LeagueStatsPage() {
         </div>
       </div>
 
-      <StatBlock title={categoryLabel} data={filteredData} statKey={statKey} leagueId={leagueId as string} />
-      <StatBarChart data={filteredData} statKey={statKey} />
-    </div>
-  )
-}
-
-function StatBlock({ title, data, statKey, leagueId }: { title: string, data: Player[], statKey: string, leagueId: string }) {
-  return (
-    <div className="bg-gray-900 p-4 rounded mb-6">
-      <h3 className="text-lg font-bold mb-2 text-neon-green">{title}</h3>
-      {data.length === 0 ? (
-        <p className="text-sm text-gray-400 italic">No data available</p>
+      {filteredData.length === 0 ? (
+        <div className="text-center py-8 text-gray-400 italic">
+          🚫 No stats available for this selection.
+        </div>
       ) : (
-        <ul className="text-sm space-y-1">
-          {data.map((entry, i) => (
-            <li key={i}>
-              <Link href={`/leagues/${leagueId}/players/${entry.id}`} className="hover:underline">
-                <span className={`mr-2 font-bold ${i === 0 ? 'text-yellow-400' : 'text-white'}`}>#{i + 1}</span>
-                {entry.name}
-              </Link>
-              {' '}— {entry[statKey]}
-              {entry.teamId && (
-                <Link href={`/leagues/${leagueId}/teams/${entry.teamId}`} className="text-blue-400 hover:underline ml-2">
-                  ({entry.teamName})
-                </Link>
-              )}
-            </li>
-          ))}
-        </ul>
+        <>
+          <StatBlock title={categoryLabel} data={filteredData} statKey={statKey} leagueId={Number(leagueId)} />
+          <StatBarChart data={filteredData} statKey={statKey} />
+        </>
       )}
     </div>
   )
 }
 
-function StatBarChart({ data, statKey }: { data: Player[], statKey: string }) {
-  if (data.length === 0) return null
+function StatBlock({
+  title,
+  data,
+  statKey,
+  leagueId
+}: {
+  title: string
+  data: Player[]
+  statKey: string
+  leagueId: number
+}) {
+  return (
+    <div className="bg-gray-900 p-4 rounded mb-6">
+      <h3 className="text-lg font-bold mb-2 text-neon-green">{title}</h3>
+      <ul className="text-sm space-y-1">
+        {data.map((entry, i) => {
+          const profileUrl = entry.id
+            ? `/leagues/${leagueId}/players/${entry.id}`
+            : '#'
+
+          return (
+            <li key={i}>
+              <Link href={profileUrl} className="hover:underline">
+                <span
+                  className={`mr-2 font-bold ${i === 0 ? 'text-yellow-400' : 'text-white'}`}
+                >
+                  #{i + 1}
+                </span>
+                {entry.name || 'Unnamed Player'}
+              </Link>{' '}
+              — {entry[statKey]}
+              <Link href={`/leagues/${leagueId}/teams/${entry.teamId}`} className="text-blue-400 hover:underline ml-2">
+                (Team #{entry.teamId})
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+function StatBarChart({
+  data,
+  statKey
+}: {
+  data: Player[]
+  statKey: string
+}) {
+  const chartData = data.slice(0, 10).map((entry, i) => ({
+    name: entry.name || 'Unnamed Player',
+    value: entry[statKey] as number,
+    color: i === 0 ? '#facc15' : '#39FF14'
+  }))
 
   return (
-    <div className="h-64 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+    <div className="bg-gray-900 p-4 rounded">
+      <h3 className="text-lg font-bold mb-4 text-neon-green">Top 10 Chart</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart
+          data={chartData}
+          layout="horizontal"
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
           <XAxis type="number" stroke="#ccc" />
-          <YAxis type="category" dataKey="name" stroke="#ccc" width={100} />
-          <Tooltip cursor={{ fill: '#222' }} contentStyle={{ backgroundColor: '#333', borderColor: '#555', color: '#fff' }} />
-          <Bar dataKey={statKey} fill="#39FF14">
-            {data.map((_, index) => (
-              <Cell key={`cell-${index}`} fill={index === 0 ? '#facc15' : '#39FF14'} />
+          <YAxis type="category" dataKey="name" stroke="#ccc" width={120} />
+          <Tooltip
+            cursor={{ fill: '#222' }}
+            contentStyle={{
+              backgroundColor: '#333',
+              borderColor: '#555',
+              color: '#fff'
+            }}
+          />
+          <Bar dataKey="value" fill="#39FF14">
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Bar>
         </BarChart>
