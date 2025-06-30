@@ -56,8 +56,8 @@ interface Player {
   [key: string]: string | number | boolean | undefined
 }
 
-export default function LeagueStatsPage() {
-  const { leagueId } = useParams()
+export default function TeamDetailPage() {
+  const { leagueId, id: teamId } = useParams()
   const [stats, setStats] = useState<Record<string, Player[]>>({})
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -67,8 +67,6 @@ export default function LeagueStatsPage() {
   const [selectedUser, setSelectedUser] = useState<string>('all')
 
   useEffect(() => {
-    if (!leagueId) return
-
     const url =
       selectedWeek === 'all'
         ? `${API_BASE}/leagues/${leagueId}/stats`
@@ -107,121 +105,173 @@ export default function LeagueStatsPage() {
   }
 
   return (
-    <div className="mt-8 bg-gray-800 p-4 rounded">
-      <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
-        <h2 className="text-2xl font-semibold text-white">Stat Leaders</h2>
+    <main className="min-h-screen bg-black text-white p-6">
+      <div className="max-w-6xl mx-auto">
+        <Link href={`/leagues/${leagueId}/teams`} className="text-neon-green underline mb-4 inline-block">
+          ← Back to Teams
+        </Link>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={selectedWeek}
-            onChange={(e) =>
-              setSelectedWeek(e.target.value === 'all' ? 'all' : Number(e.target.value))
-            }
-            className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
-          >
-            <option value="all">All Weeks</option>
-            {[...Array(18)].map((_, i) => (
-              <option key={i + 1} value={i + 1}>
-                Week {i + 1}
-              </option>
-            ))}
-          </select>
+        <h1 className="text-3xl font-bold mb-6">Team #{teamId} Statistics</h1>
 
-          <select
-            value={selectedCategory}
-            onChange={(e) => {
-              setSelectedCategory(e.target.value)
-              setSelectedPosition('all')
-              setSelectedUser('all')
-            }}
-            className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
-          >
-            {statOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
+          <h2 className="text-2xl font-semibold text-white">Team Stat Leaders</h2>
 
-          {isPlayerStat && (
+          <div className="flex flex-wrap items-center gap-2">
             <select
-              value={selectedPosition}
-              onChange={(e) => setSelectedPosition(e.target.value)}
+              value={selectedWeek}
+              onChange={(e) =>
+                setSelectedWeek(e.target.value === 'all' ? 'all' : Number(e.target.value))
+              }
               className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
             >
-              <option value="all">All Positions</option>
-              {positions.map(pos => (
-                <option key={pos} value={pos}>
-                  {pos}
+              <option value="all">All Weeks</option>
+              {[...Array(18)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  Week {i + 1}
                 </option>
               ))}
             </select>
-          )}
 
-          {users.length > 0 && (
             <select
-              value={selectedUser}
-              onChange={(e) => setSelectedUser(e.target.value)}
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value)
+                setSelectedPosition('all')
+                setSelectedUser('all')
+              }}
               className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
             >
-              <option value="all">All Users</option>
-              {users.map(user => (
-                <option key={user} value={user}>
-                  {user}
+              {statOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
                 </option>
               ))}
             </select>
-          )}
+
+            {isPlayerStat && (
+              <select
+                value={selectedPosition}
+                onChange={(e) => setSelectedPosition(e.target.value)}
+                className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
+              >
+                <option value="all">All Positions</option>
+                {positions.map(pos => (
+                  <option key={pos} value={pos}>
+                    {pos}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {users.length > 0 && (
+              <select
+                value={selectedUser}
+                onChange={(e) => setSelectedUser(e.target.value)}
+                className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
+              >
+                <option value="all">All Users</option>
+                {users.map(user => (
+                  <option key={user} value={user}>
+                    {user}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
         </div>
-      </div>
 
-      <StatBlock title={categoryLabel} data={filteredData} statKey={statKey} leagueId={leagueId as string} />
-      <StatBarChart data={filteredData} statKey={statKey} />
-    </div>
+        {filteredData.length === 0 ? (
+          <div className="text-center py-8 text-gray-400 italic">
+            🚫 No stats available for this selection.
+          </div>
+        ) : (
+          <>
+            <StatBlock title={categoryLabel} data={filteredData} statKey={statKey} leagueId={Number(leagueId)} />
+            <StatBarChart data={filteredData} statKey={statKey} />
+          </>
+        )}
+      </div>
+    </main>
   )
 }
 
-function StatBlock({ title, data, statKey, leagueId }: { title: string, data: Player[], statKey: string, leagueId: string }) {
+function StatBlock({
+  title,
+  data,
+  statKey,
+  leagueId
+}: {
+  title: string
+  data: Player[]
+  statKey: string
+  leagueId: number
+}) {
   return (
     <div className="bg-gray-900 p-4 rounded mb-6">
       <h3 className="text-lg font-bold mb-2 text-neon-green">{title}</h3>
-      {data.length === 0 ? (
-        <p className="text-sm text-gray-400 italic">No data available</p>
-      ) : (
-        <ul className="text-sm space-y-1">
-          {data.map((entry, i) => (
+      <ul className="text-sm space-y-1">
+        {data.map((entry, i) => {
+          const profileUrl = entry.id
+            ? `/leagues/${leagueId}/players/${entry.id}`
+            : '#'
+
+          return (
             <li key={i}>
-              <Link href={`/leagues/${leagueId}/players/${entry.id}`} className="hover:underline">
-                <span className={`mr-2 font-bold ${i === 0 ? 'text-yellow-400' : 'text-white'}`}>#{i + 1}</span>
-                {entry.name}
+              <Link href={profileUrl} className="hover:underline">
+                <span
+                  className={`mr-2 font-bold ${i === 0 ? 'text-yellow-400' : 'text-white'}`}
+                >
+                  #{i + 1}
+                </span>
+                {entry.name || 'Unnamed Player'}
+              </Link>{' '}
+              — {entry[statKey]}
+              <Link href={`/leagues/${leagueId}/teams/${entry.teamId}`} className="text-blue-400 hover:underline ml-2">
+                (Team #{entry.teamId})
               </Link>
-              {' '}— {entry[statKey]}
-              {entry.teamId && (
-                <Link href={`/leagues/${leagueId}/teams/${entry.teamId}`} className="text-blue-400 hover:underline ml-2">
-                  ({entry.teamName})
-                </Link>
-              )}
             </li>
-          ))}
-        </ul>
-      )}
+          )
+        })}
+      </ul>
     </div>
   )
 }
 
-function StatBarChart({ data, statKey }: { data: Player[], statKey: string }) {
-  if (data.length === 0) return null
+function StatBarChart({
+  data,
+  statKey
+}: {
+  data: Player[]
+  statKey: string
+}) {
+  const chartData = data.slice(0, 10).map((entry, i) => ({
+    name: entry.name || 'Unnamed Player',
+    value: entry[statKey] as number,
+    color: i === 0 ? '#facc15' : '#39FF14'
+  }))
 
   return (
-    <div className="h-64 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+    <div className="bg-gray-900 p-4 rounded">
+      <h3 className="text-lg font-bold mb-4 text-neon-green">Top 10 Chart</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart
+          data={chartData}
+          layout="horizontal"
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
           <XAxis type="number" stroke="#ccc" />
-          <YAxis type="category" dataKey="name" stroke="#ccc" width={100} />
-          <Tooltip cursor={{ fill: '#222' }} contentStyle={{ backgroundColor: '#333', borderColor: '#555', color: '#fff' }} />
-          <Bar dataKey={statKey} fill="#39FF14">
-            {data.map((_, index) => (
-              <Cell key={`cell-${index}`} fill={index === 0 ? '#facc15' : '#39FF14'} />
+          <YAxis type="category" dataKey="name" stroke="#ccc" width={120} />
+          <Tooltip
+            cursor={{ fill: '#222' }}
+            contentStyle={{
+              backgroundColor: '#333',
+              borderColor: '#555',
+              color: '#fff'
+            }}
+          />
+          <Bar dataKey="value" fill="#39FF14">
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Bar>
         </BarChart>
