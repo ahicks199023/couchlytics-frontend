@@ -14,7 +14,7 @@ type Team = {
 }
 
 type League = {
-  id: number
+  leagueId: number
   name: string
   seasonYear: number
   week: number
@@ -103,14 +103,14 @@ export default function LeaguesPage() {
           ) : (
             leagues.map((league) => (
               <div
-                key={league.id}
+                key={league.leagueId}
                 className="p-4 mb-4 rounded border border-gray-700 bg-gray-900 transition-all duration-200 hover:shadow-[0_0_8px_2px_#39FF14]"
               >
                 <div className="flex justify-between items-center">
                   <div>
                     <h2
                       className="text-lg sm:text-xl font-semibold hover:underline cursor-pointer"
-                      onClick={() => toggleTeams(league.id)}
+                      onClick={() => toggleTeams(league.leagueId)}
                     >
                       {league.name || 'Untitled League'}
                     </h2>
@@ -119,18 +119,18 @@ export default function LeaguesPage() {
                     </p>
                   </div>
                   <Link
-                    href={`/leagues/${league.id}`}
+                    href={`/leagues/${league.leagueId}`}
                     className="text-sm text-neon-green underline hover:text-green-400"
                   >
                     View Details
                   </Link>
                 </div>
 
-                {expandedLeagueId === league.id && (
+                {expandedLeagueId === league.leagueId && (
                   <div className="mt-3">
-                    {teamsByLeague[league.id]?.length > 0 ? (
+                    {teamsByLeague[league.leagueId]?.length > 0 ? (
                       <ul className="text-sm text-gray-300 list-disc pl-5 space-y-1">
-                        {teamsByLeague[league.id].map(team => (
+                        {teamsByLeague[league.leagueId].map(team => (
                           <li key={team.id}>
                             <span className="text-neon-green font-medium">{team.city}</span> {team.name} — {team.wins}-{team.losses}
                           </li>
