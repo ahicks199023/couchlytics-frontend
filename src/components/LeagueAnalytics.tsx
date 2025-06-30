@@ -1,255 +1,273 @@
-import React, { useEffect, useState } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
-import { Card, CardContent } from '@/components/ui/card'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  Legend
-} from 'recharts'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
+import Link from 'next/link'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { API_BASE } from '@/lib/config'
-import { getStatLabel } from '@/constants/statTypes'
+import { statOptions, getStatLabel } from '@/constants/statTypes'
 
-type Player = {
+interface Player {
+  id: number
   name: string
-  teamId: number
+  team: string
   position: string
-  valueScore: number
+  ovr: number
+  teamId?: number
+  teamName?: string
+  user?: string
+  espnId?: string
   devTrait?: string
+  age?: number
+  yearsPro?: number
+  speedRating?: number
+  strengthRating?: number
+  awareRating?: number
+  throwPowerRating?: number
+  throwAccRating?: number
+  throwOnRunRating?: number
+  catchRating?: number
+  routeRunShortRating?: number
+  specCatchRating?: number
+  carryRating?: number
+  jukeMoveRating?: number
+  breakTackleRating?: number
+  passBlockRating?: number
+  runBlockRating?: number
+  leadBlockRating?: number
+  tackleRating?: number
+  hitPowerRating?: number
+  blockShedRating?: number
+  manCoverRating?: number
+  zoneCoverRating?: number
+  pressRating?: number
+  college?: string
+  height?: number
+  weight?: number
+  birthDay?: number
+  birthMonth?: number
+  birthYear?: number
+  clutchTrait?: boolean
+  highMotorTrait?: boolean
+  bigHitTrait?: boolean
+  stripBallTrait?: boolean
+  value?: number
+  wins?: number
+  [key: string]: string | number | boolean | undefined
 }
 
-type TeamStat = {
-  teamId: number
-  teamName: string
-  statType: string
-  total: number
-}
-
-type TeamOvr = {
-  teamName: string
-  avgOvr: number
-}
-
-type AnalyticsData = {
-  topPlayers: Player[]
-  avgScoreByPosition: { position: string; avgScore: number }[]
-  devTraitDistribution: { devTrait: string; count: number }[]
-  topTeamsByOvr: TeamOvr[]
-  statTotalsByTeam: TeamStat[]
-}
-
-const LeagueAnalytics: React.FC = () => {
+export default function PlayerDetailPage() {
   const { leagueId } = useParams()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [stats, setStats] = useState<Record<string, Player[]>>({})
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all')
+  const [selectedCategory, setSelectedCategory] = useState<string>(statOptions[0].value)
+  const [selectedPosition, setSelectedPosition] = useState<string>('all')
+  const [selectedUser, setSelectedUser] = useState<string>('all')
 
-  const [data, setData] = useState<AnalyticsData | null>(null)
-  const [search, setSearch] = useState(searchParams.get('search') || '')
-  const [selectedPosition, setSelectedPosition] = useState(searchParams.get('position') || 'All')
-  const [selectedDevTrait, setSelectedDevTrait] = useState(searchParams.get('devTrait') || 'All')
-  const [selectedWeek, setSelectedWeek] = useState(searchParams.get('week') || 'All')
-
-  // Build URL params and fetch data
   useEffect(() => {
-    const params = new URLSearchParams()
-    if (search) params.set('search', search)
-    if (selectedPosition !== 'All') params.set('position', selectedPosition)
-    if (selectedDevTrait !== 'All') params.set('devTrait', selectedDevTrait)
-    if (selectedWeek !== 'All') params.set('week', selectedWeek)
+    const url =
+      selectedWeek === 'all'
+        ? `${API_BASE}/leagues/${leagueId}/stats`
+        : `${API_BASE}/leagues/${leagueId}/stats?week=${selectedWeek}`
 
-    setSearchParams(params)
+    fetch(url, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        setStats(data)
+      })
+      .catch(err => {
+        console.error(err)
+        setError('Failed to load stats')
+      })
+      .finally(() => setLoading(false))
+  }, [leagueId, selectedWeek])
 
-    const weekQuery = selectedWeek !== 'All' ? `?week=${selectedWeek}` : ''
-    fetch(`${API_BASE}/leagues/${leagueId}/analytics${weekQuery}`)
-      .then((res) => res.json())
-      .then(setData)
-      .catch(console.error)
-  }, [leagueId, search, selectedPosition, selectedDevTrait, selectedWeek, setSearchParams])
+  if (loading) return <p className="text-gray-400">Loading stats...</p>
+  if (error) return <p className="text-red-500">{error}</p>
+  if (!stats) return null
 
-  if (!data) return <p className="p-4">Loading analytics...</p>
+  const isPlayerStat = selectedCategory !== 'team_wins'
+  const allData: Player[] = stats[selectedCategory] || []
+  const statKey = selectedCategory === 'team_wins' ? 'wins' : 'value'
+  const categoryLabel = getStatLabel(selectedCategory)
 
-  const devColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7f50', '#8dd1e1']
+  const positions = Array.from(new Set(allData.map(d => d.position).filter(Boolean))).sort()
+  const users = Array.from(new Set(allData.map(d => d.user).filter(Boolean))).sort()
 
-  const filteredPlayers = data.topPlayers.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase())
-    const matchesPosition = selectedPosition === 'All' || p.position === selectedPosition
-    const matchesDev = selectedDevTrait === 'All' || p.devTrait === selectedDevTrait
-    return matchesSearch && matchesPosition && matchesDev
-  })
-
-  const uniquePositions = [...new Set(data.topPlayers.map((p) => p.position))].sort()
-  const uniqueDevTraits = [...new Set(data.devTraitDistribution.map((d) => d.devTrait))].sort()
-
-  const groupedStats: Record<string, TeamStat[]> = data.statTotalsByTeam.reduce(
-    (acc: Record<string, TeamStat[]>, stat) => {
-      if (!acc[stat.teamName]) acc[stat.teamName] = []
-      acc[stat.teamName].push(stat)
-      return acc
-    },
-    {}
-  )
+  let filteredData = allData
+  if (isPlayerStat && selectedPosition !== 'all') {
+    filteredData = filteredData.filter(d => d.position === selectedPosition)
+  }
+  if (selectedUser !== 'all') {
+    filteredData = filteredData.filter(d => d.user === selectedUser)
+  }
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">League Analytics</h1>
+    <div className="mt-8 bg-gray-800 p-4 rounded">
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
+        <h2 className="text-2xl font-semibold text-white">Player Stat Leaders</h2>
 
-      <Card>
-        <CardContent>
-          <h2 className="text-xl font-semibold mb-4">Top 10 Players by Value Score</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={selectedWeek}
+            onChange={(e) =>
+              setSelectedWeek(e.target.value === 'all' ? 'all' : Number(e.target.value))
+            }
+            className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
+          >
+            <option value="all">All Weeks</option>
+            {[...Array(18)].map((_, i) => (
+              <option key={i + 1} value={i + 1}>
+                Week {i + 1}
+              </option>
+            ))}
+          </select>
 
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4 mb-4">
-            <input
-              type="text"
-              placeholder="Search by name..."
-              className="px-3 py-1 rounded bg-gray-800 text-white border border-gray-600"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          <select
+            value={selectedCategory}
+            onChange={(e) => {
+              setSelectedCategory(e.target.value)
+              setSelectedPosition('all')
+              setSelectedUser('all')
+            }}
+            className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
+          >
+            {statOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          {isPlayerStat && (
             <select
-              className="px-3 py-1 rounded bg-gray-800 text-white border border-gray-600"
               value={selectedPosition}
               onChange={(e) => setSelectedPosition(e.target.value)}
+              className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
             >
-              <option value="All">All Positions</option>
-              {uniquePositions.map((pos) => (
-                <option key={pos} value={pos}>{pos}</option>
+              <option value="all">All Positions</option>
+              {positions.map(pos => (
+                <option key={pos} value={pos}>
+                  {pos}
+                </option>
               ))}
             </select>
+          )}
+
+          {users.length > 0 && (
             <select
-              className="px-3 py-1 rounded bg-gray-800 text-white border border-gray-600"
-              value={selectedDevTrait}
-              onChange={(e) => setSelectedDevTrait(e.target.value)}
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value)}
+              className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
             >
-              <option value="All">All Dev Traits</option>
-              {uniqueDevTraits.map((dev) => (
-                <option key={dev} value={dev}>{dev}</option>
+              <option value="all">All Users</option>
+              {users.map(user => (
+                <option key={user} value={user}>
+                  {user}
+                </option>
               ))}
             </select>
-            <select
-              className="px-3 py-1 rounded bg-gray-800 text-white border border-gray-600"
-              value={selectedWeek}
-              onChange={(e) => setSelectedWeek(e.target.value)}
-            >
-              <option value="All">All Weeks</option>
-              {[...Array(18)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>Week {i + 1}</option>
-              ))}
-            </select>
-          </div>
+          )}
+        </div>
+      </div>
 
-          <table className="w-full text-sm">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Team</th>
-                <th>Position</th>
-                <th>Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPlayers.map((p, i) => (
-                <tr key={i}>
-                  <td>{p.name}</td>
-                  <td>{p.teamId}</td>
-                  <td>{p.position}</td>
-                  <td>{p.valueScore}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent>
-          <h2 className="text-xl font-semibold mb-2">Average Value Score by Position</h2>
-          <BarChart width={500} height={300} data={data.avgScoreByPosition}>
-            <XAxis dataKey="position" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="avgScore" fill="#8884d8" />
-          </BarChart>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent>
-          <h2 className="text-xl font-semibold mb-2">Dev Trait Distribution</h2>
-          <PieChart width={400} height={300}>
-            <Pie
-              data={data.devTraitDistribution}
-              dataKey="count"
-              nameKey="devTrait"
-              cx="50%"
-              cy="50%"
-              outerRadius={100}
-              label
-            >
-              {data.devTraitDistribution.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={devColors[index % devColors.length]} />
-              ))}
-            </Pie>
-            <Legend />
-            <Tooltip />
-          </PieChart>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent>
-          <h2 className="text-xl font-semibold mb-2">Top 5 Teams by Avg OVR</h2>
-          <table className="w-full text-sm">
-            <thead>
-              <tr>
-                <th>Team</th>
-                <th>Avg OVR</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.topTeamsByOvr.map((t, i) => (
-                <tr key={i}>
-                  <td>{t.teamName}</td>
-                  <td>{t.avgOvr.toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent>
-          <h2 className="text-xl font-semibold mb-2">Team Stat Totals {selectedWeek !== 'All' ? `(Week ${selectedWeek})` : ''}</h2>
-          {Object.entries(groupedStats).map(([teamName, stats]) => (
-            <div key={teamName} className="mb-4">
-              <h3 className="font-semibold">{teamName}</h3>
-              <table className="w-full text-xs border mb-2">
-                <thead>
-                  <tr>
-                    <th>Stat</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.map((s, i) => (
-                    <tr key={i}>
-                      <td>{getStatLabel(s.statType)}</td>
-                      <td>{s.total}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      {filteredData.length === 0 ? (
+        <div className="text-center py-8 text-gray-400 italic">
+          🚫 No stats available for this selection.
+        </div>
+      ) : (
+        <>
+          <StatBlock title={categoryLabel} data={filteredData} statKey={statKey} leagueId={Number(leagueId)} />
+          <StatBarChart data={filteredData} statKey={statKey} />
+        </>
+      )}
     </div>
   )
 }
 
-export default LeagueAnalytics
+function StatBlock({
+  title,
+  data,
+  statKey,
+  leagueId
+}: {
+  title: string
+  data: Player[]
+  statKey: string
+  leagueId: number
+}) {
+  return (
+    <div className="bg-gray-900 p-4 rounded mb-6">
+      <h3 className="text-lg font-bold mb-2 text-neon-green">{title}</h3>
+      <ul className="text-sm space-y-1">
+        {data.map((entry, i) => {
+          const profileUrl = entry.id
+            ? `/leagues/${leagueId}/players/${entry.id}`
+            : '#'
+
+          return (
+            <li key={i}>
+              <Link href={profileUrl} className="hover:underline">
+                <span
+                  className={`mr-2 font-bold ${i === 0 ? 'text-yellow-400' : 'text-white'}`}
+                >
+                  #{i + 1}
+                </span>
+                {entry.name || 'Unnamed Player'}
+              </Link>{' '}
+              — {entry[statKey]}
+              <Link href={`/leagues/${leagueId}/teams/${entry.teamId}`} className="text-blue-400 hover:underline ml-2">
+                (Team #{entry.teamId})
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+function StatBarChart({
+  data,
+  statKey
+}: {
+  data: Player[]
+  statKey: string
+}) {
+  const chartData = data.slice(0, 10).map((entry, i) => ({
+    name: entry.name || 'Unnamed Player',
+    value: entry[statKey] as number,
+    color: i === 0 ? '#facc15' : '#39FF14'
+  }))
+
+  return (
+    <div className="bg-gray-900 p-4 rounded">
+      <h3 className="text-lg font-bold mb-4 text-neon-green">Top 10 Chart</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart
+          data={chartData}
+          layout="horizontal"
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
+          <XAxis type="number" stroke="#ccc" />
+          <YAxis type="category" dataKey="name" stroke="#ccc" width={120} />
+          <Tooltip
+            cursor={{ fill: '#222' }}
+            contentStyle={{
+              backgroundColor: '#333',
+              borderColor: '#555',
+              color: '#fff'
+            }}
+          />
+          <Bar dataKey="value" fill="#39FF14">
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
