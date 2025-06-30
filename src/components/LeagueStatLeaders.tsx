@@ -40,13 +40,74 @@ interface Props {
 }
 
 const statOptions = [
-  'passingYards',
-  'rushingYards',
-  'receivingYards',
-  'tackles',
-  'sacks',
-  'interceptions',
-  'fumbles',
+  { value: 'pass_yds', label: 'Passing Yards' },
+  { value: 'pass_tds', label: 'Passing TDs' },
+  { value: 'pass_ints', label: 'Interceptions Thrown' },
+  { value: 'pass_comp', label: 'Completions' },
+  { value: 'pass_att', label: 'Attempts' },
+  { value: 'passer_rating', label: 'Passer Rating' },
+  { value: 'pass_yds_per_game', label: 'Pass Yards/Game' },
+  { value: 'pass_comp_pct', label: 'Completion %' },
+  { value: 'pass_yds_per_att', label: 'Yards/Attempt' },
+  { value: 'pass_longest', label: 'Longest Pass' },
+  { value: 'pass_sacks', label: 'Sacks Taken' },
+  { value: 'pass_pts', label: 'Passing Points' },
+  { value: 'rush_yds', label: 'Rushing Yards' },
+  { value: 'rush_tds', label: 'Rushing TDs' },
+  { value: 'rush_att', label: 'Rushing Attempts' },
+  { value: 'rush_yds_per_game', label: 'Rush Yards/Game' },
+  { value: 'rush_yds_per_att', label: 'Yards/Carry' },
+  { value: 'rush_longest', label: 'Longest Rush' },
+  { value: 'rush_fum', label: 'Fumbles (Rushing)' },
+  { value: 'rush_pts', label: 'Rushing Points' },
+  { value: 'rush_20_plus_yds', label: '20+ Yard Runs' },
+  { value: 'rush_broken_tackles', label: 'Broken Tackles' },
+  { value: 'rush_yds_after_contact', label: 'Yards After Contact' },
+  { value: 'rush_to_pct', label: 'Rushing TO%' },
+  { value: 'rec_yds', label: 'Receiving Yards' },
+  { value: 'rec_tds', label: 'Receiving TDs' },
+  { value: 'rec_catches', label: 'Receptions' },
+  { value: 'rec_drops', label: 'Drops' },
+  { value: 'rec_yds_per_game', label: 'Rec Yards/Game' },
+  { value: 'rec_yds_per_catch', label: 'Yards/Catch' },
+  { value: 'rec_longest', label: 'Longest Reception' },
+  { value: 'rec_pts', label: 'Receiving Points' },
+  { value: 'rec_catch_pct', label: 'Catch %' },
+  { value: 'rec_to_pct', label: 'Receiving TO%' },
+  { value: 'rec_yac_per_catch', label: 'YAC/Catch' },
+  { value: 'rec_yds_after_catch', label: 'Yards After Catch' },
+  { value: 'def_total_tackles', label: 'Total Tackles' },
+  { value: 'def_sacks', label: 'Sacks' },
+  { value: 'def_ints', label: 'Interceptions' },
+  { value: 'def_int_return_yds', label: 'INT Return Yards' },
+  { value: 'def_tds', label: 'Defensive TDs' },
+  { value: 'def_pts', label: 'Defensive Points' },
+  { value: 'def_fum_rec', label: 'Fumble Recoveries' },
+  { value: 'def_forced_fum', label: 'Forced Fumbles' },
+  { value: 'def_deflections', label: 'Deflections' },
+  { value: 'def_safeties', label: 'Safeties' },
+  { value: 'def_catch_allowed', label: 'Catches Allowed' },
+  { value: 'fg_made', label: 'FG Made' },
+  { value: 'fg_att', label: 'FG Attempts' },
+  { value: 'fg_comp_pct', label: 'FG %' },
+  { value: 'fg_longest', label: 'Longest FG' },
+  { value: 'fg_50_plus_att', label: '50+ FG Attempts' },
+  { value: 'fg_50_plus_made', label: '50+ FG Made' },
+  { value: 'xp_made', label: 'XP Made' },
+  { value: 'xp_att', label: 'XP Attempts' },
+  { value: 'xp_comp_pct', label: 'XP %' },
+  { value: 'kick_pts', label: 'Kicking Points' },
+  { value: 'kickoff_att', label: 'Kickoff Attempts' },
+  { value: 'kickoff_tbs', label: 'Touchbacks (Kickoff)' },
+  { value: 'punt_att', label: 'Punt Attempts' },
+  { value: 'punt_yds', label: 'Punt Yards' },
+  { value: 'punt_yds_per_att', label: 'Yards/Punt' },
+  { value: 'punt_longest', label: 'Longest Punt' },
+  { value: 'punt_net_yds', label: 'Net Punt Yards' },
+  { value: 'punt_net_yds_per_att', label: 'Net Yards/Punt' },
+  { value: 'punts_in20', label: 'Punts Inside 20' },
+  { value: 'punt_tbs', label: 'Touchbacks (Punt)' },
+  { value: 'punts_blocked', label: 'Punts Blocked' },
 ]
 
 const positionOptions = [
@@ -65,7 +126,7 @@ const positionOptions = [
 ]
 
 export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
-  const [statType, setStatType] = useState('passingYards')
+  const [statType, setStatType] = useState(statOptions[0].value)
   const [week, setWeek] = useState('')
   const [position, setPosition] = useState('ALL')
   const [leaders, setLeaders] = useState<StatLeader[]>([])
@@ -138,8 +199,8 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
             </SelectTrigger>
             <SelectContent>
               {statOptions.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
                 </SelectItem>
               ))}
             </SelectContent>
