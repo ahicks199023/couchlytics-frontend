@@ -48,6 +48,9 @@ export default function LeaguesPage() {
       })
   }, [])
 
+  // Debug log to check leagueId presence
+  console.log('leagues:', leagues);
+
   const toggleTeams = async (leagueId: number) => {
     if (expandedLeagueId === leagueId) {
       setExpandedLeagueId(null)
