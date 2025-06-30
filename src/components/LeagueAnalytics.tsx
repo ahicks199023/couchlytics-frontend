@@ -13,6 +13,7 @@ import {
   Legend
 } from 'recharts'
 import { API_BASE } from '@/lib/config'
+import { getStatLabel } from '@/constants/statTypes'
 
 type Player = {
   name: string
@@ -237,7 +238,7 @@ const LeagueAnalytics: React.FC = () => {
                 <tbody>
                   {stats.map((s, i) => (
                     <tr key={i}>
-                      <td>{s.statType}</td>
+                      <td>{getStatLabel(s.statType)}</td>
                       <td>{s.total}</td>
                     </tr>
                   ))}
