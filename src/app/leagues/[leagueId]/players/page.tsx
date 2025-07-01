@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { fetchFromApi } from '@/lib/api';
@@ -9,7 +10,9 @@ interface Player {
   name: string;
   position: string;
   teamName?: string;
-  user?: string;
+  overall?: number;
+  speed?: number;
+  devTrait?: string;
   value?: number;
   [key: string]: string | number | undefined;
 }
@@ -17,8 +20,13 @@ interface Player {
 const positions = [
   "QB", "RB", "WR", "TE", "K", "DEF", "OL", "DL", "LB", "CB", "S"
 ];
-
-const PAGE_SIZE = 20;
+const devTraits = [
+  { value: "", label: "All Dev Traits" },
+  { value: "0", label: "Normal" },
+  { value: "1", label: "Star" },
+  { value: "2", label: "Superstar" },
+  { value: "3", label: "X-Factor" },
+];
 
 export default function LeaguePlayersPage() {
   const { leagueId } = useParams();
@@ -28,36 +36,38 @@ export default function LeaguePlayersPage() {
   const [search, setSearch] = useState("");
   const [position, setPosition] = useState("");
   const [team, setTeam] = useState("");
+  const [devTrait, setDevTrait] = useState("");
   const [sortKey, setSortKey] = useState<string>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [totalResults, setTotalResults] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch players from server with all filters, sort, and pagination
   useEffect(() => {
     if (!leagueId) return;
     setLoading(true);
     setError(null);
     const params = new URLSearchParams({
       page: String(page),
-      pageSize: String(PAGE_SIZE),
+      pageSize: String(pageSize),
       sortKey,
       sortDir,
     });
     if (search) params.append("search", search);
     if (position) params.append("position", position);
     if (team) params.append("team", team);
+    if (devTrait) params.append("devTrait", devTrait);
     fetchFromApi(`/leagues/${leagueId}/players?${params.toString()}`)
       .then((data => {
         const typedData = data as { players: Player[]; total: number };
         setPlayers(typedData.players || []);
         setTotalResults(typedData.total || 0);
-        setTotalPages(Math.max(1, Math.ceil((typedData.total || 0) / PAGE_SIZE)));
+        setTotalPages(Math.max(1, Math.ceil((typedData.total || 0) / pageSize)));
       }))
       .catch(() => setError("Failed to load players."))
       .finally(() => setLoading(false));
-  }, [leagueId, page, search, position, team, sortKey, sortDir]);
+  }, [leagueId, page, search, position, team, devTrait, sortKey, sortDir, pageSize]);
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -73,10 +83,10 @@ export default function LeaguePlayersPage() {
     setPage(newPage);
   };
 
-  // Reset to page 1 when filters/search/sort change
+  // Reset to page 1 when filters/search/sort/pageSize change
   useEffect(() => {
     setPage(1);
-  }, [search, position, team, sortKey, sortDir]);
+  }, [search, position, team, devTrait, sortKey, sortDir, pageSize]);
 
   return (
     <main className="min-h-screen bg-black text-white p-6">
@@ -84,7 +94,7 @@ export default function LeaguePlayersPage() {
       <div className="flex flex-wrap gap-4 mb-6">
         <input
           type="text"
-          placeholder="Fuzzy search by name..."
+          placeholder="Search by name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
@@ -96,18 +106,34 @@ export default function LeaguePlayersPage() {
         >
           <option value="">All Positions</option>
           {positions.map((pos) => (
-            <option key={pos} value={pos}>
-              {pos}
-            </option>
+            <option key={pos} value={pos}>{pos}</option>
           ))}
         </select>
         <input
           type="text"
-          placeholder="Fuzzy search by team..."
+          placeholder="Search by team..."
           value={team}
           onChange={(e) => setTeam(e.target.value)}
           className="px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
         />
+        <select
+          value={devTrait}
+          onChange={e => setDevTrait(e.target.value)}
+          className="px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
+        >
+          {devTraits.map(dt => (
+            <option key={dt.value} value={dt.value}>{dt.label}</option>
+          ))}
+        </select>
+        <select
+          value={pageSize}
+          onChange={e => setPageSize(Number(e.target.value))}
+          className="px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
+        >
+          <option value={20}>20</option>
+          <option value={50}>50</option>
+          <option value={100}>100</option>
+        </select>
       </div>
       <div className="mb-4 text-gray-400 text-sm">
         Showing {players.length} of {totalResults} players (Page {page} of {totalPages})
@@ -119,37 +145,45 @@ export default function LeaguePlayersPage() {
               <th className="cursor-pointer" onClick={() => handleSort("name")}>Name</th>
               <th className="cursor-pointer" onClick={() => handleSort("position")}>Position</th>
               <th className="cursor-pointer" onClick={() => handleSort("teamName")}>Team</th>
-              <th className="cursor-pointer" onClick={() => handleSort("user")}>User</th>
+              <th className="cursor-pointer" onClick={() => handleSort("overall")}>OVR</th>
+              <th className="cursor-pointer" onClick={() => handleSort("speed")}>Speed</th>
+              <th className="cursor-pointer" onClick={() => handleSort("devTrait")}>Dev Trait</th>
               <th className="cursor-pointer" onClick={() => handleSort("value")}>Value</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="text-center py-8 text-gray-400">
+                <td colSpan={7} className="text-center py-8 text-gray-400">
                   Loading players...
                 </td>
               </tr>
             ) : error ? (
               <tr>
-                <td colSpan={5} className="text-center py-8 text-red-400">
+                <td colSpan={7} className="text-center py-8 text-red-400">
                   {error}
                 </td>
               </tr>
             ) : players.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-center py-8 text-gray-400">
+                <td colSpan={7} className="text-center py-8 text-gray-400">
                   No players found.
                 </td>
               </tr>
             ) : (
               players.map((player) => (
                 <tr key={player.id} className="hover:bg-gray-800">
-                  <td>{player.name}</td>
+                  <td>
+                    <Link href={`/leagues/${leagueId}/players/${player.id}`} className="text-blue-400 hover:underline">
+                      {player.name}
+                    </Link>
+                  </td>
                   <td>{player.position}</td>
                   <td>{player.teamName}</td>
-                  <td>{player.user}</td>
-                  <td>{player.value ?? "-"}</td>
+                  <td>{player.overall ?? '-'}</td>
+                  <td>{player.speed ?? '-'}</td>
+                  <td>{devTraits.find(dt => dt.value === player.devTrait)?.label ?? '-'}</td>
+                  <td>{player.value ?? '-'}</td>
                 </tr>
               ))
             )}
