@@ -55,7 +55,10 @@ export const fetchFromApi = async (path: string, options: RequestInit = {}): Pro
   }
   
   const data = await res.json();
-  return toCamelCase(data); // Convert response to camelCase
+  const camelData = toCamelCase(data);
+  // Debug log to check camelCase conversion
+  console.log('API response (camelCase):', camelData);
+  return camelData; // Convert response to camelCase
 };
 
 // Enhanced API functions with automatic case conversion
