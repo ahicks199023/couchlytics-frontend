@@ -68,12 +68,14 @@ export default function LeagueDetailPage() {
         <h2 className="text-2xl font-semibold mb-2">Teams</h2>
         {league.teams?.length > 0 ? (
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {league.teams.map((team) => (
-              <li key={team.id} className="bg-gray-800 p-3 rounded">
-                <strong>{team.name}</strong>
-                <div className="text-sm text-gray-400">User: {team.user}</div>
-              </li>
-            ))}
+            {league.teams
+              .filter(team => team.name && team.name !== 'Unknown')
+              .map((team) => (
+                <li key={team.id} className="bg-gray-800 p-3 rounded">
+                  <strong>{team.name}</strong>
+                  <div className="text-sm text-gray-400">User: {team.user}</div>
+                </li>
+              ))}
           </ul>
         ) : (
           <p className="text-gray-500 text-sm italic">No teams available.</p>
