@@ -28,7 +28,7 @@ export default function PlayerDetailPage() {
     if (!leagueId || !playerId) return
     setLoading(true)
     fetchFromApi(`/leagues/${leagueId}/players/${playerId}`)
-      .then((data: Player) => setPlayer(data))
+      .then((data) => setPlayer(data as Player))
       .catch(() => setError('Failed to load player.'))
       .finally(() => setLoading(false))
   }, [leagueId, playerId])
