@@ -191,16 +191,11 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                             }}
                           />
                         ) : (
-                          <Image
-                            src={`https://cdn.madden.tools/player-portraits/${leader.portraitId || '0'}.png`}
+                          <img
+                            src={leader.portraitId ? `/headshots/${leader.portraitId}.png` : '/default-avatar.png'}
                             alt={leader.name}
-                            width={32}
-                            height={32}
-                            className="rounded-full"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement
-                              target.src = '/default-avatar.png'
-                            }}
+                            className="w-10 h-10 rounded-full object-cover mr-2"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default-avatar.png'; }}
                           />
                         )}
                         {leader.name}
