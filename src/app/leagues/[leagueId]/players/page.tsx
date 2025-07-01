@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { API_BASE } from "@/lib/config";
+import { fetchFromApi } from '@/lib/api';
 
 interface Player {
   id: number;
@@ -48,15 +48,13 @@ export default function LeaguePlayersPage() {
     if (search) params.append("search", search);
     if (position) params.append("position", position);
     if (team) params.append("team", team);
-    fetch(`${API_BASE}/leagues/${leagueId}/players?${params.toString()}`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setPlayers(data.players || []);
-        setTotalResults(data.total || 0);
-        setTotalPages(Math.max(1, Math.ceil((data.total || 0) / PAGE_SIZE)));
-      })
+    fetchFromApi(`/leagues/${leagueId}/players?${params.toString()}`)
+      .then((data => {
+        const typedData = data as { players: Player[]; total: number };
+        setPlayers(typedData.players || []);
+        setTotalResults(typedData.total || 0);
+        setTotalPages(Math.max(1, Math.ceil((typedData.total || 0) / PAGE_SIZE)));
+      }))
       .catch(() => setError("Failed to load players."))
       .finally(() => setLoading(false));
   }, [leagueId, page, search, position, team, sortKey, sortDir]);
