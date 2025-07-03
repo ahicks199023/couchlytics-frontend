@@ -37,7 +37,7 @@ export default function SyncDashboard() {
 
   const fetchStatus = () => {
     setLoading(true)
-    fetch(`${API_BASE}/admin/sync-status`)
+    fetch(`${API_BASE}/admin/sync-status`, { credentials: 'include' })
       .then(res => res.json())
       .then(setData)
       .finally(() => setLoading(false))
@@ -49,7 +49,7 @@ export default function SyncDashboard() {
 
   const handleForceImport = () => {
     setForceStatus("triggering...")
-    fetch(`${API_BASE}/admin/force-import`, { method: 'POST' })
+    fetch(`${API_BASE}/admin/force-import`, { credentials: 'include', method: 'POST' })
       .then(res => res.json())
       .then(res => setForceStatus(res.status || 'done'))
       .catch(() => setForceStatus('error'))
