@@ -5,9 +5,10 @@ import { useEffect, useState } from 'react'
 
 const features = [
   {
-    title: 'Upload Tools',
-    icon: '📂',
-    description: 'Instantly import leagues with player, game, and stat breakdowns.',
+    title: 'Advanced Trade Tool',
+    icon: '🤖',
+    description: 'Offers machine learning logic, along with AI powered trade suggestions.',
+    link: '/trade-tool',
   },
   {
     title: 'Analytics Engine',
@@ -125,4 +126,3 @@ export default function HomePage() {
     </main>
   )
 }
-
