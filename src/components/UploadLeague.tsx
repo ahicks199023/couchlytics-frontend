@@ -23,9 +23,9 @@ export default function UploadLeague() {
 
     try {
       const res = await fetch('/api/upload', {
+        credentials: 'include',
         method: 'POST',
         body: formData,
-        credentials: 'include',
       })
 
       const result = await res.json()
