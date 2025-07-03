@@ -21,7 +21,7 @@ type TradeResult = {
   suggestedTrades?: Player[]
 }
 
-export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) {
+export default function Backup({ leagueId }: { leagueId: number }) {
   const [result, setResult] = useState<TradeResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const givePlayers: Player[] = []
