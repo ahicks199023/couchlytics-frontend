@@ -185,7 +185,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         setError(null)
         
         // Load user info
-        const userRes = await fetch(`${API_BASE}/me`, { 
+        const userRes = await fetch(`${API_BASE}/leagues/${leagueId}/trade-tool/me`, { 
           credentials: 'include' 
         })
         if (userRes.ok) {
@@ -194,7 +194,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         }
         
         // Load league players
-        const playersRes = await fetch(`${API_BASE}/leagues/${leagueId}/players`, {
+        const playersRes = await fetch(`${API_BASE}/leagues/${leagueId}/trade-tool/players`, {
           credentials: 'include'
         })
         if (playersRes.ok) {
@@ -278,7 +278,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
     setSuggestedTrades([])
 
     try {
-      const res = await fetch(`${API_BASE}/trade-calculate`, {
+      const res = await fetch(`${API_BASE}/leagues/${leagueId}/trade-tool/trade-calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -334,7 +334,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         includeSuggestions
       }
 
-      const res = await fetch(`${API_BASE}/trade-calculate`, {
+      const res = await fetch(`${API_BASE}/leagues/${leagueId}/trade-tool/trade-calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
