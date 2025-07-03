@@ -78,14 +78,14 @@ export const useTradeCalculator = (leagueId: number) => {
         setError(null)
         
         // Load user info
-        const userRes = await fetch(`${API_BASE}/me`, { credentials: 'include' })
+        const userRes = await fetch(`${API_BASE}/leagues/${leagueId}/trade-tool`, { credentials: 'include' })
         if (userRes.ok) {
           const userData = await userRes.json()
           setUser(userData)
         }
         
         // Load league players
-        const playersRes = await fetch(`${API_BASE}/leagues/${leagueId}/players`, { credentials: 'include' })
+        const playersRes = await fetch(`${API_BASE}/leagues/${leagueId}/trade-tool`, { credentials: 'include' })
         if (playersRes.ok) {
           const playersData = await playersRes.json()
           setPlayers(playersData.players || [])
@@ -94,7 +94,7 @@ export const useTradeCalculator = (leagueId: number) => {
         }
         
         // Load teams
-        const teamsRes = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, { credentials: 'include' })
+        const teamsRes = await fetch(`${API_BASE}/leagues/${leagueId}/trade-tool`, { credentials: 'include' })
         if (teamsRes.ok) {
           const teamsData = await teamsRes.json()
           setTeams(teamsData.teams || [])
@@ -148,7 +148,7 @@ export const useTradeCalculator = (leagueId: number) => {
     setSuggestedTrades([])
 
     try {
-      const res = await fetch(`${API_BASE}/trade-calculate`, {
+      const res = await fetch(`${API_BASE}/leagues/${leagueId}/trade-tool`, {
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -203,7 +203,7 @@ export const useTradeCalculator = (leagueId: number) => {
         includeSuggestions
       }
 
-      const res = await fetch(`${API_BASE}/trade-calculate`, {
+      const res = await fetch(`${API_BASE}/leagues/${leagueId}/trade-tool`, {
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
