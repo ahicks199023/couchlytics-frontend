@@ -16,8 +16,6 @@ export default function NavBar() {
   const [user, setUser] = useState<User | null>(null)
   const [isOpen, setIsOpen] = useState(false)
 
-  const selectedLeagueId = 1
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -112,9 +110,6 @@ export default function NavBar() {
                   <Link href="/upload" onClick={() => setIsOpen(false)}>Upload</Link>
                   <Link href="/admin/upload-logs" onClick={() => setIsOpen(false)}>Logs</Link>
                 </>
-              )}
-              {selectedLeagueId && (
-                <Link href={`/leagues/${selectedLeagueId}/trade-tool`} onClick={() => setIsOpen(false)}>Trade Tool</Link>
               )}
               <Link href="/profile" onClick={() => setIsOpen(false)}>Profile</Link>
               <LogoutButton />
