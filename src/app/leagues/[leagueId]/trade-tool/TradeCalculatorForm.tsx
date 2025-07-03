@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import Image from 'next/image'
 import { Loader2, Search, Filter, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
-import { API_BASE } from '@/lib/config'
 
 // Types
 interface Player {
@@ -185,7 +184,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         setError(null)
         
         // Load user info
-        const userRes = await fetch(`${API_BASE}/leagues/${leagueId}/trade-tool/me`, { 
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/trade-tool/me`, { 
           credentials: 'include' 
         })
         if (userRes.ok) {
@@ -194,7 +193,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         }
         
         // Load league players
-        const playersRes = await fetch(`${API_BASE}/leagues/${leagueId}/trade-tool/players`, {
+        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/trade-tool/players`, {
           credentials: 'include'
         })
         if (playersRes.ok) {
@@ -278,7 +277,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
     setSuggestedTrades([])
 
     try {
-      const res = await fetch(`${API_BASE}/leagues/${leagueId}/trade-tool/trade-calculate`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/trade-tool/trade-calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -334,7 +333,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         includeSuggestions
       }
 
-      const res = await fetch(`${API_BASE}/leagues/${leagueId}/trade-tool/trade-calculate`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/trade-tool/trade-calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
