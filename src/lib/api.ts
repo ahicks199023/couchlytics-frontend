@@ -44,6 +44,9 @@ const toSnakeCase = (obj: unknown): unknown => {
   return snakeCaseObj;
 };
 
+// All fetch requests to api.couchlytics.com will always send credentials (cookies) for authentication.
+// This is enforced in fetchFromApi by setting credentials: 'include' for every request.
+
 export const fetchFromApi = async (path: string, options: RequestInit = {}): Promise<unknown> => {
   // Always include credentials for authentication (cookies)
   const mergedOptions: RequestInit = { ...options, credentials: 'include' as RequestCredentials };
@@ -106,3 +109,7 @@ export const api = {
     });
   }
 };
+
+// Example usage:
+// api.get('/leagues/12345').then(data => console.log(data));
+// This will send credentials (cookies) for authentication in both development and production.
