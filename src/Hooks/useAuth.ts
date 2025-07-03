@@ -51,8 +51,8 @@ export default function useAuth() {
   const logout = useCallback(async () => {
     try {
       await fetch(`${API_BASE}/logout`, {
-        method: 'POST',
         credentials: 'include',
+        method: 'POST',
       });
     } catch (error) {
       console.error('Logout error:', error);
