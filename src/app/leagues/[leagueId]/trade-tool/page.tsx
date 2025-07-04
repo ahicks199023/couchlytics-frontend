@@ -2,26 +2,23 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import TradeCalculatorForm from '@/components/TradeCalculatorForm'
+import TradeCalculatorForm from './TradeCalculatorForm'
 import { API_BASE } from '@/lib/config'
 
 export default function TradeToolPage() {
   const router = useRouter()
-  const { leagueId: paramLeagueId } = useParams()
+  const { leagueId } = useParams()
+  const league_id = typeof leagueId === 'string' ? leagueId : ''
   const [authorized, setAuthorized] = useState<boolean | null>(null)
   const [leagueInfo, setLeagueInfo] = useState<{ name: string; seasonYear?: number }>({ name: '' })
 
-  const leagueId = parseInt(paramLeagueId as string)
-
   useEffect(() => {
-    if (!leagueId) return
-
+    if (!league_id) return
     const validateAccess = async () => {
       try {
-        const res = await fetch(`${API_BASE}/league/${leagueId}/is-member`, {
+        const res = await fetch(`${API_BASE}/league/${league_id}/is-member`, {
           credentials: 'include'
         })
-
         const data = await res.json()
         if (res.ok && data.isMember) {
           setAuthorized(true)
@@ -35,16 +32,14 @@ export default function TradeToolPage() {
         router.push('/unauthorized')
       }
     }
-
     validateAccess()
-  }, [leagueId, router])
+  }, [league_id, router])
 
   useEffect(() => {
     if (!authorized) return
-
     const fetchLeague = async () => {
       try {
-        const res = await fetch(`${API_BASE}/leagues/${leagueId}`, {
+        const res = await fetch(`${API_BASE}/leagues/${league_id}`, {
           credentials: 'include'
         })
         const data = await res.json()
@@ -58,9 +53,8 @@ export default function TradeToolPage() {
         console.error("Failed to fetch league info:", err)
       }
     }
-
     fetchLeague()
-  }, [authorized, leagueId])
+  }, [authorized, league_id])
 
   if (authorized === null) {
     return <p className="text-white text-center mt-10">Checking access...</p>
@@ -68,6 +62,10 @@ export default function TradeToolPage() {
 
   if (!authorized) {
     return <p className="text-red-600 text-center mt-10">Access Denied: You are not a member of this league.</p>
+  }
+
+  if (!league_id) {
+    return <p className="text-red-600 text-center mt-10">Invalid league ID.</p>
   }
 
   return (
@@ -78,7 +76,7 @@ export default function TradeToolPage() {
       {leagueInfo.seasonYear && (
         <p className="text-gray-400 mb-6">Season Year: {leagueInfo.seasonYear}</p>
       )}
-      <TradeCalculatorForm leagueId={leagueId} />
+      <TradeCalculatorForm league_id={league_id} />
     </div>
   )
 }
