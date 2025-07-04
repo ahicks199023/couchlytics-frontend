@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { API_BASE } from '@/lib/config'
 
 export default function UploadLeague() {
   const [file, setFile] = useState<File | null>(null)
@@ -22,7 +23,7 @@ export default function UploadLeague() {
     formData.append('file', file)
 
     try {
-      const res = await fetch('/api/upload', {
+      const res = await fetch(`${API_BASE}/api/upload`, {
         credentials: 'include',
         method: 'POST',
         body: formData,
