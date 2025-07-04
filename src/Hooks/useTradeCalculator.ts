@@ -70,6 +70,10 @@ export const useTradeCalculator = (leagueId: number) => {
   const [suggestedTrades, setSuggestedTrades] = useState<SuggestedTrade[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
 
+  // Determine user's team by matching team.user_id to user.id
+  const userTeam = teams.find(team => String(team.user_id) === String(user?.id))
+  const userTeamId = userTeam?.id
+
   // Load initial data
   useEffect(() => {
     const loadData = async () => {
@@ -142,7 +146,7 @@ export const useTradeCalculator = (leagueId: number) => {
   }, [])
 
   const fetchTradeSuggestions = useCallback(async (playerId: string, strategy: string) => {
-    if (!playerId || !user?.teamId) return
+    if (!playerId || !userTeamId) return
     
     setLoadingSuggestions(true)
     setSuggestedTrades([])
@@ -154,7 +158,7 @@ export const useTradeCalculator = (leagueId: number) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           leagueId,
-          teamId: user.teamId,
+          teamId: userTeamId,
           playerId: parseInt(playerId),
           strategy
         })
@@ -173,7 +177,7 @@ export const useTradeCalculator = (leagueId: number) => {
     } finally {
       setLoadingSuggestions(false)
     }
-  }, [leagueId, user?.teamId])
+  }, [leagueId, userTeamId])
 
   const applySuggestedTrade = useCallback((suggestion: SuggestedTrade, playerId: string) => {
     const selected = givePlayers.find(p => p.id === parseInt(playerId))
@@ -183,7 +187,7 @@ export const useTradeCalculator = (leagueId: number) => {
   }, [givePlayers])
 
   const handleSubmit = useCallback(async (includeSuggestions: boolean) => {
-    if (!user?.teamId) {
+    if (!userTeamId) {
       setError('Please select your team first')
       return
     }
@@ -195,7 +199,7 @@ export const useTradeCalculator = (leagueId: number) => {
     try {
       const tradeData: TradeData = {
         leagueId,
-        teamId: user.teamId,
+        teamId: userTeamId,
         trade: {
           give: givePlayers.map(p => p.id),
           receive: receivePlayers.map(p => p.id),
@@ -222,7 +226,7 @@ export const useTradeCalculator = (leagueId: number) => {
     } finally {
       setSubmitting(false)
     }
-  }, [leagueId, user?.teamId, givePlayers, receivePlayers])
+  }, [leagueId, userTeamId, givePlayers, receivePlayers])
 
   return {
     // State
@@ -237,6 +241,7 @@ export const useTradeCalculator = (leagueId: number) => {
     submitting,
     suggestedTrades,
     loadingSuggestions,
+    userTeamId,
     
     // Computed values
     giveValue,
