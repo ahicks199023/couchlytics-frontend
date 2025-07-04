@@ -40,7 +40,16 @@ type SuggestedTrade = {
   reasoning: string
 }
 
+type Team = {
+  id: number
+  name: string
+  city: string
+  user: string
+  user_id?: number
+}
+
 type User = {
+  id?: number
   is_premium?: boolean
   teamId?: number
 }
@@ -119,6 +128,7 @@ const calculatePlayerValue = (player: Player): number => {
 export default function TradeCalculatorForm({ league_id }: { league_id: string }) {
   const [user, setUser] = useState<User | null>(null)
   const [players, setPlayers] = useState<Player[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
@@ -142,6 +152,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [suggestedTrades, setSuggestedTrades] = useState<SuggestedTrade[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
 
+  // Determine user's team by matching team.user_id to user.id
+  const userTeam = teams.find(team => String(team.user_id) === String(user?.id))
+  const userTeamId = userTeam?.id
+
   // Load user and data
   useEffect(() => {
     const loadData = async () => {
@@ -160,6 +174,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         if (playersRes.ok) {
           const playersData = await playersRes.json()
           setPlayers(playersData.players || [])
+        }
+        
+        // Load teams
+        const teamsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/teams`, { credentials: 'include' })
+        if (teamsRes.ok) {
+          const teamsData = await teamsRes.json()
+          setTeams(teamsData.teams || [])
         }
         
       } catch (err) {
@@ -241,7 +262,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   // Trade suggestions
   const fetchTradeSuggestions = async () => {
-    if (!suggestionPlayerId || !user?.teamId) return
+    if (!suggestionPlayerId || !userTeamId) return
     
     setLoadingSuggestions(true)
     setSuggestedTrades([])
@@ -253,7 +274,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           league_id,
-          teamId: user.teamId,
+          teamId: userTeamId,
           playerId: parseInt(suggestionPlayerId),
           strategy: suggestionStrategy
         })
@@ -284,7 +305,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   // Submit trade
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user?.teamId) {
+    if (!userTeamId) {
       setError('Unable to determine your team. Please refresh the page.')
       return
     }
@@ -294,7 +315,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
     try {
       const tradeData: TradeData = {
-        teamId: user.teamId,
+        teamId: userTeamId,
         trade: {
           give: givePlayers.map(p => p.id),
           receive: receivePlayers.map(p => p.id),
