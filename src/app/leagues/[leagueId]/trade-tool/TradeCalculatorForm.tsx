@@ -176,7 +176,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         setError(null)
         
         // Load user info
-        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool/me`, { 
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { 
           credentials: 'include' 
         })
         if (userRes.ok) {
@@ -186,7 +186,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         }
         
         // Load league players
-        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool/players`, {
+        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players`, {
           credentials: 'include'
         })
         if (playersRes.ok) {
@@ -274,7 +274,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     setSuggestedTrades([])
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool/trade-calculate`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -331,7 +331,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         includeSuggestions
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool/trade-calculate`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
