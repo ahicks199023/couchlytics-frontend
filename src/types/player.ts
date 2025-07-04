@@ -49,6 +49,7 @@ export interface Team {
   name: string
   city: string
   user: string
+  user_id?: number
 }
 
 export interface User {
