@@ -1,46 +1,36 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
-import { Loader2, Search, Filter, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
 
-// Types
-interface Player {
+type Player = {
   id: number
   name: string
   team: string
   position: string
   ovr: number
-  teamId?: number
-  teamName?: string
-  user?: string
   espnId?: string
+  teamId?: number
+  user?: string
   devTrait?: string
   age?: number
   yearsPro?: number
 }
 
-interface User {
-  id: number
-  email: string
-  is_premium?: boolean
-  teamId?: number
-}
-
-interface TradeResult {
+type TradeResult = {
   tradeAssessment: {
     verdict: string
     teamGives: number
     teamReceives: number
     netGain: number
-    confidence: number
+    explanation?: string
   }
   canAutoApprove: boolean
   suggestedTrades?: Player[]
-  reasoning?: string
+  riskLevel?: 'Low' | 'Medium' | 'High'
 }
 
-interface SuggestedTrade {
+type SuggestedTrade = {
   targetTeam: number
   targetTeamName: string
   verdict: string
@@ -50,8 +40,12 @@ interface SuggestedTrade {
   reasoning: string
 }
 
-interface TradeData {
-  league_id: string
+type User = {
+  is_premium?: boolean
+  teamId?: number
+}
+
+type TradeData = {
   teamId: number
   trade: {
     give: number[]
@@ -60,23 +54,27 @@ interface TradeData {
   includeSuggestions: boolean
 }
 
-// Utility functions
-const getHeadshotUrl = (playerName: string, espnId?: string) => {
-  if (espnId) {
-    return `/headshots/${espnId}.png`
+type TradeSuggestion = {
+  suggestions: SuggestedTrade[]
+}
+
+const getHeadshotUrl = (player: Player) => {
+  if (player.espnId) {
+    return `/headshots/${player.espnId}.png`
   }
-  const sanitized = playerName.toLowerCase().replace(/[^a-z]/g, '')
+  const sanitized = player.name.toLowerCase().replace(/[^a-z]/g, '')
   return `/headshots/${sanitized}.png`
 }
 
+// Enhanced player value calculation
 const calculatePlayerValue = (player: Player): number => {
-  let baseValue = player.ovr || 75
+  const baseValue = player.ovr || 75
   
   // Position multipliers
   const positionMultipliers: Record<string, number> = {
     'QB': 1.2,
     'WR': 1.1,
-    'HB': 1.0,
+    'RB': 1.0,
     'TE': 0.9,
     'LT': 0.8,
     'LG': 0.7,
@@ -87,7 +85,7 @@ const calculatePlayerValue = (player: Player): number => {
     'RE': 0.9,
     'DT': 0.8,
     'LOLB': 0.9,
-    'MLB': 1.0,
+    'MLB': 0.9,
     'ROLB': 0.9,
     'CB': 1.0,
     'FS': 0.9,
@@ -99,108 +97,74 @@ const calculatePlayerValue = (player: Player): number => {
   const multiplier = positionMultipliers[player.position] || 1.0
   
   // Age factor (younger players worth more)
+  let ageFactor = 1.0
   if (player.age) {
-    const ageFactor = Math.max(0.7, 1.0 - (player.age - 22) * 0.02)
-    baseValue *= ageFactor
+    if (player.age <= 23) ageFactor = 1.2
+    else if (player.age <= 26) ageFactor = 1.1
+    else if (player.age <= 29) ageFactor = 1.0
+    else if (player.age <= 32) ageFactor = 0.9
+    else ageFactor = 0.7
   }
   
-  // Development trait bonus
+  // Development trait factor
+  let devFactor = 1.0
   if (player.devTrait) {
-    const devMultipliers: Record<string, number> = {
-      'Superstar': 1.3,
-      'Star': 1.2,
-      'Normal': 1.0,
-      'Hidden': 1.1
+    switch (player.devTrait.toLowerCase()) {
+      case 'superstar': devFactor = 1.3
+      case 'star': devFactor = 1.2
+      case 'normal': devFactor = 1.0
+      case 'slow': devFactor = 0.8
+      default: devFactor = 1.0
     }
-    baseValue *= devMultipliers[player.devTrait] || 1.0
   }
   
-  return Math.round(baseValue * multiplier)
-}
-
-const getVerdictColor = (verdict: string) => {
-  switch (verdict.toLowerCase()) {
-    case 'you win':
-    case 'excellent':
-      return 'text-green-400'
-    case 'fair':
-    case 'balanced':
-      return 'text-yellow-400'
-    case 'you lose':
-    case 'poor':
-      return 'text-red-400'
-    default:
-      return 'text-gray-400'
-  }
-}
-
-const getVerdictIcon = (verdict: string) => {
-  switch (verdict.toLowerCase()) {
-    case 'you win':
-    case 'excellent':
-      return <CheckCircle className="w-5 h-5 text-green-400" />
-    case 'fair':
-    case 'balanced':
-      return <AlertCircle className="w-5 h-5 text-yellow-400" />
-    case 'you lose':
-    case 'poor':
-      return <XCircle className="w-5 h-5 text-red-400" />
-    default:
-      return null
-  }
+  return Math.round(baseValue * multiplier * ageFactor * devFactor)
 }
 
 export default function TradeCalculatorForm({ league_id }: { league_id: string }) {
-  // State management
   const [user, setUser] = useState<User | null>(null)
   const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
   // Trade state
+  const [includeSuggestions, setIncludeSuggestions] = useState(false)
+  const [result, setResult] = useState<TradeResult | null>(null)
   const [givePlayers, setGivePlayers] = useState<Player[]>([])
   const [receivePlayers, setReceivePlayers] = useState<Player[]>([])
-  const [result, setResult] = useState<TradeResult | null>(null)
-  const [submitting, setSubmitting] = useState(false)
   
   // Filters
-  const [searchTerm, setSearchTerm] = useState('')
   const [selectedTeam, setSelectedTeam] = useState('All')
   const [selectedPosition, setSelectedPosition] = useState('All')
-  const [showMyTeamOnly, setShowMyTeamOnly] = useState(false)
+  const [selectedPlayer, setSelectedPlayer] = useState('')
+  const [selectedReceiveTeam, setSelectedReceiveTeam] = useState('All')
+  const [selectedReceivePosition, setSelectedReceivePosition] = useState('All')
+  const [selectedReceivePlayer, setSelectedReceivePlayer] = useState('')
   
   // Suggestions
-  const [includeSuggestions] = useState(false)
-  const [suggestedTrades, setSuggestedTrades] = useState<SuggestedTrade[]>([])
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const [suggestionPlayerId, setSuggestionPlayerId] = useState('')
   const [suggestionStrategy, setSuggestionStrategy] = useState('value')
+  const [suggestedTrades, setSuggestedTrades] = useState<SuggestedTrade[]>([])
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
 
-  // Load initial data
+  // Load user and data
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true)
-        setError(null)
         
         // Load user info
-        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool/me`, { 
-          credentials: 'include' 
-        })
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool`, { credentials: 'include' })
         if (userRes.ok) {
           const userData = await userRes.json()
           setUser(userData)
         }
         
         // Load league players
-        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool/players`, {
-          credentials: 'include'
-        })
+        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players`, { credentials: 'include' })
         if (playersRes.ok) {
           const playersData = await playersRes.json()
           setPlayers(playersData.players || [])
-        } else {
-          throw new Error('Failed to load players')
         }
         
       } catch (err) {
@@ -216,24 +180,25 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   // Computed values
   const filteredPlayers = useMemo(() => {
-    return players.filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesTeam = selectedTeam === 'All' || p.team === selectedTeam
-      const matchesPosition = selectedPosition === 'All' || p.position === selectedPosition
-      const matchesMyTeam = !showMyTeamOnly || p.teamId === user?.teamId
-      
-      return matchesSearch && matchesTeam && matchesPosition && matchesMyTeam
-    }).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
-  }, [players, searchTerm, selectedTeam, selectedPosition, showMyTeamOnly, user?.teamId])
+    return players.filter(p => 
+      (selectedTeam === 'All' || p.team === selectedTeam) &&
+      (selectedPosition === 'All' || p.position === selectedPosition)
+    ).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
+  }, [players, selectedTeam, selectedPosition])
 
-  const availableTeams = useMemo(() => {
-    const teamNames = [...new Set(players.map(p => p.team))].sort()
-    return ['All', ...teamNames]
+  const filteredReceivePlayers = useMemo(() => {
+    return players.filter(p => 
+      (selectedReceiveTeam === 'All' || p.team === selectedReceiveTeam) &&
+      (selectedReceivePosition === 'All' || p.position === selectedReceivePosition)
+    ).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
+  }, [players, selectedReceiveTeam, selectedReceivePosition])
+
+  const teamOptions = useMemo(() => {
+    return ['All', ...new Set(players.map(p => p.team))].sort()
   }, [players])
 
-  const availablePositions = useMemo(() => {
-    const positions = [...new Set(players.map(p => p.position))].sort()
-    return ['All', ...positions]
+  const positionOptions = useMemo(() => {
+    return ['All', ...new Set(players.map(p => p.position))].sort()
   }, [players])
 
   const giveValue = useMemo(() => 
@@ -247,29 +212,39 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   )
 
   const netValue = receiveValue - giveValue
-  const verdict = Math.abs(netValue) <= 15 ? 'Fair' : netValue > 15 ? 'You Lose' : 'You Win'
+  const tradeVerdict = useMemo(() => {
+    const absNet = Math.abs(netValue)
+    if (absNet <= 15) return 'Fair'
+    if (absNet <= 30) return netValue > 0 ? 'You Win' : 'You Lose'
+    return netValue > 0 ? 'You Win Big' : 'You Lose Big'
+  }, [netValue])
 
-  // Event handlers
-  const addPlayer = useCallback((player: Player, toGive: boolean) => {
-    const playerList = toGive ? givePlayers : receivePlayers
-    const setPlayerList = toGive ? setGivePlayers : setReceivePlayers
-    
-    if (!playerList.find(p => p.id === player.id)) {
-      setPlayerList([...playerList, player])
+  // Player management functions
+  const addGivePlayer = () => {
+    const found = players.find(p => p.id === parseInt(selectedPlayer))
+    if (found && !givePlayers.find(p => p.id === found.id)) {
+      setGivePlayers([...givePlayers, found])
+      setSelectedPlayer('')
     }
-  }, [givePlayers, receivePlayers])
+  }
 
-  const removePlayer = useCallback((playerId: number, fromGive: boolean) => {
-    const setPlayerList = fromGive ? setGivePlayers : setReceivePlayers
-    setPlayerList(prev => prev.filter(p => p.id !== playerId))
-  }, [])
+  const removeGivePlayer = (id: number) => {
+    setGivePlayers(givePlayers.filter(p => p.id !== id))
+  }
 
-  const clearTrade = useCallback(() => {
-    setGivePlayers([])
-    setReceivePlayers([])
-    setResult(null)
-  }, [])
+  const addReceivePlayer = () => {
+    const found = players.find(p => p.id === parseInt(selectedReceivePlayer))
+    if (found && !receivePlayers.find(p => p.id === found.id)) {
+      setReceivePlayers([...receivePlayers, found])
+      setSelectedReceivePlayer('')
+    }
+  }
 
+  const removeReceivePlayer = (id: number) => {
+    setReceivePlayers(receivePlayers.filter(p => p.id !== id))
+  }
+
+  // Trade suggestions
   const fetchTradeSuggestions = async () => {
     if (!suggestionPlayerId || !user?.teamId) return
     
@@ -277,10 +252,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     setSuggestedTrades([])
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool/trade-calculate`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           league_id,
           teamId: user.teamId,
@@ -294,37 +269,36 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         throw new Error(errorText || 'Suggestion fetch failed')
       }
 
-      const data = await res.json()
+      const data = await res.json() as TradeSuggestion
       setSuggestedTrades(data.suggestions || [])
     } catch (err: unknown) {
       console.error('Suggestion Error:', err instanceof Error ? err.message : 'Unknown error')
-      setError('Failed to load trade suggestions')
+      setError('Failed to fetch trade suggestions')
     } finally {
       setLoadingSuggestions(false)
     }
   }
 
-  const applySuggestedTrade = useCallback((suggestion: SuggestedTrade) => {
+  const applySuggestedTrade = (suggestion: SuggestedTrade) => {
     const selected = givePlayers.find(p => p.id === parseInt(suggestionPlayerId))
     if (!selected) return
     setGivePlayers([selected])
     setReceivePlayers(suggestion.playersOffered)
-  }, [givePlayers, suggestionPlayerId])
+  }
 
+  // Submit trade
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user?.teamId) {
-      setError('Please select your team first')
+      setError('Unable to determine your team. Please refresh the page.')
       return
     }
     
-    setSubmitting(true)
     setError(null)
     setResult(null)
 
     try {
       const tradeData: TradeData = {
-        league_id,
         teamId: user.teamId,
         trade: {
           give: givePlayers.map(p => p.id),
@@ -333,10 +307,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         includeSuggestions
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool/trade-calculate`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(tradeData)
       })
 
@@ -349,442 +323,434 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       setResult(data)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unknown error')
-    } finally {
-      setSubmitting(false)
     }
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-neon-green" />
-          <p className="text-gray-400">Loading league data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-green mx-auto mb-4"></div>
+          <p>Loading trade calculator...</p>
         </div>
       </div>
     )
   }
 
-  if (error) {
+  if (error && !players.length) {
     return (
-      <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
-        <div className="flex items-center gap-2 text-red-400">
-          <AlertCircle className="w-5 h-5" />
-          <p>{error}</p>
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-neon-green text-black px-4 py-2 rounded hover:bg-green-400"
+          >
+            Retry
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white">Trade Calculator</h2>
-          <p className="text-gray-400">Evaluate trades and get AI-powered suggestions</p>
-        </div>
-        <button
-          onClick={clearTrade}
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-        >
-          Clear Trade
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-gray-800/50 rounded-lg p-4 space-y-4">
-        <div className="flex items-center gap-2 text-gray-300">
-          <Filter className="w-4 h-4" />
-          <span className="font-medium">Filters</span>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search players..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-green"
-            />
-          </div>
-
-          {/* Team Filter */}
-          <select
-            value={selectedTeam}
-            onChange={(e) => setSelectedTeam(e.target.value)}
-            className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
-          >
-            {availableTeams.map(team => (
-              <option key={team} value={team}>{team}</option>
-            ))}
-          </select>
-
-          {/* Position Filter */}
-          <select
-            value={selectedPosition}
-            onChange={(e) => setSelectedPosition(e.target.value)}
-            className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
-          >
-            {availablePositions.map(pos => (
-              <option key={pos} value={pos}>{pos}</option>
-            ))}
-          </select>
-
-          {/* My Team Only Toggle */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showMyTeamOnly}
-              onChange={(e) => setShowMyTeamOnly(e.target.checked)}
-              className="w-4 h-4 text-neon-green bg-gray-700 border-gray-600 rounded focus:ring-neon-green"
-            />
-            <span className="text-gray-300">My Team Only</span>
-          </label>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Player Selection */}
-        <div className="lg:col-span-2">
-          <div className="bg-gray-800/50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">Available Players</h3>
-            
-            {filteredPlayers.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                <p>No players found matching your filters</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-96 overflow-y-auto">
-                {filteredPlayers.map((player) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors cursor-pointer"
-                    onClick={() => addPlayer(player, true)}
-                  >
-                    <Image
-                      src={getHeadshotUrl(player.name, player.espnId)}
-                      alt={player.name}
-                      width={40}
-                      height={40}
-                      className="rounded-full bg-white"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.src = '/default-avatar.png'
-                      }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-medium truncate">{player.name}</p>
-                      <p className="text-gray-400 text-sm">{player.position} • {player.team}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-neon-green font-bold">{player.ovr}</p>
-                      <p className="text-gray-400 text-xs">OVR</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+    <div className="bg-black text-white min-h-screen">
+      <div className="p-4 max-w-6xl mx-auto">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-2">Trade Calculator</h2>
+          <p className="text-gray-400">Analyze and evaluate potential trades in your league</p>
         </div>
 
-        {/* Trade Summary */}
-        <div className="space-y-4">
-          {/* Give Players */}
-          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-red-400 mb-3">Giving Away</h3>
-            {givePlayers.length === 0 ? (
-              <p className="text-gray-400 text-sm">No players selected</p>
-            ) : (
-              <div className="space-y-2">
-                {givePlayers.map((player) => (
-                  <div key={player.id} className="flex items-center gap-2 p-2 bg-red-900/30 rounded">
-                    <Image
-                      src={getHeadshotUrl(player.name, player.espnId)}
-                      alt={player.name}
-                      width={32}
-                      height={32}
-                      className="rounded-full bg-white"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.src = '/default-avatar.png'
-                      }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm truncate">{player.name}</p>
-                      <p className="text-gray-400 text-xs">{player.position} • {player.ovr} OVR</p>
-                    </div>
-                    <button
-                      onClick={() => removePlayer(player.id, true)}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      ×
-                    </button>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Trade Summary */}
+          {(givePlayers.length > 0 || receivePlayers.length > 0) && (
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+              <h3 className="text-lg font-semibold mb-3">Trade Summary</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-medium text-red-400 mb-2">You Give ({giveValue} pts)</h4>
+                  <div className="space-y-2">
+                    {givePlayers.map(p => (
+                      <div key={p.id} className="flex items-center justify-between bg-gray-700 p-2 rounded">
+                        <div className="flex items-center gap-2">
+                          <Image
+                            src={getHeadshotUrl(p)}
+                            alt={p.name}
+                            width={32}
+                            height={32}
+                            className="rounded-full bg-white"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.src = '/default-avatar.png'
+                            }}
+                          />
+                          <span>{p.name} ({p.position})</span>
+                        </div>
+                        <span className="text-sm text-gray-300">{calculatePlayerValue(p)}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                <div className="pt-2 border-t border-red-500/30">
-                  <p className="text-red-400 font-bold">Total Value: {giveValue}</p>
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Receive Players */}
-          <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-green-400 mb-3">Receiving</h3>
-            {receivePlayers.length === 0 ? (
-              <p className="text-gray-400 text-sm">No players selected</p>
-            ) : (
-              <div className="space-y-2">
-                {receivePlayers.map((player) => (
-                  <div key={player.id} className="flex items-center gap-2 p-2 bg-green-900/30 rounded">
-                    <Image
-                      src={getHeadshotUrl(player.name, player.espnId)}
-                      alt={player.name}
-                      width={32}
-                      height={32}
-                      className="rounded-full bg-white"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.src = '/default-avatar.png'
-                      }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm truncate">{player.name}</p>
-                      <p className="text-gray-400 text-xs">{player.position} • {player.ovr} OVR</p>
-                    </div>
-                    <button
-                      onClick={() => removePlayer(player.id, false)}
-                      className="text-green-400 hover:text-green-300"
-                    >
-                      ×
-                    </button>
+                <div>
+                  <h4 className="font-medium text-green-400 mb-2">You Receive ({receiveValue} pts)</h4>
+                  <div className="space-y-2">
+                    {receivePlayers.map(p => (
+                      <div key={p.id} className="flex items-center justify-between bg-gray-700 p-2 rounded">
+                        <div className="flex items-center gap-2">
+                          <Image
+                            src={getHeadshotUrl(p)}
+                            alt={p.name}
+                            width={32}
+                            height={32}
+                            className="rounded-full bg-white"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.src = '/default-avatar.png'
+                            }}
+                          />
+                          <span>{p.name} ({p.position})</span>
+                        </div>
+                        <span className="text-sm text-gray-300">{calculatePlayerValue(p)}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-                <div className="pt-2 border-t border-green-500/30">
-                  <p className="text-green-400 font-bold">Total Value: {receiveValue}</p>
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* Trade Verdict */}
-          <div className="bg-gray-800/50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-white mb-3">Trade Analysis</h3>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Net Value:</span>
-                <span className={`font-bold ${netValue >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {netValue >= 0 ? '+' : ''}{netValue}
-                </span>
+              
+              <div className="mt-4 p-3 bg-gray-700 rounded text-center">
+                <p className="text-lg">
+                  <span className="font-medium">Net Value:</span> 
+                  <span className={`ml-2 font-bold ${netValue > 0 ? 'text-green-400' : netValue < 0 ? 'text-red-400' : 'text-yellow-400'}`}>
+                    {netValue > 0 ? '+' : ''}{netValue}
+                  </span>
+                  <span className="ml-4 font-medium">Verdict:</span>
+                  <span className={`ml-2 font-bold ${
+                    tradeVerdict.includes('Win') ? 'text-green-400' : 
+                    tradeVerdict.includes('Lose') ? 'text-red-400' : 'text-yellow-400'
+                  }`}>
+                    {tradeVerdict}
+                  </span>
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400">Verdict:</span>
-                <div className="flex items-center gap-1">
-                  {getVerdictIcon(verdict)}
-                  <span className={`font-bold ${getVerdictColor(verdict)}`}>{verdict}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <button
-            onClick={handleSubmit}
-            disabled={givePlayers.length === 0 || receivePlayers.length === 0 || submitting}
-            className="w-full py-3 bg-neon-green hover:bg-green-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-bold rounded-lg transition-colors"
-          >
-            {submitting ? (
-              <div className="flex items-center justify-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Analyzing Trade...
-              </div>
-            ) : (
-              'Analyze Trade'
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Trade Suggestions (Premium Feature) */}
-      {user?.is_premium && (
-        <div className="bg-gray-800/50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-neon-green" />
-            <h3 className="text-lg font-semibold text-white">AI Trade Suggestions</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <select
-              value={suggestionPlayerId}
-              onChange={(e) => setSuggestionPlayerId(e.target.value)}
-              className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
-            >
-              <option value="">Select a player to trade</option>
-              {givePlayers.map(p => (
-                <option key={p.id} value={p.id}>{p.name} ({p.position})</option>
-              ))}
-            </select>
-            
-            <select
-              value={suggestionStrategy}
-              onChange={(e) => setSuggestionStrategy(e.target.value)}
-              className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
-            >
-              <option value="value">Best Value</option>
-              <option value="fairness">Fair Trade</option>
-              <option value="potential">High Potential</option>
-              <option value="needs">Fill Team Needs</option>
-            </select>
-            
-            <button
-              onClick={fetchTradeSuggestions}
-              disabled={!suggestionPlayerId || loadingSuggestions}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors"
-            >
-              {loadingSuggestions ? (
-                <div className="flex items-center justify-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading...
-                </div>
-              ) : (
-                'Get Suggestions'
-              )}
-            </button>
-          </div>
-
-          {suggestedTrades.length > 0 && (
-            <div className="space-y-3">
-              <h4 className="font-semibold text-white">Suggested Trade Packages:</h4>
-              {suggestedTrades.map((suggestion, index) => (
-                <div key={index} className="p-4 bg-gray-700/50 rounded-lg border border-gray-600">
-                  <div className="flex items-center justify-between mb-2">
-                    <h5 className="font-medium text-white">{suggestion.targetTeamName}</h5>
-                    <div className="flex items-center gap-2">
-                      {getVerdictIcon(suggestion.verdict)}
-                      <span className={`font-bold ${getVerdictColor(suggestion.verdict)}`}>
-                        {suggestion.verdict}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-gray-400 text-sm mb-3">{suggestion.reasoning}</p>
-                  <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div>
-                      <p className="text-gray-400 text-xs">Players Offered:</p>
-                      <ul className="text-sm text-white">
-                        {suggestion.playersOffered.map((player) => (
-                          <li key={player.id} className="flex items-center gap-2">
-                            <Image
-                              src={getHeadshotUrl(player.name, player.espnId)}
-                              alt={player.name}
-                              width={20}
-                              height={20}
-                              className="rounded-full bg-white"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement
-                                target.src = '/default-avatar.png'
-                              }}
-                            />
-                            {player.name} ({player.position})
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 text-xs">Trade Value: {suggestion.tradeValue}</p>
-                      <p className="text-gray-400 text-xs">Confidence: {suggestion.confidence}%</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => applySuggestedTrade(suggestion)}
-                    className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded transition-colors"
-                  >
-                    Use This Trade
-                  </button>
-                </div>
-              ))}
             </div>
           )}
-        </div>
-      )}
 
-      {/* Results */}
-      {result && (
-        <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-600">
-          <div className="flex items-center gap-2 mb-4">
-            {getVerdictIcon(result.tradeAssessment.verdict)}
-            <h3 className="text-xl font-bold text-white">
-              Trade Analysis Results
-            </h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-semibold text-white mb-3">Assessment</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Verdict:</span>
-                  <span className={`font-bold ${getVerdictColor(result.tradeAssessment.verdict)}`}>
-                    {result.tradeAssessment.verdict}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Team Gives:</span>
-                  <span className="text-white">{result.tradeAssessment.teamGives}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Team Receives:</span>
-                  <span className="text-white">{result.tradeAssessment.teamReceives}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Net Gain:</span>
-                  <span className={`font-bold ${result.tradeAssessment.netGain >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {result.tradeAssessment.netGain >= 0 ? '+' : ''}{result.tradeAssessment.netGain}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Confidence:</span>
-                  <span className="text-white">{result.tradeAssessment.confidence}%</span>
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Give Players Section */}
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+              <h3 className="font-bold mb-4 text-red-400">Players You Give</h3>
+              
+              {/* Filters */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <select 
+                  value={selectedTeam} 
+                  onChange={e => setSelectedTeam(e.target.value)} 
+                  className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
+                >
+                  {teamOptions.map(team => (
+                    <option key={team} value={team}>{team}</option>
+                  ))}
+                </select>
+                <select 
+                  value={selectedPosition} 
+                  onChange={e => setSelectedPosition(e.target.value)} 
+                  className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
+                >
+                  {positionOptions.map(pos => (
+                    <option key={pos} value={pos}>{pos}</option>
+                  ))}
+                </select>
               </div>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold text-white mb-3">Details</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Auto-Approve:</span>
-                  <span className={result.canAutoApprove ? 'text-green-400' : 'text-red-400'}>
-                    {result.canAutoApprove ? 'Yes' : 'No'}
-                  </span>
+
+              {/* Player Selection */}
+              <div className="mb-4">
+                <select 
+                  value={selectedPlayer} 
+                  onChange={e => setSelectedPlayer(e.target.value)} 
+                  className="w-full bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
+                >
+                  <option value="">Select Player to Add</option>
+                  {filteredPlayers.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} – {p.position} ({p.team}) - {calculatePlayerValue(p)} pts
+                    </option>
+                  ))}
+                </select>
+                <button 
+                  type="button" 
+                  onClick={addGivePlayer} 
+                  disabled={!selectedPlayer}
+                  className="mt-2 bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add Player
+                </button>
+              </div>
+
+              {/* Selected Players */}
+              {givePlayers.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-gray-300">Selected Players:</h4>
+                  {givePlayers.map(p => (
+                    <div key={p.id} className="flex items-center justify-between bg-gray-700 p-2 rounded">
+                      <div className="flex items-center gap-2">
+                        <Image
+                          src={getHeadshotUrl(p)}
+                          alt={p.name}
+                          width={24}
+                          height={24}
+                          className="rounded-full bg-white"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = '/default-avatar.png'
+                          }}
+                        />
+                        <span className="text-sm">{p.name} ({p.position})</span>
+                      </div>
+                      <button 
+                        onClick={() => removeGivePlayer(p.id)} 
+                        className="text-red-400 hover:text-red-300 text-sm"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                {result.reasoning && (
-                  <div>
-                    <p className="text-gray-400 text-sm mb-1">Reasoning:</p>
-                    <p className="text-white text-sm">{result.reasoning}</p>
+              )}
+            </div>
+
+            {/* Receive Players Section */}
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+              <h3 className="font-bold mb-4 text-green-400">Players You Receive</h3>
+              
+              {/* Filters */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <select 
+                  value={selectedReceiveTeam} 
+                  onChange={e => setSelectedReceiveTeam(e.target.value)} 
+                  className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
+                >
+                  {teamOptions.map(team => (
+                    <option key={team} value={team}>{team}</option>
+                  ))}
+                </select>
+                <select 
+                  value={selectedReceivePosition} 
+                  onChange={e => setSelectedReceivePosition(e.target.value)} 
+                  className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
+                >
+                  {positionOptions.map(pos => (
+                    <option key={pos} value={pos}>{pos}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Player Selection */}
+              <div className="mb-4">
+                <select 
+                  value={selectedReceivePlayer} 
+                  onChange={e => setSelectedReceivePlayer(e.target.value)} 
+                  className="w-full bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
+                >
+                  <option value="">Select Player to Add</option>
+                  {filteredReceivePlayers.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} – {p.position} ({p.team}) - {calculatePlayerValue(p)} pts
+                    </option>
+                  ))}
+                </select>
+                <button 
+                  type="button" 
+                  onClick={addReceivePlayer} 
+                  disabled={!selectedReceivePlayer}
+                  className="mt-2 bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add Player
+                </button>
+              </div>
+
+              {/* Selected Players */}
+              {receivePlayers.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-gray-300">Selected Players:</h4>
+                  {receivePlayers.map(p => (
+                    <div key={p.id} className="flex items-center justify-between bg-gray-700 p-2 rounded">
+                      <div className="flex items-center gap-2">
+                        <Image
+                          src={getHeadshotUrl(p)}
+                          alt={p.name}
+                          width={24}
+                          height={24}
+                          className="rounded-full bg-white"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = '/default-avatar.png'
+                          }}
+                        />
+                        <span className="text-sm">{p.name} ({p.position})</span>
+                      </div>
+                      <button 
+                        onClick={() => removeReceivePlayer(p.id)} 
+                        className="text-red-400 hover:text-red-300 text-sm"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Trade Suggestions (Premium Feature) */}
+          {user?.is_premium && (
+            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+              <div className="flex items-center space-x-2 mb-4">
+                <input
+                  type="checkbox"
+                  checked={includeSuggestions}
+                  onChange={e => setIncludeSuggestions(e.target.checked)}
+                  className="rounded"
+                />
+                <label className="font-medium">💡 Enable AI Trade Suggestions</label>
+              </div>
+              
+              {includeSuggestions && givePlayers.length > 0 && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <select
+                      value={suggestionPlayerId}
+                      onChange={e => setSuggestionPlayerId(e.target.value)}
+                      className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2"
+                    >
+                      <option value="">Select a player from your team</option>
+                      {givePlayers.map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} – {p.position}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={suggestionStrategy}
+                      onChange={e => setSuggestionStrategy(e.target.value)}
+                      className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2"
+                    >
+                      <option value="value">Best Value</option>
+                      <option value="fairness">Fairness</option>
+                      <option value="potential">High Potential</option>
+                      <option value="win-now">Win Now</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={fetchTradeSuggestions}
+                      disabled={!suggestionPlayerId || loadingSuggestions}
+                      className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
+                    >
+                      {loadingSuggestions ? 'Loading...' : 'Get Suggestions'}
+                    </button>
                   </div>
+
+                  {suggestedTrades.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="font-semibold mb-3">AI Trade Suggestions:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {suggestedTrades.map((sug, i) => (
+                          <div key={i} className="p-4 bg-gray-700 rounded border border-gray-600">
+                            <div className="flex justify-between items-start mb-2">
+                              <h5 className="font-medium">{sug.targetTeamName}</h5>
+                              <span className={`text-sm px-2 py-1 rounded ${
+                                sug.verdict.includes('Win') ? 'bg-green-600' : 
+                                sug.verdict.includes('Lose') ? 'bg-red-600' : 'bg-yellow-600'
+                              }`}>
+                                {sug.verdict}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-300 mb-2">
+                              Value: {sug.tradeValue} pts | Confidence: {sug.confidence}%
+                            </p>
+                            <p className="text-xs text-gray-400 mb-3">{sug.reasoning}</p>
+                            <div className="space-y-1 mb-3">
+                              {sug.playersOffered.map((p: Player) => (
+                                <div key={p.id} className="flex items-center gap-2 text-sm">
+                                  <Image
+                                    src={getHeadshotUrl(p)}
+                                    alt={p.name}
+                                    width={20}
+                                    height={20}
+                                    className="rounded-full bg-white"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement
+                                      target.src = '/default-avatar.png'
+                                    }}
+                                  />
+                                  {p.name} ({p.position}) - {calculatePlayerValue(p)} pts
+                                </div>
+                              ))}
+                            </div>
+                            <button
+                              type="button"
+                              className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                              onClick={() => applySuggestedTrade(sug)}
+                            >
+                              Use This Trade
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <div className="text-center">
+            <button 
+              type="submit" 
+              disabled={givePlayers.length === 0 && receivePlayers.length === 0}
+              className="bg-neon-green text-black px-8 py-3 rounded-lg font-semibold hover:bg-green-400 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Analyze Trade
+            </button>
+          </div>
+        </form>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mt-6 p-4 bg-red-900 border border-red-700 rounded-lg">
+            <p className="text-red-200">{error}</p>
+          </div>
+        )}
+
+        {/* Results Display */}
+        {result && (
+          <div className="mt-6 bg-gray-800 p-6 rounded-lg border border-gray-700">
+            <h3 className="text-xl font-semibold mb-4">Trade Analysis Results</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+              <div className="space-y-2">
+                <p><span className="font-medium">Team Gives Value:</span> {result.tradeAssessment.teamGives}</p>
+                <p><span className="font-medium">Team Receives Value:</span> {result.tradeAssessment.teamReceives}</p>
+                <p><span className="font-medium">Net Gain:</span> {result.tradeAssessment.netGain}</p>
+              </div>
+              <div className="space-y-2">
+                <p><span className="font-medium">Verdict:</span> {result.tradeAssessment.verdict}</p>
+                <p><span className="font-medium">Auto-Approve:</span> {result.canAutoApprove ? 'Yes' : 'No'}</p>
+                {result.riskLevel && (
+                  <p><span className="font-medium">Risk Level:</span> {result.riskLevel}</p>
                 )}
               </div>
             </div>
+            
+            {result.tradeAssessment.explanation && (
+              <div className="mt-4 p-3 bg-gray-700 rounded">
+                <h4 className="font-medium mb-2">Analysis:</h4>
+                <p className="text-sm text-gray-300">{result.tradeAssessment.explanation}</p>
+              </div>
+            )}
           </div>
-        </div>
-      )}
-
-      {/* Premium Upgrade Notice */}
-      {!user?.is_premium && (
-        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-yellow-400 mb-2">
-            <AlertCircle className="w-5 h-5" />
-            <span className="font-medium">Premium Feature</span>
-          </div>
-          <p className="text-gray-300 text-sm">
-            Upgrade to Premium to access AI-powered trade suggestions and advanced analytics.
-          </p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
-} 
+}
