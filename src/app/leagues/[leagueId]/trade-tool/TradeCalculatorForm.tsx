@@ -51,7 +51,7 @@ interface SuggestedTrade {
 }
 
 interface TradeData {
-  leagueId: number
+  league_id: string
   teamId: number
   trade: {
     give: number[]
@@ -150,7 +150,7 @@ const getVerdictIcon = (verdict: string) => {
   }
 }
 
-export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) {
+export default function TradeCalculatorForm({ league_id }: { league_id: string }) {
   // State management
   const [user, setUser] = useState<User | null>(null)
   const [players, setPlayers] = useState<Player[]>([])
@@ -184,7 +184,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         setError(null)
         
         // Load user info
-        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/trade-tool/me`, { 
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool/me`, { 
           credentials: 'include' 
         })
         if (userRes.ok) {
@@ -193,7 +193,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         }
         
         // Load league players
-        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/trade-tool/players`, {
+        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool/players`, {
           credentials: 'include'
         })
         if (playersRes.ok) {
@@ -212,7 +212,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
     }
     
     loadData()
-  }, [leagueId])
+  }, [league_id])
 
   // Computed values
   const filteredPlayers = useMemo(() => {
@@ -277,12 +277,12 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
     setSuggestedTrades([])
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/trade-tool/trade-calculate`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool/trade-calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          leagueId,
+          league_id,
           teamId: user.teamId,
           playerId: parseInt(suggestionPlayerId),
           strategy: suggestionStrategy
@@ -324,7 +324,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
 
     try {
       const tradeData: TradeData = {
-        leagueId,
+        league_id,
         teamId: user.teamId,
         trade: {
           give: givePlayers.map(p => p.id),
@@ -333,7 +333,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         includeSuggestions
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/trade-tool/trade-calculate`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool/trade-calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
