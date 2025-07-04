@@ -20,6 +20,14 @@ interface Player {
   yearsPro?: number
 }
 
+interface Team {
+  id: number
+  name: string
+  city: string
+  user: string
+  user_id?: number
+}
+
 interface User {
   id: number
   email: string
@@ -146,6 +154,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   // State management
   const [user, setUser] = useState<User | null>(null)
   const [players, setPlayers] = useState<Player[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
@@ -167,6 +176,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const [suggestionPlayerId, setSuggestionPlayerId] = useState('')
   const [suggestionStrategy, setSuggestionStrategy] = useState('value')
+
+  // Determine user's team by matching team.user_id to user.id
+  const userTeam = teams.find(team => String(team.user_id) === String(user?.id))
+  const userTeamId = userTeam?.id
 
   // Load initial data
   useEffect(() => {
@@ -197,6 +210,17 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           throw new Error('Failed to load players')
         }
         
+        // Load teams
+        const teamsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/teams`, {
+          credentials: 'include'
+        })
+        if (teamsRes.ok) {
+          const teamsData = await teamsRes.json()
+          setTeams(teamsData.teams || [])
+        } else {
+          throw new Error('Failed to load teams')
+        }
+        
       } catch (err) {
         console.error('Failed to load data:', err)
         setError('Failed to load league data. Please try again.')
@@ -214,11 +238,11 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesTeam = selectedTeam === 'All' || p.team === selectedTeam
       const matchesPosition = selectedPosition === 'All' || p.position === selectedPosition
-      const matchesMyTeam = !showMyTeamOnly || p.teamId === user?.teamId
+      const matchesMyTeam = !showMyTeamOnly || p.teamId === userTeamId
       
       return matchesSearch && matchesTeam && matchesPosition && matchesMyTeam
     }).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
-  }, [players, searchTerm, selectedTeam, selectedPosition, showMyTeamOnly, user?.teamId])
+  }, [players, searchTerm, selectedTeam, selectedPosition, showMyTeamOnly, userTeamId])
 
   const availableTeams = useMemo(() => {
     const teamNames = [...new Set(players.map(p => p.team).filter(Boolean))].sort()
@@ -268,7 +292,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   }, [])
 
   const fetchTradeSuggestions = async () => {
-    if (!suggestionPlayerId || !user?.teamId) return
+    if (!suggestionPlayerId || !userTeamId) return
     
     setLoadingSuggestions(true)
     setSuggestedTrades([])
@@ -280,7 +304,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         credentials: 'include',
         body: JSON.stringify({
           league_id,
-          teamId: user.teamId,
+          teamId: userTeamId,
           playerId: parseInt(suggestionPlayerId),
           strategy: suggestionStrategy
         })
@@ -310,7 +334,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user?.teamId) {
+    if (!userTeamId) {
       console.log('User object when unable to determine team:', user)
       setError('Unable to determine your team. Please refresh the page.')
       return
@@ -323,7 +347,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     try {
       const tradeData: TradeData = {
         league_id,
-        teamId: user.teamId,
+        teamId: userTeamId,
         trade: {
           give: givePlayers.map(p => p.id),
           receive: receivePlayers.map(p => p.id),
@@ -380,7 +404,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     )
   }
 
-  if (!user?.teamId) {
+  if (!userTeamId) {
     return (
       <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6 text-center text-red-400">
         Unable to determine your team. Please refresh the page or contact support.
