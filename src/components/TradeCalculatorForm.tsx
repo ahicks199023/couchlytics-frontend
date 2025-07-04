@@ -58,13 +58,8 @@ type TradeSuggestion = {
   suggestions: SuggestedTrade[]
 }
 
-const getHeadshotUrl = (player: Player) => {
-  if (player.espnId) {
-    return `/headshots/${player.espnId}.png`
-  }
-  const sanitized = player.name.toLowerCase().replace(/[^a-z]/g, '')
-  return `/headshots/${sanitized}.png`
-}
+// Always use default avatar to prevent headshot errors
+const getHeadshotUrl = () => '/default-avatar.png'
 
 // Enhanced player value calculation
 const calculatePlayerValue = (player: Player): number => {
@@ -121,7 +116,7 @@ const calculatePlayerValue = (player: Player): number => {
   return Math.round(baseValue * multiplier * ageFactor * devFactor)
 }
 
-export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) {
+export default function TradeCalculatorForm({ league_id }: { league_id: string }) {
   const [user, setUser] = useState<User | null>(null)
   const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
@@ -154,14 +149,14 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         setLoading(true)
         
         // Load user info
-        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/trade-tool`, { credentials: 'include' })
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
         if (userRes.ok) {
           const userData = await userRes.json()
           setUser(userData)
         }
         
         // Load league players
-        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players`, { credentials: 'include' })
+        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players`, { credentials: 'include' })
         if (playersRes.ok) {
           const playersData = await playersRes.json()
           setPlayers(playersData.players || [])
@@ -176,7 +171,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
     }
     
     loadData()
-  }, [leagueId])
+  }, [league_id])
 
   // Computed values
   const filteredPlayers = useMemo(() => {
@@ -252,12 +247,12 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
     setSuggestedTrades([])
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/trade-tool`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool`, {
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          leagueId,
+          league_id,
           teamId: user.teamId,
           playerId: parseInt(suggestionPlayerId),
           strategy: suggestionStrategy
@@ -307,7 +302,7 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
         includeSuggestions
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/trade-tool`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool`, {
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -374,15 +369,11 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
                       <div key={p.id} className="flex items-center justify-between bg-gray-700 p-2 rounded">
                         <div className="flex items-center gap-2">
                           <Image
-                            src={getHeadshotUrl(p)}
+                            src={getHeadshotUrl()}
                             alt={p.name}
                             width={32}
                             height={32}
                             className="rounded-full bg-white"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement
-                              target.src = '/default-avatar.png'
-                            }}
                           />
                           <span>{p.name} ({p.position})</span>
                         </div>
@@ -398,15 +389,11 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
                       <div key={p.id} className="flex items-center justify-between bg-gray-700 p-2 rounded">
                         <div className="flex items-center gap-2">
                           <Image
-                            src={getHeadshotUrl(p)}
+                            src={getHeadshotUrl()}
                             alt={p.name}
                             width={32}
                             height={32}
                             className="rounded-full bg-white"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement
-                              target.src = '/default-avatar.png'
-                            }}
                           />
                           <span>{p.name} ({p.position})</span>
                         </div>
@@ -494,15 +481,11 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
                     <div key={p.id} className="flex items-center justify-between bg-gray-700 p-2 rounded">
                       <div className="flex items-center gap-2">
                         <Image
-                          src={getHeadshotUrl(p)}
+                          src={getHeadshotUrl()}
                           alt={p.name}
                           width={24}
                           height={24}
                           className="rounded-full bg-white"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement
-                            target.src = '/default-avatar.png'
-                          }}
                         />
                         <span className="text-sm">{p.name} ({p.position})</span>
                       </div>
@@ -576,15 +559,11 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
                     <div key={p.id} className="flex items-center justify-between bg-gray-700 p-2 rounded">
                       <div className="flex items-center gap-2">
                         <Image
-                          src={getHeadshotUrl(p)}
+                          src={getHeadshotUrl()}
                           alt={p.name}
                           width={24}
                           height={24}
                           className="rounded-full bg-white"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement
-                            target.src = '/default-avatar.png'
-                          }}
                         />
                         <span className="text-sm">{p.name} ({p.position})</span>
                       </div>
@@ -672,15 +651,11 @@ export default function TradeCalculatorForm({ leagueId }: { leagueId: number }) 
                               {sug.playersOffered.map((p: Player) => (
                                 <div key={p.id} className="flex items-center gap-2 text-sm">
                                   <Image
-                                    src={getHeadshotUrl(p)}
+                                    src={getHeadshotUrl()}
                                     alt={p.name}
                                     width={20}
                                     height={20}
                                     className="rounded-full bg-white"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement
-                                      target.src = '/default-avatar.png'
-                                    }}
                                   />
                                   {p.name} ({p.position}) - {calculatePlayerValue(p)} pts
                                 </div>
