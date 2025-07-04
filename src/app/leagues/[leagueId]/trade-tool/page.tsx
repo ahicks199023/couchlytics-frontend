@@ -16,7 +16,7 @@ export default function TradeToolPage() {
     if (!league_id) return
     const validateAccess = async () => {
       try {
-        const res = await fetch(`${API_BASE}/league/${league_id}/is-member`, {
+        const res = await fetch(`${API_BASE}/leagues/${league_id}/is-member`, {
           credentials: 'include'
         })
         const data = await res.json()
