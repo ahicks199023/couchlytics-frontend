@@ -255,6 +255,14 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     return ['All', ...teamNames];
   }, [players]);
 
+  const availablePositions = useMemo(() => {
+    const positions = [...new Set(players
+      .map(p => typeof p.position === 'string' ? p.position.toUpperCase() : null)
+      .filter((pos): pos is string => Boolean(pos))
+    )].sort();
+    return ['All', ...positions];
+  }, [players]);
+
   const filteredPlayers = useMemo(() => {
     return players.filter(p => {
       const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -477,7 +485,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             onChange={(e) => setSelectedPosition(e.target.value)}
             className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
           >
-            {['All', ...new Set(players.map(p => p.position))].sort().map(pos => (
+            {availablePositions.map((pos: string) => (
               <option key={pos} value={pos}>{pos}</option>
             ))}
           </select>
