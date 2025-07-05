@@ -859,7 +859,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       )}
 
       {/* Results */}
-      {result && (
+      {result && result.tradeAssessment ? (
         <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-600">
           <div className="flex items-center gap-2 mb-4">
             {getVerdictIcon(result.tradeAssessment.verdict)}
@@ -867,7 +867,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               Trade Analysis Results
             </h3>
           </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h4 className="font-semibold text-white mb-3">Assessment</h4>
@@ -898,7 +897,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                 </div>
               </div>
             </div>
-            
             <div>
               <h4 className="font-semibold text-white mb-3">Details</h4>
               <div className="space-y-2">
@@ -918,7 +916,14 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             </div>
           </div>
         </div>
-      )}
+      ) : result ? (
+        <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-600 text-red-400">
+          Could not analyze trade. Please try again or check your selections.
+          {result.reasoning && (
+            <div className="mt-2 text-white text-sm">{result.reasoning}</div>
+          )}
+        </div>
+      ) : null}
 
       {/* Premium Upgrade Notice */}
       {!user?.is_premium && (
