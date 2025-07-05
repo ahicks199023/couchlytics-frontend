@@ -7,8 +7,8 @@ import { Loader2, Search, Filter, TrendingUp, AlertCircle, CheckCircle, XCircle 
 // Types
 interface Player {
   id: number
-  name: string
-  team: string
+  name?: string | null
+  team?: string | null
   position?: string | null
   ovr: number
   teamId?: number
@@ -265,8 +265,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   const filteredPlayers = useMemo(() => {
     return players.filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesTeam = selectedTeam === 'All' || p.team === selectedTeam;
+      // Make search filter robust against null/undefined names
+      const matchesSearch = typeof p.name === 'string' && p.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesTeam = selectedTeam === 'All' || (typeof p.team === 'string' && p.team === selectedTeam);
       // Make position filter robust and case-insensitive
       const matchesPosition =
         selectedPosition === 'All' ||
@@ -470,23 +471,23 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
           {/* Team Filter */}
           <select
-            value={selectedTeam}
+            value={selectedTeam || ''}
             onChange={(e) => setSelectedTeam(e.target.value)}
             className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
           >
             {availableTeams.map(team => (
-              <option key={team} value={team}>{team}</option>
+              <option key={team || ''} value={team || ''}>{team || '—'}</option>
             ))}
           </select>
 
           {/* Position Filter */}
           <select
-            value={selectedPosition}
+            value={selectedPosition || ''}
             onChange={(e) => setSelectedPosition(e.target.value)}
             className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
           >
             {availablePositions.map((pos: string) => (
-              <option key={pos} value={pos}>{pos}</option>
+              <option key={pos || ''} value={pos || ''}>{pos || '—'}</option>
             ))}
           </select>
 
@@ -523,15 +524,15 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                   >
                     <Image
                       src={'/default-avatar.png'}
-                      alt={player.name}
+                      alt={typeof player.name === 'string' ? player.name : 'Player'}
                       width={40}
                       height={40}
                       className="rounded-full bg-white"
                     />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-medium truncate">{player.name}</p>
-                      <p className="text-gray-400 text-sm">{player.position || '—'} • {player.team}</p>
-                    </div>
+                                          <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium truncate">{player.name || '—'}</p>
+                        <p className="text-gray-400 text-sm">{player.position || '—'} • {player.team || '—'}</p>
+                      </div>
                     <div className="text-right">
                       <p className="text-neon-green font-bold">{player.ovr}</p>
                       <p className="text-gray-400 text-xs">OVR</p>
@@ -556,13 +557,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                   <div key={player.id} className="flex items-center gap-2 p-2 bg-red-900/30 rounded">
                     <Image
                       src={'/default-avatar.png'}
-                      alt={player.name}
+                      alt={typeof player.name === 'string' ? player.name : 'Player'}
                       width={40}
                       height={40}
                       className="rounded-full bg-white"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm truncate">{player.name}</p>
+                      <p className="text-white text-sm truncate">{player.name || '—'}</p>
                       <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR</p>
                     </div>
                     <button
@@ -591,13 +592,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                   <div key={player.id} className="flex items-center gap-2 p-2 bg-green-900/30 rounded">
                     <Image
                       src={'/default-avatar.png'}
-                      alt={player.name}
+                      alt={typeof player.name === 'string' ? player.name : 'Player'}
                       width={40}
                       height={40}
                       className="rounded-full bg-white"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm truncate">{player.name}</p>
+                      <p className="text-white text-sm truncate">{player.name || '—'}</p>
                       <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR</p>
                     </div>
                     <button
@@ -663,13 +664,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <select
-              value={suggestionPlayerId}
+              value={suggestionPlayerId || ''}
               onChange={(e) => setSuggestionPlayerId(e.target.value)}
               className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
             >
               <option value="">Select a player to trade</option>
               {givePlayers.map(p => (
-                <option key={p.id} value={p.id}>{p.name} ({p.position || '—'})</option>
+                <option key={p.id} value={p.id}>{p.name || '—'} ({p.position || '—'})</option>
               ))}
             </select>
             
@@ -723,12 +724,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                           <li key={player.id} className="flex items-center gap-2">
                             <Image
                               src={'/default-avatar.png'}
-                              alt={player.name}
+                              alt={typeof player.name === 'string' ? player.name : 'Player'}
                               width={40}
                               height={40}
                               className="rounded-full bg-white"
                             />
-                            {player.name} ({player.position || '—'})
+                            {player.name || '—'} ({player.position || '—'})
                           </li>
                         ))}
                       </ul>
