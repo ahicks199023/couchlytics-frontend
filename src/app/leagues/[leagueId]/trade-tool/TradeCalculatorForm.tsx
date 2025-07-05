@@ -9,7 +9,7 @@ interface Player {
   id: number
   name: string
   team: string
-  position: string
+  position?: string | null
   ovr: number
   teamId?: number
   teamName?: string
@@ -96,7 +96,7 @@ const calculatePlayerValue = (player: Player): number => {
     'P': 0.4
   }
   
-  const multiplier = positionMultipliers[player.position] || 1.0
+  const multiplier = positionMultipliers[player.position || ''] || 1.0
   
   // Age factor (younger players worth more)
   if (player.age) {
@@ -257,7 +257,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   const availablePositions = useMemo(() => {
     const positions = [...new Set(players
-      .map(p => typeof p.position === 'string' ? p.position.toUpperCase() : null)
+      .map(p => typeof p.position === 'string' && p.position.trim() ? p.position.toUpperCase() : null)
       .filter((pos): pos is string => Boolean(pos))
     )].sort();
     return ['All', ...positions];
@@ -270,7 +270,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       // Make position filter robust and case-insensitive
       const matchesPosition =
         selectedPosition === 'All' ||
-        (typeof p.position === 'string' && typeof selectedPosition === 'string' &&
+        (typeof p.position === 'string' && p.position.trim() && typeof selectedPosition === 'string' &&
           p.position.toUpperCase() === selectedPosition.toUpperCase());
       const matchesMyTeam = !showMyTeamOnly || p.teamId === userTeamId;
       return matchesSearch && matchesTeam && matchesPosition && matchesMyTeam;
@@ -530,7 +530,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium truncate">{player.name}</p>
-                      <p className="text-gray-400 text-sm">{player.position} • {player.team}</p>
+                      <p className="text-gray-400 text-sm">{player.position || '—'} • {player.team}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-neon-green font-bold">{player.ovr}</p>
@@ -563,7 +563,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm truncate">{player.name}</p>
-                      <p className="text-gray-400 text-xs">{player.position} • {player.ovr} OVR</p>
+                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR</p>
                     </div>
                     <button
                       onClick={() => removePlayer(player.id, true)}
@@ -598,7 +598,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm truncate">{player.name}</p>
-                      <p className="text-gray-400 text-xs">{player.position} • {player.ovr} OVR</p>
+                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR</p>
                     </div>
                     <button
                       onClick={() => removePlayer(player.id, false)}
@@ -669,7 +669,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             >
               <option value="">Select a player to trade</option>
               {givePlayers.map(p => (
-                <option key={p.id} value={p.id}>{p.name} ({p.position})</option>
+                <option key={p.id} value={p.id}>{p.name} ({p.position || '—'})</option>
               ))}
             </select>
             
@@ -728,7 +728,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                               height={40}
                               className="rounded-full bg-white"
                             />
-                            {player.name} ({player.position})
+                            {player.name} ({player.position || '—'})
                           </li>
                         ))}
                       </ul>
