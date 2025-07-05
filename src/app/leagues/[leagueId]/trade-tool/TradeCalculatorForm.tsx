@@ -158,6 +158,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
+  // Pagination state
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
+  const [totalResults, setTotalResults] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  
   // Trade state
   const [givePlayers, setGivePlayers] = useState<Player[]>([])
   const [receivePlayers, setReceivePlayers] = useState<Player[]>([])
@@ -198,29 +204,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           console.log('User object:', userData)
         }
         
-        // Load league players (fetch all pages)
-        async function fetchAllPlayers(league_id: string): Promise<Player[]> {
-          let allPlayers: Player[] = [];
-          let page = 1;
-          const pageSize = 100; // adjust if your backend default is different
-          let total: number = 0;
-          while (true) {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players?page=${page}&pageSize=${pageSize}`, {
-              credentials: 'include'
-            });
-            const data = await res.json();
-            const players = data.players || [];
-            allPlayers = allPlayers.concat(players);
-            total = data.total || 0;
-            if (players.length < pageSize || (total && allPlayers.length >= total)) break;
-            page += 1;
-          }
-          return allPlayers;
-        }
-        const allPlayers = await fetchAllPlayers(league_id);
-        setPlayers(allPlayers);
-        console.log('Fetched all players:', allPlayers);
-        
         // Load teams
         const teamsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/teams`, {
           credentials: 'include'
@@ -243,25 +226,79 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     loadData()
   }, [league_id])
 
+  // Load players with pagination
+  useEffect(() => {
+    const loadPlayers = async () => {
+      if (!league_id) return
+      
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const params = new URLSearchParams({
+          page: String(page),
+          pageSize: String(pageSize),
+        })
+        if (searchTerm) params.append("search", searchTerm)
+        if (selectedPosition !== 'All') params.append("position", selectedPosition)
+        if (selectedTeam !== 'All') params.append("team", selectedTeam)
+        
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players?${params.toString()}`, {
+          credentials: 'include'
+        })
+        
+        if (!res.ok) {
+          throw new Error('Failed to load players')
+        }
+        
+        const data = await res.json()
+        const players = data.players || []
+        setPlayers(players)
+        setTotalResults(data.total || 0)
+        setTotalPages(Math.max(1, Math.ceil((data.total || 0) / pageSize)))
+        console.log('Fetched players:', players)
+        
+      } catch (err) {
+        console.error('Failed to load players:', err)
+        setError('Failed to load players. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadPlayers()
+  }, [league_id, page, pageSize, searchTerm, selectedPosition, selectedTeam])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1)
+  }, [searchTerm, selectedPosition, selectedTeam, pageSize])
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return
+    setPage(newPage)
+  }
+
   // Debug: log positions in state and selectedPosition before filtering
   console.log('Positions in state:', [...new Set(players.map(p => p.position))]);
   console.log('Selected position:', selectedPosition);
 
   const availableTeams = useMemo(() => {
-    const teamNames = [...new Set(players.map(p => p.team).filter(Boolean))].sort();
+    // For pagination, we'll use a fixed list of teams or get from teams API
+    const teamNames = teams.map(t => t.name).filter(Boolean).sort();
     if (teamNames.length === 0) {
-      console.warn('No team names found in player data. Team filter will be disabled.');
+      console.warn('No team names found in teams data. Team filter will be disabled.');
     }
     return ['All', ...teamNames];
-  }, [players]);
+  }, [teams]);
 
   const availablePositions = useMemo(() => {
-    const positions = [...new Set(players
-      .map(p => typeof p.position === 'string' && p.position.trim() ? p.position.toUpperCase() : null)
-      .filter((pos): pos is string => Boolean(pos))
-    )].sort();
+    // For pagination, use a fixed list of positions like Players Database
+    const positions = [
+      "QB", "RB", "WR", "TE", "K", "DEF", "OL", "DL", "LB", "CB", "S"
+    ];
     return ['All', ...positions];
-  }, [players]);
+  }, []);
 
   const filteredPlayers = useMemo(() => {
     return players.filter(p => {
@@ -501,7 +538,23 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             />
             <span className="text-gray-300">My Team Only</span>
           </label>
+
+          {/* Page Size Selector */}
+          <select
+            value={pageSize}
+            onChange={(e) => setPageSize(Number(e.target.value))}
+            className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
+          >
+            <option value={20}>20 per page</option>
+            <option value={50}>50 per page</option>
+            <option value={100}>100 per page</option>
+          </select>
         </div>
+      </div>
+
+      {/* Pagination Info */}
+      <div className="mb-4 text-gray-400 text-sm">
+        Showing {players.length} of {totalResults} players (Page {page} of {totalPages})
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -541,6 +594,27 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                 ))}
               </div>
             )}
+
+            {/* Page Navigation */}
+            <div className="flex items-center justify-center gap-4 mt-4">
+              <button
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page === 1}
+                className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50 hover:bg-gray-600 transition-colors"
+              >
+                Previous
+              </button>
+              <span className="text-gray-300">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page === totalPages}
+                className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50 hover:bg-gray-600 transition-colors"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
 
