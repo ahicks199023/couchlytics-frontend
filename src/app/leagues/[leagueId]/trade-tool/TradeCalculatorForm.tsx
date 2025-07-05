@@ -183,6 +183,33 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [suggestionPlayerId, setSuggestionPlayerId] = useState('')
   const [suggestionStrategy, setSuggestionStrategy] = useState('value')
 
+  // Two-panel state
+  const [giveTeam, setGiveTeam] = useState('All')
+  const [givePosition, setGivePosition] = useState('All')
+  const [giveSearch, setGiveSearch] = useState('')
+  const [givePage, setGivePage] = useState(1)
+  const [givePageSize, setGivePageSize] = useState(50)
+  const [givePlayersList, setGivePlayersList] = useState<Player[]>([])
+  const [giveTotal, setGiveTotal] = useState(0)
+  const [giveTotalPages, setGiveTotalPages] = useState(1)
+
+  const [receiveTeam, setReceiveTeam] = useState('All')
+  const [receivePosition, setReceivePosition] = useState('All')
+  const [receiveSearch, setReceiveSearch] = useState('')
+  const [receivePage, setReceivePage] = useState(1)
+  const [receivePageSize, setReceivePageSize] = useState(50)
+  const [receivePlayersList, setReceivePlayersList] = useState<Player[]>([])
+  const [receiveTotal, setReceiveTotal] = useState(0)
+  const [receiveTotalPages, setReceiveTotalPages] = useState(1)
+
+  // 1. Add sort state for each panel
+  const [giveSort, setGiveSort] = useState('Name')
+  const [receiveSort, setReceiveSort] = useState('Name')
+
+  // 4. Add modal state
+  const [modalPlayer, setModalPlayer] = useState<Player | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+
   // Determine user's team by matching team.user_id to user.id
   const userTeam = teams.find(team => String(team.user_id) === String(user?.id))
   const userTeamId = userTeam?.id
@@ -274,15 +301,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     setPage(1)
   }, [searchTerm, selectedPosition, selectedTeam, pageSize])
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages) return
-    setPage(newPage)
-  }
-
-  // Debug: log positions in state and selectedPosition before filtering
-  console.log('Positions in state:', [...new Set(players.map(p => p.position))]);
-  console.log('Selected position:', selectedPosition);
-
   const availableTeams = useMemo(() => {
     // For pagination, we'll use a fixed list of teams or get from teams API
     const teamNames = teams.map(t => t.name).filter(Boolean).sort();
@@ -299,15 +317,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     ];
     return ['All', ...positions];
   }, []);
-
-  const filteredPlayers = useMemo(() => {
-    return players.filter(p => {
-      // Only apply frontend filtering for My Team Only and search
-      const matchesSearch = typeof p.name === 'string' && p.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesMyTeam = !showMyTeamOnly || p.teamId === userTeamId;
-      return matchesSearch && matchesMyTeam;
-    }).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a));
-  }, [players, searchTerm, showMyTeamOnly, userTeamId]);
 
   const giveValue = useMemo(() => 
     givePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0), 
@@ -426,6 +435,101 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     } finally {
       setSubmitting(false)
     }
+  }
+
+  // Fetch players for Give panel
+  useEffect(() => {
+    const fetchGivePlayers = async () => {
+      if (!league_id || giveTeam === 'All') {
+        setGivePlayersList([])
+        setGiveTotal(0)
+        setGiveTotalPages(1)
+        return
+      }
+      try {
+        setLoading(true)
+        setError(null)
+        const params = new URLSearchParams({
+          page: String(givePage),
+          pageSize: String(givePageSize),
+        })
+        if (giveTeam !== 'All') params.append('team', giveTeam)
+        if (givePosition !== 'All') params.append('position', givePosition)
+        if (giveSearch) params.append('search', giveSearch)
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players?${params.toString()}`, {
+          credentials: 'include'
+        })
+        if (!res.ok) throw new Error('Failed to load players')
+        const data = await res.json()
+        setGivePlayersList(data.players || [])
+        setGiveTotal(data.total || 0)
+        setGiveTotalPages(Math.max(1, Math.ceil((data.total || 0) / givePageSize)))
+      } catch {
+        setError('Failed to load players for your team.')
+        setGivePlayersList([])
+        setGiveTotal(0)
+        setGiveTotalPages(1)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchGivePlayers()
+  }, [league_id, giveTeam, givePosition, giveSearch, givePage, givePageSize])
+
+  // Fetch players for Receive panel
+  useEffect(() => {
+    const fetchReceivePlayers = async () => {
+      if (!league_id || receiveTeam === 'All') {
+        setReceivePlayersList([])
+        setReceiveTotal(0)
+        setReceiveTotalPages(1)
+        return
+      }
+      try {
+        setLoading(true)
+        setError(null)
+        const params = new URLSearchParams({
+          page: String(receivePage),
+          pageSize: String(receivePageSize),
+        })
+        if (receiveTeam !== 'All') params.append('team', receiveTeam)
+        if (receivePosition !== 'All') params.append('position', receivePosition)
+        if (receiveSearch) params.append('search', receiveSearch)
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players?${params.toString()}`, {
+          credentials: 'include'
+        })
+        if (!res.ok) throw new Error('Failed to load players')
+        const data = await res.json()
+        setReceivePlayersList(data.players || [])
+        setReceiveTotal(data.total || 0)
+        setReceiveTotalPages(Math.max(1, Math.ceil((data.total || 0) / receivePageSize)))
+      } catch {
+        setError('Failed to load players for other team.')
+        setReceivePlayersList([])
+        setReceiveTotal(0)
+        setReceiveTotalPages(1)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchReceivePlayers()
+  }, [league_id, receiveTeam, receivePosition, receiveSearch, receivePage, receivePageSize])
+
+  // Helper: sort function
+  function sortPlayers(players: Player[], sort: string) {
+    return [...players].sort((a, b) => {
+      if (sort === 'OVR') return (b.ovr || 0) - (a.ovr || 0)
+      if (sort === 'Age') return (a.age || 0) - (b.age || 0)
+      if (sort === 'Value') return calculatePlayerValue(b) - calculatePlayerValue(a)
+      // Default: Name
+      return (a.name || '').localeCompare(b.name || '')
+    })
+  }
+
+  // Helper to open player modal
+  function openPlayerModal(player: Player) {
+    setModalPlayer(player);
+    setModalOpen(true);
   }
 
   if (loading) {
@@ -552,67 +656,108 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Player Selection */}
-        <div className="lg:col-span-2">
+        {/* Two-panel player selection */}
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Give Panel */}
           <div className="bg-gray-800/50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">Available Players</h3>
-            
-            {filteredPlayers.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                <p>No players found matching your filters</p>
-              </div>
+            <h3 className="text-lg font-semibold text-white mb-4">Your Team</h3>
+            <div className="flex gap-2 mb-2">
+              <select value={giveTeam} onChange={e => { setGiveTeam(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
+                <option value="All">Select Team</option>
+                {teams.map(team => <option key={team.id} value={team.name}>{team.name}</option>)}
+              </select>
+              <select value={givePosition} onChange={e => { setGivePosition(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
+                <option value="All">All Positions</option>
+                {availablePositions.slice(1).map(pos => <option key={pos} value={pos}>{pos}</option>)}
+              </select>
+              <input type="text" value={giveSearch} onChange={e => { setGiveSearch(e.target.value); setGivePage(1); }} placeholder="Search..." className="px-2 py-1 rounded bg-gray-700 text-white flex-1" />
+              <select value={givePageSize} onChange={e => { setGivePageSize(Number(e.target.value)); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <select value={giveSort} onChange={e => setGiveSort(e.target.value)} className="px-2 py-1 rounded bg-gray-700 text-white">
+                <option value="Name">Name</option>
+                <option value="OVR">OVR</option>
+                <option value="Age">Age</option>
+                <option value="Value">Value</option>
+              </select>
+            </div>
+            <div className="mb-2 text-gray-400 text-xs">Showing {givePlayersList.length} of {giveTotal} (Page {givePage} of {giveTotalPages})</div>
+            {givePlayersList.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">No players found.</div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-96 overflow-y-auto">
-                {filteredPlayers.map((player) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors cursor-pointer"
-                    onClick={() => addPlayer(player, true)}
-                  >
-                    <Image
-                      src={'/default-avatar.png'}
-                      alt={typeof player.name === 'string' ? player.name : 'Player'}
-                      width={40}
-                      height={40}
-                      className="rounded-full bg-white"
-                    />
-                                          <div className="flex-1 min-w-0">
-                        <p className="text-white font-medium truncate">{player.name || '—'}</p>
-                        <p className="text-gray-400 text-sm">{player.position || '—'} • {player.team || '—'}</p>
-                      </div>
-                    <div className="text-right">
-                      <p className="text-neon-green font-bold">{player.ovr}</p>
-                      <p className="text-gray-400 text-xs">OVR</p>
+              <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto">
+                {sortPlayers(givePlayersList.filter(p => !givePlayers.some(sel => sel.id === p.id)), giveSort).map(player => (
+                  <div key={player.id} className="flex items-center gap-3 p-2 bg-gray-700/50 rounded-lg hover:bg-gray-700 cursor-pointer" onClick={() => addPlayer(player, true)}>
+                    <Image src={'/default-avatar.png'} alt={typeof player.name === 'string' ? player.name : 'Player'} width={32} height={32} className="rounded-full bg-white" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium truncate">{player.name || '—'}</p>
+                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.team || '—'}</p>
                     </div>
+                    <p className="text-neon-green font-bold">{player.ovr}</p>
+                    <button className="ml-2 text-gray-400 hover:text-white" onClick={e => { e.stopPropagation(); openPlayerModal(player); }} title="View Details" type="button">i</button>
                   </div>
                 ))}
               </div>
             )}
-
-            {/* Page Navigation */}
-            <div className="flex items-center justify-center gap-4 mt-4">
-              <button
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page === 1}
-                className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50 hover:bg-gray-600 transition-colors"
-              >
-                Previous
-              </button>
-              <span className="text-gray-300">
-                Page {page} of {totalPages}
-              </span>
-              <button
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page === totalPages}
-                className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50 hover:bg-gray-600 transition-colors"
-              >
-                Next
-              </button>
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <button onClick={() => setGivePage(givePage - 1)} disabled={givePage === 1} className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50">Prev</button>
+              <span className="text-gray-300">Page {givePage} of {giveTotalPages}</span>
+              <button onClick={() => setGivePage(givePage + 1)} disabled={givePage === giveTotalPages} className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50">Next</button>
+            </div>
+          </div>
+          {/* Receive Panel */}
+          <div className="bg-gray-800/50 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-white mb-4">Other Team</h3>
+            <div className="flex gap-2 mb-2">
+              <select value={receiveTeam} onChange={e => { setReceiveTeam(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
+                <option value="All">Select Team</option>
+                {teams.map(team => <option key={team.id} value={team.name}>{team.name}</option>)}
+              </select>
+              <select value={receivePosition} onChange={e => { setReceivePosition(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
+                <option value="All">All Positions</option>
+                {availablePositions.slice(1).map(pos => <option key={pos} value={pos}>{pos}</option>)}
+              </select>
+              <input type="text" value={receiveSearch} onChange={e => { setReceiveSearch(e.target.value); setReceivePage(1); }} placeholder="Search..." className="px-2 py-1 rounded bg-gray-700 text-white flex-1" />
+              <select value={receivePageSize} onChange={e => { setReceivePageSize(Number(e.target.value)); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <select value={receiveSort} onChange={e => setReceiveSort(e.target.value)} className="px-2 py-1 rounded bg-gray-700 text-white">
+                <option value="Name">Name</option>
+                <option value="OVR">OVR</option>
+                <option value="Age">Age</option>
+                <option value="Value">Value</option>
+              </select>
+            </div>
+            <div className="mb-2 text-gray-400 text-xs">Showing {receivePlayersList.length} of {receiveTotal} (Page {receivePage} of {receiveTotalPages})</div>
+            {receivePlayersList.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">No players found.</div>
+            ) : (
+              <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto">
+                {sortPlayers(receivePlayersList.filter(p => !receivePlayers.some(sel => sel.id === p.id)), receiveSort).map(player => (
+                  <div key={player.id} className="flex items-center gap-3 p-2 bg-gray-700/50 rounded-lg hover:bg-gray-700 cursor-pointer" onClick={() => addPlayer(player, false)}>
+                    <Image src={'/default-avatar.png'} alt={typeof player.name === 'string' ? player.name : 'Player'} width={32} height={32} className="rounded-full bg-white" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium truncate">{player.name || '—'}</p>
+                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.team || '—'}</p>
+                    </div>
+                    <p className="text-neon-green font-bold">{player.ovr}</p>
+                    <button className="ml-2 text-gray-400 hover:text-white" onClick={e => { e.stopPropagation(); openPlayerModal(player); }} title="View Details" type="button">i</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <button onClick={() => setReceivePage(receivePage - 1)} disabled={receivePage === 1} className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50">Prev</button>
+              <span className="text-gray-300">Page {receivePage} of {receiveTotalPages}</span>
+              <button onClick={() => setReceivePage(receivePage + 1)} disabled={receivePage === receiveTotalPages} className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50">Next</button>
             </div>
           </div>
         </div>
-
-        {/* Trade Summary */}
+        {/* Trade Summary/Analysis Panel (right) remains unchanged */}
         <div className="space-y-4">
           {/* Give Players */}
           <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
@@ -635,7 +780,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR</p>
                     </div>
                     <button
-                      onClick={() => removePlayer(player.id, true)}
+                      onClick={(e) => { e.stopPropagation(); removePlayer(player.id, true) }}
                       className="text-red-400 hover:text-red-300"
                     >
                       ×
@@ -670,7 +815,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR</p>
                     </div>
                     <button
-                      onClick={() => removePlayer(player.id, false)}
+                      onClick={(e) => { e.stopPropagation(); removePlayer(player.id, false) }}
                       className="text-green-400 hover:text-green-300"
                     >
                       ×
@@ -892,6 +1037,33 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           <p className="text-gray-300 text-sm">
             Upgrade to Premium to access AI-powered trade suggestions and advanced analytics.
           </p>
+        </div>
+      )}
+
+      {/* 3. Add Clear All button above trade summary */}
+      <button onClick={clearTrade} className="w-full py-2 mb-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-bold">Clear All</button>
+
+      {/* 4. Player Detail Modal */}
+      {modalOpen && modalPlayer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md relative">
+            <button onClick={() => setModalOpen(false)} className="absolute top-2 right-2 text-gray-400 hover:text-white">×</button>
+            <div className="flex items-center gap-4 mb-4">
+              <Image src={'/default-avatar.png'} alt={typeof modalPlayer.name === 'string' ? modalPlayer.name : 'Player'} width={64} height={64} className="rounded-full bg-white" />
+              <div>
+                <h2 className="text-xl font-bold text-white">{modalPlayer.name || '—'}</h2>
+                <p className="text-gray-400">{modalPlayer.position || '—'} • {modalPlayer.team || '—'}</p>
+              </div>
+            </div>
+            <div className="space-y-2 text-gray-300">
+              <div>OVR: <span className="font-bold text-neon-green">{modalPlayer.ovr}</span></div>
+              {modalPlayer.age && <div>Age: {modalPlayer.age}</div>}
+              {modalPlayer.devTrait && <div>Dev Trait: {modalPlayer.devTrait}</div>}
+              {modalPlayer.yearsPro && <div>Years Pro: {modalPlayer.yearsPro}</div>}
+              {modalPlayer.espnId && <div>ESPN ID: {modalPlayer.espnId}</div>}
+              <div>Value: <span className="font-bold">{calculatePlayerValue(modalPlayer)}</span></div>
+            </div>
+          </div>
         </div>
       )}
     </div>
