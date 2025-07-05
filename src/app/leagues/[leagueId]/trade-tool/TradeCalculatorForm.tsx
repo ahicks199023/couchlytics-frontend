@@ -539,7 +539,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             <div className="mb-4 flex items-center gap-2">
               <select value={giveTeam} onChange={e => { setGiveTeam(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
                 <option value="All">Select Team</option>
-                {teams.map(team => <option key={team.id} value={team.name}>{team.name}</option>)}
+                {teams.slice().sort((a, b) => a.name.localeCompare(b.name)).map(team => (
+                  <option key={team.id} value={team.name}>{team.name}</option>
+                ))}
               </select>
             </div>
             {/* Filters stacked in two rows */}
@@ -595,7 +597,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             <div className="mb-4 flex items-center gap-2">
               <select value={receiveTeam} onChange={e => { setReceiveTeam(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
                 <option value="All">Select Team</option>
-                {teams.map(team => <option key={team.id} value={team.name}>{team.name}</option>)}
+                {teams.slice().sort((a, b) => a.name.localeCompare(b.name)).map(team => (
+                  <option key={team.id} value={team.name}>{team.name}</option>
+                ))}
               </select>
             </div>
             {/* Filters stacked in two rows */}
