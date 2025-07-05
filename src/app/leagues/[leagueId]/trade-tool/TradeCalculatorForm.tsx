@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import Image from 'next/image'
-import { Loader2, Search, Filter, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
+import { Loader2, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
 
 // Types
 interface Player {
@@ -153,28 +153,15 @@ const getVerdictIcon = (verdict: string) => {
 export default function TradeCalculatorForm({ league_id }: { league_id: string }) {
   // State management
   const [user, setUser] = useState<User | null>(null)
-  const [players, setPlayers] = useState<Player[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
-  // Pagination state
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(50)
-  const [totalResults, setTotalResults] = useState(0)
-  const [totalPages, setTotalPages] = useState(1)
   
   // Trade state
   const [givePlayers, setGivePlayers] = useState<Player[]>([])
   const [receivePlayers, setReceivePlayers] = useState<Player[]>([])
   const [result, setResult] = useState<TradeResult | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  
-  // Filters
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedTeam, setSelectedTeam] = useState('All')
-  const [selectedPosition, setSelectedPosition] = useState('All')
-  const [showMyTeamOnly, setShowMyTeamOnly] = useState(false)
   
   // Suggestions
   const [includeSuggestions] = useState(false)
@@ -253,53 +240,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     loadData()
   }, [league_id])
 
-  // Load players with pagination
-  useEffect(() => {
-    const loadPlayers = async () => {
-      if (!league_id) return
-      
-      try {
-        setLoading(true)
-        setError(null)
-        
-        const params = new URLSearchParams({
-          page: String(page),
-          pageSize: String(pageSize),
-        })
-        if (searchTerm) params.append("search", searchTerm)
-        if (selectedPosition !== 'All') params.append("position", selectedPosition)
-        if (selectedTeam !== 'All') params.append("team", selectedTeam)
-        
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players?${params.toString()}`, {
-          credentials: 'include'
-        })
-        
-        if (!res.ok) {
-          throw new Error('Failed to load players')
-        }
-        
-        const data = await res.json()
-        const players = data.players || []
-        setPlayers(players)
-        setTotalResults(data.total || 0)
-        setTotalPages(Math.max(1, Math.ceil((data.total || 0) / pageSize)))
-        console.log('Fetched players:', players)
-        
-      } catch (err) {
-        console.error('Failed to load players:', err)
-        setError('Failed to load players. Please try again.')
-      } finally {
-        setLoading(false)
-      }
-    }
-    
-    loadPlayers()
-  }, [league_id, page, pageSize, searchTerm, selectedPosition, selectedTeam])
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setPage(1)
-  }, [searchTerm, selectedPosition, selectedTeam, pageSize])
 
   const availableTeams = useMemo(() => {
     // For pagination, we'll use a fixed list of teams or get from teams API
@@ -582,77 +523,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         >
           Clear Trade
         </button>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-gray-800/50 rounded-lg p-4 space-y-4">
-        <div className="flex items-center gap-2 text-gray-300">
-          <Filter className="w-4 h-4" />
-          <span className="font-medium">Filters</span>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search players..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-neon-green"
-            />
-          </div>
-
-          {/* Team Filter */}
-          <select
-            value={selectedTeam || ''}
-            onChange={(e) => setSelectedTeam(e.target.value)}
-            className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
-          >
-            {availableTeams.map(team => (
-              <option key={team || ''} value={team || ''}>{team || '—'}</option>
-            ))}
-          </select>
-
-          {/* Position Filter */}
-          <select
-            value={selectedPosition || ''}
-            onChange={(e) => setSelectedPosition(e.target.value)}
-            className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
-          >
-            {availablePositions.map((pos: string) => (
-              <option key={pos || ''} value={pos || ''}>{pos || '—'}</option>
-            ))}
-          </select>
-
-          {/* My Team Only Toggle */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showMyTeamOnly}
-              onChange={(e) => setShowMyTeamOnly(e.target.checked)}
-              className="w-4 h-4 text-neon-green bg-gray-700 border-gray-600 rounded focus:ring-neon-green"
-            />
-            <span className="text-gray-300">My Team Only</span>
-          </label>
-
-          {/* Page Size Selector */}
-          <select
-            value={pageSize}
-            onChange={(e) => setPageSize(Number(e.target.value))}
-            className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
-          >
-            <option value={20}>20 per page</option>
-            <option value={50}>50 per page</option>
-            <option value={100}>100 per page</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Pagination Info */}
-      <div className="mb-4 text-gray-400 text-sm">
-        Showing {players.length} of {totalResults} players (Page {page} of {totalPages})
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
