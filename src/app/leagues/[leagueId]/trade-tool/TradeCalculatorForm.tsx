@@ -260,8 +260,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesTeam = selectedTeam === 'All' || p.team === selectedTeam;
       // Make position filter robust and case-insensitive
-      const matchesPosition = selectedPosition === 'All' ||
-        (typeof p.position === 'string' && p.position.toUpperCase() === selectedPosition.toUpperCase());
+      const matchesPosition =
+        selectedPosition === 'All' ||
+        (typeof p.position === 'string' && typeof selectedPosition === 'string' &&
+          p.position.toUpperCase() === selectedPosition.toUpperCase());
       const matchesMyTeam = !showMyTeamOnly || p.teamId === userTeamId;
       return matchesSearch && matchesTeam && matchesPosition && matchesMyTeam;
     }).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a));
