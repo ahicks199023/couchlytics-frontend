@@ -302,18 +302,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   const filteredPlayers = useMemo(() => {
     return players.filter(p => {
-      // Make search filter robust against null/undefined names
+      // Only apply frontend filtering for My Team Only and search
       const matchesSearch = typeof p.name === 'string' && p.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesTeam = selectedTeam === 'All' || (typeof p.team === 'string' && p.team === selectedTeam);
-      // Make position filter robust and case-insensitive
-      const matchesPosition =
-        selectedPosition === 'All' ||
-        (typeof p.position === 'string' && p.position.trim() && typeof selectedPosition === 'string' &&
-          p.position.toUpperCase() === selectedPosition.toUpperCase());
       const matchesMyTeam = !showMyTeamOnly || p.teamId === userTeamId;
-      return matchesSearch && matchesTeam && matchesPosition && matchesMyTeam;
+      return matchesSearch && matchesMyTeam;
     }).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a));
-  }, [players, searchTerm, selectedTeam, selectedPosition, showMyTeamOnly, userTeamId]);
+  }, [players, searchTerm, showMyTeamOnly, userTeamId]);
 
   const giveValue = useMemo(() => 
     givePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0), 
