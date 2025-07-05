@@ -529,30 +529,36 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         {/* Two-panel player selection */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Give Panel */}
-          <div className="bg-gray-800/50 rounded-lg p-4">
+          <div className="bg-gray-800/50 rounded-lg p-4 min-h-[420px] flex flex-col">
+            {/* Team dropdown as header */}
             <div className="mb-4 flex items-center gap-2">
-              <select value={giveTeam} onChange={e => { setGiveTeam(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold">
+              <select value={giveTeam} onChange={e => { setGiveTeam(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
                 <option value="All">Select Team</option>
                 {teams.map(team => <option key={team.id} value={team.name}>{team.name}</option>)}
               </select>
             </div>
-            <div className="flex gap-2 mb-2">
-              <select value={givePosition} onChange={e => { setGivePosition(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
-                <option value="All">All Positions</option>
-                {availablePositions.slice(1).map(pos => <option key={pos} value={pos}>{pos}</option>)}
-              </select>
-              <input type="text" value={giveSearch} onChange={e => { setGiveSearch(e.target.value); setGivePage(1); }} placeholder="Search..." className="px-2 py-1 rounded bg-gray-700 text-white flex-1" />
-              <select value={givePageSize} onChange={e => { setGivePageSize(Number(e.target.value)); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-              <select value={giveSort} onChange={e => setGiveSort(e.target.value)} className="px-2 py-1 rounded bg-gray-700 text-white">
-                <option value="Name">Name</option>
-                <option value="OVR">OVR</option>
-                <option value="Age">Age</option>
-                <option value="Value">Value</option>
-              </select>
+            {/* Filters stacked in two rows */}
+            <div className="flex flex-col gap-2 mb-2">
+              <div className="flex gap-2">
+                <select value={givePosition} onChange={e => { setGivePosition(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white w-full">
+                  <option value="All">All Positions</option>
+                  {availablePositions.slice(1).map(pos => <option key={pos} value={pos}>{pos}</option>)}
+                </select>
+                <input type="text" value={giveSearch} onChange={e => { setGiveSearch(e.target.value); setGivePage(1); }} placeholder="Search..." className="px-2 py-1 rounded bg-gray-700 text-white w-full" />
+              </div>
+              <div className="flex gap-2">
+                <select value={givePageSize} onChange={e => { setGivePageSize(Number(e.target.value)); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white w-full">
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <select value={giveSort} onChange={e => setGiveSort(e.target.value)} className="px-2 py-1 rounded bg-gray-700 text-white w-full">
+                  <option value="Name">Name</option>
+                  <option value="OVR">OVR</option>
+                  <option value="Age">Age</option>
+                  <option value="Value">Value</option>
+                </select>
+              </div>
             </div>
             <div className="mb-2 text-gray-400 text-xs">Showing {givePlayersList.length} of {giveTotal} (Page {givePage} of {giveTotalPages})</div>
             {givePlayersList.length === 0 ? (
@@ -579,30 +585,36 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             </div>
           </div>
           {/* Receive Panel */}
-          <div className="bg-gray-800/50 rounded-lg p-4">
+          <div className="bg-gray-800/50 rounded-lg p-4 min-h-[420px] flex flex-col">
+            {/* Team dropdown as header */}
             <div className="mb-4 flex items-center gap-2">
-              <select value={receiveTeam} onChange={e => { setReceiveTeam(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold">
+              <select value={receiveTeam} onChange={e => { setReceiveTeam(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
                 <option value="All">Select Team</option>
                 {teams.map(team => <option key={team.id} value={team.name}>{team.name}</option>)}
               </select>
             </div>
-            <div className="flex gap-2 mb-2">
-              <select value={receivePosition} onChange={e => { setReceivePosition(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
-                <option value="All">All Positions</option>
-                {availablePositions.slice(1).map(pos => <option key={pos} value={pos}>{pos}</option>)}
-              </select>
-              <input type="text" value={receiveSearch} onChange={e => { setReceiveSearch(e.target.value); setReceivePage(1); }} placeholder="Search..." className="px-2 py-1 rounded bg-gray-700 text-white flex-1" />
-              <select value={receivePageSize} onChange={e => { setReceivePageSize(Number(e.target.value)); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-              <select value={receiveSort} onChange={e => setReceiveSort(e.target.value)} className="px-2 py-1 rounded bg-gray-700 text-white">
-                <option value="Name">Name</option>
-                <option value="OVR">OVR</option>
-                <option value="Age">Age</option>
-                <option value="Value">Value</option>
-              </select>
+            {/* Filters stacked in two rows */}
+            <div className="flex flex-col gap-2 mb-2">
+              <div className="flex gap-2">
+                <select value={receivePosition} onChange={e => { setReceivePosition(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white w-full">
+                  <option value="All">All Positions</option>
+                  {availablePositions.slice(1).map(pos => <option key={pos} value={pos}>{pos}</option>)}
+                </select>
+                <input type="text" value={receiveSearch} onChange={e => { setReceiveSearch(e.target.value); setReceivePage(1); }} placeholder="Search..." className="px-2 py-1 rounded bg-gray-700 text-white w-full" />
+              </div>
+              <div className="flex gap-2">
+                <select value={receivePageSize} onChange={e => { setReceivePageSize(Number(e.target.value)); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white w-full">
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <select value={receiveSort} onChange={e => setReceiveSort(e.target.value)} className="px-2 py-1 rounded bg-gray-700 text-white w-full">
+                  <option value="Name">Name</option>
+                  <option value="OVR">OVR</option>
+                  <option value="Age">Age</option>
+                  <option value="Value">Value</option>
+                </select>
+              </div>
             </div>
             <div className="mb-2 text-gray-400 text-xs">Showing {receivePlayersList.length} of {receiveTotal} (Page {receivePage} of {receiveTotalPages})</div>
             {receivePlayersList.length === 0 ? (
