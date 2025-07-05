@@ -236,31 +236,29 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     loadData()
   }, [league_id])
 
-  // Computed values
-  const filteredPlayers = useMemo(() => {
-    return players.filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesTeam = selectedTeam === 'All' || p.team === selectedTeam
-      const matchesPosition = selectedPosition === 'All' ||
-        (p.position && p.position.toLowerCase() === selectedPosition.toLowerCase())
-      const matchesMyTeam = !showMyTeamOnly || p.teamId === userTeamId
-      
-      return matchesSearch && matchesTeam && matchesPosition && matchesMyTeam
-    }).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
-  }, [players, searchTerm, selectedTeam, selectedPosition, showMyTeamOnly, userTeamId])
+  // Debug: log positions in state and selectedPosition before filtering
+  console.log('Positions in state:', [...new Set(players.map(p => p.position))]);
+  console.log('Selected position:', selectedPosition);
 
   const availableTeams = useMemo(() => {
-    const teamNames = [...new Set(players.map(p => p.team).filter(Boolean))].sort()
+    const teamNames = [...new Set(players.map(p => p.team).filter(Boolean))].sort();
     if (teamNames.length === 0) {
-      console.warn('No team names found in player data. Team filter will be disabled.')
+      console.warn('No team names found in player data. Team filter will be disabled.');
     }
-    return ['All', ...teamNames]
-  }, [players])
+    return ['All', ...teamNames];
+  }, [players]);
 
-  const availablePositions = useMemo(() => {
-    const positions = [...new Set(players.map(p => p.position))].sort()
-    return ['All', ...positions]
-  }, [players])
+  const filteredPlayers = useMemo(() => {
+    return players.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesTeam = selectedTeam === 'All' || p.team === selectedTeam;
+      // Make position filter robust and case-insensitive
+      const matchesPosition = selectedPosition === 'All' ||
+        (typeof p.position === 'string' && p.position.toUpperCase() === selectedPosition.toUpperCase());
+      const matchesMyTeam = !showMyTeamOnly || p.teamId === userTeamId;
+      return matchesSearch && matchesTeam && matchesPosition && matchesMyTeam;
+    }).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a));
+  }, [players, searchTerm, selectedTeam, selectedPosition, showMyTeamOnly, userTeamId]);
 
   const giveValue = useMemo(() => 
     givePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0), 
@@ -470,7 +468,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             onChange={(e) => setSelectedPosition(e.target.value)}
             className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
           >
-            {availablePositions.map(pos => (
+            {['All', ...new Set(players.map(p => p.position))].sort().map(pos => (
               <option key={pos} value={pos}>{pos}</option>
             ))}
           </select>
