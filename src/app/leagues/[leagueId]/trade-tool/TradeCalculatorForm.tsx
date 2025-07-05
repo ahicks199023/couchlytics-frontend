@@ -198,21 +198,28 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           console.log('User object:', userData)
         }
         
-        // Load league players
-        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players?page=1&pageSize=5000`, {
-          credentials: 'include'
-        })
-        if (playersRes.ok) {
-          const playersData = await playersRes.json()
-          setPlayers(playersData.players || [])
-          // Debug logs
-          console.log('Fetched players:', playersData.players || playersData)
-          if (Array.isArray(playersData.players)) {
-            console.log('Available positions:', [...new Set(playersData.players.map((p: unknown) => typeof p === 'object' && p !== null && 'position' in p ? (p as { position?: string }).position : undefined))])
+        // Load league players (fetch all pages)
+        async function fetchAllPlayers(league_id: string): Promise<Player[]> {
+          let allPlayers: Player[] = [];
+          let page = 1;
+          const pageSize = 100; // adjust if your backend default is different
+          let total: number = 0;
+          while (true) {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players?page=${page}&pageSize=${pageSize}`, {
+              credentials: 'include'
+            });
+            const data = await res.json();
+            const players = data.players || [];
+            allPlayers = allPlayers.concat(players);
+            total = data.total || 0;
+            if (players.length < pageSize || (total && allPlayers.length >= total)) break;
+            page += 1;
           }
-        } else {
-          throw new Error('Failed to load players')
+          return allPlayers;
         }
+        const allPlayers = await fetchAllPlayers(league_id);
+        setPlayers(allPlayers);
+        console.log('Fetched all players:', allPlayers);
         
         // Load teams
         const teamsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/teams`, {
