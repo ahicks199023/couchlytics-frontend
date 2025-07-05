@@ -252,11 +252,16 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   }, [teams]);
 
   const availablePositions = useMemo(() => {
-    // For pagination, use a fixed list of positions like Players Database
-    const positions = [
-      "QB", "RB", "WR", "TE", "K", "DEF", "OL", "DL", "LB", "CB", "S"
+    // Only list specific football positions, no broad groups
+    return [
+      'All',
+      'QB', 'HB', 'FB', 'WR', 'TE',
+      'LT', 'LG', 'C', 'RG', 'RT',
+      'LE', 'RE', 'DT',
+      'LOLB', 'MLB', 'ROLB',
+      'CB', 'FS', 'SS',
+      'K', 'P'
     ];
-    return ['All', ...positions];
   }, []);
 
   const giveValue = useMemo(() => 
