@@ -199,7 +199,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         }
         
         // Load league players
-        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players`, {
+        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players?page=1&pageSize=5000`, {
           credentials: 'include'
         })
         if (playersRes.ok) {
