@@ -205,7 +205,11 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         if (playersRes.ok) {
           const playersData = await playersRes.json()
           setPlayers(playersData.players || [])
-          console.log('Players array:', playersData.players)
+          // Debug logs
+          console.log('Fetched players:', playersData.players || playersData)
+          if (Array.isArray(playersData.players)) {
+            console.log('Available positions:', [...new Set(playersData.players.map((p: unknown) => typeof p === 'object' && p !== null && 'position' in p ? (p as { position?: string }).position : undefined))])
+          }
         } else {
           throw new Error('Failed to load players')
         }
@@ -237,7 +241,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     return players.filter(p => {
       const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesTeam = selectedTeam === 'All' || p.team === selectedTeam
-      const matchesPosition = selectedPosition === 'All' || p.position === selectedPosition
+      const matchesPosition = selectedPosition === 'All' ||
+        (p.position && p.position.toLowerCase() === selectedPosition.toLowerCase())
       const matchesMyTeam = !showMyTeamOnly || p.teamId === userTeamId
       
       return matchesSearch && matchesTeam && matchesPosition && matchesMyTeam
