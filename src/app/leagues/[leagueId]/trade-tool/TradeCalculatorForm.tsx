@@ -530,12 +530,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Give Panel */}
           <div className="bg-gray-800/50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">Your Team</h3>
-            <div className="flex gap-2 mb-2">
-              <select value={giveTeam} onChange={e => { setGiveTeam(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
+            <div className="mb-4 flex items-center gap-2">
+              <select value={giveTeam} onChange={e => { setGiveTeam(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold">
                 <option value="All">Select Team</option>
                 {teams.map(team => <option key={team.id} value={team.name}>{team.name}</option>)}
               </select>
+            </div>
+            <div className="flex gap-2 mb-2">
               <select value={givePosition} onChange={e => { setGivePosition(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
                 <option value="All">All Positions</option>
                 {availablePositions.slice(1).map(pos => <option key={pos} value={pos}>{pos}</option>)}
@@ -579,12 +580,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           </div>
           {/* Receive Panel */}
           <div className="bg-gray-800/50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">Other Team</h3>
-            <div className="flex gap-2 mb-2">
-              <select value={receiveTeam} onChange={e => { setReceiveTeam(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
+            <div className="mb-4 flex items-center gap-2">
+              <select value={receiveTeam} onChange={e => { setReceiveTeam(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold">
                 <option value="All">Select Team</option>
                 {teams.map(team => <option key={team.id} value={team.name}>{team.name}</option>)}
               </select>
+            </div>
+            <div className="flex gap-2 mb-2">
               <select value={receivePosition} onChange={e => { setReceivePosition(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white">
                 <option value="All">All Positions</option>
                 {availablePositions.slice(1).map(pos => <option key={pos} value={pos}>{pos}</option>)}
