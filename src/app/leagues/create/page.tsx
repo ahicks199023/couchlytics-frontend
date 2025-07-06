@@ -8,7 +8,7 @@ export default function CreateLeaguePage() {
   const [seasonYear, setSeasonYear] = useState(new Date().getFullYear())
   const [error, setError] = useState('')
   const [result, setResult] = useState<{
-    leagueId: number
+    leagueId: string
     externalId: string
     syncUrl: string
   } | null>(null)
