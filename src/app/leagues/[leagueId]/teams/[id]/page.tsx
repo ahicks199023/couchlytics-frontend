@@ -56,8 +56,16 @@ interface Player {
   [key: string]: string | number | boolean | undefined
 }
 
+interface StatBlockProps {
+  title: string
+  data: Player[]
+  statKey: string
+  leagueId: string
+}
+
 export default function TeamDetailPage() {
   const { leagueId, id: teamId } = useParams()
+  const leagueIdString = leagueId as string
   const [stats, setStats] = useState<Record<string, Player[]>>({})
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -69,8 +77,8 @@ export default function TeamDetailPage() {
   useEffect(() => {
     const url =
       selectedWeek === 'all'
-        ? `${API_BASE}/leagues/${leagueId}/stats`
-        : `${API_BASE}/leagues/${leagueId}/stats?week=${selectedWeek}`
+        ? `${API_BASE}/leagues/${leagueIdString}/stats`
+        : `${API_BASE}/leagues/${leagueIdString}/stats?week=${selectedWeek}`
 
     fetch(url, { credentials: 'include' })
       .then(res => res.json())
@@ -82,7 +90,7 @@ export default function TeamDetailPage() {
         setError('Failed to load stats')
       })
       .finally(() => setLoading(false))
-  }, [leagueId, selectedWeek])
+  }, [leagueIdString, selectedWeek])
 
   if (loading) return <p className="text-gray-400">Loading stats...</p>
   if (error) return <p className="text-red-500">{error}</p>
@@ -107,7 +115,7 @@ export default function TeamDetailPage() {
   return (
     <main className="min-h-screen bg-black text-white p-6">
       <div className="max-w-6xl mx-auto">
-        <Link href={`/leagues/${leagueId}/teams`} className="text-neon-green underline mb-4 inline-block">
+        <Link href={`/leagues/${leagueIdString}/teams`} className="text-neon-green underline mb-4 inline-block">
           ← Back to Teams
         </Link>
 
@@ -163,30 +171,26 @@ export default function TeamDetailPage() {
               </select>
             )}
 
-            {users.length > 0 && (
-              <select
-                value={selectedUser}
-                onChange={(e) => setSelectedUser(e.target.value)}
-                className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
-              >
-                <option value="all">All Users</option>
-                {users.map(user => (
-                  <option key={user} value={user}>
-                    {user}
-                  </option>
-                ))}
-              </select>
-            )}
+            <select
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value)}
+              className="bg-gray-900 border border-gray-600 text-white text-sm rounded px-2 py-1"
+            >
+              <option value="all">All Users</option>
+              {users.map(user => (
+                <option key={user} value={user}>
+                  {user}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
         {filteredData.length === 0 ? (
-          <div className="text-center py-8 text-gray-400 italic">
-            🚫 No stats available for this selection.
-          </div>
+          <p className="text-gray-500 text-center py-8">No data available for the selected filters.</p>
         ) : (
           <>
-            <StatBlock title={categoryLabel} data={filteredData} statKey={statKey} leagueId={Number(leagueId)} />
+            <StatBlock title={categoryLabel} data={filteredData} statKey={statKey} leagueId={leagueIdString} />
             <StatBarChart data={filteredData} statKey={statKey} />
           </>
         )}
@@ -200,12 +204,7 @@ function StatBlock({
   data,
   statKey,
   leagueId
-}: {
-  title: string
-  data: Player[]
-  statKey: string
-  leagueId: number
-}) {
+}: StatBlockProps) {
   return (
     <div className="bg-gray-900 p-4 rounded mb-6">
       <h3 className="text-lg font-bold mb-2 text-neon-green">{title}</h3>
