@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { API_BASE } from '@/lib/config'
 
 type League = {
-  leagueId: number
+  leagueId: string
   name: string
   seasonYear: number
 }
