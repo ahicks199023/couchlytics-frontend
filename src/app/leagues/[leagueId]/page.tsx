@@ -9,7 +9,7 @@ import { fetchFromApi } from '@/lib/api'
 
 type LeagueData = {
   league: {
-    leagueId: number
+    leagueId: string
     name: string
     seasonYear: number
   }
@@ -29,15 +29,14 @@ type LeagueData = {
 
 export default function LeagueDetailPage() {
   const { leagueId } = useParams()
-  const parsedLeagueId = Number(leagueId)
   const [league, setLeague] = useState<LeagueData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!parsedLeagueId) return
+    if (!leagueId) return
 
-    fetchFromApi(`/leagues/${parsedLeagueId}`)
+    fetchFromApi(`/leagues/${leagueId}`)
       .then(data => {
         setLeague(data as LeagueData)
         setLoading(false)
@@ -47,7 +46,7 @@ export default function LeagueDetailPage() {
         setError('League not found or access denied.')
         setLoading(false)
       })
-  }, [parsedLeagueId])
+  }, [leagueId])
 
   if (loading) return <main className="p-6 text-white">Loading league details...</main>
   if (error || !league) return <main className="p-6 text-red-400">{error || 'No data found.'}</main>
@@ -99,12 +98,12 @@ export default function LeagueDetailPage() {
 
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-2">League Stat Leaders</h2>
-        <LeagueStatLeaders leagueId={parsedLeagueId} />
+        <LeagueStatLeaders leagueId={league.league.leagueId} />
       </section>
 
       <section>
         <h2 className="text-2xl font-semibold mb-2">League Stats</h2>
-        <LeagueStats leagueId={parsedLeagueId} />
+        <LeagueStats leagueId={league.league.leagueId} />
       </section>
     </main>
   )
