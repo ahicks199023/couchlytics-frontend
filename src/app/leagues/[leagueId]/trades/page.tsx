@@ -5,9 +5,10 @@ import { useParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { API_BASE } from '@/lib/config'
 
-type Trade = {
+interface Trade {
   id: number
-  leagueId: number
+  leagueId: string
+  teamId: number
   fromTeam: string
   toTeam: string
   playersGiven: string
@@ -17,32 +18,40 @@ type Trade = {
   submittedBy: string
   submittedAt: string
   resolvedAt?: string
+  createdAt: string
+  updatedAt: string
 }
 
 export default function TradeDashboard() {
-  const { leagueId: paramLeagueId } = useParams()
-  const leagueId = parseInt(paramLeagueId as string)
-  const [pending, setPending] = useState<Trade[]>([])
-  const [history, setHistory] = useState<Trade[]>([])
+  const params = useParams()
+  const paramLeagueId = params.leagueId
+  const leagueId = paramLeagueId as string
+  const [trades, setTrades] = useState<Trade[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!leagueId) return
 
-    fetch(`${API_BASE}/trades/pending?leagueId=${leagueId}`, {
-      credentials: 'include'
-    })
-      .then(res => res.json())
-      .then(setPending)
-      .catch(() => toast.error('Failed to fetch pending trades'))
+    const fetchTrades = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/leagues/${leagueId}/trades`, {
+          credentials: 'include'
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch trades')
+        }
+        
+        const data = await response.json()
+        setTrades(data.trades || [])
+      } catch (err) {
+        console.error('Error fetching trades:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-    fetch(`${API_BASE}/trades/finalized?leagueId=${leagueId}`, {
-      credentials: 'include'
-    })
-      .then(res => res.json())
-      .then(setHistory)
-      .catch(() => toast.error('Failed to fetch trade history'))
-      .finally(() => setLoading(false))
+    fetchTrades()
   }, [leagueId])
 
   const voteOnTrade = async (tradeId: number, vote: 'approve' | 'deny') => {
@@ -55,7 +64,7 @@ export default function TradeDashboard() {
 
     if (res.ok) {
       toast.success(`Trade ${vote}d`)
-      setPending(prev => prev.filter(t => t.id !== tradeId))
+      setTrades(prev => prev.filter(t => t.id !== tradeId))
     } else {
       const error = await res.json()
       toast.error(error?.error || 'Vote failed')
@@ -113,11 +122,11 @@ export default function TradeDashboard() {
         <p className="text-gray-500">Loading...</p>
       ) : (
         <>
-          {pending.length > 0 && (
+          {trades.length > 0 && (
             <div className="mb-10">
               <h2 className="text-2xl font-semibold mb-4">🗳️ Pending Votes</h2>
               <div className="space-y-6">
-                {pending.map((trade) => (
+                {trades.map((trade) => (
                   <TradeCard key={trade.id} trade={trade} showButtons />
                 ))}
               </div>
@@ -126,11 +135,11 @@ export default function TradeDashboard() {
 
           <div>
             <h2 className="text-2xl font-semibold mb-4">📋 Trade History</h2>
-            {history.length === 0 ? (
+            {trades.length === 0 ? (
               <p className="text-gray-500">No finalized trades yet.</p>
             ) : (
               <div className="space-y-6">
-                {history.map((trade) => (
+                {trades.map((trade) => (
                   <TradeCard key={trade.id} trade={trade} />
                 ))}
               </div>
@@ -141,4 +150,3 @@ export default function TradeDashboard() {
     </div>
   )
 }
-
