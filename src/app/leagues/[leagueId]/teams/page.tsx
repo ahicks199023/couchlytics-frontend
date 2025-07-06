@@ -12,7 +12,7 @@ type Team = {
   city: string
   wins: number
   losses: number
-  leagueId: number
+  leagueId: string
 }
 
 export default function TeamsPage() {
