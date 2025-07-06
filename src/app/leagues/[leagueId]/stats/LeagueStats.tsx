@@ -19,7 +19,7 @@ interface StatEntry {
   [key: string]: string | number | undefined
 }
 
-export default function LeagueStats({ leagueId }: { leagueId: number }) {
+export default function LeagueStats({ leagueId }: { leagueId: string }) {
   const [stats, setStats] = useState<Record<string, StatEntry[]>>({})
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -163,7 +163,7 @@ function StatBlock({
   title: string
   data: StatEntry[]
   statKey: string
-  leagueId: number
+  leagueId: string
 }) {
   return (
     <div className="bg-gray-900 p-4 rounded mb-6">
