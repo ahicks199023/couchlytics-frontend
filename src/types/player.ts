@@ -83,7 +83,7 @@ export interface SuggestedTrade {
 }
 
 export interface TradeData {
-  leagueId: number
+  leagueId: string
   teamId: number
   trade: {
     give: number[]
