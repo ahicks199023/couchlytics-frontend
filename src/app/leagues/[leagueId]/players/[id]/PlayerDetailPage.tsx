@@ -56,8 +56,16 @@ interface Player {
   [key: string]: string | number | boolean | undefined
 }
 
+interface StatBlockProps {
+  title: string
+  data: Player[]
+  statKey: string
+  leagueId: string
+}
+
 export default function PlayerDetailPage() {
   const { leagueId } = useParams()
+  const leagueIdString = leagueId as string
   const [stats, setStats] = useState<Record<string, Player[]>>({})
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -69,8 +77,8 @@ export default function PlayerDetailPage() {
   useEffect(() => {
     const url =
       selectedWeek === 'all'
-        ? `${API_BASE}/leagues/${leagueId}/stats`
-        : `${API_BASE}/leagues/${leagueId}/stats?week=${selectedWeek}`
+        ? `${API_BASE}/leagues/${leagueIdString}/stats`
+        : `${API_BASE}/leagues/${leagueIdString}/stats?week=${selectedWeek}`
 
     fetch(url, { credentials: 'include' })
       .then(res => res.json())
@@ -82,7 +90,7 @@ export default function PlayerDetailPage() {
         setError('Failed to load stats')
       })
       .finally(() => setLoading(false))
-  }, [leagueId, selectedWeek])
+  }, [leagueIdString, selectedWeek])
 
   if (loading) return <p className="text-gray-400">Loading stats...</p>
   if (error) return <p className="text-red-500">{error}</p>
@@ -179,7 +187,7 @@ export default function PlayerDetailPage() {
         </div>
       ) : (
         <>
-          <StatBlock title={categoryLabel} data={filteredData} statKey={statKey} leagueId={Number(leagueId)} />
+          <StatBlock title={categoryLabel} data={filteredData} statKey={statKey} leagueId={leagueIdString} />
           <StatBarChart data={filteredData} statKey={statKey} />
         </>
       )}
@@ -192,12 +200,7 @@ function StatBlock({
   data,
   statKey,
   leagueId
-}: {
-  title: string
-  data: Player[]
-  statKey: string
-  leagueId: number
-}) {
+}: StatBlockProps) {
   return (
     <div className="bg-gray-900 p-4 rounded mb-6">
       <h3 className="text-lg font-bold mb-2 text-neon-green">{title}</h3>
