@@ -76,6 +76,11 @@ export const useTradeCalculator = (leagueId: string) => {
 
   // Load initial data
   useEffect(() => {
+    if (!leagueId || leagueId === 'undefined') {
+      setError('Invalid or missing league ID.');
+      setLoading(false);
+      return;
+    }
     const loadData = async () => {
       try {
         setLoading(true)
