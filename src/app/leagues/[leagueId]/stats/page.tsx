@@ -5,9 +5,9 @@ import LeagueStats from './LeagueStats'
 
 export default function StatsPage() {
   const { leagueId } = useParams()
-  const parsedLeagueId = parseInt(leagueId as string, 10)
+  const leagueIdString = leagueId as string
 
-  if (isNaN(parsedLeagueId)) {
+  if (!leagueIdString) {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Invalid League ID</h1>
@@ -19,7 +19,7 @@ export default function StatsPage() {
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6">League Statistics</h1>
-      <LeagueStats leagueId={parsedLeagueId} />
+      <LeagueStats leagueId={leagueIdString} />
     </div>
   )
 } 
