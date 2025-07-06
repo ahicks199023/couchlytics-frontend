@@ -49,7 +49,7 @@ export interface User {
   isActive: boolean
   teamId?: number
   teamName?: string
-  leagueId?: number
+  leagueId?: string
   leagueName?: string
   createdAt: string
   lastLoginAt?: string
@@ -72,7 +72,7 @@ export interface UserProfile extends User {
 
 export interface LeagueMember {
   userId: number
-  leagueId: number
+  leagueId: string
   role: UserRole
   teamId?: number
   joinedAt: string
