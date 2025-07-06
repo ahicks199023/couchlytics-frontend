@@ -22,7 +22,10 @@ export default function TeamsPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!leagueId) return
+    if (!leagueId || leagueId === 'undefined') {
+      setError('Invalid or missing league ID.')
+      return
+    }
 
     const fetchTeams = async () => {
       try {
@@ -48,6 +51,8 @@ export default function TeamsPage() {
     fetchTeams()
   }, [leagueId])
 
+  if (error) return <div className="p-4 text-red-500">{error}</div>
+
   return (
     <ProtectedRoute>
       <main className="min-h-screen bg-black text-white px-4 py-8 sm:px-6 lg:px-8">
@@ -56,8 +61,6 @@ export default function TeamsPage() {
 
           {loading ? (
             <p className="text-gray-400">Loading teams...</p>
-          ) : error ? (
-            <p className="text-red-400">Error: {error}</p>
           ) : teams.length === 0 ? (
             <p className="text-gray-400 italic">No teams found for this league.</p>
           ) : (
