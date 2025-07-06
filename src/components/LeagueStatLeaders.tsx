@@ -64,6 +64,11 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   }, [])
 
   useEffect(() => {
+    if (!leagueId || leagueId === 'undefined') {
+      setError('Invalid or missing league ID.');
+      setLoading(false);
+      return;
+    }
     const fetchLeaders = async () => {
       try {
         const query = new URLSearchParams({ statType })
