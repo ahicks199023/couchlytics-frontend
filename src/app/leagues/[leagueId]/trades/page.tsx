@@ -28,9 +28,13 @@ export default function TradeDashboard() {
   const leagueId = paramLeagueId as string
   const [trades, setTrades] = useState<Trade[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!leagueId) return
+    if (!leagueId || leagueId === 'undefined') {
+      setError('Invalid or missing league ID.')
+      return
+    }
 
     const fetchTrades = async () => {
       try {
@@ -46,6 +50,7 @@ export default function TradeDashboard() {
         setTrades(data.trades || [])
       } catch (err) {
         console.error('Error fetching trades:', err)
+        setError('Failed to load trades.')
       } finally {
         setLoading(false)
       }
@@ -113,6 +118,8 @@ export default function TradeDashboard() {
       )}
     </div>
   )
+
+  if (error) return <div className="p-4 text-red-500">{error}</div>
 
   return (
     <div className="min-h-screen px-6 py-10 bg-black text-white">
