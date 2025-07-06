@@ -14,7 +14,7 @@ type Team = {
 }
 
 type League = {
-  leagueId: number
+  leagueId: string
   name: string
   seasonYear: number
   week: number
@@ -30,8 +30,8 @@ type TeamsResponse = {
 
 export default function LeaguesPage() {
   const [leagues, setLeagues] = useState<League[]>([])
-  const [expandedLeagueId, setExpandedLeagueId] = useState<number | null>(null)
-  const [teamsByLeague, setTeamsByLeague] = useState<Record<number, Team[]>>({})
+  const [expandedLeagueId, setExpandedLeagueId] = useState<string | null>(null)
+  const [teamsByLeague, setTeamsByLeague] = useState<Record<string, Team[]>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -51,7 +51,7 @@ export default function LeaguesPage() {
   // Debug log to check leagueId presence
   console.log('leagues:', leagues);
 
-  const toggleTeams = async (leagueId: number) => {
+  const toggleTeams = async (leagueId: string) => {
     if (expandedLeagueId === leagueId) {
       setExpandedLeagueId(null)
       return
