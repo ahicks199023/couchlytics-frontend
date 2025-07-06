@@ -25,7 +25,10 @@ export default function PlayerDetailPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!leagueId || !playerId) return
+    if (!leagueId || leagueId === 'undefined') {
+      setError('Invalid or missing league ID.')
+      return
+    }
     setLoading(true)
     fetchFromApi(`/leagues/${leagueId}/players/${playerId}`)
       .then((data) => setPlayer(data as Player))
@@ -33,8 +36,9 @@ export default function PlayerDetailPage() {
       .finally(() => setLoading(false))
   }, [leagueId, playerId])
 
+  if (error) return <div className="p-4 text-red-500">{error}</div>
   if (loading) return <main className="p-6 text-white">Loading player...</main>
-  if (error || !player) return <main className="p-6 text-red-400">{error || 'No data found.'}</main>
+  if (!player) return <main className="p-6 text-red-400">{error || 'No data found.'}</main>
 
   return (
     <main className="min-h-screen bg-black text-white p-6">
