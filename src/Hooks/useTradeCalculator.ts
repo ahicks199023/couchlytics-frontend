@@ -52,7 +52,7 @@ const calculatePlayerValue = (player: Player): number => {
   return Math.round(baseValue * multiplier)
 }
 
-export const useTradeCalculator = (leagueId: number) => {
+export const useTradeCalculator = (leagueId: string) => {
   // State management
   const [user, setUser] = useState<User | null>(null)
   const [players, setPlayers] = useState<Player[]>([])
@@ -89,7 +89,7 @@ export const useTradeCalculator = (leagueId: number) => {
         }
         
         // Load league players
-        const playersRes = await fetch(`${API_BASE}/leagues/${leagueId}/players`, { credentials: 'include' })
+        const playersRes = await fetch(`${API_BASE}/leagues/${leagueId}/players?page=1&pageSize=5000`, { credentials: 'include' })
         if (playersRes.ok) {
           const playersData = await playersRes.json()
           setPlayers(playersData.players || [])
