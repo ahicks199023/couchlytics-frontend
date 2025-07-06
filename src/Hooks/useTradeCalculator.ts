@@ -198,7 +198,7 @@ export const useTradeCalculator = (leagueId: string) => {
 
     try {
       const tradeData: TradeData = {
-        leagueId,
+        leagueId: String(leagueId),
         teamId: userTeamId,
         trade: {
           give: givePlayers.map(p => p.id),
