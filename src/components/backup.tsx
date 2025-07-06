@@ -31,6 +31,11 @@ export default function Backup({ leagueId }: { leagueId: string }) {
     setError(null)
     setResult(null)
 
+    if (!leagueId || leagueId === 'undefined') {
+      setError('Invalid or missing league ID.')
+      return
+    }
+
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/trade-tool`, {
         method: 'POST',
