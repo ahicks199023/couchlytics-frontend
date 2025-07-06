@@ -37,7 +37,7 @@ interface StatLeader {
 }
 
 interface Props {
-  leagueId: number
+  leagueId: string
 }
 
 export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
