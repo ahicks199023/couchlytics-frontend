@@ -9,11 +9,18 @@ export default function TradeToolPage() {
   const router = useRouter()
   const { leagueId } = useParams()
   const league_id = typeof leagueId === 'string' ? leagueId : ''
+
+  // Debug log for leagueId and league_id
+  console.log('[TradeToolPage] leagueId from useParams:', leagueId, '| league_id:', league_id)
+
   const [authorized, setAuthorized] = useState<boolean | null>(null)
   const [leagueInfo, setLeagueInfo] = useState<{ name: string; seasonYear?: number }>({ name: '' })
 
   useEffect(() => {
-    if (!league_id) return
+    if (!league_id) {
+      console.warn('[TradeToolPage] league_id is missing or invalid. Skipping membership check.')
+      return
+    }
     const validateAccess = async () => {
       try {
         const res = await fetch(`${API_BASE}/leagues/${league_id}/is-member`, {
@@ -65,7 +72,8 @@ export default function TradeToolPage() {
   }
 
   if (!league_id) {
-    return <p className="text-red-600 text-center mt-10">Invalid league ID.</p>
+    // This means the route param is missing or invalid. Check your navigation/routing logic to ensure leagueId is always present in the URL.
+    return <p className="text-red-600 text-center mt-10">Invalid league ID. (Check your URL and navigation logic.)</p>
   }
 
   return (
