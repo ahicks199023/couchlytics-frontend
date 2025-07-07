@@ -16,6 +16,9 @@ export default function TradeToolPage() {
   const [authorized, setAuthorized] = useState<boolean | null>(null)
   const [leagueInfo, setLeagueInfo] = useState<{ name: string; seasonYear?: number }>({ name: '' })
 
+  // Log render and state
+  console.log('[TradeToolPage] Render: authorized =', authorized, '| league_id =', league_id)
+
   useEffect(() => {
     if (!league_id) {
       console.warn('[TradeToolPage] league_id is missing or invalid. Skipping membership check.')
@@ -28,13 +31,15 @@ export default function TradeToolPage() {
         })
         const data = await res.json()
         if (res.ok && data.isMember) {
+          console.log('[TradeToolPage] Membership check passed. User is a member.')
           setAuthorized(true)
         } else {
+          console.warn('[TradeToolPage] Membership check failed. User is NOT a member.')
           setAuthorized(false)
           router.push('/unauthorized')
         }
       } catch (err) {
-        console.error("Access check failed:", err)
+        console.error('[TradeToolPage] Access check failed:', err)
         setAuthorized(false)
         router.push('/unauthorized')
       }
@@ -57,25 +62,29 @@ export default function TradeToolPage() {
           })
         }
       } catch (err) {
-        console.error("Failed to fetch league info:", err)
+        console.error('[TradeToolPage] Failed to fetch league info:', err)
       }
     }
     fetchLeague()
   }, [authorized, league_id])
 
   if (authorized === null) {
+    console.log('[TradeToolPage] Showing: Checking access...')
     return <p className="text-white text-center mt-10">Checking access...</p>
   }
 
   if (!authorized) {
+    console.log('[TradeToolPage] Showing: Access Denied')
     return <p className="text-red-600 text-center mt-10">Access Denied: You are not a member of this league.</p>
   }
 
   if (!league_id) {
+    console.log('[TradeToolPage] Showing: Invalid league ID')
     // This means the route param is missing or invalid. Check your navigation/routing logic to ensure leagueId is always present in the URL.
     return <p className="text-red-600 text-center mt-10">Invalid league ID. (Check your URL and navigation logic.)</p>
   }
 
+  console.log('[TradeToolPage] Showing: Main Trade Tool Page')
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <h1 className="text-3xl font-bold text-neon-green mb-2">
