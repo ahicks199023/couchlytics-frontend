@@ -204,6 +204,11 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   // Load initial data
   useEffect(() => {
     const loadData = async () => {
+      if (!league_id || league_id === 'undefined') {
+        setError('Invalid or missing league ID.');
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true)
         setError(null)
@@ -239,8 +244,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     
     loadData()
   }, [league_id])
-
-
 
   const availableTeams = useMemo(() => {
     // For pagination, we'll use a fixed list of teams or get from teams API
@@ -299,6 +302,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   }, [])
 
   const fetchTradeSuggestions = async () => {
+    if (!league_id || league_id === 'undefined') {
+      setError('Invalid or missing league ID.');
+      return;
+    }
     if (!suggestionPlayerId || !userTeamId) return
     
     setLoadingSuggestions(true)
@@ -341,6 +348,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!league_id || league_id === 'undefined') {
+      setError('Invalid or missing league ID.');
+      return;
+    }
     if (!userTeamId) {
       console.log('User object when unable to determine team:', user)
       setError('Unable to determine your team. Please refresh the page.')
@@ -386,7 +397,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   // Fetch players for Give panel
   useEffect(() => {
     const fetchGivePlayers = async () => {
-      if (!league_id || giveTeam === 'All') {
+      if (!league_id || league_id === 'undefined' || giveTeam === 'All') {
         setGivePlayersList([])
         setGiveTotal(0)
         setGiveTotalPages(1)
@@ -425,7 +436,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   // Fetch players for Receive panel
   useEffect(() => {
     const fetchReceivePlayers = async () => {
-      if (!league_id || receiveTeam === 'All') {
+      if (!league_id || league_id === 'undefined' || receiveTeam === 'All') {
         setReceivePlayersList([])
         setReceiveTotal(0)
         setReceiveTotalPages(1)
@@ -476,6 +487,15 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   function openPlayerModal(player: Player) {
     setModalPlayer(player);
     setModalOpen(true);
+  }
+
+  // Top-level check for valid league_id (after hooks)
+  if (!league_id || league_id === 'undefined') {
+    return (
+      <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6 text-center text-red-400">
+        Invalid or missing league ID. Please return to the dashboard or select a valid league.
+      </div>
+    );
   }
 
   if (loading) {
