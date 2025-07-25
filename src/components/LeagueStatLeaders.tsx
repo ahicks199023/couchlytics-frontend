@@ -55,46 +55,13 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   const [loading, setLoading] = useState(true)
 
   // Function to handle player navigation
-  const handlePlayerClick = async (playerName: string) => {
+  const handlePlayerClick = async (playerName: string, playerId: string) => {
     try {
-      // Since the individual player detail API doesn't exist, we'll search for the player
-      // and show their details directly instead of navigating to a detail page
-      const searchUrl = `${API_BASE}/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}&pageSize=100`
-      const response = await fetch(searchUrl, { credentials: 'include' })
-      
-      if (response.ok) {
-        const data = await response.json()
-        const players = data.players || []
-        
-        // Find exact match by name
-        const exactMatch = players.find((p: { name: string; id: number }) => p.name === playerName)
-        
-        if (exactMatch) {
-          // Show player details in an alert since there's no detail page
-          const player = exactMatch
-          const details = `
-Player Details:
-Name: ${player.name}
-Position: ${player.position || 'N/A'}
-Team: ${player.teamName || 'N/A'}
-Overall: ${player.overall || 'N/A'}
-Speed: ${player.speed || 'N/A'}
-Dev Trait: ${player.devTrait || 'N/A'}
-Value: ${player.value || 'N/A'}
-          `.trim()
-          
-          alert(details)
-        } else {
-          // If no exact match, show a message and navigate to players list with search
-          alert(`Player "${playerName}" not found in the players database. You can search for them in the Players section.`)
-          router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
-        }
-      } else {
-        // Fallback: navigate to players list with search
-        router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
-      }
+      // Use the playerId (madden_id) directly from stat leaders API for navigation
+      // This assumes the backend endpoint will be updated to handle madden_id
+      router.push(`/leagues/${leagueId}/players/${playerId}`)
     } catch (err) {
-      console.error('Error finding player:', err)
+      console.error('Error navigating to player:', err)
       // Fallback: navigate to players list with search
       router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
     }
@@ -230,11 +197,12 @@ Value: ${player.value || 'N/A'}
                   return (
                     <tr
                       key={leader.playerId}
-                      className={`border-t ${
+                      className={`border-t cursor-pointer hover:bg-gray-700 ${
                         isUserTeam
                           ? 'bg-yellow-100 dark:bg-yellow-900 font-bold'
                           : ''
                       }`}
+                      onClick={() => handlePlayerClick(leader.name, leader.playerId)}
                     >
                       <td className="p-2">{idx + 1}</td>
                       <td className="p-2 flex items-center gap-2">
@@ -265,7 +233,10 @@ Value: ${player.value || 'N/A'}
                           </Link>
                         )}
                         <button 
-                          onClick={() => handlePlayerClick(leader.name)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handlePlayerClick(leader.name, leader.playerId)
+                          }}
                           className="text-blue-400 hover:underline cursor-pointer"
                         >
                           {leader.name}
