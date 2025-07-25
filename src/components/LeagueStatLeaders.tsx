@@ -196,10 +196,12 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                             }}
                           />
                         ) : (
-                          <img
+                          <Image
                             src={leader.portraitId ? `/headshots/${leader.portraitId}.png` : '/default-avatar.png'}
                             alt={leader.name}
-                            className="w-10 h-10 rounded-full object-cover mr-2"
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover mr-2"
                             onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default-avatar.png'; }}
                           />
                         )}

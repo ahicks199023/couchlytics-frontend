@@ -4,7 +4,6 @@ import {
   TeamStats, 
   TeamSalaryCap, 
   LeagueStandings, 
-  AnalyticsError,
   LoadingState 
 } from '@/types/analytics'
 
@@ -154,13 +153,13 @@ export const getTeamRankingColor = (rank: number): string => {
 }
 
 // Cache management
-const cache = new Map<string, { data: any; timestamp: number }>()
+const cache = new Map<string, { data: unknown; timestamp: number }>()
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 export const getCachedData = <T>(key: string): T | null => {
   const cached = cache.get(key)
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data
+    return cached.data as T
   }
   return null
 }

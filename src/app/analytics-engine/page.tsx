@@ -8,7 +8,7 @@ import AnalyticsDashboard from '@/components/AnalyticsDashboard'
 export default function AnalyticsEnginePage() {
   const router = useRouter()
   const [authorized, setAuthorized] = useState(false)
-  const [leagueId, setLeagueId] = useState<string>('12335716') // Default test league ID
+  const leagueId = '12335716' // Default test league ID
 
   useEffect(() => {
     fetch(`${API_BASE}/me`, { credentials: 'include' })

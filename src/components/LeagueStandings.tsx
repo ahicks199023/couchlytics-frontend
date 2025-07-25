@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { analyticsApi, formatRecord, getTeamRankingColor } from '@/lib/analytics'
+import { analyticsApi, getTeamRankingColor } from '@/lib/analytics'
 import { LeagueStandings as LeagueStandingsType } from '@/types/analytics'
 
 interface LeagueStandingsProps {
