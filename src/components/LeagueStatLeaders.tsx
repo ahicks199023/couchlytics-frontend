@@ -55,7 +55,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   const [loading, setLoading] = useState(true)
 
   // Function to handle player navigation
-  const handlePlayerClick = async (playerName: string, playerId: string) => {
+  const handlePlayerClick = async (playerName: string) => {
     try {
       // The playerId from stat leaders is the madden_id, but the player detail API expects the short id
       // We need to search for the player by name to find the correct short id
@@ -253,7 +253,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                           </Link>
                         )}
                         <button 
-                          onClick={() => handlePlayerClick(leader.name, leader.playerId)}
+                          onClick={() => handlePlayerClick(leader.name)}
                           className="text-blue-400 hover:underline cursor-pointer"
                         >
                           {leader.name}
