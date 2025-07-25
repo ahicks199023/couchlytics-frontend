@@ -27,12 +27,13 @@ ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 
 interface StatLeader {
   playerId: string
-  portraitId?: string
-  espnId?: string
   name: string
   teamName: string
-  teamId?: number
   statValue: number
+  // Optional fields that may not be present in API response
+  portraitId?: string
+  espnId?: string
+  teamId?: number
   position?: string
 }
 
@@ -41,7 +42,7 @@ interface Props {
 }
 
 export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
-  const [statType, setStatType] = useState(statOptions[0].value)
+  const [statType, setStatType] = useState('pass_yds') // Use a working stat type as default
   const [week, setWeek] = useState('')
   const [position, setPosition] = useState('ALL')
   const [leaders, setLeaders] = useState<StatLeader[]>([])
@@ -74,11 +75,15 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         const query = new URLSearchParams({ statType })
         if (week) query.append('week', week)
 
-        const res = await fetch(`${API_BASE}/leagues/${leagueId}/stats/leaders?${query.toString()}`, { credentials: 'include' })
+        const url = `${API_BASE}/leagues/${leagueId}/stats/leaders?${query.toString()}`
+        console.log('Fetching stat leaders from:', url)
+        
+        const res = await fetch(url, { credentials: 'include' })
         if (!res.ok) {
           throw new Error('Failed to fetch stat leaders')
         }
         const data = await res.json()
+        console.log('Stat leaders response:', data)
         setLeaders(data)
         setError(null)
       } catch (err) {
@@ -108,6 +113,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
 
   if (loading) return <p className="text-gray-400">Loading stats...</p>
   if (error) return <p className="text-red-500">{error}</p>
+  if (!leaders || leaders.length === 0) return <p className="text-gray-400">No stat leaders available for this selection.</p>
 
   return (
     <Card className="p-4 w-full">

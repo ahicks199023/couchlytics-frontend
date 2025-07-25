@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import LeagueStats from './stats/LeagueStats'
 import { LeagueStatLeaders } from '@/components/LeagueStatLeaders'
 import { fetchFromApi } from '@/lib/api'
 
@@ -99,11 +98,6 @@ export default function LeagueDetailPage() {
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-2">League Stat Leaders</h2>
         <LeagueStatLeaders leagueId={league.league.leagueId} />
-      </section>
-
-      <section>
-        <h2 className="text-2xl font-semibold mb-2">League Stats</h2>
-        <LeagueStats leagueId={league.league.leagueId} />
       </section>
     </main>
   )
