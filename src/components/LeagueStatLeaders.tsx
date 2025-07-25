@@ -21,6 +21,7 @@ import {
 } from 'chart.js'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { API_BASE } from '@/lib/config'
 import { statOptions, positionOptions } from '@/constants/statTypes'
 
@@ -43,6 +44,7 @@ interface Props {
 }
 
 export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
+  const router = useRouter()
   const [statType, setStatType] = useState('pass_yds') // Use a working stat type as default
   const [week, setWeek] = useState('')
   const [position, setPosition] = useState('ALL')
@@ -51,6 +53,39 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   const [currentTeamId, setCurrentTeamId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Function to handle player navigation
+  const handlePlayerClick = async (playerName: string) => {
+    try {
+      // First try to find the player by name in the players list
+      const searchUrl = `${API_BASE}/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}&pageSize=100`
+      const response = await fetch(searchUrl, { credentials: 'include' })
+      
+      if (response.ok) {
+        const data = await response.json()
+        const players = data.players || []
+        
+        // Find exact match by name
+        const exactMatch = players.find((p: { name: string; id: number }) => p.name === playerName)
+        
+        if (exactMatch) {
+          // Navigate to the correct player detail page
+          router.push(`/leagues/${leagueId}/players/${exactMatch.id}`)
+        } else {
+          // If no exact match, show a message and navigate to players list with search
+          alert(`Player "${playerName}" not found in the players database. You can search for them in the Players section.`)
+          router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
+        }
+      } else {
+        // Fallback: navigate to players list with search
+        router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
+      }
+    } catch (err) {
+      console.error('Error finding player:', err)
+      // Fallback: navigate to players list with search
+      router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
+    }
+  }
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -216,9 +251,12 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                             />
                           </Link>
                         )}
-                        <Link href={`/leagues/${leagueId}/players/${leader.playerId}`} className="text-blue-400 hover:underline">
+                        <button 
+                          onClick={() => handlePlayerClick(leader.name)}
+                          className="text-blue-400 hover:underline cursor-pointer"
+                        >
                           {leader.name}
-                        </Link>
+                        </button>
                       </td>
                       <td className="p-2">{leader.teamName}</td>
                       <td className="p-2">{leader.position ?? '—'}</td>
