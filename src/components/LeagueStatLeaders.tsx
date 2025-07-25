@@ -55,33 +55,13 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   const [loading, setLoading] = useState(true)
 
   // Function to handle player navigation
-  const handlePlayerClick = async (playerName: string) => {
+  const handlePlayerClick = async (playerName: string, playerId: string) => {
     try {
-      // First try to find the player by name in the players list
-      const searchUrl = `${API_BASE}/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}&pageSize=100`
-      const response = await fetch(searchUrl, { credentials: 'include' })
-      
-      if (response.ok) {
-        const data = await response.json()
-        const players = data.players || []
-        
-        // Find exact match by name
-        const exactMatch = players.find((p: { name: string; id: number }) => p.name === playerName)
-        
-        if (exactMatch) {
-          // Navigate to the correct player detail page
-          router.push(`/leagues/${leagueId}/players/${exactMatch.id}`)
-        } else {
-          // If no exact match, show a message and navigate to players list with search
-          alert(`Player "${playerName}" not found in the players database. You can search for them in the Players section.`)
-          router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
-        }
-      } else {
-        // Fallback: navigate to players list with search
-        router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
-      }
+      // The playerId from stat leaders is actually the madden_id that the database uses
+      // Try to navigate directly to the player detail page using the madden_id
+      router.push(`/leagues/${leagueId}/players/${playerId}`)
     } catch (err) {
-      console.error('Error finding player:', err)
+      console.error('Error navigating to player:', err)
       // Fallback: navigate to players list with search
       router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
     }
@@ -252,7 +232,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                           </Link>
                         )}
                         <button 
-                          onClick={() => handlePlayerClick(leader.name)}
+                          onClick={() => handlePlayerClick(leader.name, leader.playerId)}
                           className="text-blue-400 hover:underline cursor-pointer"
                         >
                           {leader.name}
