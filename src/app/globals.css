@@ -148,3 +148,16 @@
     color: var(--foreground);
   }
 }
+
+/* Custom neon green color */
+.text-neon-green {
+  color: #00ff41;
+}
+
+.bg-neon-green {
+  background-color: #00ff41;
+}
+
+.border-neon-green {
+  border-color: #00ff41;
+}

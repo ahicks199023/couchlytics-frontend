@@ -1,7 +1,15 @@
 'use client'
 
-import LeagueAnalytics from '@/components/LeagueAnalytics'
+import { useParams } from 'next/navigation'
+import AnalyticsDashboard from '@/components/AnalyticsDashboard'
 
 export default function LeagueAnalyticsPage() {
-  return <LeagueAnalytics />
+  const { leagueId } = useParams()
+  const league_id = typeof leagueId === 'string' ? leagueId : ''
+
+  return (
+    <div className="min-h-screen bg-black">
+      <AnalyticsDashboard leagueId={league_id} />
+    </div>
+  )
 } 
