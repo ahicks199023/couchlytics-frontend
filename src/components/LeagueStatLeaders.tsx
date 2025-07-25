@@ -57,8 +57,8 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   // Function to handle player navigation
   const handlePlayerClick = async (playerName: string) => {
     try {
-      // The playerId from stat leaders is the madden_id, but the player detail API expects the short id
-      // We need to search for the player by name to find the correct short id
+      // Since the individual player detail API doesn't exist, we'll search for the player
+      // and show their details directly instead of navigating to a detail page
       const searchUrl = `${API_BASE}/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}&pageSize=100`
       const response = await fetch(searchUrl, { credentials: 'include' })
       
@@ -70,8 +70,20 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         const exactMatch = players.find((p: { name: string; id: number }) => p.name === playerName)
         
         if (exactMatch) {
-          // Navigate to the player detail page using the short id
-          router.push(`/leagues/${leagueId}/players/${exactMatch.id}`)
+          // Show player details in an alert since there's no detail page
+          const player = exactMatch
+          const details = `
+Player Details:
+Name: ${player.name}
+Position: ${player.position || 'N/A'}
+Team: ${player.teamName || 'N/A'}
+Overall: ${player.overall || 'N/A'}
+Speed: ${player.speed || 'N/A'}
+Dev Trait: ${player.devTrait || 'N/A'}
+Value: ${player.value || 'N/A'}
+          `.trim()
+          
+          alert(details)
         } else {
           // If no exact match, show a message and navigate to players list with search
           alert(`Player "${playerName}" not found in the players database. You can search for them in the Players section.`)
