@@ -20,6 +20,7 @@ import {
   Legend,
 } from 'chart.js'
 import Image from 'next/image'
+import Link from 'next/link'
 import { API_BASE } from '@/lib/config'
 import { statOptions, positionOptions } from '@/constants/statTypes'
 
@@ -190,28 +191,34 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                       <td className="p-2">{idx + 1}</td>
                       <td className="p-2 flex items-center gap-2">
                         {leader.espnId ? (
-                          <Image
-                            src={`/headshots/${leader.espnId}.png`}
-                            alt={leader.name}
-                            width={32}
-                            height={32}
-                            className="rounded-full"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement
-                              target.src = '/headshots/default.png'
-                            }}
-                          />
+                          <Link href={`/players/${leader.espnId}`}>
+                            <Image
+                              src={`/headshots/${leader.espnId}.png`}
+                              alt={leader.name}
+                              width={32}
+                              height={32}
+                              className="rounded-full"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement
+                                target.src = '/headshots/default.png'
+                              }}
+                            />
+                          </Link>
                         ) : (
-                          <Image
-                            src={leader.portraitId ? `/headshots/${leader.portraitId}.png` : '/default-avatar.png'}
-                            alt={leader.name}
-                            width={40}
-                            height={40}
-                            className="rounded-full object-cover mr-2"
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default-avatar.png'; }}
-                          />
+                          <Link href={`/players/${leader.playerId}`}>
+                            <Image
+                              src={leader.portraitId ? `/headshots/${leader.portraitId}.png` : '/default-avatar.png'}
+                              alt={leader.name}
+                              width={40}
+                              height={40}
+                              className="rounded-full object-cover mr-2"
+                              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/default-avatar.png'; }}
+                            />
+                          </Link>
                         )}
-                        {leader.name}
+                        <Link href={`/leagues/${leagueId}/players/${leader.playerId}`} className="text-blue-400 hover:underline">
+                          {leader.name}
+                        </Link>
                       </td>
                       <td className="p-2">{leader.teamName}</td>
                       <td className="p-2">{leader.position ?? '—'}</td>
