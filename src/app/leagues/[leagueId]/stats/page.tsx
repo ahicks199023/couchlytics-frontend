@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import LeagueStats from './LeagueStats'
+import { LeagueStatLeaders } from '@/components/LeagueStatLeaders'
 
 export default function StatsPage() {
   const { leagueId } = useParams()
@@ -19,7 +19,7 @@ export default function StatsPage() {
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6">League Statistics</h1>
-      <LeagueStats leagueId={leagueIdString} />
+      <LeagueStatLeaders leagueId={leagueIdString} />
     </div>
   )
 } 
