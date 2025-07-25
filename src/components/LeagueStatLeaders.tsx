@@ -57,11 +57,32 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   // Function to handle player navigation
   const handlePlayerClick = async (playerName: string, playerId: string) => {
     try {
-      // The playerId from stat leaders is actually the madden_id that the database uses
-      // Try to navigate directly to the player detail page using the madden_id
-      router.push(`/leagues/${leagueId}/players/${playerId}`)
+      // The playerId from stat leaders is the madden_id, but the player detail API expects the short id
+      // We need to search for the player by name to find the correct short id
+      const searchUrl = `${API_BASE}/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}&pageSize=100`
+      const response = await fetch(searchUrl, { credentials: 'include' })
+      
+      if (response.ok) {
+        const data = await response.json()
+        const players = data.players || []
+        
+        // Find exact match by name
+        const exactMatch = players.find((p: { name: string; id: number }) => p.name === playerName)
+        
+        if (exactMatch) {
+          // Navigate to the player detail page using the short id
+          router.push(`/leagues/${leagueId}/players/${exactMatch.id}`)
+        } else {
+          // If no exact match, show a message and navigate to players list with search
+          alert(`Player "${playerName}" not found in the players database. You can search for them in the Players section.`)
+          router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
+        }
+      } else {
+        // Fallback: navigate to players list with search
+        router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
+      }
     } catch (err) {
-      console.error('Error navigating to player:', err)
+      console.error('Error finding player:', err)
       // Fallback: navigate to players list with search
       router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
     }
