@@ -55,34 +55,13 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   const [loading, setLoading] = useState(true)
 
   // Function to handle player navigation
-  const handlePlayerClick = async (playerName: string) => {
+  const handlePlayerClick = async (playerName: string, playerId: string) => {
     try {
-      // Search for the player by name to find the correct short ID for navigation
-      // This matches the working approach used in the players page
-      const searchUrl = `${API_BASE}/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}&pageSize=100`
-      const response = await fetch(searchUrl, { credentials: 'include' })
-      
-      if (response.ok) {
-        const data = await response.json()
-        const players = data.players || []
-        
-        // Find exact match by name
-        const exactMatch = players.find((p: { name: string; id: number }) => p.name === playerName)
-        
-        if (exactMatch) {
-          // Navigate to the player detail page using the short ID (like the players page does)
-          router.push(`/leagues/${leagueId}/players/${exactMatch.id}`)
-        } else {
-          // If no exact match, show a message and navigate to players list with search
-          alert(`Player "${playerName}" not found in the players database. You can search for them in the Players section.`)
-          router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
-        }
-      } else {
-        // Fallback: navigate to players list with search
-        router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
-      }
+      // Use the same simple approach as the players page
+      // Navigate directly using the playerId from stat leaders
+      router.push(`/leagues/${leagueId}/players/${playerId}`)
     } catch (err) {
-      console.error('Error finding player:', err)
+      console.error('Error navigating to player:', err)
       // Fallback: navigate to players list with search
       router.push(`/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}`)
     }
@@ -223,7 +202,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                           ? 'bg-yellow-100 dark:bg-yellow-900 font-bold'
                           : ''
                       }`}
-                      onClick={() => handlePlayerClick(leader.name)}
+                      onClick={() => handlePlayerClick(leader.name, leader.playerId)}
                     >
                       <td className="p-2">{idx + 1}</td>
                       <td className="p-2 flex items-center gap-2">
@@ -256,7 +235,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                         <button 
                           onClick={(e) => {
                             e.stopPropagation()
-                            handlePlayerClick(leader.name)
+                            handlePlayerClick(leader.name, leader.playerId)
                           }}
                           className="text-blue-400 hover:underline cursor-pointer"
                         >

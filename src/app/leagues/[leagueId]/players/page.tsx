@@ -175,7 +175,7 @@ export default function LeaguePlayersPage() {
               players.map((player) => (
                 <tr key={player.id} className="hover:bg-gray-800">
                   <td>
-                    <Link href={`/leagues/${leagueId}/players/${player.maddenId || player.id}`} className="text-blue-400 hover:underline">
+                    <Link href={`/leagues/${leagueId}/players/${player.id}`} className="text-blue-400 hover:underline">
                       {player.name}
                     </Link>
                   </td>
