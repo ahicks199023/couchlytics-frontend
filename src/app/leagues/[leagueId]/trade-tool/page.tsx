@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import TradeCalculatorForm from './TradeCalculatorForm'
-import { API_BASE } from '@/lib/config'
+import { API_BASE, authenticatedFetch } from '@/lib/config'
 
 console.log('!!! TradeToolPage file loaded !!!');
 
@@ -28,15 +28,27 @@ export default function TradeToolPage() {
     }
     const validateAccess = async () => {
       try {
-        const res = await fetch(`${API_BASE}/leagues/${league_id}/is-member`, {
-          credentials: 'include'
-        })
-        const data = await res.json()
-        if (res.ok && data.isMember) {
-          console.log('[TradeToolPage] Membership check passed. User is a member.')
-          setAuthorized(true)
+        console.log('[TradeToolPage] Checking membership for league:', league_id)
+        const res = await authenticatedFetch(`${API_BASE}/leagues/${league_id}/is-member`)
+        
+        console.log('[TradeToolPage] Membership check response status:', res.status)
+        
+        if (res.ok) {
+          const data = await res.json()
+          console.log('[TradeToolPage] Membership check response data:', data)
+          
+          if (data.isMember) {
+            console.log('[TradeToolPage] Membership check passed. User is a member.')
+            setAuthorized(true)
+          } else {
+            console.warn('[TradeToolPage] Membership check failed. User is NOT a member.')
+            setAuthorized(false)
+            router.push('/unauthorized')
+          }
         } else {
-          console.warn('[TradeToolPage] Membership check failed. User is NOT a member.')
+          console.error('[TradeToolPage] Membership check failed with status:', res.status)
+          const errorText = await res.text()
+          console.error('[TradeToolPage] Error response:', errorText)
           setAuthorized(false)
           router.push('/unauthorized')
         }
@@ -53,15 +65,21 @@ export default function TradeToolPage() {
     if (!authorized) return
     const fetchLeague = async () => {
       try {
-        const res = await fetch(`${API_BASE}/leagues/${league_id}`, {
-          credentials: 'include'
-        })
-        const data = await res.json()
-        if (res.ok && data.league?.name) {
-          setLeagueInfo({
-            name: data.league.name,
-            seasonYear: data.league.seasonYear
-          })
+        console.log('[TradeToolPage] Fetching league info for:', league_id)
+        const res = await authenticatedFetch(`${API_BASE}/leagues/${league_id}`)
+        
+        if (res.ok) {
+          const data = await res.json()
+          console.log('[TradeToolPage] League info response:', data)
+          
+          if (data.league?.name) {
+            setLeagueInfo({
+              name: data.league.name,
+              seasonYear: data.league.seasonYear
+            })
+          }
+        } else {
+          console.error('[TradeToolPage] Failed to fetch league info, status:', res.status)
         }
       } catch (err) {
         console.error('[TradeToolPage] Failed to fetch league info:', err)
