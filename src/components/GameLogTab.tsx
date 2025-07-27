@@ -1,5 +1,6 @@
 'use client'
 
+// GameLogTab Component - Fixed TypeScript errors
 import React, { useState, useEffect, useCallback } from 'react'
 import { fetchFromApi } from '@/lib/api'
 
