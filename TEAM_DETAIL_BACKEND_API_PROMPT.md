@@ -1,356 +1,233 @@
-# Team Detail Backend API Implementation Prompt
+# Team Detail Backend API - Missing Data Fix
 
-## Overview
-I need to implement comprehensive backend API endpoints to support a detailed team page similar to the screenshots provided. The frontend expects multiple endpoints to fetch different aspects of team data.
+## Current Issue
+The `/leagues/{league_id}/teams/{team_id}/detail` endpoint is returning empty objects for critical data sections:
+- `capInformation: ()` - Team salary cap data
+- `defensiveStats: ()` - Team defensive statistics  
+- `offensiveStats: ()` - Team offensive statistics
+- `leaders: (-)` - Team statistical leaders
+- `mostExpensive: []` - Most expensive players
+- `upcomingFreeAgents: []` - Upcoming free agents
 
-## Required API Endpoints
+## Required Backend Updates
 
-### 1. Team Detail Information
+### 1. Fix Cap Information Data
+The `capInformation` object should be populated with actual financial data:
+
+```sql
+-- Query to get team cap information
+SELECT 
+    SUM(p.cap_hit) as total_cap_hit,
+    SUM(p.contract_salary) as total_salary,
+    SUM(p.contract_bonus) as total_bonus,
+    (625000000 - SUM(p.cap_hit)) as cap_room,
+    SUM(p.cap_hit) as spent,
+    (625000000 - SUM(p.cap_hit)) as available
+FROM players p
+WHERE p.league_id = ? AND p.team_id = ? AND p.is_active = true
 ```
-GET /leagues/{leagueId}/teams/{teamId}
-```
 
-**Response Structure:**
+**Expected Response:**
 ```json
 {
-  "teamId": 123,
-  "teamName": "Browns",
-  "city": "Cleveland",
-  "abbreviation": "CLE",
-  "conference": "AFC",
-  "division": "AFC North",
-  "overall": 97,
-  "leagueRank": 14,
-  "record": {
-    "wins": 11,
-    "losses": 6,
-    "ties": 0,
-    "winPercentage": 0.647
-  },
-  "owner": {
-    "name": "CPG TWON",
-    "username": "cpgtwon"
-  },
-  "schemes": {
-    "offense": "Multiple Zone Run",
-    "defense": "Base 4-3"
-  },
-  "roster": {
-    "total": 53,
-    "active": 53,
-    "injured": 0
-  },
-  "cap": {
-    "room": 315400000,
+  "capInformation": {
+    "capRoom": 315400000,
     "spent": 309620000,
     "available": 5780000,
-    "total": 625000000
-  },
-  "teamNotes": "None",
-  "tradeBlockComments": "None"
+    "totalSalary": 436000000,
+    "totalBonus": 42800000
+  }
 }
 ```
 
-### 2. Team Roster
-```
-GET /leagues/{leagueId}/teams/{teamId}/roster
-```
+### 2. Fix Offensive/Defensive Statistics
+The `offensiveStats` and `defensiveStats` objects need actual game statistics:
 
-**Response Structure:**
-```json
-[
-  {
-    "playerId": 123456,
-    "playerName": "Mike Hall Jr",
-    "position": "DT",
-    "jerseyNumber": 51,
-    "devTrait": "Superstar",
-    "overall": 99,
-    "age": 23,
-    "height": 75,
-    "speed": 78,
-    "capHit": 26480000,
-    "salary": 43600000,
-    "bonus": 42800000,
-    "yearsLeft": 3,
-    "contractLength": 4,
-    "value": 26480000,
-    "headshotUrl": "https://example.com/headshot.jpg"
-  }
-]
-```
-
-### 3. Team Schedule/Games
-```
-GET /leagues/{leagueId}/teams/{teamId}/schedule
-```
-
-**Response Structure:**
-```json
-[
-  {
-    "week": 1,
-    "opponent": "Cincinnati Bengals",
-    "opponentAbbr": "CIN",
-    "result": "W 28-24",
-    "homeScore": 28,
-    "awayScore": 24,
-    "isHome": true,
-    "date": "2024-09-08",
-    "time": "1:00 PM"
-  }
-]
-```
-
-### 4. Team Stat Leaders
-```
-GET /leagues/{leagueId}/teams/{teamId}/stat-leaders
-```
-
-**Response Structure:**
-```json
-[
-  {
-    "playerName": "Kaidon Salter",
-    "position": "QB",
-    "value": 5111,
-    "teamAbbr": "CLE",
-    "headshotUrl": "https://example.com/headshot.jpg"
-  }
-]
-```
-
-### 5. Team Trade Block
-```
-GET /leagues/{leagueId}/teams/{teamId}/trade-block
-```
-
-**Response Structure:**
-```json
-[
-  {
-    "playerId": 123456,
-    "playerName": "Player Name",
-    "position": "WR",
-    "devTrait": "Star",
-    "overall": 85,
-    "age": 25,
-    "height": 72,
-    "speed": 88,
-    "value": 15000000
-  }
-]
-```
-
-## Database Queries Needed
-
-### 1. Team Detail Query
 ```sql
+-- Query for offensive stats (points scored, yards gained)
 SELECT 
-  t.team_id,
-  t.name as team_name,
-  t.city,
-  t.abbrev as abbreviation,
-  t.conference,
-  t.division,
-  t.overall_rating as overall,
-  t.league_rank,
-  t.wins,
-  t.losses,
-  t.ties,
-  t.win_percentage,
-  u.first_name || ' ' || u.last_name as owner_name,
-  u.email as owner_username,
-  t.offense_scheme,
-  t.defense_scheme,
-  COUNT(p.id) as roster_total,
-  COUNT(CASE WHEN p.is_active = true THEN 1 END) as roster_active,
-  COUNT(CASE WHEN p.is_on_ir = true THEN 1 END) as roster_injured,
-  t.cap_room,
-  t.cap_spent,
-  t.cap_available,
-  t.salary_cap as cap_total,
-  t.team_notes,
-  t.trade_block_comments
-FROM teams t
-LEFT JOIN users u ON t.user_id = u.id
-LEFT JOIN players p ON t.team_id = p.team_id AND p.league_id = t.league_id
-WHERE t.league_id = :league_id AND t.team_id = :team_id
-GROUP BY t.team_id, t.name, t.city, t.abbrev, t.conference, t.division, 
-         t.overall_rating, t.league_rank, t.wins, t.losses, t.ties, t.win_percentage,
-         u.first_name, u.last_name, u.email, t.offense_scheme, t.defense_scheme,
-         t.cap_room, t.cap_spent, t.cap_available, t.salary_cap, t.team_notes, t.trade_block_comments
-```
-
-### 2. Team Roster Query
-```sql
-SELECT 
-  p.id as player_id,
-  p.name as player_name,
-  p.position,
-  p.jersey_number,
-  p.dev_trait,
-  p.overall,
-  p.age,
-  p.height,
-  p.rating_speed as speed,
-  p.cap_hit,
-  p.contract_salary as salary,
-  p.contract_bonus as bonus,
-  p.contract_years_left as years_left,
-  p.contract_length,
-  p.value,
-  p.headshot_url
-FROM players p
-WHERE p.league_id = :league_id AND p.team_id = :team_id
-ORDER BY p.overall DESC, p.name ASC
-```
-
-### 3. Team Schedule Query
-```sql
-SELECT 
-  g.week,
-  CASE 
-    WHEN g.home_team_id = :team_id THEN g.away_team_name
-    ELSE g.home_team_name
-  END as opponent,
-  CASE 
-    WHEN g.home_team_id = :team_id THEN g.away_team_abbr
-    ELSE g.home_team_abbr
-  END as opponent_abbr,
-  CASE 
-    WHEN g.is_complete = true THEN
-      CASE 
-        WHEN (g.home_team_id = :team_id AND g.home_score > g.away_score) OR
-             (g.away_team_id = :team_id AND g.away_score > g.home_score) THEN 'W'
-        ELSE 'L'
-      END || ' ' || GREATEST(g.home_score, g.away_score) || '-' || LEAST(g.home_score, g.away_score)
-    ELSE NULL
-  END as result,
-  g.home_score,
-  g.away_score,
-  g.home_team_id = :team_id as is_home,
-  g.game_date,
-  g.game_time
+    SUM(CASE WHEN g.home_team_id = ? THEN g.home_score ELSE g.away_score END) as points,
+    -- Add yards calculations from game stats
+    COUNT(*) as games_played
 FROM games g
-WHERE g.league_id = :league_id 
-  AND (g.home_team_id = :team_id OR g.away_team_id = :team_id)
-ORDER BY g.week ASC
+WHERE g.league_id = ? AND (g.home_team_id = ? OR g.away_team_id = ?) AND g.is_complete = true
+
+-- Query for defensive stats (points allowed, yards allowed)  
+SELECT 
+    SUM(CASE WHEN g.home_team_id = ? THEN g.away_score ELSE g.home_score END) as points_allowed,
+    -- Add yards allowed calculations
+    COUNT(*) as games_played
+FROM games g
+WHERE g.league_id = ? AND (g.home_team_id = ? OR g.away_team_id = ?) AND g.is_complete = true
 ```
 
-### 4. Team Stat Leaders Query
-```sql
--- For passing yards
-SELECT 
-  p.name as player_name,
-  p.position,
-  ps.total_value as value,
-  t.abbrev as team_abbr,
-  p.headshot_url
-FROM player_stat_totals ps
-JOIN players p ON ps.player_id = p.id
-JOIN teams t ON p.team_id = t.team_id
-WHERE ps.league_id = :league_id 
-  AND p.team_id = :team_id
-  AND ps.stat_category = 'passing'
-  AND ps.stat_type = 'yards'
-ORDER BY ps.total_value DESC
-LIMIT 3
-
--- For rushing yards
-SELECT 
-  p.name as player_name,
-  p.position,
-  ps.total_value as value,
-  t.abbrev as team_abbr,
-  p.headshot_url
-FROM player_stat_totals ps
-JOIN players p ON ps.player_id = p.id
-JOIN teams t ON p.team_id = t.team_id
-WHERE ps.league_id = :league_id 
-  AND p.team_id = :team_id
-  AND ps.stat_category = 'rushing'
-  AND ps.stat_type = 'yards'
-ORDER BY ps.total_value DESC
-LIMIT 3
-
--- For receiving yards
-SELECT 
-  p.name as player_name,
-  p.position,
-  ps.total_value as value,
-  t.abbrev as team_abbr,
-  p.headshot_url
-FROM player_stat_totals ps
-JOIN players p ON ps.player_id = p.id
-JOIN teams t ON p.team_id = t.team_id
-WHERE ps.league_id = :league_id 
-  AND p.team_id = :team_id
-  AND ps.stat_category = 'receiving'
-  AND ps.stat_type = 'yards'
-ORDER BY ps.total_value DESC
-LIMIT 3
+**Expected Response:**
+```json
+{
+  "offensiveStats": {
+    "points": 425,
+    "pointsRank": 7,
+    "yards": 6120,
+    "yardsRank": 19,
+    "passingYards": 4125,
+    "passingYardsRank": 14,
+    "rushingYards": 1995,
+    "rushingYardsRank": 25
+  },
+  "defensiveStats": {
+    "points": 22,
+    "pointsRank": 8,
+    "yards": 5178,
+    "yardsRank": 7,
+    "passingYards": 4125,
+    "passingYardsRank": 20,
+    "rushingYards": 1053,
+    "rushingYardsRank": 3
+  }
+}
 ```
 
-### 5. Team Trade Block Query
+### 3. Fix Team Leaders Data
+The `leaders` object should contain statistical leaders:
+
 ```sql
+-- Query for passing leader
 SELECT 
-  p.id as player_id,
-  p.name as player_name,
-  p.position,
-  p.dev_trait,
-  p.overall,
-  p.age,
-  p.height,
-  p.rating_speed as speed,
-  p.value
+    p.name as player,
+    p.position,
+    -- Add passing yards from stats table
+    MAX(ps.passing_yards) as yards
 FROM players p
-WHERE p.league_id = :league_id 
-  AND p.team_id = :team_id
-  AND p.is_on_trade_block = true
-ORDER BY p.overall DESC
+LEFT JOIN player_stats ps ON p.id = ps.player_id
+WHERE p.league_id = ? AND p.team_id = ? AND p.position IN ('QB')
+GROUP BY p.id, p.name, p.position
+ORDER BY yards DESC
+LIMIT 1
+
+-- Similar queries for rushing, receiving, tackles, sacks, interceptions
+```
+
+**Expected Response:**
+```json
+{
+  "leaders": {
+    "passing": {
+      "player": "Kaidon Salter",
+      "position": "QB",
+      "yards": 4125
+    },
+    "rushing": {
+      "player": "Tony Pollard",
+      "position": "HB",
+      "yards": 1247
+    },
+    "receiving": {
+      "player": "DeAndre Hopkins",
+      "position": "WR",
+      "yards": 1156
+    },
+    "tackles": {
+      "player": "Azeez Al-Shaair",
+      "position": "LOLB",
+      "tackles": 127
+    },
+    "sacks": {
+      "player": "Harold Landry III",
+      "position": "ROLB",
+      "sacks": 12.5
+    },
+    "interceptions": {
+      "player": "Roger McCreary",
+      "position": "CB",
+      "interceptions": 4
+    }
+  }
+}
+```
+
+### 4. Fix Most Expensive Players
+The `mostExpensive` array should contain players sorted by cap hit:
+
+```sql
+-- Query for most expensive players
+SELECT 
+    p.name as player,
+    p.position,
+    p.dev_trait as devTrait,
+    p.overall,
+    p.cap_hit as capHit,
+    p.contract_salary as salary,
+    p.contract_bonus as bonus,
+    p.contract_years_left as yearsLeft,
+    p.contract_length as contractLength
+FROM players p
+WHERE p.league_id = ? AND p.team_id = ? AND p.is_active = true
+ORDER BY p.cap_hit DESC
+LIMIT 10
+```
+
+**Expected Response:**
+```json
+{
+  "mostExpensive": [
+    {
+      "player": "Kaidon Salter",
+      "position": "QB",
+      "devTrait": "Superstar",
+      "overall": 95,
+      "capHit": 26.48,
+      "salary": 43.6,
+      "bonus": 42.8,
+      "yearsLeft": 3,
+      "contractLength": 4
+    }
+  ]
+}
+```
+
+### 5. Fix Upcoming Free Agents
+The `upcomingFreeAgents` array should contain players with expiring contracts:
+
+```sql
+-- Query for upcoming free agents (contracts expiring soon)
+SELECT 
+    p.name as player,
+    p.position,
+    p.dev_trait as devTrait,
+    p.overall,
+    p.cap_hit as capHit,
+    p.contract_salary as salary,
+    p.contract_bonus as bonus,
+    p.contract_years_left as yearsLeft,
+    p.contract_length as contractLength
+FROM players p
+WHERE p.league_id = ? AND p.team_id = ? AND p.is_active = true AND p.contract_years_left <= 1
+ORDER BY p.contract_years_left ASC, p.cap_hit DESC
+LIMIT 10
 ```
 
 ## Implementation Notes
 
-### 1. Database Schema Updates
-You may need to add these columns to your existing tables:
+1. **Database Schema**: Ensure the `players` table has these fields:
+   - `cap_hit` (BIGINT)
+   - `contract_salary` (BIGINT) 
+   - `contract_bonus` (BIGINT)
+   - `contract_years_left` (INTEGER)
+   - `contract_length` (INTEGER)
 
-**teams table:**
-- `overall_rating` (INTEGER)
-- `league_rank` (INTEGER)
-- `offense_scheme` (VARCHAR)
-- `defense_scheme` (VARCHAR)
-- `cap_room` (BIGINT)
-- `cap_spent` (BIGINT)
-- `cap_available` (BIGINT)
-- `salary_cap` (BIGINT)
-- `team_notes` (TEXT)
-- `trade_block_comments` (TEXT)
+2. **Game Statistics**: If game stats are stored separately, join with the appropriate tables to get offensive/defensive statistics.
 
-**players table:**
-- `jersey_number` (INTEGER)
-- `is_on_trade_block` (BOOLEAN)
-- `value` (BIGINT)
+3. **Ranking Logic**: Calculate rankings by comparing team stats against all other teams in the league.
 
-### 2. API Response Formatting
-- Convert snake_case database fields to camelCase in API responses
-- Format currency values as integers (cents) or use proper formatting
-- Handle null/empty values gracefully
-- Include proper error handling for missing teams/players
+4. **Error Handling**: Return empty arrays/objects if no data is found, but ensure the structure is consistent.
 
-### 3. Authentication & Authorization
-- Ensure all endpoints require authentication
-- Verify user has access to the specified league
-- Check if user is a member of the league
-
-### 4. Performance Considerations
-- Add database indexes on frequently queried fields
-- Consider caching for static data like team details
-- Use pagination for large rosters if needed
-- Optimize queries to minimize database calls
+5. **Performance**: Consider caching frequently accessed data like team statistics and rankings.
 
 ## Testing
-Test with the following team ID: `123` in league `12335716`
 
-The frontend will make multiple API calls to populate the team detail page, so ensure all endpoints return the expected data structure. 
+Test with the Titans team (ID: 6) in league 12335716 to verify all sections populate correctly:
+- Cap Information should show actual dollar amounts
+- Offense/Defense stats should show non-zero values with proper rankings
+- Leaders should show actual player names and statistics
+- Most Expensive should show players sorted by cap hit
+- Upcoming Free Agents should show players with expiring contracts 
