@@ -35,6 +35,23 @@ interface ApiStandingsResponse {
     name: string
     teams: Array<unknown>
   }>
+  teams?: Array<{
+    teamId: number
+    teamName: string
+    city: string
+    conference?: string
+    division?: string
+    wins?: number
+    losses?: number
+    ties?: number
+    winPercentage?: number
+    pointsScored?: number
+    pointsAllowed?: number
+    pointDifferential?: number
+    conferenceRank?: number
+    divisionRank?: number
+    overallRank?: number
+  }>
   season?: number
 }
 
@@ -51,36 +68,94 @@ export default function LeagueStandings({ leagueId }: LeagueStandingsProps) {
         const data = await analyticsApi.getLeagueStandings(leagueId) as unknown as ApiStandingsResponse
         console.log('Standings API Response:', data) // Debug log
         
+        // Add detailed logging to inspect the teams data
+        if (data && data.conferences) {
+          console.log('Number of conferences:', data.conferences.length)
+          console.log('Separate teams array:', data.teams)
+          data.conferences.forEach((conf, confIndex) => {
+            console.log(`Conference ${confIndex + 1} (${conf.name}):`, conf)
+            console.log(`Teams in ${conf.name}:`, conf.teams)
+            console.log(`Number of teams in ${conf.name}:`, conf.teams?.length || 0)
+            if (conf.teams && conf.teams.length > 0) {
+              console.log('First team sample:', conf.teams[0])
+            }
+          })
+        }
+        
         // Transform the flat API response to the expected nested structure
         if (data && data.conferences) {
+          // If teams data is separate, merge it with conference data
+          let mergedConferences = data.conferences
+          if (data.teams && data.teams.length > 0) {
+            console.log('Found separate teams array, merging with conferences...')
+            mergedConferences = data.conferences.map(conf => {
+              // Find teams that belong to this conference
+              const conferenceTeams = data.teams!.filter(team => 
+                team.conference === conf.name || team.conference === conf.id
+              )
+              console.log(`Teams for conference ${conf.name}:`, conferenceTeams)
+              
+              // Map the teams to match the expected interface
+              const mappedTeams = conferenceTeams.map(team => ({
+                teamId: team.teamId,
+                teamName: team.teamName,
+                city: team.city,
+                wins: team.wins || 0,
+                losses: team.losses || 0,
+                ties: team.ties || 0,
+                winPercentage: team.winPercentage || 0,
+                pointsScored: team.pointsScored || 0,
+                pointsAllowed: team.pointsAllowed || 0,
+                pointDifferential: team.pointDifferential || 0,
+                conferenceRank: team.conferenceRank || 0,
+                divisionRank: team.divisionRank || 0,
+                overallRank: team.overallRank || 0,
+                division: team.division
+              }))
+              
+              return {
+                ...conf,
+                teams: mappedTeams.length > 0 ? mappedTeams : conf.teams
+              }
+            })
+          }
+          
           const transformedStandings: LeagueStandingsType = {
             leagueId: Number(leagueId),
             season: data.season || 2024,
-            conferences: data.conferences.map((conf, confIndex) => ({
-              conferenceId: confIndex + 1,
-              conferenceName: conf.name,
-              divisions: [
-                {
-                  divisionId: confIndex + 1,
-                  divisionName: `${conf.name} Division`,
-                  teams: conf.teams.map((team, teamIndex) => ({
-                    teamId: team.teamId,
-                    teamName: team.teamName,
-                    city: team.city,
-                    wins: team.wins || 0,
-                    losses: team.losses || 0,
-                    ties: team.ties || 0,
-                    winPercentage: team.winPercentage || 0,
-                    pointsScored: team.pointsScored || 0,
-                    pointsAllowed: team.pointsAllowed || 0,
-                    pointDifferential: team.pointDifferential || 0,
-                    conferenceRank: team.conferenceRank || teamIndex + 1,
-                    divisionRank: team.divisionRank || teamIndex + 1,
-                    overallRank: team.overallRank || teamIndex + 1,
-                  }))
-                }
-              ]
-            }))
+            conferences: mergedConferences.map((conf, confIndex) => {
+              console.log(`Processing conference ${confIndex + 1}:`, conf.name)
+              console.log(`Teams for ${conf.name}:`, conf.teams)
+              
+              return {
+                conferenceId: confIndex + 1,
+                conferenceName: conf.name,
+                divisions: [
+                  {
+                    divisionId: confIndex + 1,
+                    divisionName: `${conf.name} Division`,
+                    teams: (conf.teams || []).map((team, teamIndex) => {
+                      console.log(`Processing team ${teamIndex + 1}:`, team)
+                      return {
+                        teamId: team.teamId,
+                        teamName: team.teamName,
+                        city: team.city,
+                        wins: team.wins || 0,
+                        losses: team.losses || 0,
+                        ties: team.ties || 0,
+                        winPercentage: team.winPercentage || 0,
+                        pointsScored: team.pointsScored || 0,
+                        pointsAllowed: team.pointsAllowed || 0,
+                        pointDifferential: team.pointDifferential || 0,
+                        conferenceRank: team.conferenceRank || teamIndex + 1,
+                        divisionRank: team.divisionRank || teamIndex + 1,
+                        overallRank: team.overallRank || teamIndex + 1,
+                      }
+                    })
+                  }
+                ]
+              }
+            })
           }
           
           console.log('Transformed Standings:', transformedStandings)
