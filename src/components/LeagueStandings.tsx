@@ -14,19 +14,32 @@ interface ApiStandingsResponse {
     id: string
     name: string
     teams: Array<{
-      teamId: number
-      teamName: string
+      teamId?: number
+      id?: number
+      teamName?: string
+      name?: string
       city: string
-      wins: number
-      losses: number
-      ties: number
-      winPercentage: number
-      pointsScored: number
-      pointsAllowed: number
-      pointDifferential: number
-      conferenceRank: number
-      divisionRank: number
-      overallRank: number
+      wins?: number
+      Wins?: number
+      losses?: number
+      Losses?: number
+      ties?: number
+      Ties?: number
+      winPercentage?: number
+      winPct?: number
+      pointsScored?: number
+      pointsFor?: number
+      PointsFor?: number
+      pointsAllowed?: number
+      pointsAgainst?: number
+      PointsAgainst?: number
+      pointDifferential?: number
+      pointDiff?: number
+      conferenceRank?: number
+      confRank?: number
+      divisionRank?: number
+      divRank?: number
+      overallRank?: number
       division?: string
     }>
   }>
@@ -36,20 +49,33 @@ interface ApiStandingsResponse {
     teams: Array<unknown>
   }>
   teams?: Array<{
-    teamId: number
-    teamName: string
+    teamId?: number
+    id?: number
+    teamName?: string
+    name?: string
     city: string
     conference?: string
     division?: string
     wins?: number
+    Wins?: number
     losses?: number
+    Losses?: number
     ties?: number
+    Ties?: number
     winPercentage?: number
+    winPct?: number
     pointsScored?: number
+    pointsFor?: number
+    PointsFor?: number
     pointsAllowed?: number
+    pointsAgainst?: number
+    PointsAgainst?: number
     pointDifferential?: number
+    pointDiff?: number
     conferenceRank?: number
+    confRank?: number
     divisionRank?: number
+    divRank?: number
     overallRank?: number
   }>
   season?: number
@@ -137,18 +163,18 @@ export default function LeagueStandings({ leagueId }: LeagueStandingsProps) {
                     teams: (conf.teams || []).map((team, teamIndex) => {
                       console.log(`Processing team ${teamIndex + 1}:`, team)
                       return {
-                        teamId: team.teamId,
-                        teamName: team.teamName,
-                        city: team.city,
-                        wins: team.wins || 0,
-                        losses: team.losses || 0,
-                        ties: team.ties || 0,
-                        winPercentage: team.winPercentage || 0,
-                        pointsScored: team.pointsScored || 0,
-                        pointsAllowed: team.pointsAllowed || 0,
-                        pointDifferential: team.pointDifferential || 0,
-                        conferenceRank: team.conferenceRank || teamIndex + 1,
-                        divisionRank: team.divisionRank || teamIndex + 1,
+                        teamId: team.teamId || team.id || teamIndex + 1,
+                        teamName: team.teamName || team.name || `Team ${teamIndex + 1}`,
+                        city: team.city || '',
+                        wins: team.wins || team.Wins || 0,
+                        losses: team.losses || team.Losses || 0,
+                        ties: team.ties || team.Ties || 0,
+                        winPercentage: team.winPercentage || team.winPct || 0,
+                        pointsScored: team.pointsScored || team.pointsFor || team.PointsFor || 0,
+                        pointsAllowed: team.pointsAllowed || team.pointsAgainst || team.PointsAgainst || 0,
+                        pointDifferential: team.pointDifferential || team.pointDiff || 0,
+                        conferenceRank: team.conferenceRank || team.confRank || teamIndex + 1,
+                        divisionRank: team.divisionRank || team.divRank || teamIndex + 1,
                         overallRank: team.overallRank || teamIndex + 1,
                       }
                     })
