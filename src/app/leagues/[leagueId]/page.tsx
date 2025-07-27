@@ -70,7 +70,12 @@ export default function LeagueDetailPage() {
               .filter(team => team.name && team.name !== 'Unknown')
               .map((team) => (
                 <li key={team.id} className="bg-gray-800 p-3 rounded">
-                  <strong>{team.name}</strong>
+                  <Link 
+                    href={`/leagues/${league.league.leagueId}/teams/${team.id}`}
+                    className="hover:text-neon-green transition-colors"
+                  >
+                    <strong>{team.name}</strong>
+                  </Link>
                   <div className="text-sm text-gray-400">User: {team.user}</div>
                 </li>
               ))}

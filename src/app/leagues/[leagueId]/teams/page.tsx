@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { API_BASE } from '@/lib/config'
 
@@ -65,19 +66,24 @@ export default function TeamsPage() {
             <p className="text-gray-400 italic">No teams found for this league.</p>
           ) : (
             teams.map((team) => (
-              <div
+              <Link
                 key={team.id}
-                className="p-4 mb-4 rounded border border-gray-700 bg-gray-900 text-white transition-all duration-200 hover:shadow-[0_0_6px_2px_#39FF14]"
+                href={`/leagues/${leagueId}/teams/${team.id}`}
+                className="block"
               >
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold text-neon-green">
-                    {team.city} {team.name}
-                  </h2>
-                  <span className="text-sm text-gray-400">
-                    Record: {team.wins}-{team.losses}
-                  </span>
+                <div
+                  className="p-4 mb-4 rounded border border-gray-700 bg-gray-900 text-white transition-all duration-200 hover:shadow-[0_0_6px_2px_#39FF14] cursor-pointer"
+                >
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-lg font-semibold text-neon-green">
+                      {team.city} {team.name}
+                    </h2>
+                    <span className="text-sm text-gray-400">
+                      Record: {team.wins}-{team.losses}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>

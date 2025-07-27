@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { analyticsApi, getTeamRankingColor } from '@/lib/analytics'
 import { LeagueStandings as LeagueStandingsType } from '@/types/analytics'
 
@@ -315,7 +316,12 @@ export default function LeagueStandings({ leagueId }: LeagueStandingsProps) {
                                 </td>
                                 <td className="py-2 px-1 text-white">
                                   <div>
-                                    <div className="font-medium">{team.city || ''} {team.teamName || 'Unknown Team'}</div>
+                                    <Link 
+                                      href={`/leagues/${leagueId}/teams/${team.teamId}`}
+                                      className="hover:text-neon-green transition-colors"
+                                    >
+                                      <div className="font-medium">{team.city || ''} {team.teamName || 'Unknown Team'}</div>
+                                    </Link>
                                     <div className="text-xs text-gray-400">
                                       Conf: {team.conferenceRank || '-'} | Overall: {team.overallRank || '-'}
                                     </div>

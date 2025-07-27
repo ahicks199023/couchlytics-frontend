@@ -135,7 +135,12 @@ export default function LeaguesPage() {
                       <ul className="text-sm text-gray-300 list-disc pl-5 space-y-1">
                         {teamsByLeague[league.leagueId].map(team => (
                           <li key={team.id}>
-                            <span className="text-neon-green font-medium">{team.city}</span> {team.name} — {team.wins}-{team.losses}
+                            <Link 
+                              href={`/leagues/${league.leagueId}/teams/${team.id}`}
+                              className="hover:text-neon-green transition-colors"
+                            >
+                              <span className="text-neon-green font-medium">{team.city}</span> {team.name} — {team.wins}-{team.losses}
+                            </Link>
                           </li>
                         ))}
                       </ul>
