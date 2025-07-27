@@ -162,6 +162,8 @@ export default function LeagueStandings({ leagueId }: LeagueStandingsProps) {
                     divisionName: `${conf.name} Division`,
                     teams: (conf.teams || []).map((team, teamIndex) => {
                       console.log(`Processing team ${teamIndex + 1}:`, team)
+                      console.log(`Team ${teamIndex + 1} - All available keys:`, Object.keys(team))
+                      console.log(`Team ${teamIndex + 1} - Complete object:`, JSON.stringify(team, null, 2))
                       return {
                         teamId: team.teamId || team.id || teamIndex + 1,
                         teamName: team.teamName || team.name || `Team ${teamIndex + 1}`,
@@ -185,6 +187,17 @@ export default function LeagueStandings({ leagueId }: LeagueStandingsProps) {
           }
           
           console.log('Transformed Standings:', transformedStandings)
+          
+          // Add summary of what data we're getting
+          const allTeams = transformedStandings.conferences.flatMap(conf => 
+            conf.divisions.flatMap(div => div.teams)
+          )
+          console.log('Summary - Total teams processed:', allTeams.length)
+          console.log('Summary - Teams with non-zero wins:', allTeams.filter(t => t.wins > 0).length)
+          console.log('Summary - Teams with non-zero losses:', allTeams.filter(t => t.losses > 0).length)
+          console.log('Summary - Teams with non-zero points:', allTeams.filter(t => t.pointsScored > 0 || t.pointsAllowed > 0).length)
+          console.log('Sample team data:', allTeams.slice(0, 3))
+          
           setStandings(transformedStandings)
         } else {
           console.warn('Invalid API response structure:', data)
