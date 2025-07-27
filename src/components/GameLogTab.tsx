@@ -107,19 +107,44 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
       
       const data = await fetchFromApi(`/leagues/${leagueId}/players/${playerId}/game-log?${params}`) as GameLogResponse
       
-      setGameLogs(data.gameLogs)
-      setPlayer(data.player)
+      // Defensive programming: Ensure data structure is valid
+      console.log('API Response:', data)
+      
+      if (!data) {
+        throw new Error('No data received from API')
+      }
+      
+      // Handle different possible response structures
+      if (data.gameLogs && Array.isArray(data.gameLogs)) {
+        setGameLogs(data.gameLogs)
+      } else if (Array.isArray(data)) {
+        // If API returns array directly
+        setGameLogs(data)
+      } else {
+        // If no gameLogs array, set empty array
+        console.warn('No gameLogs array found in response:', data)
+        setGameLogs([])
+      }
+      
+      if (data.player) {
+        setPlayer(data.player)
+      } else {
+        console.warn('No player data found in response')
+        setPlayer(null)
+      }
     } catch (err) {
       console.error('Failed to fetch game logs:', err)
       setError('Failed to load game logs. Please try again.')
-         } finally {
-       setLoading(false)
-     }
-   }, [playerId, leagueId, seasonOnly, limit])
+      setGameLogs([]) // Ensure gameLogs is always an array
+      setPlayer(null)
+    } finally {
+      setLoading(false)
+    }
+  }, [playerId, leagueId, seasonOnly, limit])
 
-   useEffect(() => {
-     fetchGameLogs()
-   }, [fetchGameLogs])
+  useEffect(() => {
+    fetchGameLogs()
+  }, [fetchGameLogs])
 
   const getTableHeaders = () => {
     const position = player?.position?.toUpperCase() || ''
@@ -172,10 +197,10 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
         game.cmp_pct ? `${game.cmp_pct}%` : '-',
         game.pass_yds || '-',
         game.pass_avg || '-',
-                 game.pass_tds || '-',
-         game.pass_ints || '-',
-         game.pass_long || '-',
-         game.pass_sacks || '-',
+        game.pass_tds || '-',
+        game.pass_ints || '-',
+        game.pass_long || '-',
+        game.pass_sacks || '-',
         game.passer_rating || '-',
         game.rush_att || '-',
         game.rush_yds || '-',
@@ -262,9 +287,9 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
         game.team,
         game.opponent,
         game.result,
-                 game.tackles || '-',
-         game.def_sacks || '-',
-         game.def_ints || '-',
+        game.tackles || '-',
+        game.def_sacks || '-',
+        game.def_ints || '-',
         game.int_yds || '-',
         game.def_tds || '-',
         game.forced_fum || '-',
@@ -306,10 +331,22 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
     )
   }
 
-  if (!gameLogs.length) {
+  // Defensive check: Ensure gameLogs is an array before checking length
+  if (!Array.isArray(gameLogs) || gameLogs.length === 0) {
     return (
       <div className="text-center py-8">
         <p className="text-gray-400">No games found for this player</p>
+      </div>
+    )
+  }
+
+  // Defensive check: Ensure getTableHeaders returns an array
+  const tableHeaders = getTableHeaders()
+  if (!Array.isArray(tableHeaders)) {
+    console.error('getTableHeaders did not return an array:', tableHeaders)
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-400">Error: Invalid table headers</p>
       </div>
     )
   }
@@ -352,7 +389,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-900">
-                {getTableHeaders().map((header, index) => (
+                {tableHeaders.map((header, index) => (
                   <th key={index} className="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700">
                     {header}
                   </th>
@@ -360,15 +397,24 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700">
-              {gameLogs.map((game, index) => (
-                <tr key={index} className="hover:bg-gray-700/50 transition-colors">
-                  {getTableRow(game).map((value, cellIndex) => (
-                    <td key={cellIndex} className={`px-3 py-2 text-sm ${cellIndex === 3 ? getResultClass(value as string) : 'text-white'}`}>
-                      {value}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+              {gameLogs.map((game, index) => {
+                // Defensive check: Ensure getTableRow returns an array
+                const tableRow = getTableRow(game)
+                if (!Array.isArray(tableRow)) {
+                  console.error('getTableRow did not return an array for game:', game, 'row:', tableRow)
+                  return null
+                }
+                
+                return (
+                  <tr key={index} className="hover:bg-gray-700/50 transition-colors">
+                    {tableRow.map((value, cellIndex) => (
+                      <td key={cellIndex} className={`px-3 py-2 text-sm ${cellIndex === 3 ? getResultClass(value as string) : 'text-white'}`}>
+                        {value}
+                      </td>
+                    ))}
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
