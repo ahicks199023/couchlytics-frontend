@@ -257,6 +257,60 @@ export interface TeamDetailResponse {
     pointsFor: number
     pointsAgainst: number
   }>
+  // New fields for roster and depth chart
+  roster: Array<{
+    id: number
+    madden_id: string
+    name: string
+    position: string
+    overall: number
+    dev_trait: string
+    age: number
+    height: string
+    weight: number
+    speed: number
+    cap_hit: number
+    salary: number
+    bonus: number
+    years_left: number
+    contract_length: number
+    is_on_ir: boolean
+    is_on_trade_block: boolean
+  }>
+  depthChart: {
+    [position: string]: Array<{
+      id: number
+      madden_id: string
+      name: string
+      position: string
+      overall: number
+      dev_trait: string
+      age: number
+      height: string
+      weight: number
+      speed: number
+      cap_hit: number
+      salary: number
+      bonus: number
+      years_left: number
+      contract_length: number
+      is_on_ir: boolean
+      is_on_trade_block: boolean
+    }>
+  }
+  onTheBlock: Array<{
+    player: string
+    position: string
+    devTrait: string
+    overall: number
+    age: number
+    height: string
+    speed: number
+    capHit: number
+    salary: number
+    bonus: number
+    yearsLeft: number
+  }>
 }
 
 // Legacy interfaces for backward compatibility

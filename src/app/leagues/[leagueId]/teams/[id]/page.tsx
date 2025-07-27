@@ -6,6 +6,16 @@ import Link from 'next/link'
 import { API_BASE, authenticatedFetch } from '@/lib/config'
 import { TeamDetailResponse } from '@/types/analytics'
 
+// Helper function to format currency values
+const formatCurrencyValue = (value: number): string => {
+  return `$${(value / 1000000).toFixed(2)}M`
+}
+
+// Helper function to format height
+const formatHeight = (height: string): string => {
+  return height || 'N/A'
+}
+
 export default function TeamDetailPage() {
   const { leagueId, id: teamId } = useParams()
   const leagueIdString = leagueId as string
@@ -19,6 +29,10 @@ export default function TeamDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'home' | 'schedule' | 'statistics' | 'roster' | 'depth-chart' | 'transactions' | 'contracts' | 'customization'>('home')
   const [activeStatTab, setActiveStatTab] = useState<'offense' | 'defense'>('offense')
+
+  // Roster sorting state
+  const [rosterSortField, setRosterSortField] = useState<keyof TeamDetailResponse['roster'][0]>('overall')
+  const [rosterSortDirection, setRosterSortDirection] = useState<'asc' | 'desc'>('desc')
 
   useEffect(() => {
     const fetchTeamData = async () => {
@@ -49,541 +63,492 @@ export default function TeamDetailPage() {
     fetchTeamData()
   }, [leagueIdString, teamIdString])
 
+  // Sort roster data
+  const sortedRoster = teamData?.roster ? [...teamData.roster].sort((a, b) => {
+    const aValue = a[rosterSortField]
+    const bValue = b[rosterSortField]
+    
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return rosterSortDirection === 'asc' 
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue)
+    }
+    
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return rosterSortDirection === 'asc' ? aValue - bValue : bValue - aValue
+    }
+    
+    return 0
+  }) : []
+
+  // Handle roster column sorting
+  const handleRosterSort = (field: keyof TeamDetailResponse['roster'][0]) => {
+    if (rosterSortField === field) {
+      setRosterSortDirection(rosterSortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setRosterSortField(field)
+      setRosterSortDirection('desc')
+    }
+  }
+
+  // Get sort indicator
+  const getSortIndicator = (field: keyof TeamDetailResponse['roster'][0]) => {
+    if (rosterSortField !== field) return ''
+    return rosterSortDirection === 'asc' ? ' ↑' : ' ↓'
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white p-6">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-green"></div>
-          <span className="ml-2 text-white">Loading team data...</span>
-        </div>
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-green"></div>
+        <span className="ml-2">Loading team data...</span>
       </div>
     )
   }
 
-  if (error) {
+  if (error || !teamData) {
     return (
-      <div className="min-h-screen bg-black text-white p-6">
-        <div className="bg-red-900/20 border border-red-500 rounded-lg p-4">
-          <h3 className="text-red-400 font-semibold mb-2">Error Loading Team Data</h3>
-          <p className="text-red-300">{error}</p>
-        </div>
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-red-400">Error: {error || 'Failed to load team data'}</div>
       </div>
     )
   }
 
-  if (!teamData) {
-    return (
-      <div className="min-h-screen bg-black text-white p-6">
-        <div className="text-center p-8">
-          <p className="text-gray-400">Team not found</p>
-        </div>
-      </div>
-    )
-  }
+  const tabs = [
+    { id: 'home', label: 'HOME' },
+    { id: 'schedule', label: 'SCHEDULE' },
+    { id: 'statistics', label: 'STATISTICS' },
+    { id: 'roster', label: 'ROSTER' },
+    { id: 'depth-chart', label: 'DEPTH CHART' },
+    { id: 'transactions', label: 'TRANSACTIONS' },
+    { id: 'contracts', label: 'CONTRACTS' },
+    { id: 'customization', label: 'CUSTOMIZATION' }
+  ]
 
-  const formatCurrencyValue = (value: number) => {
-    return `$${value.toFixed(2)}M`
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'roster':
+        return (
+          <div className="bg-gray-900 p-4 rounded">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th 
+                      className="text-left py-2 px-1 text-gray-400 cursor-pointer hover:text-white"
+                      onClick={() => handleRosterSort('name')}
+                    >
+                      Player{getSortIndicator('name')}
+                    </th>
+                    <th 
+                      className="text-left py-2 px-1 text-gray-400 cursor-pointer hover:text-white"
+                      onClick={() => handleRosterSort('position')}
+                    >
+                      POS{getSortIndicator('position')}
+                    </th>
+                    <th 
+                      className="text-left py-2 px-1 text-gray-400 cursor-pointer hover:text-white"
+                      onClick={() => handleRosterSort('dev_trait')}
+                    >
+                      DEV{getSortIndicator('dev_trait')}
+                    </th>
+                    <th 
+                      className="text-left py-2 px-1 text-gray-400 cursor-pointer hover:text-white"
+                      onClick={() => handleRosterSort('overall')}
+                    >
+                      OVR{getSortIndicator('overall')}
+                    </th>
+                    <th 
+                      className="text-left py-2 px-1 text-gray-400 cursor-pointer hover:text-white"
+                      onClick={() => handleRosterSort('age')}
+                    >
+                      AGE{getSortIndicator('age')}
+                    </th>
+                    <th 
+                      className="text-left py-2 px-1 text-gray-400 cursor-pointer hover:text-white"
+                      onClick={() => handleRosterSort('height')}
+                    >
+                      HGT{getSortIndicator('height')}
+                    </th>
+                    <th 
+                      className="text-left py-2 px-1 text-gray-400 cursor-pointer hover:text-white"
+                      onClick={() => handleRosterSort('speed')}
+                    >
+                      SPD{getSortIndicator('speed')}
+                    </th>
+                    <th 
+                      className="text-left py-2 px-1 text-gray-400 cursor-pointer hover:text-white"
+                      onClick={() => handleRosterSort('cap_hit')}
+                    >
+                      CAP HIT{getSortIndicator('cap_hit')}
+                    </th>
+                    <th 
+                      className="text-left py-2 px-1 text-gray-400 cursor-pointer hover:text-white"
+                      onClick={() => handleRosterSort('salary')}
+                    >
+                      SALARY{getSortIndicator('salary')}
+                    </th>
+                    <th 
+                      className="text-left py-2 px-1 text-gray-400 cursor-pointer hover:text-white"
+                      onClick={() => handleRosterSort('bonus')}
+                    >
+                      BON{getSortIndicator('bonus')}
+                    </th>
+                    <th 
+                      className="text-left py-2 px-1 text-gray-400 cursor-pointer hover:text-white"
+                      onClick={() => handleRosterSort('years_left')}
+                    >
+                      YRS LEFT{getSortIndicator('years_left')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedRoster.length > 0 ? (
+                    sortedRoster.map((player) => (
+                      <tr key={player.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                        <td className="py-2 px-1 text-white">
+                          <Link 
+                            href={`/leagues/${leagueIdString}/players/${player.madden_id}`}
+                            className="hover:text-neon-green transition-colors"
+                          >
+                            {player.name}
+                          </Link>
+                        </td>
+                        <td className="py-2 px-1 text-white">{player.position}</td>
+                        <td className="py-2 px-1 text-white">{player.dev_trait}</td>
+                        <td className="py-2 px-1 text-white">{player.overall}</td>
+                        <td className="py-2 px-1 text-white">{player.age}</td>
+                        <td className="py-2 px-1 text-white">{formatHeight(player.height)}</td>
+                        <td className="py-2 px-1 text-white">{player.speed}</td>
+                        <td className="py-2 px-1 text-white">{formatCurrencyValue(player.cap_hit)}</td>
+                        <td className="py-2 px-1 text-white">{formatCurrencyValue(player.salary)}</td>
+                        <td className="py-2 px-1 text-white">{formatCurrencyValue(player.bonus)}</td>
+                        <td className="py-2 px-1 text-white">{player.years_left}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={11} className="py-4 text-center text-gray-400">
+                        No players found in roster
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+
+      case 'depth-chart':
+        return (
+          <div className="bg-gray-900 p-4 rounded">
+            {teamData.depthChart && Object.keys(teamData.depthChart).length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(teamData.depthChart).map(([position, players]) => (
+                  <div key={position} className="bg-gray-800 p-3 rounded">
+                    <h4 className="text-lg font-semibold text-neon-green mb-2">{position}</h4>
+                    <div className="space-y-2">
+                      {players.map((player, index) => (
+                        <div key={player.id} className="flex items-center justify-between p-2 bg-gray-700 rounded">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-400">#{index + 1}</span>
+                              <Link 
+                                href={`/leagues/${leagueIdString}/players/${player.madden_id}`}
+                                className="text-white hover:text-neon-green transition-colors font-medium"
+                              >
+                                {player.name}
+                              </Link>
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {player.position} • OVR: {player.overall} • {player.dev_trait}
+                            </div>
+                          </div>
+                          <div className="text-right text-xs text-gray-400">
+                            <div>Age: {player.age}</div>
+                            <div>SPD: {player.speed}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                No depth chart data available
+              </div>
+            )}
+          </div>
+        )
+
+      default:
+        return (
+          <div className="bg-gray-900 p-4 rounded">
+            <p className="text-gray-400">Content for {activeTab} tab coming soon...</p>
+          </div>
+        )
+    }
   }
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <div className="bg-gray-900 border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href={`/leagues/${leagueIdString}/teams`} className="text-neon-green hover:underline">
-                ← Back to Teams
-              </Link>
-              <h1 className="text-2xl font-bold">{teamData.team.name}</h1>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-400">Record</div>
-              <div className="text-lg font-semibold">{teamData.team.record}</div>
-            </div>
+      <div className="bg-gray-900 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link 
+              href={`/leagues/${leagueIdString}/teams`}
+              className="text-neon-green hover:text-green-400 transition-colors"
+            >
+              ← Back to Teams
+            </Link>
+            <h1 className="text-2xl font-bold">{teamData.team.name}</h1>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold">{teamData.team.record}</div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Team Overview */}
-            <div className="bg-gray-900 rounded-lg p-6">
-              <div className="flex items-center space-x-6 mb-6">
-                <div className="w-24 h-24 bg-gray-800 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl font-bold">{teamData.team.name.split(' ').map(word => word[0]).join('')}</span>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold">{teamData.team.name}</h2>
-                  <div className="flex items-center space-x-4 text-sm text-gray-400">
-                    <span>Record: {teamData.team.record}</span>
-                    <span>Owner: {teamData.team.user}</span>
-                    <span>Roster: {teamData.team.rosterCount}</span>
-                  </div>
-                </div>
+      <div className="flex gap-6 p-6">
+        {/* Main Content */}
+        <div className="flex-1 space-y-6">
+          {/* Team Info Card */}
+          <div className="bg-gray-900 p-6 rounded-lg">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-16 h-16 bg-neon-green rounded-lg flex items-center justify-center">
+                <span className="text-2xl font-bold text-black">
+                  {teamData.team.name.split(' ').map(word => word[0]).join('')}
+                </span>
               </div>
+              <div>
+                <h2 className="text-2xl font-bold">{teamData.team.name}</h2>
+                <p className="text-gray-400">
+                  Record: {teamData.team.record} • Owner: {teamData.team.user} • Roster: {teamData.team.rosterCount}
+                </p>
+              </div>
+            </div>
 
-              {/* Team Notes */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-2">Team Notes</h3>
-                <p className="text-gray-400">None</p>
-              </div>
+            {/* Team Notes */}
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-neon-green mb-2">Team Notes</h3>
+              <p className="text-gray-400">None</p>
+            </div>
 
-              {/* Offense/Defense Stats */}
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Offense</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">PTS:</span>
-                      <span className="text-white">{teamData.offensiveStats.points} (Rank: {teamData.offensiveStats.pointsRank})</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">YDS:</span>
-                      <span className="text-white">{teamData.offensiveStats.yards.toLocaleString()} (Rank: {teamData.offensiveStats.yardsRank})</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">P.YDS:</span>
-                      <span className="text-white">{teamData.offensiveStats.passingYards.toLocaleString()} (Rank: {teamData.offensiveStats.passingYardsRank})</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">R.YDS:</span>
-                      <span className="text-white">{teamData.offensiveStats.rushingYards.toLocaleString()} (Rank: {teamData.offensiveStats.rushingYardsRank})</span>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Defense</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">PTS:</span>
-                      <span className="text-white">{teamData.defensiveStats.points} (Rank: {teamData.defensiveStats.pointsRank})</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">YDS:</span>
-                      <span className="text-white">{teamData.defensiveStats.yards.toLocaleString()} (Rank: {teamData.defensiveStats.yardsRank})</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">P.YDS:</span>
-                      <span className="text-white">{teamData.defensiveStats.passingYards.toLocaleString()} (Rank: {teamData.defensiveStats.passingYardsRank})</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">R.YDS:</span>
-                      <span className="text-white">{teamData.defensiveStats.rushingYards.toLocaleString()} (Rank: {teamData.defensiveStats.rushingYardsRank})</span>
-                    </div>
-                  </div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-6 mb-4">
+              <div>
+                <h4 className="text-lg font-semibold text-neon-green mb-2">Offense</h4>
+                <div className="space-y-1 text-sm">
+                  <div>PTS: {teamData.offensiveStats.points} (Rank: {teamData.offensiveStats.pointsRank})</div>
+                  <div>YDS: {teamData.offensiveStats.yards} (Rank: {teamData.offensiveStats.yardsRank})</div>
+                  <div>P.YDS: {teamData.offensiveStats.passingYards} (Rank: {teamData.offensiveStats.passingYardsRank})</div>
+                  <div>R.YDS: {teamData.offensiveStats.rushingYards} (Rank: {teamData.offensiveStats.rushingYardsRank})</div>
                 </div>
               </div>
-
-              {/* Trade Block Comments */}
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-2">Trade Block Comments</h3>
-                <p className="text-gray-400">None</p>
+              <div>
+                <h4 className="text-lg font-semibold text-neon-green mb-2">Defense</h4>
+                <div className="space-y-1 text-sm">
+                  <div>PTS: {teamData.defensiveStats.points} (Rank: {teamData.defensiveStats.pointsRank})</div>
+                  <div>YDS: {teamData.defensiveStats.yards} (Rank: {teamData.defensiveStats.yardsRank})</div>
+                  <div>P.YDS: {teamData.defensiveStats.passingYards} (Rank: {teamData.defensiveStats.passingYardsRank})</div>
+                  <div>R.YDS: {teamData.defensiveStats.rushingYards} (Rank: {teamData.defensiveStats.rushingYardsRank})</div>
+                </div>
               </div>
+            </div>
+
+            {/* Trade Block Comments */}
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-neon-green mb-2">Trade Block Comments</h3>
+              <p className="text-gray-400">None</p>
             </div>
 
             {/* Details and Cap Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-900 rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">Details</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Division:</span>
-                    <span className="text-white">{teamData.team.division}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Member:</span>
-                    <span className="text-white">@{teamData.team.user}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Coach/Owner:</span>
-                    <span className="text-white">{teamData.team.user.toUpperCase()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Offense Scheme:</span>
-                    <span className="text-white">{teamData.team.offenseScheme}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Defense Scheme:</span>
-                    <span className="text-white">{teamData.team.defenseScheme}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Roster Count:</span>
-                    <span className="text-white">{teamData.team.rosterCount}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Injury Count:</span>
-                    <span className="text-white">{teamData.team.injuryCount}</span>
-                  </div>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-lg font-semibold text-neon-green mb-2">Details</h4>
+                <div className="space-y-1 text-sm">
+                  <div>Division: {teamData.team.division}</div>
+                  <div>Member: @{teamData.team.user}</div>
+                  <div>Coach/Owner: {teamData.team.user.toUpperCase()}</div>
+                  <div>Offense Scheme: {teamData.team.offenseScheme}</div>
+                  <div>Defense Scheme: {teamData.team.defenseScheme}</div>
+                  <div>Roster Count: {teamData.team.rosterCount}</div>
+                  <div>Injury Count: {teamData.team.injuryCount}</div>
                 </div>
               </div>
-
-              <div className="bg-gray-900 rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">Cap Information</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Cap Room:</span>
-                    <span className="text-green-400">{formatCurrencyValue(teamData.capInformation.capRoom)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Spent:</span>
-                    <span className="text-white">{formatCurrencyValue(teamData.capInformation.spent)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Available:</span>
-                    <span className="text-white">{formatCurrencyValue(teamData.capInformation.available)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Total Salary:</span>
-                    <span className="text-white">{formatCurrencyValue(teamData.capInformation.totalSalary)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Total Bonus:</span>
-                    <span className="text-white">{formatCurrencyValue(teamData.capInformation.totalBonus)}</span>
-                  </div>
+              <div>
+                <h4 className="text-lg font-semibold text-neon-green mb-2">Cap Information</h4>
+                <div className="space-y-1 text-sm">
+                  <div className="text-green-400">Cap Room: {formatCurrencyValue(teamData.capInformation.capRoom)}</div>
+                  <div>Spent: {formatCurrencyValue(teamData.capInformation.spent)}</div>
+                  <div className="text-green-400">Available: {formatCurrencyValue(teamData.capInformation.available)}</div>
+                  <div>Total Salary: {formatCurrencyValue(teamData.capInformation.totalSalary)}</div>
+                  <div>Total Bonus: {formatCurrencyValue(teamData.capInformation.totalBonus)}</div>
                 </div>
-              </div>
-            </div>
-
-            {/* Navigation Tabs */}
-            <div className="bg-gray-900 rounded-lg">
-              <div className="border-b border-gray-700">
-                <nav className="flex space-x-8 px-6">
-                  {[
-                    { id: 'home', label: 'HOME' },
-                    { id: 'schedule', label: 'SCHEDULE' },
-                    { id: 'statistics', label: 'STATISTICS' },
-                    { id: 'roster', label: 'ROSTER' },
-                    { id: 'depth-chart', label: 'DEPTH CHART' },
-                    { id: 'transactions', label: 'TRANSACTIONS' },
-                    { id: 'contracts', label: 'CONTRACTS' },
-                    { id: 'customization', label: 'CUSTOMIZATION' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id as 'home' | 'schedule' | 'statistics' | 'roster' | 'depth-chart' | 'transactions' | 'contracts' | 'customization')}
-                      className={`py-3 px-1 border-b-2 font-medium text-sm ${
-                        activeTab === tab.id
-                          ? 'border-neon-green text-neon-green'
-                          : 'border-transparent text-gray-400 hover:text-gray-300'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </nav>
-              </div>
-
-              {/* Tab Content */}
-              <div className="p-6">
-                {activeTab === 'home' && (
-                  <div className="space-y-6">
-                    {/* Upcoming Games */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Upcoming Games</h3>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-gray-700">
-                              <th className="text-left py-2 px-2 text-gray-400">WEEK</th>
-                              <th className="text-left py-2 px-2 text-gray-400">OPP</th>
-                              <th className="text-left py-2 px-2 text-gray-400">RESULT</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {teamData.upcomingGames.length > 0 ? (
-                              teamData.upcomingGames.map((game, index) => (
-                                <tr key={index} className="border-b border-gray-700/50">
-                                  <td className="py-2 px-2 text-white">{game.week}</td>
-                                  <td className="py-2 px-2 text-white">{game.opponent}</td>
-                                  <td className="py-2 px-2 text-white">{game.result || 'TBD'}</td>
-                                </tr>
-                              ))
-                            ) : (
-                              <tr>
-                                <td colSpan={3} className="py-4 text-center text-gray-500">
-                                  No matching records found
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    {/* Division Standings */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">{teamData.team.division} Standings</h3>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-gray-700">
-                              <th className="text-left py-2 px-2 text-gray-400">Team</th>
-                              <th className="text-center py-2 px-2 text-gray-400">W</th>
-                              <th className="text-center py-2 px-2 text-gray-400">L</th>
-                              <th className="text-center py-2 px-2 text-gray-400">T</th>
-                              <th className="text-center py-2 px-2 text-gray-400">%</th>
-                              <th className="text-center py-2 px-2 text-gray-400">PF</th>
-                              <th className="text-center py-2 px-2 text-gray-400">PA</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {teamData.divisionStandings.map((standing, index) => (
-                              <tr key={index} className="border-b border-gray-700/50">
-                                <td className="py-2 px-2 text-white">{standing.abbreviation} ({standing.team})</td>
-                                <td className="py-2 px-2 text-center text-white">{standing.wins}</td>
-                                <td className="py-2 px-2 text-center text-white">{standing.losses}</td>
-                                <td className="py-2 px-2 text-center text-white">{standing.ties}</td>
-                                <td className="py-2 px-2 text-center text-white">{standing.winPercentage.toFixed(2)}</td>
-                                <td className="py-2 px-2 text-center text-white">{standing.pointsFor}</td>
-                                <td className="py-2 px-2 text-center text-white">{standing.pointsAgainst}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className="mt-2">
-                        <Link href={`/leagues/${leagueIdString}/standings`} className="text-neon-green hover:underline text-sm">
-                          All Standings
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'statistics' && (
-                  <div>
-                    <div className="flex space-x-4 mb-4">
-                      <button
-                        onClick={() => setActiveStatTab('offense')}
-                        className={`px-4 py-2 rounded ${
-                          activeStatTab === 'offense'
-                            ? 'bg-neon-green text-black'
-                            : 'bg-gray-700 text-white'
-                        }`}
-                      >
-                        OFFENSE
-                      </button>
-                      <button
-                        onClick={() => setActiveStatTab('defense')}
-                        className={`px-4 py-2 rounded ${
-                          activeStatTab === 'defense'
-                            ? 'bg-neon-green text-black'
-                            : 'bg-gray-700 text-white'
-                        }`}
-                      >
-                        DEFENSE
-                      </button>
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Stat Leaders ({activeStatTab})</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {activeStatTab === 'offense' ? (
-                          <>
-                            <div className="bg-gray-800 rounded-lg p-4">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                                  <span className="text-xs">QB</span>
-                                </div>
-                                <div>
-                                  <div className="font-medium text-white">{teamData.leaders.passing.player}</div>
-                                  <div className="text-sm text-gray-400">QB • {teamData.team.name.split(' ').map(word => word[0]).join('')}</div>
-                                  <div className="text-neon-green font-semibold">{teamData.leaders.passing.yards.toLocaleString()} yds</div>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="bg-gray-800 rounded-lg p-4">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                                  <span className="text-xs">HB</span>
-                                </div>
-                                <div>
-                                  <div className="font-medium text-white">{teamData.leaders.rushing.player}</div>
-                                  <div className="text-sm text-gray-400">HB • {teamData.team.name.split(' ').map(word => word[0]).join('')}</div>
-                                  <div className="text-neon-green font-semibold">{teamData.leaders.rushing.yards.toLocaleString()} yds</div>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="bg-gray-800 rounded-lg p-4">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                                  <span className="text-xs">WR</span>
-                                </div>
-                                <div>
-                                  <div className="font-medium text-white">{teamData.leaders.receiving.player}</div>
-                                  <div className="text-sm text-gray-400">WR • {teamData.team.name.split(' ').map(word => word[0]).join('')}</div>
-                                  <div className="text-neon-green font-semibold">{teamData.leaders.receiving.yards.toLocaleString()} yds</div>
-                                </div>
-                              </div>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="bg-gray-800 rounded-lg p-4">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                                  <span className="text-xs">{teamData.leaders.tackles.position}</span>
-                                </div>
-                                <div>
-                                  <div className="font-medium text-white">{teamData.leaders.tackles.player}</div>
-                                  <div className="text-sm text-gray-400">{teamData.leaders.tackles.position} • {teamData.team.name.split(' ').map(word => word[0]).join('')}</div>
-                                  <div className="text-neon-green font-semibold">{teamData.leaders.tackles.tackles} tkl</div>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="bg-gray-800 rounded-lg p-4">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                                  <span className="text-xs">{teamData.leaders.sacks.position}</span>
-                                </div>
-                                <div>
-                                  <div className="font-medium text-white">{teamData.leaders.sacks.player}</div>
-                                  <div className="text-sm text-gray-400">{teamData.leaders.sacks.position} • {teamData.team.name.split(' ').map(word => word[0]).join('')}</div>
-                                  <div className="text-neon-green font-semibold">{teamData.leaders.sacks.sacks} sack</div>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="bg-gray-800 rounded-lg p-4">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                                  <span className="text-xs">{teamData.leaders.interceptions.position}</span>
-                                </div>
-                                <div>
-                                  <div className="font-medium text-white">{teamData.leaders.interceptions.player}</div>
-                                  <div className="text-sm text-gray-400">{teamData.leaders.interceptions.position} • {teamData.team.name.split(' ').map(word => word[0]).join('')}</div>
-                                  <div className="text-neon-green font-semibold">{teamData.leaders.interceptions.interceptions} int</div>
-                                </div>
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                      <div className="mt-4">
-                        <button className="text-neon-green hover:underline text-sm">View All</button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Add other tab content as needed */}
-                {activeTab !== 'home' && activeTab !== 'statistics' && (
-                  <div className="text-center py-8">
-                    <p className="text-gray-400">Content for {activeTab} tab coming soon...</p>
-                  </div>
-                )}
               </div>
             </div>
           </div>
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* On The Block */}
-            <div className="bg-gray-900 rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">On The Block</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-700">
-                      <th className="text-left py-2 px-2 text-gray-400">Player</th>
-                      <th className="text-left py-2 px-2 text-gray-400">POS</th>
-                      <th className="text-center py-2 px-2 text-gray-400">DEV</th>
-                      <th className="text-center py-2 px-2 text-gray-400">OVR</th>
-                      <th className="text-center py-2 px-2 text-gray-400">AGE</th>
-                      <th className="text-center py-2 px-2 text-gray-400">HGT</th>
-                      <th className="text-center py-2 px-2 text-gray-400">SPD</th>
-                      <th className="text-right py-2 px-2 text-gray-400">Value</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+          {/* Tab Navigation */}
+          <div className="bg-gray-900 p-4 rounded-lg">
+            <div className="flex space-x-6 border-b border-gray-700">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as 'home' | 'schedule' | 'statistics' | 'roster' | 'depth-chart' | 'transactions' | 'contracts' | 'customization')}
+                  className={`pb-2 px-1 text-sm font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? 'text-neon-green border-b-2 border-neon-green'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            
+            {/* Tab Content */}
+            <div className="mt-4">
+              {renderTabContent()}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <div className="w-80 space-y-4">
+          {/* Record Display */}
+          <div className="text-right text-sm text-gray-400">
+            {teamData.team.record}
+          </div>
+
+          {/* On The Block */}
+          <div className="bg-gray-900 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold text-neon-green mb-3">On The Block</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="text-left py-1 px-1 text-gray-400">Player</th>
+                    <th className="text-left py-1 px-1 text-gray-400">POS</th>
+                    <th className="text-left py-1 px-1 text-gray-400">DEV</th>
+                    <th className="text-left py-1 px-1 text-gray-400">OVR</th>
+                    <th className="text-left py-1 px-1 text-gray-400">AGE</th>
+                    <th className="text-left py-1 px-1 text-gray-400">HGT</th>
+                    <th className="text-left py-1 px-1 text-gray-400">SPD</th>
+                    <th className="text-left py-1 px-1 text-gray-400">V</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teamData.onTheBlock && teamData.onTheBlock.length > 0 ? (
+                    teamData.onTheBlock.map((player, index) => (
+                      <tr key={index} className="border-b border-gray-700/50">
+                        <td className="py-1 px-1 text-white text-xs">{player.player}</td>
+                        <td className="py-1 px-1 text-white text-xs">{player.position}</td>
+                        <td className="py-1 px-1 text-white text-xs">{player.devTrait}</td>
+                        <td className="py-1 px-1 text-white text-xs">{player.overall}</td>
+                        <td className="py-1 px-1 text-white text-xs">{player.age}</td>
+                        <td className="py-1 px-1 text-white text-xs">{formatHeight(player.height)}</td>
+                        <td className="py-1 px-1 text-white text-xs">{player.speed}</td>
+                        <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.capHit)}</td>
+                      </tr>
+                    ))
+                  ) : (
                     <tr>
-                      <td colSpan={8} className="py-4 text-center text-gray-500">
+                      <td colSpan={8} className="py-2 text-center text-gray-400 text-xs">
                         No matching records found
                       </td>
                     </tr>
-                  </tbody>
-                </table>
-              </div>
+                  )}
+                </tbody>
+              </table>
             </div>
+          </div>
 
-            {/* Most Expensive */}
-            <div className="bg-gray-900 rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Most Expensive</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-700">
-                      <th className="text-left py-2 px-2 text-gray-400">Player</th>
-                      <th className="text-left py-2 px-2 text-gray-400">POS</th>
-                      <th className="text-center py-2 px-2 text-gray-400">DEV</th>
-                      <th className="text-center py-2 px-2 text-gray-400">OVR</th>
-                      <th className="text-right py-2 px-2 text-gray-400">CAP HIT</th>
-                      <th className="text-right py-2 px-2 text-gray-400">SALARY</th>
-                      <th className="text-right py-2 px-2 text-gray-400">BONUS</th>
-                      <th className="text-center py-2 px-2 text-gray-400">YRS LEFT</th>
-                      <th className="text-center py-2 px-2 text-gray-400">LEN</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {teamData.mostExpensive.map((player, index) => (
+          {/* Most Expensive */}
+          <div className="bg-gray-900 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold text-neon-green mb-3">Most Expensive</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="text-left py-1 px-1 text-gray-400">Player</th>
+                    <th className="text-left py-1 px-1 text-gray-400">POS</th>
+                    <th className="text-left py-1 px-1 text-gray-400">DEV</th>
+                    <th className="text-left py-1 px-1 text-gray-400">OVR</th>
+                    <th className="text-left py-1 px-1 text-gray-400">CAP HIT</th>
+                    <th className="text-left py-1 px-1 text-gray-400">SALARY</th>
+                    <th className="text-left py-1 px-1 text-gray-400">BON</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teamData.mostExpensive && teamData.mostExpensive.length > 0 ? (
+                    teamData.mostExpensive.map((player, index) => (
                       <tr key={index} className="border-b border-gray-700/50">
-                        <td className="py-2 px-2 text-white font-medium">{player.player}</td>
-                        <td className="py-2 px-2 text-gray-300">{player.position}</td>
-                        <td className="py-2 px-2 text-center text-gray-300">{player.devTrait}</td>
-                        <td className="py-2 px-2 text-center text-white">{player.overall}</td>
-                        <td className="py-2 px-2 text-right text-white">{formatCurrencyValue(player.capHit)}</td>
-                        <td className="py-2 px-2 text-right text-white">{formatCurrencyValue(player.salary)}</td>
-                        <td className="py-2 px-2 text-right text-white">{formatCurrencyValue(player.bonus)}</td>
-                        <td className="py-2 px-2 text-center text-gray-300">{player.yearsLeft}</td>
-                        <td className="py-2 px-2 text-center text-gray-300">{player.contractLength}</td>
+                        <td className="py-1 px-1 text-white text-xs">{player.player}</td>
+                        <td className="py-1 px-1 text-white text-xs">{player.position}</td>
+                        <td className="py-1 px-1 text-white text-xs">{player.devTrait}</td>
+                        <td className="py-1 px-1 text-white text-xs">{player.overall}</td>
+                        <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.capHit)}</td>
+                        <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.salary)}</td>
+                        <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.bonus)}</td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="py-2 text-center text-gray-400 text-xs">
+                        No data available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
+          </div>
 
-            {/* Upcoming FA */}
-            <div className="bg-gray-900 rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Upcoming FA</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-700">
-                      <th className="text-left py-2 px-2 text-gray-400">Player</th>
-                      <th className="text-left py-2 px-2 text-gray-400">POS</th>
-                      <th className="text-center py-2 px-2 text-gray-400">DEV</th>
-                      <th className="text-center py-2 px-2 text-gray-400">OVR</th>
-                      <th className="text-right py-2 px-2 text-gray-400">CAP HIT</th>
-                      <th className="text-right py-2 px-2 text-gray-400">SALARY</th>
-                      <th className="text-right py-2 px-2 text-gray-400">BONUS</th>
-                      <th className="text-center py-2 px-2 text-gray-400">YRS LEFT</th>
-                      <th className="text-center py-2 px-2 text-gray-400">LEN</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {teamData.upcomingFreeAgents.map((player, index) => (
+          {/* Upcoming FA */}
+          <div className="bg-gray-900 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold text-neon-green mb-3">Upcoming FA</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="text-left py-1 px-1 text-gray-400">Player</th>
+                    <th className="text-left py-1 px-1 text-gray-400">POS</th>
+                    <th className="text-left py-1 px-1 text-gray-400">DEV</th>
+                    <th className="text-left py-1 px-1 text-gray-400">OVR</th>
+                    <th className="text-left py-1 px-1 text-gray-400">CAP HIT</th>
+                    <th className="text-left py-1 px-1 text-gray-400">SALARY</th>
+                    <th className="text-left py-1 px-1 text-gray-400">BON</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teamData.upcomingFreeAgents && teamData.upcomingFreeAgents.length > 0 ? (
+                    teamData.upcomingFreeAgents.map((player, index) => (
                       <tr key={index} className="border-b border-gray-700/50">
-                        <td className="py-2 px-2 text-white font-medium">{player.player}</td>
-                        <td className="py-2 px-2 text-gray-300">{player.position}</td>
-                        <td className="py-2 px-2 text-center text-gray-300">{player.devTrait}</td>
-                        <td className="py-2 px-2 text-center text-white">{player.overall}</td>
-                        <td className="py-2 px-2 text-right text-white">{formatCurrencyValue(player.capHit)}</td>
-                        <td className="py-2 px-2 text-right text-white">{formatCurrencyValue(player.salary)}</td>
-                        <td className="py-2 px-2 text-right text-white">{formatCurrencyValue(player.bonus)}</td>
-                        <td className="py-2 px-2 text-center text-gray-300">{player.yearsLeft}</td>
-                        <td className="py-2 px-2 text-center text-gray-300">{player.contractLength}</td>
+                        <td className="py-1 px-1 text-white text-xs">{player.player}</td>
+                        <td className="py-1 px-1 text-white text-xs">{player.position}</td>
+                        <td className="py-1 px-1 text-white text-xs">{player.devTrait}</td>
+                        <td className="py-1 px-1 text-white text-xs">{player.overall}</td>
+                        <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.capHit)}</td>
+                        <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.salary)}</td>
+                        <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.bonus)}</td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="py-2 text-center text-gray-400 text-xs">
+                        No data available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 }
