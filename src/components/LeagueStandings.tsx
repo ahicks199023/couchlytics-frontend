@@ -8,6 +8,36 @@ interface LeagueStandingsProps {
   leagueId: string | number
 }
 
+// Interface for the actual API response structure
+interface ApiStandingsResponse {
+  conferences: Array<{
+    id: string
+    name: string
+    teams: Array<{
+      teamId: number
+      teamName: string
+      city: string
+      wins: number
+      losses: number
+      ties: number
+      winPercentage: number
+      pointsScored: number
+      pointsAllowed: number
+      pointDifferential: number
+      conferenceRank: number
+      divisionRank: number
+      overallRank: number
+      division?: string
+    }>
+  }>
+  divisions?: Array<{
+    id: string
+    name: string
+    teams: Array<unknown>
+  }>
+  season?: number
+}
+
 export default function LeagueStandings({ leagueId }: LeagueStandingsProps) {
   const [standings, setStandings] = useState<LeagueStandingsType | null>(null)
   const [loading, setLoading] = useState(true)
@@ -18,9 +48,47 @@ export default function LeagueStandings({ leagueId }: LeagueStandingsProps) {
       try {
         setLoading(true)
         setError(null)
-        const data = await analyticsApi.getLeagueStandings(leagueId)
+        const data = await analyticsApi.getLeagueStandings(leagueId) as unknown as ApiStandingsResponse
         console.log('Standings API Response:', data) // Debug log
-        setStandings(data)
+        
+        // Transform the flat API response to the expected nested structure
+        if (data && data.conferences) {
+          const transformedStandings: LeagueStandingsType = {
+            leagueId: Number(leagueId),
+            season: data.season || 2024,
+            conferences: data.conferences.map((conf, confIndex) => ({
+              conferenceId: confIndex + 1,
+              conferenceName: conf.name,
+              divisions: [
+                {
+                  divisionId: confIndex + 1,
+                  divisionName: `${conf.name} Division`,
+                  teams: conf.teams.map((team, teamIndex) => ({
+                    teamId: team.teamId,
+                    teamName: team.teamName,
+                    city: team.city,
+                    wins: team.wins || 0,
+                    losses: team.losses || 0,
+                    ties: team.ties || 0,
+                    winPercentage: team.winPercentage || 0,
+                    pointsScored: team.pointsScored || 0,
+                    pointsAllowed: team.pointsAllowed || 0,
+                    pointDifferential: team.pointDifferential || 0,
+                    conferenceRank: team.conferenceRank || teamIndex + 1,
+                    divisionRank: team.divisionRank || teamIndex + 1,
+                    overallRank: team.overallRank || teamIndex + 1,
+                  }))
+                }
+              ]
+            }))
+          }
+          
+          console.log('Transformed Standings:', transformedStandings)
+          setStandings(transformedStandings)
+        } else {
+          console.warn('Invalid API response structure:', data)
+          setError('Invalid standings data structure received from API')
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch standings')
         console.error('Error fetching standings:', err)
