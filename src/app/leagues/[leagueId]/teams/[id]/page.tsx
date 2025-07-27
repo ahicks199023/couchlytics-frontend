@@ -6,9 +6,10 @@ import Link from 'next/link'
 import { API_BASE, authenticatedFetch } from '@/lib/config'
 import { TeamDetailResponse } from '@/types/analytics'
 
-// Helper function to format currency values
-const formatCurrencyValue = (value: number): string => {
-  return `$${(value / 1000000).toFixed(2)}M`
+// Helper function to format currency values (values are already in millions)
+const formatCurrencyValue = (value: number | null | undefined): string => {
+  if (value === null || value === undefined) return '$0.00M'
+  return `$${value.toFixed(2)}M`
 }
 
 // Helper function to format height
@@ -46,6 +47,14 @@ export default function TeamDetailPage() {
           const data = await detailResponse.json()
           setTeamData(data)
           console.log('[TeamDetail] Team data loaded:', data)
+          
+          // Debug logging for cap and contract data
+          console.log('=== CAP DATA DEBUG ===')
+          console.log('Cap Information:', data.capInformation)
+          console.log('First 3 Players:', data.roster?.slice(0, 3))
+          console.log('Most Expensive:', data.mostExpensive)
+          console.log('Upcoming FA:', data.upcomingFreeAgents)
+          
         } else {
           console.error('[TeamDetail] Failed to fetch team data:', detailResponse.status)
           setError('Failed to load team data')
@@ -222,7 +231,7 @@ export default function TeamDetailPage() {
                         <td className="py-2 px-1 text-white">{formatCurrencyValue(player.cap_hit)}</td>
                         <td className="py-2 px-1 text-white">{formatCurrencyValue(player.salary)}</td>
                         <td className="py-2 px-1 text-white">{formatCurrencyValue(player.bonus)}</td>
-                        <td className="py-2 px-1 text-white">{player.years_left}</td>
+                        <td className="py-2 px-1 text-white">{player.years_left || 0}</td>
                       </tr>
                     ))
                   ) : (
@@ -380,11 +389,11 @@ export default function TeamDetailPage() {
               <div>
                 <h4 className="text-lg font-semibold text-neon-green mb-2">Cap Information</h4>
                 <div className="space-y-1 text-sm">
-                  <div className="text-green-400">Cap Room: {formatCurrencyValue(teamData.capInformation.capRoom)}</div>
-                  <div>Spent: {formatCurrencyValue(teamData.capInformation.spent)}</div>
-                  <div className="text-green-400">Available: {formatCurrencyValue(teamData.capInformation.available)}</div>
-                  <div>Total Salary: {formatCurrencyValue(teamData.capInformation.totalSalary)}</div>
-                  <div>Total Bonus: {formatCurrencyValue(teamData.capInformation.totalBonus)}</div>
+                  <div className="text-green-400">Cap Room: {formatCurrencyValue(teamData.capInformation?.capRoom)}</div>
+                  <div>Spent: {formatCurrencyValue(teamData.capInformation?.spent)}</div>
+                  <div className="text-green-400">Available: {formatCurrencyValue(teamData.capInformation?.available)}</div>
+                  <div>Total Salary: {formatCurrencyValue(teamData.capInformation?.totalSalary)}</div>
+                  <div>Total Bonus: {formatCurrencyValue(teamData.capInformation?.totalBonus)}</div>
                 </div>
               </div>
             </div>
