@@ -25,6 +25,7 @@ export default function AnalyticsDashboard({
   const [selectedTeamId, setSelectedTeamId] = useState<string | number | undefined>(teamId)
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | number | undefined>(playerId)
 
+  // Defensive programming: Ensure navigationItems is always an array
   const navigationItems = [
     { id: 'standings', label: 'League Standings', icon: '🏆' },
     { id: 'team-stats', label: 'Team Stats', icon: '📊' },
@@ -106,9 +107,9 @@ export default function AnalyticsDashboard({
         <div className="p-4">
           <h1 className="text-2xl font-bold text-neon-green mb-4">Analytics Dashboard</h1>
           
-          {/* Navigation Tabs */}
+          {/* Navigation Tabs - Defensive check for array */}
           <div className="flex flex-wrap gap-2">
-            {navigationItems.map((item) => (
+            {Array.isArray(navigationItems) && navigationItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setCurrentView(item.id as ViewType)}
