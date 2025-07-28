@@ -39,6 +39,12 @@ interface StatLeader {
   position?: string
 }
 
+interface ApiResponse {
+  passingLeaders?: StatLeader[]
+  rushingLeaders?: StatLeader[]
+  receivingLeaders?: StatLeader[]
+}
+
 interface Props {
   leagueId: string
 }
@@ -98,9 +104,28 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         if (!res.ok) {
           throw new Error('Failed to fetch stat leaders')
         }
-        const data = await res.json()
+        const data: ApiResponse = await res.json()
         console.log('Stat leaders response:', data)
-        setLeaders(data)
+        
+        // Handle the new API response structure
+        let processedLeaders: StatLeader[] = []
+        
+        if (data.passingLeaders && Array.isArray(data.passingLeaders)) {
+          processedLeaders = [...processedLeaders, ...data.passingLeaders]
+        }
+        if (data.rushingLeaders && Array.isArray(data.rushingLeaders)) {
+          processedLeaders = [...processedLeaders, ...data.rushingLeaders]
+        }
+        if (data.receivingLeaders && Array.isArray(data.receivingLeaders)) {
+          processedLeaders = [...processedLeaders, ...data.receivingLeaders]
+        }
+        
+        // If no specific leaders found, try to use the data as a flat array (fallback)
+        if (processedLeaders.length === 0 && Array.isArray(data)) {
+          processedLeaders = data
+        }
+        
+        setLeaders(processedLeaders)
         setError(null)
       } catch (err) {
         console.error('Error fetching leaders:', err)
@@ -205,7 +230,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                       onClick={() => handlePlayerClick(leader.name, leader.playerId)}
                     >
                       <td className="p-2">{idx + 1}</td>
-                      <td className="p-2 flex items-center gap-2">
+                      <td className="p-2 flex items-center">
                         {leader.espnId ? (
                           <Link href={`/players/${leader.espnId}`}>
                             <Image
@@ -243,7 +268,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                         </button>
                       </td>
                       <td className="p-2">{leader.teamName}</td>
-                      <td className="p-2">{leader.position ?? '—'}</td>
+                      <td className="p-2">{leader.position}</td>
                       <td className="p-2 text-right">{leader.statValue}</td>
                     </tr>
                   )
