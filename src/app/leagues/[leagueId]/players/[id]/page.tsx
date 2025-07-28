@@ -27,6 +27,7 @@ export default function PlayerDetailPage() {
     setLoading(true)
     console.log('Fetching player details for:', { leagueId, playerId })
     
+    console.log(`[PlayerDetail] Fetching player ${playerId} from league ${leagueId}`)
     fetchFromApi(`/leagues/${leagueId}/players/${playerId}`)
       .then((data) => {
         console.log('Player data received:', data)
@@ -205,7 +206,13 @@ export default function PlayerDetailPage() {
          setPlayer(mappedPlayer)
       })
       .catch((err) => {
-        console.error('Failed to load player:', err)
+        console.error('[PlayerDetail] Failed to load player:', err)
+        console.error('[PlayerDetail] Error details:', {
+          leagueId,
+          playerId,
+          error: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined
+        })
         setError(`Failed to load player (ID: ${playerId}). Player may not exist in this league.`)
       })
       .finally(() => setLoading(false))

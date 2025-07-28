@@ -59,6 +59,7 @@ export default function LeaguePlayersPage() {
     if (position) params.append("position", position);
     if (team) params.append("team", team);
     if (devTrait) params.append("devTrait", devTrait);
+    console.log(`[PlayersList] Fetching players for league ${leagueId} with params:`, params.toString())
     fetchFromApi(`/leagues/${leagueId}/players?${params.toString()}`)
       .then((data => {
         const typedData = data as { players: Player[]; total: number };
@@ -66,7 +67,15 @@ export default function LeaguePlayersPage() {
         setTotalResults(typedData.total || 0);
         setTotalPages(Math.max(1, Math.ceil((typedData.total || 0) / pageSize)));
       }))
-      .catch(() => setError("Failed to load players."))
+      .catch((err) => {
+        console.error('[PlayersList] Failed to load players:', err)
+        console.error('[PlayersList] Error details:', {
+          leagueId,
+          params: params.toString(),
+          error: err instanceof Error ? err.message : String(err)
+        })
+        setError("Failed to load players.")
+      })
       .finally(() => setLoading(false));
   }, [leagueId, page, search, position, team, devTrait, sortKey, sortDir, pageSize]);
 
