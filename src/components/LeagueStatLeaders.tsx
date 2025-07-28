@@ -78,6 +78,25 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   const [currentTeamId, setCurrentTeamId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [teamNames, setTeamNames] = useState<Record<number, string>>({})
+
+  // Function to fetch team names
+  const fetchTeamNames = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, { credentials: 'include' })
+      if (res.ok) {
+        const teams = await res.json()
+        const teamMap: Record<number, string> = {}
+        teams.forEach((team: { id?: number; teamId?: number; name: string }) => {
+          teamMap[team.id || team.teamId || 0] = team.name
+        })
+        setTeamNames(teamMap)
+        console.log('Team names loaded:', teamMap)
+      }
+    } catch (err) {
+      console.error('Failed to fetch team names:', err)
+    }
+  }
 
   // Function to handle player navigation
   const handlePlayerClick = async (playerName: string, playerId: string) => {
@@ -103,7 +122,8 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
       }
     }
     fetchCurrentUser()
-  }, [])
+    fetchTeamNames()
+  }, [leagueId])
 
   useEffect(() => {
     if (!leagueId || leagueId === 'undefined') {
@@ -131,45 +151,66 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         
         if (data.passingLeaders && Array.isArray(data.passingLeaders)) {
           console.log('Processing passing leaders:', data.passingLeaders)
-          const mappedPassingLeaders = data.passingLeaders.map((leader: BackendStatLeader) => ({
-            playerId: leader.playerId || leader.player_id || '',
-            name: leader.name || '',
-            teamName: leader.teamName || leader.team_name || `Team ${leader.teamId || leader.team_id || ''}`,
-            statValue: leader.statValue || leader.yards || leader.value || 0,
-            position: leader.position || 'QB',
-            teamId: leader.teamId || leader.team_id,
-            portraitId: leader.portraitId || leader.portrait_id,
-            espnId: leader.espnId || leader.espn_id
-          }))
-          processedLeaders = [...processedLeaders, ...mappedPassingLeaders]
+          const mappedPassingLeaders = data.passingLeaders.map((leader: BackendStatLeader) => {
+            const teamId = leader.teamId || leader.team_id
+            const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+            return {
+              playerId: leader.playerId || leader.player_id || '',
+              name: leader.name || '',
+              teamName: teamName,
+              statValue: leader.statValue || leader.yards || leader.value || 0,
+              position: leader.position || 'QB',
+              teamId: teamId,
+              portraitId: leader.portraitId || leader.portrait_id,
+              espnId: leader.espnId || leader.espn_id
+            }
+          })
+          // Only include passing leaders if we're looking at passing stats
+          if (statType.includes('pass')) {
+            processedLeaders = [...processedLeaders, ...mappedPassingLeaders]
+          }
         }
         if (data.rushingLeaders && Array.isArray(data.rushingLeaders)) {
           console.log('Processing rushing leaders:', data.rushingLeaders)
-          const mappedRushingLeaders = data.rushingLeaders.map((leader: BackendStatLeader) => ({
-            playerId: leader.playerId || leader.player_id || '',
-            name: leader.name || '',
-            teamName: leader.teamName || leader.team_name || `Team ${leader.teamId || leader.team_id || ''}`,
-            statValue: leader.statValue || leader.yards || leader.value || 0,
-            position: leader.position || 'HB',
-            teamId: leader.teamId || leader.team_id,
-            portraitId: leader.portraitId || leader.portrait_id,
-            espnId: leader.espnId || leader.espn_id
-          }))
-          processedLeaders = [...processedLeaders, ...mappedRushingLeaders]
+          const mappedRushingLeaders = data.rushingLeaders.map((leader: BackendStatLeader) => {
+            const teamId = leader.teamId || leader.team_id
+            const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+            return {
+              playerId: leader.playerId || leader.player_id || '',
+              name: leader.name || '',
+              teamName: teamName,
+              statValue: leader.statValue || leader.yards || leader.value || 0,
+              position: leader.position || 'HB',
+              teamId: teamId,
+              portraitId: leader.portraitId || leader.portrait_id,
+              espnId: leader.espnId || leader.espn_id
+            }
+          })
+          // Only include rushing leaders if we're looking at rushing stats
+          if (statType.includes('rush')) {
+            processedLeaders = [...processedLeaders, ...mappedRushingLeaders]
+          }
         }
         if (data.receivingLeaders && Array.isArray(data.receivingLeaders)) {
           console.log('Processing receiving leaders:', data.receivingLeaders)
-          const mappedReceivingLeaders = data.receivingLeaders.map((leader: BackendStatLeader) => ({
-            playerId: leader.playerId || leader.player_id || '',
-            name: leader.name || '',
-            teamName: leader.teamName || leader.team_name || `Team ${leader.teamId || leader.team_id || ''}`,
-            statValue: leader.statValue || leader.yards || leader.value || 0,
-            position: leader.position || 'WR',
-            teamId: leader.teamId || leader.team_id,
-            portraitId: leader.portraitId || leader.portrait_id,
-            espnId: leader.espnId || leader.espn_id
-          }))
-          processedLeaders = [...processedLeaders, ...mappedReceivingLeaders]
+          const mappedReceivingLeaders = data.receivingLeaders.map((leader: BackendStatLeader) => {
+            const teamId = leader.teamId || leader.team_id
+            const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+            return {
+              playerId: leader.playerId || leader.player_id || '',
+              name: leader.name || '',
+              teamName: teamName,
+              statValue: leader.statValue || leader.yards || leader.value || 0,
+              position: leader.position || 'WR',
+              teamId: teamId,
+              portraitId: leader.portraitId || leader.portrait_id,
+              espnId: leader.espnId || leader.espn_id
+            }
+          })
+          // Only include receiving leaders if we're looking at receiving stats
+          if (statType.includes('rec')) {
+            processedLeaders = [...processedLeaders, ...mappedReceivingLeaders]
+          }
         }
         
         // If no specific leaders found, try to use the data as a flat array (fallback)
