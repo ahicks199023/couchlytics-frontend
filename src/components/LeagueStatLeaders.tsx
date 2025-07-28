@@ -39,10 +39,29 @@ interface StatLeader {
   position?: string
 }
 
+// Interface for the actual backend response structure
+interface BackendStatLeader {
+  playerId?: string
+  player_id?: string
+  name?: string
+  teamName?: string
+  team_name?: string
+  teamId?: number
+  team_id?: number
+  statValue?: number
+  yards?: number
+  value?: number
+  position?: string
+  portraitId?: string
+  portrait_id?: string
+  espnId?: string
+  espn_id?: string
+}
+
 interface ApiResponse {
-  passingLeaders?: StatLeader[]
-  rushingLeaders?: StatLeader[]
-  receivingLeaders?: StatLeader[]
+  passingLeaders?: BackendStatLeader[]
+  rushingLeaders?: BackendStatLeader[]
+  receivingLeaders?: BackendStatLeader[]
 }
 
 interface Props {
@@ -112,10 +131,10 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         
         if (data.passingLeaders && Array.isArray(data.passingLeaders)) {
           console.log('Processing passing leaders:', data.passingLeaders)
-          const mappedPassingLeaders = data.passingLeaders.map(leader => ({
+          const mappedPassingLeaders = data.passingLeaders.map((leader: BackendStatLeader) => ({
             playerId: leader.playerId || leader.player_id || '',
             name: leader.name || '',
-            teamName: leader.teamName || leader.team_name || `Team ${leader.teamId || ''}`,
+            teamName: leader.teamName || leader.team_name || `Team ${leader.teamId || leader.team_id || ''}`,
             statValue: leader.statValue || leader.yards || leader.value || 0,
             position: leader.position || 'QB',
             teamId: leader.teamId || leader.team_id,
@@ -126,10 +145,10 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         }
         if (data.rushingLeaders && Array.isArray(data.rushingLeaders)) {
           console.log('Processing rushing leaders:', data.rushingLeaders)
-          const mappedRushingLeaders = data.rushingLeaders.map(leader => ({
+          const mappedRushingLeaders = data.rushingLeaders.map((leader: BackendStatLeader) => ({
             playerId: leader.playerId || leader.player_id || '',
             name: leader.name || '',
-            teamName: leader.teamName || leader.team_name || `Team ${leader.teamId || ''}`,
+            teamName: leader.teamName || leader.team_name || `Team ${leader.teamId || leader.team_id || ''}`,
             statValue: leader.statValue || leader.yards || leader.value || 0,
             position: leader.position || 'HB',
             teamId: leader.teamId || leader.team_id,
@@ -140,10 +159,10 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         }
         if (data.receivingLeaders && Array.isArray(data.receivingLeaders)) {
           console.log('Processing receiving leaders:', data.receivingLeaders)
-          const mappedReceivingLeaders = data.receivingLeaders.map(leader => ({
+          const mappedReceivingLeaders = data.receivingLeaders.map((leader: BackendStatLeader) => ({
             playerId: leader.playerId || leader.player_id || '',
             name: leader.name || '',
-            teamName: leader.teamName || leader.team_name || `Team ${leader.teamId || ''}`,
+            teamName: leader.teamName || leader.team_name || `Team ${leader.teamId || leader.team_id || ''}`,
             statValue: leader.statValue || leader.yards || leader.value || 0,
             position: leader.position || 'WR',
             teamId: leader.teamId || leader.team_id,
