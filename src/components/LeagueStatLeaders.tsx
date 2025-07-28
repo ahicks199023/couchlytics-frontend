@@ -129,12 +129,26 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         } else if (teams && typeof teams === 'object') {
           // Handle case where teams might be an object with team data
           console.log('Teams is an object, keys:', Object.keys(teams))
-          Object.entries(teams).forEach(([key, team]: [string, unknown]) => {
-            if (team && typeof team === 'object' && 'name' in team && typeof (team as { name: string }).name === 'string') {
-              const teamObj = team as { id?: number; teamId?: number; name: string }
-              teamMap[teamObj.id || teamObj.teamId || parseInt(key) || 0] = teamObj.name
-            }
-          })
+          
+          // Check if teams has a 'teams' property that contains the array
+          if ('teams' in teams && Array.isArray((teams as { teams: unknown[] }).teams)) {
+            console.log('Found teams.teams array, processing...')
+            const teamsArray = (teams as { teams: unknown[] }).teams
+            teamsArray.forEach((team: unknown) => {
+              if (team && typeof team === 'object' && 'name' in team && typeof (team as { name: string }).name === 'string') {
+                const teamObj = team as { id?: number; teamId?: number; name: string }
+                teamMap[teamObj.id || teamObj.teamId || 0] = teamObj.name
+              }
+            })
+          } else {
+            // Fallback: try to iterate over object entries
+            Object.entries(teams).forEach(([key, team]: [string, unknown]) => {
+              if (team && typeof team === 'object' && 'name' in team && typeof (team as { name: string }).name === 'string') {
+                const teamObj = team as { id?: number; teamId?: number; name: string }
+                teamMap[teamObj.id || teamObj.teamId || parseInt(key) || 0] = teamObj.name
+              }
+            })
+          }
         }
         
         console.log('Final team names map:', teamMap)
