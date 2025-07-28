@@ -145,6 +145,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         console.error('Failed to fetch current user:', err)
       }
     }
+    console.log('useEffect triggered - fetching current user and team names')
     fetchCurrentUser()
     fetchTeamNames()
   }, [leagueId, fetchTeamNames])
@@ -169,6 +170,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         }
         const data: ApiResponse = await res.json()
         console.log('Stat leaders response:', data)
+        console.log('Current teamNames state:', teamNames)
         console.log('Raw passing leaders first item:', data.passingLeaders?.[0])
         console.log('Raw rushing leaders first item:', data.rushingLeaders?.[0])
         console.log('Raw receiving leaders first item:', data.receivingLeaders?.[0])
@@ -179,9 +181,10 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         if (data.passingLeaders && Array.isArray(data.passingLeaders)) {
           console.log('Processing passing leaders:', data.passingLeaders)
           const mappedPassingLeaders = data.passingLeaders.map((leader: BackendStatLeader, index: number) => {
-            console.log(`Passing leader ${index}:`, leader)
-            console.log(`Passing leader ${index} name field:`, leader.name)
-            console.log(`Passing leader ${index} all fields:`, Object.keys(leader))
+                         console.log(`Passing leader ${index}:`, leader)
+             console.log(`Passing leader ${index} name field:`, leader.name)
+             console.log(`Passing leader ${index} all fields:`, Object.keys(leader))
+             console.log(`Passing leader ${index} full object:`, JSON.stringify(leader, null, 2))
             
             const teamId = leader.teamId || leader.team_id
             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
