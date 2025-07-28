@@ -280,11 +280,28 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
              })
             
             const teamId = leader.teamId || leader.team_id
-            console.log(`Passing leader ${index} - Team ID:`, teamId)
-            console.log(`Available team names keys:`, Object.keys(teamNames))
-            console.log(`Looking up team name for ID ${teamId}:`, teamNames[teamId || 0])
-            const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
-            console.log(`Final team name for passing leader ${index}:`, teamName)
+            
+            // Try to find team name by matching teamId with any available keys
+            let teamName = leader.teamName || leader.team_name || `Team ${teamId || ''}`
+            
+            // If we have teamNames populated, try to find a match
+            if (Object.keys(teamNames).length > 0) {
+              // First try direct lookup
+              if (teamNames[teamId || 0]) {
+                teamName = teamNames[teamId || 0]
+              } else {
+                // If direct lookup fails, try to find by team name pattern
+                // This handles cases where teamId doesn't match but we can infer the team
+                const teamNameLower = teamName.toLowerCase()
+                const matchingTeam = Object.entries(teamNames).find(([, name]) => 
+                  name.toLowerCase().includes(teamNameLower.replace('team ', '')) ||
+                  teamNameLower.includes(name.toLowerCase())
+                )
+                if (matchingTeam) {
+                  teamName = matchingTeam[1]
+                }
+              }
+            }
             
                          // Use the new leaderboard structure with fallbacks
              // Try multiple possible name fields based on the database structure
@@ -343,7 +360,27 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
             console.log(`Rushing leader ${index}:`, leader)
             
                          const teamId = leader.teamId || leader.team_id
-             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+            
+             // Try to find team name by matching teamId with any available keys
+             let teamName = leader.teamName || leader.team_name || `Team ${teamId || ''}`
+             
+             // If we have teamNames populated, try to find a match
+             if (Object.keys(teamNames).length > 0) {
+               // First try direct lookup
+               if (teamNames[teamId || 0]) {
+                 teamName = teamNames[teamId || 0]
+               } else {
+                 // If direct lookup fails, try to find by team name pattern
+                 const teamNameLower = teamName.toLowerCase()
+                 const matchingTeam = Object.entries(teamNames).find(([, name]) => 
+                   name.toLowerCase().includes(teamNameLower.replace('team ', '')) ||
+                   teamNameLower.includes(name.toLowerCase())
+                 )
+                 if (matchingTeam) {
+                   teamName = matchingTeam[1]
+                 }
+               }
+             }
              
              // Try multiple possible name fields based on the database structure
              let playerName = leader.name
@@ -400,7 +437,27 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
             console.log(`Receiving leader ${index}:`, leader)
             
                          const teamId = leader.teamId || leader.team_id
-             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+            
+             // Try to find team name by matching teamId with any available keys
+             let teamName = leader.teamName || leader.team_name || `Team ${teamId || ''}`
+             
+             // If we have teamNames populated, try to find a match
+             if (Object.keys(teamNames).length > 0) {
+               // First try direct lookup
+               if (teamNames[teamId || 0]) {
+                 teamName = teamNames[teamId || 0]
+               } else {
+                 // If direct lookup fails, try to find by team name pattern
+                 const teamNameLower = teamName.toLowerCase()
+                 const matchingTeam = Object.entries(teamNames).find(([, name]) => 
+                   name.toLowerCase().includes(teamNameLower.replace('team ', '')) ||
+                   teamNameLower.includes(name.toLowerCase())
+                 )
+                 if (matchingTeam) {
+                   teamName = matchingTeam[1]
+                 }
+               }
+             }
              
              // Try multiple possible name fields based on the database structure
              let playerName = leader.name
@@ -459,7 +516,27 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
             console.log(`Defensive leader ${index}:`, leader)
             
             const teamId = leader.teamId || leader.team_id
-            const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+            
+            // Try to find team name by matching teamId with any available keys
+            let teamName = leader.teamName || leader.team_name || `Team ${teamId || ''}`
+            
+            // If we have teamNames populated, try to find a match
+            if (Object.keys(teamNames).length > 0) {
+              // First try direct lookup
+              if (teamNames[teamId || 0]) {
+                teamName = teamNames[teamId || 0]
+              } else {
+                // If direct lookup fails, try to find by team name pattern
+                const teamNameLower = teamName.toLowerCase()
+                const matchingTeam = Object.entries(teamNames).find(([, name]) => 
+                  name.toLowerCase().includes(teamNameLower.replace('team ', '')) ||
+                  teamNameLower.includes(name.toLowerCase())
+                )
+                if (matchingTeam) {
+                  teamName = matchingTeam[1]
+                }
+              }
+            }
             
             const mappedLeader: StatLeader = {
               playerId: leader.playerId || leader.player_id || index,
@@ -494,7 +571,27 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
             console.log(`Kicking leader ${index}:`, leader)
             
             const teamId = leader.teamId || leader.team_id
-            const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+            
+            // Try to find team name by matching teamId with any available keys
+            let teamName = leader.teamName || leader.team_name || `Team ${teamId || ''}`
+            
+            // If we have teamNames populated, try to find a match
+            if (Object.keys(teamNames).length > 0) {
+              // First try direct lookup
+              if (teamNames[teamId || 0]) {
+                teamName = teamNames[teamId || 0]
+              } else {
+                // If direct lookup fails, try to find by team name pattern
+                const teamNameLower = teamName.toLowerCase()
+                const matchingTeam = Object.entries(teamNames).find(([, name]) => 
+                  name.toLowerCase().includes(teamNameLower.replace('team ', '')) ||
+                  teamNameLower.includes(name.toLowerCase())
+                )
+                if (matchingTeam) {
+                  teamName = matchingTeam[1]
+                }
+              }
+            }
             
             const mappedLeader: StatLeader = {
               playerId: leader.playerId || leader.player_id || index,
@@ -544,7 +641,29 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
               return {
                 playerId: item.playerId || item.player_id || `player_${index}`,
                 name: item.name || `Player ${index + 1}`,
-                teamName: item.teamName || item.team_name || teamNames[item.teamId || item.team_id || 0] || `Team ${item.teamId || item.team_id || index}`,
+                teamName: (() => {
+                  const itemTeamId = item.teamId || item.team_id
+                  let itemTeamName = item.teamName || item.team_name || `Team ${itemTeamId || index}`
+                  
+                  // If we have teamNames populated, try to find a match
+                  if (Object.keys(teamNames).length > 0) {
+                    // First try direct lookup
+                    if (teamNames[itemTeamId || 0]) {
+                      itemTeamName = teamNames[itemTeamId || 0]
+                    } else {
+                      // If direct lookup fails, try to find by team name pattern
+                      const teamNameLower = itemTeamName.toLowerCase()
+                      const matchingTeam = Object.entries(teamNames).find(([, name]) => 
+                        name.toLowerCase().includes(teamNameLower.replace('team ', '')) ||
+                        teamNameLower.includes(name.toLowerCase())
+                      )
+                      if (matchingTeam) {
+                        itemTeamName = matchingTeam[1]
+                      }
+                    }
+                  }
+                  return itemTeamName
+                })(),
                 statValue: item.statValue || item.yards || item.value || 0,
                 position: item.position || 'QB',
                 teamId: item.teamId || item.team_id,
