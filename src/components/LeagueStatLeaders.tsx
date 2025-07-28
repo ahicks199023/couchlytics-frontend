@@ -83,15 +83,39 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   // Function to fetch team names
   const fetchTeamNames = useCallback(async () => {
     try {
+      console.log('Fetching team names for league:', leagueId)
       const res = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, { credentials: 'include' })
+      console.log('Team names response status:', res.status)
+      
       if (res.ok) {
         const teams = await res.json()
+        console.log('Raw teams response:', teams)
+        console.log('Teams type:', typeof teams)
+        console.log('Teams is array:', Array.isArray(teams))
+        
         const teamMap: Record<number, string> = {}
-        teams.forEach((team: { id?: number; teamId?: number; name: string }) => {
-          teamMap[team.id || team.teamId || 0] = team.name
-        })
+        
+        if (Array.isArray(teams)) {
+          teams.forEach((team: { id?: number; teamId?: number; name: string }) => {
+            teamMap[team.id || team.teamId || 0] = team.name
+          })
+                 } else if (teams && typeof teams === 'object') {
+           // Handle case where teams might be an object with team data
+           console.log('Teams is an object, keys:', Object.keys(teams))
+           Object.entries(teams).forEach(([key, team]: [string, unknown]) => {
+             if (team && typeof team === 'object' && 'name' in team && typeof (team as { name: string }).name === 'string') {
+               const teamObj = team as { id?: number; teamId?: number; name: string }
+               teamMap[teamObj.id || teamObj.teamId || parseInt(key) || 0] = teamObj.name
+             }
+           })
+         }
+        
+        console.log('Final team names map:', teamMap)
         setTeamNames(teamMap)
-        console.log('Team names loaded:', teamMap)
+      } else {
+        console.error('Failed to fetch team names, status:', res.status)
+        const errorText = await res.text()
+        console.error('Error response:', errorText)
       }
     } catch (err) {
       console.error('Failed to fetch team names:', err)
@@ -156,11 +180,29 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
           console.log('Processing passing leaders:', data.passingLeaders)
           const mappedPassingLeaders = data.passingLeaders.map((leader: BackendStatLeader, index: number) => {
             console.log(`Passing leader ${index}:`, leader)
+            console.log(`Passing leader ${index} name field:`, leader.name)
+            console.log(`Passing leader ${index} all fields:`, Object.keys(leader))
+            
             const teamId = leader.teamId || leader.team_id
             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+            
+            // Try to find player name from various possible fields
+            let playerName = leader.name
+            if (!playerName || playerName === null) {
+              // Check for alternative name fields
+              const possibleNameFields = ['playerName', 'player_name', 'fullName', 'full_name', 'displayName', 'display_name']
+              for (const field of possibleNameFields) {
+                if (leader[field as keyof BackendStatLeader] && typeof leader[field as keyof BackendStatLeader] === 'string') {
+                  playerName = leader[field as keyof BackendStatLeader] as string
+                  console.log(`Found player name in field ${field}:`, playerName)
+                  break
+                }
+              }
+            }
+            
             const mappedLeader = {
               playerId: leader.playerId || leader.player_id || '',
-              name: leader.name || '',
+              name: playerName || `Player ${index + 1}`,
               teamName: teamName,
               statValue: leader.statValue || leader.yards || leader.value || 0,
               position: leader.position || 'QB',
@@ -178,12 +220,30 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         }
         if (data.rushingLeaders && Array.isArray(data.rushingLeaders)) {
           console.log('Processing rushing leaders:', data.rushingLeaders)
-          const mappedRushingLeaders = data.rushingLeaders.map((leader: BackendStatLeader) => {
+          const mappedRushingLeaders = data.rushingLeaders.map((leader: BackendStatLeader, index: number) => {
+            console.log(`Rushing leader ${index}:`, leader)
+            console.log(`Rushing leader ${index} name field:`, leader.name)
+            
             const teamId = leader.teamId || leader.team_id
             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+            
+            // Try to find player name from various possible fields
+            let playerName = leader.name
+            if (!playerName || playerName === null) {
+              // Check for alternative name fields
+              const possibleNameFields = ['playerName', 'player_name', 'fullName', 'full_name', 'displayName', 'display_name']
+              for (const field of possibleNameFields) {
+                if (leader[field as keyof BackendStatLeader] && typeof leader[field as keyof BackendStatLeader] === 'string') {
+                  playerName = leader[field as keyof BackendStatLeader] as string
+                  console.log(`Found rushing player name in field ${field}:`, playerName)
+                  break
+                }
+              }
+            }
+            
             return {
               playerId: leader.playerId || leader.player_id || '',
-              name: leader.name || '',
+              name: playerName || `Player ${index + 1}`,
               teamName: teamName,
               statValue: leader.statValue || leader.yards || leader.value || 0,
               position: leader.position || 'HB',
@@ -199,12 +259,30 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         }
         if (data.receivingLeaders && Array.isArray(data.receivingLeaders)) {
           console.log('Processing receiving leaders:', data.receivingLeaders)
-          const mappedReceivingLeaders = data.receivingLeaders.map((leader: BackendStatLeader) => {
+          const mappedReceivingLeaders = data.receivingLeaders.map((leader: BackendStatLeader, index: number) => {
+            console.log(`Receiving leader ${index}:`, leader)
+            console.log(`Receiving leader ${index} name field:`, leader.name)
+            
             const teamId = leader.teamId || leader.team_id
             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+            
+            // Try to find player name from various possible fields
+            let playerName = leader.name
+            if (!playerName || playerName === null) {
+              // Check for alternative name fields
+              const possibleNameFields = ['playerName', 'player_name', 'fullName', 'full_name', 'displayName', 'display_name']
+              for (const field of possibleNameFields) {
+                if (leader[field as keyof BackendStatLeader] && typeof leader[field as keyof BackendStatLeader] === 'string') {
+                  playerName = leader[field as keyof BackendStatLeader] as string
+                  console.log(`Found receiving player name in field ${field}:`, playerName)
+                  break
+                }
+              }
+            }
+            
             return {
               playerId: leader.playerId || leader.player_id || '',
-              name: leader.name || '',
+              name: playerName || `Player ${index + 1}`,
               teamName: teamName,
               statValue: leader.statValue || leader.yards || leader.value || 0,
               position: leader.position || 'WR',
