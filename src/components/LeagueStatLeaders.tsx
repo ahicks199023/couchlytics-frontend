@@ -170,11 +170,12 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   }, [])
 
   // Function to handle player navigation
-  const handlePlayerClick = async (playerName: string, playerId: string | number) => {
+  const handlePlayerClick = async (playerName: string, playerId: string | number, maddenId?: string) => {
     try {
-      // Use the same simple approach as the players page
-      // Navigate directly using the playerId from stat leaders
-      router.push(`/leagues/${leagueId}/players/${playerId}`)
+      // Try to use maddenId first if available, otherwise fall back to playerId
+      const idToUse = maddenId || playerId
+      console.log(`Navigating to player: ${playerName} (ID: ${idToUse}, maddenId: ${maddenId}, playerId: ${playerId})`)
+      router.push(`/leagues/${leagueId}/players/${idToUse}`)
     } catch (err) {
       console.error('Error navigating to player:', err)
       // Fallback: navigate to players list with search
@@ -644,7 +645,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                           ? 'bg-yellow-100 dark:bg-yellow-900 font-bold'
                           : ''
                       }`}
-                      onClick={() => handlePlayerClick(leader.name, leader.playerId)}
+                                             onClick={() => handlePlayerClick(leader.name, leader.playerId, leader.maddenId)}
                     >
                       <td className="p-2">{idx + 1}</td>
                       <td className="p-2 flex items-center">
@@ -675,10 +676,10 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                           </Link>
                         )}
                         <button 
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handlePlayerClick(leader.name, leader.playerId)
-                          }}
+                                                     onClick={(e) => {
+                             e.stopPropagation()
+                             handlePlayerClick(leader.name, leader.playerId, leader.maddenId)
+                           }}
                           className="text-blue-400 hover:underline cursor-pointer"
                         >
                           {leader.name}
