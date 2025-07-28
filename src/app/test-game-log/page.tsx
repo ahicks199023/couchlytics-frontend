@@ -1,6 +1,7 @@
 'use client'
 
 import GameLogTab from '@/components/GameLogTab'
+import OzzieChat from '@/components/OzzieChat'
 
 export default function TestGameLogPage() {
   return (
@@ -18,6 +19,12 @@ export default function TestGameLogPage() {
           />
         </div>
       </div>
+      
+      {/* Ozzie Chat Component */}
+      <OzzieChat 
+        leagueId="12335716"
+        teamId="1" // You can update this with the actual team ID
+      />
     </main>
   )
 } 
