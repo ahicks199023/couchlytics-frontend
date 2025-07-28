@@ -280,7 +280,11 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
              })
             
             const teamId = leader.teamId || leader.team_id
+            console.log(`Passing leader ${index} - Team ID:`, teamId)
+            console.log(`Available team names keys:`, Object.keys(teamNames))
+            console.log(`Looking up team name for ID ${teamId}:`, teamNames[teamId || 0])
             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+            console.log(`Final team name for passing leader ${index}:`, teamName)
             
                          // Use the new leaderboard structure with fallbacks
              // Try multiple possible name fields based on the database structure
