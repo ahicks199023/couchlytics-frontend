@@ -28,7 +28,7 @@ import { statOptions, positionOptions } from '@/constants/statTypes'
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 
 interface StatLeader {
-  playerId: string
+  playerId: string | number
   name: string
   teamName: string
   statValue: number
@@ -37,21 +37,37 @@ interface StatLeader {
   espnId?: string
   teamId?: number
   position?: string
+  // New leaderboard fields
+  maddenId?: string
+  touchdowns?: number
+  interceptions?: number
+  completions?: number
+  attempts?: number
+  rating?: number
+  gamesPlayed?: number
 }
 
-// Interface for the actual backend response structure
+// Interface for the new leaderboard API response structure
 interface BackendStatLeader {
-  playerId?: string
+  playerId: number
+  maddenId?: string
+  name: string
+  position: string
+  teamId: number
+  yards?: number
+  touchdowns?: number
+  interceptions?: number
+  completions?: number
+  attempts?: number
+  rating?: number
+  gamesPlayed?: number
+  // Legacy fields for backward compatibility
   player_id?: string
-  name?: string
   teamName?: string
   team_name?: string
-  teamId?: number
   team_id?: number
   statValue?: number
-  yards?: number
   value?: number
-  position?: string
   portraitId?: string
   portrait_id?: string
   espnId?: string
@@ -62,6 +78,8 @@ interface ApiResponse {
   passingLeaders?: BackendStatLeader[]
   rushingLeaders?: BackendStatLeader[]
   receivingLeaders?: BackendStatLeader[]
+  defensiveLeaders?: BackendStatLeader[]
+  kickingLeaders?: BackendStatLeader[]
 }
 
 interface Props {
@@ -80,7 +98,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   const [loading, setLoading] = useState(true)
   const [teamNames, setTeamNames] = useState<Record<number, string>>({})
 
-  // Function to fetch team names
+    // Function to fetch team names
   const fetchTeamNames = useCallback(async () => {
     try {
       console.log('Fetching team names for league:', leagueId)
@@ -99,16 +117,16 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
           teams.forEach((team: { id?: number; teamId?: number; name: string }) => {
             teamMap[team.id || team.teamId || 0] = team.name
           })
-                 } else if (teams && typeof teams === 'object') {
-           // Handle case where teams might be an object with team data
-           console.log('Teams is an object, keys:', Object.keys(teams))
-           Object.entries(teams).forEach(([key, team]: [string, unknown]) => {
-             if (team && typeof team === 'object' && 'name' in team && typeof (team as { name: string }).name === 'string') {
-               const teamObj = team as { id?: number; teamId?: number; name: string }
-               teamMap[teamObj.id || teamObj.teamId || parseInt(key) || 0] = teamObj.name
-             }
-           })
-         }
+        } else if (teams && typeof teams === 'object') {
+          // Handle case where teams might be an object with team data
+          console.log('Teams is an object, keys:', Object.keys(teams))
+          Object.entries(teams).forEach(([key, team]: [string, unknown]) => {
+            if (team && typeof team === 'object' && 'name' in team && typeof (team as { name: string }).name === 'string') {
+              const teamObj = team as { id?: number; teamId?: number; name: string }
+              teamMap[teamObj.id || teamObj.teamId || parseInt(key) || 0] = teamObj.name
+            }
+          })
+        }
         
         console.log('Final team names map:', teamMap)
         setTeamNames(teamMap)
@@ -122,8 +140,28 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
     }
   }, [leagueId])
 
+  // Function to check leaderboard system status
+  const checkLeaderboardStatus = useCallback(async () => {
+    try {
+      console.log('Checking leaderboard system status...')
+      const res = await fetch(`${API_BASE}/leaderboard/health`, { credentials: 'include' })
+      
+      if (res.ok) {
+        const health = await res.json()
+        console.log('Leaderboard health status:', health)
+        return health.status === 'healthy'
+      } else {
+        console.warn('Leaderboard health check failed:', res.status)
+        return false
+      }
+    } catch (err) {
+      console.error('Failed to check leaderboard status:', err)
+      return false
+    }
+  }, [])
+
   // Function to handle player navigation
-  const handlePlayerClick = async (playerName: string, playerId: string) => {
+  const handlePlayerClick = async (playerName: string, playerId: string | number) => {
     try {
       // Use the same simple approach as the players page
       // Navigate directly using the playerId from stat leaders
@@ -158,15 +196,39 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
     }
     const fetchLeaders = async () => {
       try {
-        const query = new URLSearchParams({ statType })
-        if (week) query.append('week', week)
-
-        const url = `${API_BASE}/leagues/${leagueId}/stats/leaders?${query.toString()}`
-        console.log('Fetching stat leaders from:', url)
+        // First check if the new leaderboard system is available
+        const leaderboardHealthy = await checkLeaderboardStatus()
+        
+        let url: string
+        if (leaderboardHealthy) {
+          // Use the new high-performance leaderboard API
+          const query = new URLSearchParams()
+          
+          // Map old stat types to new leaderboard stat types
+          let leaderboardStatType = 'all'
+          if (statType.includes('pass')) leaderboardStatType = 'passing'
+          else if (statType.includes('rush')) leaderboardStatType = 'rushing'
+          else if (statType.includes('rec')) leaderboardStatType = 'receiving'
+          else if (statType.includes('def')) leaderboardStatType = 'defensive'
+          else if (statType.includes('kick')) leaderboardStatType = 'kicking'
+          
+          query.append('statType', leaderboardStatType)
+          query.append('limit', '50') // Get more results for better filtering
+          
+          url = `${API_BASE}/leaderboard/leagues/${leagueId}/leaders?${query.toString()}`
+          console.log('Using NEW leaderboard API:', url)
+        } else {
+          // Fallback to old API
+          const query = new URLSearchParams({ statType })
+          if (week) query.append('week', week)
+          
+          url = `${API_BASE}/leagues/${leagueId}/stats/leaders?${query.toString()}`
+          console.log('Using OLD API (fallback):', url)
+        }
         
         const res = await fetch(url, { credentials: 'include' })
         if (!res.ok) {
-          throw new Error('Failed to fetch stat leaders')
+          throw new Error(`Failed to fetch stat leaders: ${res.status}`)
         }
         const data: ApiResponse = await res.json()
         console.log('Stat leaders response:', data)
@@ -175,43 +237,35 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         console.log('Raw rushing leaders first item:', data.rushingLeaders?.[0])
         console.log('Raw receiving leaders first item:', data.receivingLeaders?.[0])
         
-        // Handle the new API response structure
+                // Handle the new leaderboard API response structure
         let processedLeaders: StatLeader[] = []
         
         if (data.passingLeaders && Array.isArray(data.passingLeaders)) {
           console.log('Processing passing leaders:', data.passingLeaders)
           const mappedPassingLeaders = data.passingLeaders.map((leader: BackendStatLeader, index: number) => {
-                         console.log(`Passing leader ${index}:`, leader)
-             console.log(`Passing leader ${index} name field:`, leader.name)
-             console.log(`Passing leader ${index} all fields:`, Object.keys(leader))
-             console.log(`Passing leader ${index} full object:`, JSON.stringify(leader, null, 2))
+            console.log(`Passing leader ${index}:`, leader)
             
             const teamId = leader.teamId || leader.team_id
             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
             
-            // Try to find player name from various possible fields
-            let playerName = leader.name
-            if (!playerName || playerName === null) {
-              // Check for alternative name fields
-              const possibleNameFields = ['playerName', 'player_name', 'fullName', 'full_name', 'displayName', 'display_name']
-              for (const field of possibleNameFields) {
-                if (leader[field as keyof BackendStatLeader] && typeof leader[field as keyof BackendStatLeader] === 'string') {
-                  playerName = leader[field as keyof BackendStatLeader] as string
-                  console.log(`Found player name in field ${field}:`, playerName)
-                  break
-                }
-              }
-            }
-            
-            const mappedLeader = {
-              playerId: leader.playerId || leader.player_id || '',
-              name: playerName || `Player ${index + 1}`,
+            // Use the new leaderboard structure with fallbacks
+            const mappedLeader: StatLeader = {
+              playerId: leader.playerId || leader.player_id || index,
+              name: leader.name || `Player ${index + 1}`,
               teamName: teamName,
-              statValue: leader.statValue || leader.yards || leader.value || 0,
+              statValue: leader.yards || leader.statValue || leader.value || 0,
               position: leader.position || 'QB',
               teamId: teamId,
               portraitId: leader.portraitId || leader.portrait_id,
-              espnId: leader.espnId || leader.espn_id
+              espnId: leader.espnId || leader.espn_id,
+              // New leaderboard fields
+              maddenId: leader.maddenId,
+              touchdowns: leader.touchdowns,
+              interceptions: leader.interceptions,
+              completions: leader.completions,
+              attempts: leader.attempts,
+              rating: leader.rating,
+              gamesPlayed: leader.gamesPlayed
             }
             console.log(`Mapped passing leader ${index}:`, mappedLeader)
             return mappedLeader
@@ -225,35 +279,29 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
           console.log('Processing rushing leaders:', data.rushingLeaders)
           const mappedRushingLeaders = data.rushingLeaders.map((leader: BackendStatLeader, index: number) => {
             console.log(`Rushing leader ${index}:`, leader)
-            console.log(`Rushing leader ${index} name field:`, leader.name)
             
             const teamId = leader.teamId || leader.team_id
             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
             
-            // Try to find player name from various possible fields
-            let playerName = leader.name
-            if (!playerName || playerName === null) {
-              // Check for alternative name fields
-              const possibleNameFields = ['playerName', 'player_name', 'fullName', 'full_name', 'displayName', 'display_name']
-              for (const field of possibleNameFields) {
-                if (leader[field as keyof BackendStatLeader] && typeof leader[field as keyof BackendStatLeader] === 'string') {
-                  playerName = leader[field as keyof BackendStatLeader] as string
-                  console.log(`Found rushing player name in field ${field}:`, playerName)
-                  break
-                }
-              }
-            }
-            
-            return {
-              playerId: leader.playerId || leader.player_id || '',
-              name: playerName || `Player ${index + 1}`,
+            const mappedLeader: StatLeader = {
+              playerId: leader.playerId || leader.player_id || index,
+              name: leader.name || `Player ${index + 1}`,
               teamName: teamName,
-              statValue: leader.statValue || leader.yards || leader.value || 0,
+              statValue: leader.yards || leader.statValue || leader.value || 0,
               position: leader.position || 'HB',
               teamId: teamId,
               portraitId: leader.portraitId || leader.portrait_id,
-              espnId: leader.espnId || leader.espn_id
+              espnId: leader.espnId || leader.espn_id,
+              // New leaderboard fields
+              maddenId: leader.maddenId,
+              touchdowns: leader.touchdowns,
+              interceptions: leader.interceptions,
+              completions: leader.completions,
+              attempts: leader.attempts,
+              rating: leader.rating,
+              gamesPlayed: leader.gamesPlayed
             }
+            return mappedLeader
           })
           // Only include rushing leaders if we're looking at rushing stats
           if (statType.includes('rush')) {
@@ -264,39 +312,103 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
           console.log('Processing receiving leaders:', data.receivingLeaders)
           const mappedReceivingLeaders = data.receivingLeaders.map((leader: BackendStatLeader, index: number) => {
             console.log(`Receiving leader ${index}:`, leader)
-            console.log(`Receiving leader ${index} name field:`, leader.name)
             
             const teamId = leader.teamId || leader.team_id
             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
             
-            // Try to find player name from various possible fields
-            let playerName = leader.name
-            if (!playerName || playerName === null) {
-              // Check for alternative name fields
-              const possibleNameFields = ['playerName', 'player_name', 'fullName', 'full_name', 'displayName', 'display_name']
-              for (const field of possibleNameFields) {
-                if (leader[field as keyof BackendStatLeader] && typeof leader[field as keyof BackendStatLeader] === 'string') {
-                  playerName = leader[field as keyof BackendStatLeader] as string
-                  console.log(`Found receiving player name in field ${field}:`, playerName)
-                  break
-                }
-              }
-            }
-            
-            return {
-              playerId: leader.playerId || leader.player_id || '',
-              name: playerName || `Player ${index + 1}`,
+            const mappedLeader: StatLeader = {
+              playerId: leader.playerId || leader.player_id || index,
+              name: leader.name || `Player ${index + 1}`,
               teamName: teamName,
-              statValue: leader.statValue || leader.yards || leader.value || 0,
+              statValue: leader.yards || leader.statValue || leader.value || 0,
               position: leader.position || 'WR',
               teamId: teamId,
               portraitId: leader.portraitId || leader.portrait_id,
-              espnId: leader.espnId || leader.espn_id
+              espnId: leader.espnId || leader.espn_id,
+              // New leaderboard fields
+              maddenId: leader.maddenId,
+              touchdowns: leader.touchdowns,
+              interceptions: leader.interceptions,
+              completions: leader.completions,
+              attempts: leader.attempts,
+              rating: leader.rating,
+              gamesPlayed: leader.gamesPlayed
             }
+            return mappedLeader
           })
           // Only include receiving leaders if we're looking at receiving stats
           if (statType.includes('rec')) {
             processedLeaders = [...processedLeaders, ...mappedReceivingLeaders]
+          }
+        }
+        
+        // Process defensive leaders (new category)
+        if (data.defensiveLeaders && Array.isArray(data.defensiveLeaders)) {
+          console.log('Processing defensive leaders:', data.defensiveLeaders)
+          const mappedDefensiveLeaders = data.defensiveLeaders.map((leader: BackendStatLeader, index: number) => {
+            console.log(`Defensive leader ${index}:`, leader)
+            
+            const teamId = leader.teamId || leader.team_id
+            const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+            
+            const mappedLeader: StatLeader = {
+              playerId: leader.playerId || leader.player_id || index,
+              name: leader.name || `Player ${index + 1}`,
+              teamName: teamName,
+              statValue: leader.yards || leader.statValue || leader.value || 0,
+              position: leader.position || 'LB',
+              teamId: teamId,
+              portraitId: leader.portraitId || leader.portrait_id,
+              espnId: leader.espnId || leader.espn_id,
+              // New leaderboard fields
+              maddenId: leader.maddenId,
+              touchdowns: leader.touchdowns,
+              interceptions: leader.interceptions,
+              completions: leader.completions,
+              attempts: leader.attempts,
+              rating: leader.rating,
+              gamesPlayed: leader.gamesPlayed
+            }
+            return mappedLeader
+          })
+          // Only include defensive leaders if we're looking at defensive stats
+          if (statType.includes('def')) {
+            processedLeaders = [...processedLeaders, ...mappedDefensiveLeaders]
+          }
+        }
+        
+        // Process kicking leaders (new category)
+        if (data.kickingLeaders && Array.isArray(data.kickingLeaders)) {
+          console.log('Processing kicking leaders:', data.kickingLeaders)
+          const mappedKickingLeaders = data.kickingLeaders.map((leader: BackendStatLeader, index: number) => {
+            console.log(`Kicking leader ${index}:`, leader)
+            
+            const teamId = leader.teamId || leader.team_id
+            const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+            
+            const mappedLeader: StatLeader = {
+              playerId: leader.playerId || leader.player_id || index,
+              name: leader.name || `Player ${index + 1}`,
+              teamName: teamName,
+              statValue: leader.yards || leader.statValue || leader.value || 0,
+              position: leader.position || 'K',
+              teamId: teamId,
+              portraitId: leader.portraitId || leader.portrait_id,
+              espnId: leader.espnId || leader.espn_id,
+              // New leaderboard fields
+              maddenId: leader.maddenId,
+              touchdowns: leader.touchdowns,
+              interceptions: leader.interceptions,
+              completions: leader.completions,
+              attempts: leader.attempts,
+              rating: leader.rating,
+              gamesPlayed: leader.gamesPlayed
+            }
+            return mappedLeader
+          })
+          // Only include kicking leaders if we're looking at kicking stats
+          if (statType.includes('kick')) {
+            processedLeaders = [...processedLeaders, ...mappedKickingLeaders]
           }
         }
         
@@ -345,7 +457,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
       }
     }
     fetchLeaders()
-  }, [leagueId, statType, week, teamNames])
+  }, [leagueId, statType, week, teamNames, checkLeaderboardStatus])
 
   const filteredLeaders =
     position === 'ALL'
@@ -424,6 +536,10 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                   <th className="text-left p-2">Team</th>
                   <th className="text-left p-2">Pos</th>
                   <th className="text-right p-2">{statType}</th>
+                  {/* Show additional stats for new leaderboard data */}
+                  {filteredLeaders.some(l => l.touchdowns !== undefined) && <th className="text-right p-2">TDs</th>}
+                  {filteredLeaders.some(l => l.interceptions !== undefined) && <th className="text-right p-2">INTs</th>}
+                  {filteredLeaders.some(l => l.rating !== undefined) && <th className="text-right p-2">Rating</th>}
                 </tr>
               </thead>
               <tbody>
@@ -480,6 +596,16 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
                       <td className="p-2">{leader.teamName}</td>
                       <td className="p-2">{leader.position}</td>
                       <td className="p-2 text-right">{leader.statValue}</td>
+                      {/* Show additional stats for new leaderboard data */}
+                      {filteredLeaders.some(l => l.touchdowns !== undefined) && (
+                        <td className="p-2 text-right">{leader.touchdowns || '-'}</td>
+                      )}
+                      {filteredLeaders.some(l => l.interceptions !== undefined) && (
+                        <td className="p-2 text-right">{leader.interceptions || '-'}</td>
+                      )}
+                      {filteredLeaders.some(l => l.rating !== undefined) && (
+                        <td className="p-2 text-right">{leader.rating ? leader.rating.toFixed(1) : '-'}</td>
+                      )}
                     </tr>
                   )
                 })}
