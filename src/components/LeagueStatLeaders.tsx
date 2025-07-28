@@ -51,7 +51,7 @@ interface StatLeader {
 interface BackendStatLeader {
   playerId: number
   maddenId?: string
-  name: string
+  name?: string
   position: string
   teamId: number
   yards?: number
@@ -61,6 +61,15 @@ interface BackendStatLeader {
   attempts?: number
   rating?: number
   gamesPlayed?: number
+  // Database field names for player names
+  full_name?: string
+  fullName?: string
+  firstName?: string
+  first_name?: string
+  lastName?: string
+  last_name?: string
+  playerName?: string
+  player_name?: string
   // Legacy fields for backward compatibility
   player_id?: string
   teamName?: string
@@ -243,30 +252,64 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         if (data.passingLeaders && Array.isArray(data.passingLeaders)) {
           console.log('Processing passing leaders:', data.passingLeaders)
           const mappedPassingLeaders = data.passingLeaders.map((leader: BackendStatLeader, index: number) => {
-            console.log(`Passing leader ${index}:`, leader)
+                         console.log(`Passing leader ${index}:`, leader)
+             console.log(`Passing leader ${index} all available fields:`, Object.keys(leader))
+             console.log(`Passing leader ${index} name-related fields:`, {
+               name: leader.name,
+               full_name: leader.full_name,
+               fullName: leader.fullName,
+               firstName: leader.firstName,
+               first_name: leader.first_name,
+               lastName: leader.lastName,
+               last_name: leader.last_name
+             })
             
             const teamId = leader.teamId || leader.team_id
             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
             
-            // Use the new leaderboard structure with fallbacks
-            const mappedLeader: StatLeader = {
-              playerId: leader.playerId || leader.player_id || index,
-              name: leader.name || `Player ${index + 1}`,
-              teamName: teamName,
-              statValue: leader.yards || leader.statValue || leader.value || 0,
-              position: leader.position || 'QB',
-              teamId: teamId,
-              portraitId: leader.portraitId || leader.portrait_id,
-              espnId: leader.espnId || leader.espn_id,
-              // New leaderboard fields
-              maddenId: leader.maddenId,
-              touchdowns: leader.touchdowns,
-              interceptions: leader.interceptions,
-              completions: leader.completions,
-              attempts: leader.attempts,
-              rating: leader.rating,
-              gamesPlayed: leader.gamesPlayed
-            }
+                         // Use the new leaderboard structure with fallbacks
+             // Try multiple possible name fields based on the database structure
+             let playerName = leader.name
+             if (!playerName || playerName === null) {
+               // Check for alternative name fields that exist in the database
+               const possibleNameFields = ['full_name', 'fullName', 'playerName', 'player_name', 'firstName', 'first_name', 'lastName', 'last_name']
+               for (const field of possibleNameFields) {
+                 if (leader[field as keyof BackendStatLeader] && typeof leader[field as keyof BackendStatLeader] === 'string') {
+                   playerName = leader[field as keyof BackendStatLeader] as string
+                   console.log(`Found player name in field ${field}:`, playerName)
+                   break
+                 }
+               }
+             }
+             
+             // If still no name, try combining first and last name
+             if (!playerName || playerName === null) {
+               const firstName = leader.firstName || leader.first_name
+               const lastName = leader.lastName || leader.last_name
+               if (firstName && lastName) {
+                 playerName = `${firstName} ${lastName}`
+                 console.log(`Combined name from first/last:`, playerName)
+               }
+             }
+             
+             const mappedLeader: StatLeader = {
+               playerId: leader.playerId || leader.player_id || index,
+               name: playerName || `Player ${index + 1}`,
+               teamName: teamName,
+               statValue: leader.yards || leader.statValue || leader.value || 0,
+               position: leader.position || 'QB',
+               teamId: teamId,
+               portraitId: leader.portraitId || leader.portrait_id,
+               espnId: leader.espnId || leader.espn_id,
+               // New leaderboard fields
+               maddenId: leader.maddenId,
+               touchdowns: leader.touchdowns,
+               interceptions: leader.interceptions,
+               completions: leader.completions,
+               attempts: leader.attempts,
+               rating: leader.rating,
+               gamesPlayed: leader.gamesPlayed
+             }
             console.log(`Mapped passing leader ${index}:`, mappedLeader)
             return mappedLeader
           })
@@ -280,27 +323,51 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
           const mappedRushingLeaders = data.rushingLeaders.map((leader: BackendStatLeader, index: number) => {
             console.log(`Rushing leader ${index}:`, leader)
             
-            const teamId = leader.teamId || leader.team_id
-            const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
-            
-            const mappedLeader: StatLeader = {
-              playerId: leader.playerId || leader.player_id || index,
-              name: leader.name || `Player ${index + 1}`,
-              teamName: teamName,
-              statValue: leader.yards || leader.statValue || leader.value || 0,
-              position: leader.position || 'HB',
-              teamId: teamId,
-              portraitId: leader.portraitId || leader.portrait_id,
-              espnId: leader.espnId || leader.espn_id,
-              // New leaderboard fields
-              maddenId: leader.maddenId,
-              touchdowns: leader.touchdowns,
-              interceptions: leader.interceptions,
-              completions: leader.completions,
-              attempts: leader.attempts,
-              rating: leader.rating,
-              gamesPlayed: leader.gamesPlayed
-            }
+                         const teamId = leader.teamId || leader.team_id
+             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+             
+             // Try multiple possible name fields based on the database structure
+             let playerName = leader.name
+             if (!playerName || playerName === null) {
+               // Check for alternative name fields that exist in the database
+               const possibleNameFields = ['full_name', 'fullName', 'playerName', 'player_name', 'firstName', 'first_name', 'lastName', 'last_name']
+               for (const field of possibleNameFields) {
+                 if (leader[field as keyof BackendStatLeader] && typeof leader[field as keyof BackendStatLeader] === 'string') {
+                   playerName = leader[field as keyof BackendStatLeader] as string
+                   console.log(`Found rushing player name in field ${field}:`, playerName)
+                   break
+                 }
+               }
+             }
+             
+             // If still no name, try combining first and last name
+             if (!playerName || playerName === null) {
+               const firstName = leader.firstName || leader.first_name
+               const lastName = leader.lastName || leader.last_name
+               if (firstName && lastName) {
+                 playerName = `${firstName} ${lastName}`
+                 console.log(`Combined rushing name from first/last:`, playerName)
+               }
+             }
+             
+             const mappedLeader: StatLeader = {
+               playerId: leader.playerId || leader.player_id || index,
+               name: playerName || `Player ${index + 1}`,
+               teamName: teamName,
+               statValue: leader.yards || leader.statValue || leader.value || 0,
+               position: leader.position || 'HB',
+               teamId: teamId,
+               portraitId: leader.portraitId || leader.portrait_id,
+               espnId: leader.espnId || leader.espn_id,
+               // New leaderboard fields
+               maddenId: leader.maddenId,
+               touchdowns: leader.touchdowns,
+               interceptions: leader.interceptions,
+               completions: leader.completions,
+               attempts: leader.attempts,
+               rating: leader.rating,
+               gamesPlayed: leader.gamesPlayed
+             }
             return mappedLeader
           })
           // Only include rushing leaders if we're looking at rushing stats
@@ -313,27 +380,51 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
           const mappedReceivingLeaders = data.receivingLeaders.map((leader: BackendStatLeader, index: number) => {
             console.log(`Receiving leader ${index}:`, leader)
             
-            const teamId = leader.teamId || leader.team_id
-            const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
-            
-            const mappedLeader: StatLeader = {
-              playerId: leader.playerId || leader.player_id || index,
-              name: leader.name || `Player ${index + 1}`,
-              teamName: teamName,
-              statValue: leader.yards || leader.statValue || leader.value || 0,
-              position: leader.position || 'WR',
-              teamId: teamId,
-              portraitId: leader.portraitId || leader.portrait_id,
-              espnId: leader.espnId || leader.espn_id,
-              // New leaderboard fields
-              maddenId: leader.maddenId,
-              touchdowns: leader.touchdowns,
-              interceptions: leader.interceptions,
-              completions: leader.completions,
-              attempts: leader.attempts,
-              rating: leader.rating,
-              gamesPlayed: leader.gamesPlayed
-            }
+                         const teamId = leader.teamId || leader.team_id
+             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
+             
+             // Try multiple possible name fields based on the database structure
+             let playerName = leader.name
+             if (!playerName || playerName === null) {
+               // Check for alternative name fields that exist in the database
+               const possibleNameFields = ['full_name', 'fullName', 'playerName', 'player_name', 'firstName', 'first_name', 'lastName', 'last_name']
+               for (const field of possibleNameFields) {
+                 if (leader[field as keyof BackendStatLeader] && typeof leader[field as keyof BackendStatLeader] === 'string') {
+                   playerName = leader[field as keyof BackendStatLeader] as string
+                   console.log(`Found receiving player name in field ${field}:`, playerName)
+                   break
+                 }
+               }
+             }
+             
+             // If still no name, try combining first and last name
+             if (!playerName || playerName === null) {
+               const firstName = leader.firstName || leader.first_name
+               const lastName = leader.lastName || leader.last_name
+               if (firstName && lastName) {
+                 playerName = `${firstName} ${lastName}`
+                 console.log(`Combined receiving name from first/last:`, playerName)
+               }
+             }
+             
+             const mappedLeader: StatLeader = {
+               playerId: leader.playerId || leader.player_id || index,
+               name: playerName || `Player ${index + 1}`,
+               teamName: teamName,
+               statValue: leader.yards || leader.statValue || leader.value || 0,
+               position: leader.position || 'WR',
+               teamId: teamId,
+               portraitId: leader.portraitId || leader.portrait_id,
+               espnId: leader.espnId || leader.espn_id,
+               // New leaderboard fields
+               maddenId: leader.maddenId,
+               touchdowns: leader.touchdowns,
+               interceptions: leader.interceptions,
+               completions: leader.completions,
+               attempts: leader.attempts,
+               rating: leader.rating,
+               gamesPlayed: leader.gamesPlayed
+             }
             return mappedLeader
           })
           // Only include receiving leaders if we're looking at receiving stats
