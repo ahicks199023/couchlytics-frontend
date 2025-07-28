@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import {
   Select,
   SelectTrigger,
@@ -81,7 +81,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   const [teamNames, setTeamNames] = useState<Record<number, string>>({})
 
   // Function to fetch team names
-  const fetchTeamNames = async () => {
+  const fetchTeamNames = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, { credentials: 'include' })
       if (res.ok) {
@@ -96,7 +96,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
     } catch (err) {
       console.error('Failed to fetch team names:', err)
     }
-  }
+  }, [leagueId])
 
   // Function to handle player navigation
   const handlePlayerClick = async (playerName: string, playerId: string) => {
@@ -123,7 +123,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
     }
     fetchCurrentUser()
     fetchTeamNames()
-  }, [leagueId])
+  }, [leagueId, fetchTeamNames])
 
   useEffect(() => {
     if (!leagueId || leagueId === 'undefined') {
@@ -234,15 +234,15 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
           console.log('All arrays found in response:', allArrays)
           
           if (allArrays.length > 0) {
-            const firstArray = allArrays[0] as any[]
+            const firstArray = allArrays[0] as BackendStatLeader[]
             console.log('Using first array as fallback:', firstArray)
-            const fallbackLeaders = firstArray.map((item: any, index: number) => {
+            const fallbackLeaders = firstArray.map((item: BackendStatLeader, index: number) => {
               console.log(`Fallback item ${index}:`, item)
               return {
-                playerId: item.playerId || item.player_id || item.id || `player_${index}`,
-                name: item.name || item.playerName || item.player_name || `Player ${index + 1}`,
-                teamName: item.teamName || item.team_name || teamNames[item.teamId || item.team_id] || `Team ${item.teamId || item.team_id || index}`,
-                statValue: item.statValue || item.yards || item.value || item.pass_yds || item.rush_yds || item.rec_yds || 0,
+                playerId: item.playerId || item.player_id || `player_${index}`,
+                name: item.name || `Player ${index + 1}`,
+                teamName: item.teamName || item.team_name || teamNames[item.teamId || item.team_id || 0] || `Team ${item.teamId || item.team_id || index}`,
+                statValue: item.statValue || item.yards || item.value || 0,
                 position: item.position || 'QB',
                 teamId: item.teamId || item.team_id,
                 portraitId: item.portraitId || item.portrait_id,
@@ -264,7 +264,7 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
       }
     }
     fetchLeaders()
-  }, [leagueId, statType, week])
+  }, [leagueId, statType, week, teamNames])
 
   const filteredLeaders =
     position === 'ALL'
