@@ -23,6 +23,9 @@ export interface Player {
   birthMonth?: number
   birthYear?: number
   lastUpdated?: string
+  hometown?: string
+  homeState?: string
+  fullName?: string
   
   // Trade & Contract Information
   tradeBlocked?: boolean
@@ -116,7 +119,27 @@ export interface Player {
   
   // Additional fields for compatibility
   maddenId?: string
-  [key: string]: string | number | boolean | undefined
+  
+  // Stats and additional data
+  careerStats?: Record<string, unknown>
+  weeklyStats?: unknown[]
+  
+  // Additional player details
+  durabilityRating?: number
+  experiencePoints?: number
+  skillPoints?: number
+  legacyScore?: number
+  isFreeAgent?: boolean
+  isOnIr?: boolean
+  isOnPracticeSquad?: boolean
+  isActive?: boolean
+  reSignStatus?: number
+  desiredLength?: number
+  headshotUrl?: string
+  headshotSource?: string
+  headshotConfidence?: number
+  
+  [key: string]: string | number | boolean | undefined | Record<string, unknown> | unknown[]
 }
 
 export interface Team {
