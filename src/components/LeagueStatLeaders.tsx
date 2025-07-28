@@ -145,16 +145,20 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         }
         const data: ApiResponse = await res.json()
         console.log('Stat leaders response:', data)
+        console.log('Raw passing leaders first item:', data.passingLeaders?.[0])
+        console.log('Raw rushing leaders first item:', data.rushingLeaders?.[0])
+        console.log('Raw receiving leaders first item:', data.receivingLeaders?.[0])
         
         // Handle the new API response structure
         let processedLeaders: StatLeader[] = []
         
         if (data.passingLeaders && Array.isArray(data.passingLeaders)) {
           console.log('Processing passing leaders:', data.passingLeaders)
-          const mappedPassingLeaders = data.passingLeaders.map((leader: BackendStatLeader) => {
+          const mappedPassingLeaders = data.passingLeaders.map((leader: BackendStatLeader, index: number) => {
+            console.log(`Passing leader ${index}:`, leader)
             const teamId = leader.teamId || leader.team_id
             const teamName = leader.teamName || leader.team_name || teamNames[teamId || 0] || `Team ${teamId || ''}`
-            return {
+            const mappedLeader = {
               playerId: leader.playerId || leader.player_id || '',
               name: leader.name || '',
               teamName: teamName,
@@ -164,6 +168,8 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
               portraitId: leader.portraitId || leader.portrait_id,
               espnId: leader.espnId || leader.espn_id
             }
+            console.log(`Mapped passing leader ${index}:`, mappedLeader)
+            return mappedLeader
           })
           // Only include passing leaders if we're looking at passing stats
           if (statType.includes('pass')) {
@@ -216,6 +222,35 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         // If no specific leaders found, try to use the data as a flat array (fallback)
         if (processedLeaders.length === 0 && Array.isArray(data)) {
           processedLeaders = data
+        }
+        
+        // Additional fallback: try to extract data from any structure
+        if (processedLeaders.length === 0) {
+          console.log('No leaders found, trying alternative data extraction...')
+          console.log('Full response structure:', JSON.stringify(data, null, 2))
+          
+          // Try to find any array in the response
+          const allArrays = Object.values(data).filter(Array.isArray)
+          console.log('All arrays found in response:', allArrays)
+          
+          if (allArrays.length > 0) {
+            const firstArray = allArrays[0] as any[]
+            console.log('Using first array as fallback:', firstArray)
+            const fallbackLeaders = firstArray.map((item: any, index: number) => {
+              console.log(`Fallback item ${index}:`, item)
+              return {
+                playerId: item.playerId || item.player_id || item.id || `player_${index}`,
+                name: item.name || item.playerName || item.player_name || `Player ${index + 1}`,
+                teamName: item.teamName || item.team_name || teamNames[item.teamId || item.team_id] || `Team ${item.teamId || item.team_id || index}`,
+                statValue: item.statValue || item.yards || item.value || item.pass_yds || item.rush_yds || item.rec_yds || 0,
+                position: item.position || 'QB',
+                teamId: item.teamId || item.team_id,
+                portraitId: item.portraitId || item.portrait_id,
+                espnId: item.espnId || item.espn_id
+              }
+            })
+            processedLeaders = fallbackLeaders
+          }
         }
         
         console.log('Final processed leaders:', processedLeaders)
