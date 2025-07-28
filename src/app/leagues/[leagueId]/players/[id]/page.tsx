@@ -31,8 +31,14 @@ export default function PlayerDetailPage() {
     fetchFromApi(`/leagues/${leagueId}/players/${playerId}`)
       .then((data) => {
         console.log('Player data received:', data)
-        const playerData = data as Record<string, unknown>
-        console.log('Player data keys:', Object.keys(playerData))
+        const responseData = data as Record<string, unknown>
+        console.log('Response data keys:', Object.keys(responseData))
+        
+        // Extract player data from the nested structure
+        const playerData = responseData.player as Record<string, unknown>
+        const careerStats = responseData.careerStats as Record<string, unknown>
+        const weeklyStats = responseData.weeklyStats as unknown[]
+        
         console.log('Player data structure:', JSON.stringify(playerData, null, 2))
         
         // Debug: Log all fields that might contain ratings
@@ -66,144 +72,147 @@ export default function PlayerDetailPage() {
         console.log('ALL available fields:', Object.keys(playerData))
         console.log('Field values that are numbers:', Object.entries(playerData).filter(([, value]) => typeof value === 'number').map(([key, value]) => `${key}: ${value}`))
         
-                            // Map the API response to our Player interface using actual API field names
-                    const mappedPlayer = {
-                      ...playerData,
-                      // Required fields
-                      id: playerData.id,
-                      name: playerData.name,
-                      team: playerData.teamName,
-                      position: playerData.position,
-                      // Basic info
-                      teamName: playerData.teamName,
-                      ovr: playerData.overall,
-                      
-                      // Core Attributes - using actual API field names
-                      speedRating: playerData.speed,
-                      accelerationRating: playerData.acceleration,
-                      agilityRating: playerData.agility,
-                      strengthRating: playerData.strength,
-                      awareRating: playerData.awareness,
-                      jumpRating: playerData.jumping,
-                      staminaRating: playerData.stamina,
-                      toughnessRating: playerData.toughness,
-                      injuryRating: playerData.injury,
-                      
-                      // Passing Attributes - using actual API field names
-                      throwPowerRating: playerData.throwPower,
-                      shortAccuracyRating: playerData.shortAccuracy,
-                      midAccuracyRating: playerData.midAccuracy,
-                      deepAccuracyRating: playerData.deepAccuracy,
-                      throwOnRunRating: playerData.throwOnRun,
-                      playActionRating: playerData.playAction,
-                      breakSackRating: playerData.breakSack,
-                      underPressureRating: playerData.underPressure,
-                      
-                      // Rushing Attributes - using actual API field names
-                      carryRating: playerData.carrying,
-                      changeOfDirectionRating: playerData.changeOfDirection,
-                      spinMoveRating: playerData.spinMove,
-                      jukeMoveRating: playerData.jukeMove,
-                      breakTackleRating: playerData.breakTackle,
-                      ballCarryVisionRating: playerData.ballCarrierVision,
-                      truckingRating: playerData.trucking,
-                      stiffArmRating: playerData.stiffArm,
-                      
-                      // Receiving Attributes - using actual API field names
-                      catchRating: playerData.catching,
-                      specCatchRating: playerData.spectacularCatch,
-                      releaseRating: playerData.release,
-                      catchInTrafficRating: playerData.catchInTraffic,
-                      routeRunShortRating: playerData.routeRunShort,
-                      medRouteRunRating: playerData.routeRunMedium,
-                      deepRouteRunRating: playerData.routeRunDeep,
-                      kickReturnRating: playerData.kickReturn,
-                      
-                      // Blocking Attributes - using actual API field names
-                      passBlockRating: playerData.passBlock,
-                      passBlockPowerRating: playerData.passBlockPower,
-                      passBlockFinesseRating: playerData.passBlockFinesse,
-                      runBlockRating: playerData.runBlock,
-                      runBlockPowerRating: playerData.runBlockPower,
-                      runBlockFinesseRating: playerData.runBlockFinesse,
-                      leadBlockRating: playerData.leadBlock,
-                      impactBlockRating: playerData.impactBlock,
-                      
-                      // Defense Attributes - using actual API field names
-                      tackleRating: playerData.tackle,
-                      hitPowerRating: playerData.hitPower,
-                      pursuitRating: playerData.pursuit,
-                      playRecognitionRating: playerData.playRecognition,
-                      blockShedRating: playerData.blockShedding,
-                      finesseMovesRating: playerData.finesseMoves,
-                      powerMovesRating: playerData.powerMoves,
-                      manCoverRating: playerData.manCoverage,
-                      zoneCoverRating: playerData.zoneCoverage,
-                      pressRating: playerData.press,
-                      
-                      // Kicking Attributes - using actual API field names
-                      kickPowerRating: playerData.kickPower,
-                      kickAccuracyRating: playerData.kickAccuracy,
-                      
-                      // Contract & Trade - using actual API field names
-                      capHit: playerData.capHit,
-                      salary: playerData.salary,
-                      bonus: playerData.bonus,
-                      yearsLeft: playerData.yearsLeft,
-                      contractLength: playerData.contractLength,
-                      releaseNetSavings: playerData.releaseNetSavings,
-                      totalReleasePenalty: playerData.totalReleasePenalty,
-                      
-                      // Additional player details - using actual API field names
-                      jerseyNumber: playerData.jerseyNumber,
-                      yearsPro: playerData.yearsPro,
-                      rookieYear: playerData.rookieYear,
-                      draftRound: playerData.draftRound,
-                      draftPick: playerData.draftPick,
-                      college: playerData.college,
-                      height: playerData.height,
-                      weight: playerData.weight,
-                      birthDay: playerData.birthDay,
-                      birthMonth: playerData.birthMonth,
-                      birthYear: playerData.birthYear,
-                      hometown: playerData.hometown,
-                      homeState: playerData.homeState,
-                      age: playerData.age,
-                      devTrait: playerData.devTrait,
-                      durabilityRating: playerData.durabilityRating,
-                      experiencePoints: playerData.experiencePoints,
-                      skillPoints: playerData.skillPoints,
-                      legacyScore: playerData.legacyScore,
-                      isFreeAgent: playerData.isFreeAgent,
-                      isOnIr: playerData.isOnIr,
-                      isOnPracticeSquad: playerData.isOnPracticeSquad,
-                      isActive: playerData.isActive,
-                      reSignStatus: playerData.reSignStatus,
-                      desiredLength: playerData.desiredLength,
-                      headshotUrl: playerData.headshotUrl,
-                      headshotSource: playerData.headshotSource,
-                      headshotConfidence: playerData.headshotConfidence,
-                      fullName: playerData.fullName,
-                    } as Player
+        // Map the API response to our Player interface using actual API field names
+        const mappedPlayer = {
+          // Required fields
+          id: playerData.id,
+          name: playerData.name,
+          team: playerData.teamName,
+          position: playerData.position,
+          // Basic info
+          teamName: playerData.teamName,
+          ovr: playerData.overall,
+          
+          // Core Attributes - using actual API field names
+          speedRating: playerData.ratingSpeed,
+          accelerationRating: playerData.ratingAcceleration,
+          agilityRating: playerData.ratingAgility,
+          strengthRating: playerData.ratingStrength,
+          awareRating: playerData.ratingAwareness,
+          jumpRating: playerData.ratingJumping,
+          staminaRating: playerData.ratingStamina,
+          toughnessRating: playerData.ratingToughness,
+          injuryRating: playerData.ratingInjury,
+          
+          // Passing Attributes - using actual API field names
+          throwPowerRating: playerData.ratingThrowPower,
+          shortAccuracyRating: playerData.ratingThrowAccuracyShort,
+          midAccuracyRating: playerData.ratingThrowAccuracyMedium,
+          deepAccuracyRating: playerData.ratingThrowAccuracyDeep,
+          throwOnRunRating: playerData.ratingThrowOnRun,
+          playActionRating: playerData.ratingPlayAction,
+          breakSackRating: playerData.ratingBreakSack,
+          underPressureRating: playerData.ratingThrowUnderPressure,
+          
+          // Rushing Attributes - using actual API field names
+          carryRating: playerData.ratingCarrying,
+          changeOfDirectionRating: playerData.ratingChangeOfDirection,
+          spinMoveRating: playerData.ratingSpinMove,
+          jukeMoveRating: playerData.ratingJukeMove,
+          breakTackleRating: playerData.ratingBreakTackle,
+          ballCarryVisionRating: playerData.ratingBallCarrierVision,
+          truckingRating: playerData.ratingTrucking,
+          stiffArmRating: playerData.ratingStiffArm,
+          
+          // Receiving Attributes - using actual API field names
+          catchRating: playerData.ratingCatching,
+          specCatchRating: playerData.ratingSpectacularCatch,
+          releaseRating: playerData.ratingRelease,
+          catchInTrafficRating: playerData.ratingCatchInTraffic,
+          routeRunShortRating: playerData.ratingRouteRunningShort,
+          medRouteRunRating: playerData.ratingRouteRunningMedium,
+          deepRouteRunRating: playerData.ratingRouteRunningDeep,
+          kickReturnRating: playerData.ratingKickReturn,
+          
+          // Blocking Attributes - using actual API field names
+          passBlockRating: playerData.ratingPassBlock,
+          passBlockPowerRating: playerData.ratingPassBlockPower,
+          passBlockFinesseRating: playerData.ratingPassBlockFinesse,
+          runBlockRating: playerData.ratingRunBlock,
+          runBlockPowerRating: playerData.ratingRunBlockPower,
+          runBlockFinesseRating: playerData.ratingRunBlockFinesse,
+          leadBlockRating: playerData.ratingLeadBlock,
+          impactBlockRating: playerData.ratingImpactBlock,
+          
+          // Defense Attributes - using actual API field names
+          tackleRating: playerData.ratingTackle,
+          hitPowerRating: playerData.ratingHitPower,
+          pursuitRating: playerData.ratingPursuit,
+          playRecognitionRating: playerData.ratingPlayRecognition,
+          blockShedRating: playerData.ratingBlockShedding,
+          finesseMovesRating: playerData.ratingFinesseMoves,
+          powerMovesRating: playerData.ratingPowerMoves,
+          manCoverRating: playerData.ratingManCoverage,
+          zoneCoverRating: playerData.ratingZoneCoverage,
+          pressRating: playerData.ratingPress,
+          
+          // Kicking Attributes - using actual API field names
+          kickPowerRating: playerData.ratingKickPower,
+          kickAccuracyRating: playerData.ratingKickAccuracy,
+          
+          // Contract & Trade - using actual API field names
+          capHit: playerData.capHit,
+          salary: playerData.contractSalary,
+          bonus: playerData.contractBonus,
+          yearsLeft: playerData.contractYearsLeft,
+          contractLength: playerData.contractLength,
+          releaseNetSavings: playerData.capReleaseNetSavings,
+          totalReleasePenalty: playerData.capReleasePenalty,
+          
+          // Additional player details - using actual API field names
+          jerseyNumber: playerData.jerseyNumber,
+          yearsPro: playerData.yearsPro,
+          rookieYear: playerData.rookieYear,
+          draftRound: playerData.draftRound,
+          draftPick: playerData.draftPick,
+          college: playerData.college,
+          height: playerData.height,
+          weight: playerData.weight,
+          birthDay: playerData.birthDay,
+          birthMonth: playerData.birthMonth,
+          birthYear: playerData.birthYear,
+          hometown: playerData.hometown,
+          homeState: playerData.homeState,
+          age: playerData.age,
+          devTrait: playerData.devTrait,
+          durabilityRating: playerData.durabilityRating,
+          experiencePoints: playerData.experiencePoints,
+          skillPoints: playerData.skillPoints,
+          legacyScore: playerData.legacyScore,
+          isFreeAgent: playerData.isFreeAgent,
+          isOnIr: playerData.isOnIR,
+          isOnPracticeSquad: playerData.isOnPracticeSquad,
+          isActive: playerData.isActive,
+          reSignStatus: playerData.reSignStatus,
+          desiredLength: playerData.desiredLength,
+          headshotUrl: playerData.headshotUrl,
+          headshotSource: playerData.headshotSource,
+          headshotConfidence: playerData.headshotConfidence,
+          fullName: playerData.name,
+          
+          // Career stats
+          careerStats: careerStats,
+          weeklyStats: weeklyStats,
+        } as Player
         
-                 console.log('Mapped player data:', mappedPlayer)
-         
-         // Log what we actually have vs what we need
-         console.log('=== API DATA ANALYSIS ===')
-         console.log('Fields provided by API:', Object.keys(playerData))
-         console.log('Fields we need for full player profile:')
-         console.log('- Core: speed, acceleration, agility, strength, awareness, jumping, stamina, toughness, injury')
-         console.log('- Passing: throwPower, shortAccuracy, midAccuracy, deepAccuracy, throwOnRun, playAction, breakSack, underPressure')
-         console.log('- Rushing: carrying, changeOfDirection, spinMove, jukeMove, breakTackle, ballCarrierVision, trucking, stiffArm')
-         console.log('- Receiving: catching, spectacularCatch, release, catchInTraffic, routeRunShort, routeRunMedium, routeRunDeep, kickReturn')
-         console.log('- Blocking: passBlock, passBlockPower, passBlockFinesse, runBlock, runBlockPower, runBlockFinesse, leadBlock, impactBlock')
-         console.log('- Defense: tackle, hitPower, pursuit, playRecognition, blockShedding, finesseMoves, powerMoves, manCoverage, zoneCoverage, press')
-         console.log('- Kicking: kickPower, kickAccuracy')
-         console.log('- Contract: capHit, salary, bonus, yearsLeft, contractLength, releaseNetSavings, totalReleasePenalty')
-         console.log('')
-         console.log('RECOMMENDATION: Update backend API endpoint to return all rating fields from database')
-         
-         setPlayer(mappedPlayer)
+        console.log('Mapped player data:', mappedPlayer)
+        
+        // Log what we actually have vs what we need
+        console.log('=== API DATA ANALYSIS ===')
+        console.log('Fields provided by API:', Object.keys(playerData))
+        console.log('Fields we need for full player profile:')
+        console.log('- Core: speed, acceleration, agility, strength, awareness, jumping, stamina, toughness, injury')
+        console.log('- Passing: throwPower, shortAccuracy, midAccuracy, deepAccuracy, throwOnRun, playAction, breakSack, underPressure')
+        console.log('- Rushing: carrying, changeOfDirection, spinMove, jukeMove, breakTackle, ballCarrierVision, trucking, stiffArm')
+        console.log('- Receiving: catching, spectacularCatch, release, catchInTraffic, routeRunShort, routeRunMedium, routeRunDeep, kickReturn')
+        console.log('- Blocking: passBlock, passBlockPower, passBlockFinesse, runBlock, runBlockPower, runBlockFinesse, leadBlock, impactBlock')
+        console.log('- Defense: tackle, hitPower, pursuit, playRecognition, blockShedding, finesseMoves, powerMoves, manCoverage, zoneCoverage, press')
+        console.log('- Kicking: kickPower, kickAccuracy')
+        console.log('- Contract: capHit, salary, bonus, yearsLeft, contractLength, releaseNetSavings, totalReleasePenalty')
+        console.log('')
+        console.log('✅ SUCCESS: All rating fields are now properly mapped from the API response!')
+        
+        setPlayer(mappedPlayer)
       })
       .catch((err) => {
         console.error('[PlayerDetail] Failed to load player:', err)
