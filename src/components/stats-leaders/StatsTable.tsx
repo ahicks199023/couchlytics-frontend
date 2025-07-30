@@ -184,15 +184,15 @@ export function StatsTable({
                     <td className="py-3 px-2 text-gray-600 dark:text-gray-400">
                       {index + 1}
                     </td>
-                    {columns.map((column) => {
-                      const value = row[column.key]
-                      let displayValue = value
+                                         {columns.map((column) => {
+                       const value = row[column.key]
+                       let displayValue: string | number = String(value || '')
 
-                      if (column.formatter) {
-                        displayValue = column.formatter(value)
-                      } else if (typeof value === 'number') {
-                        displayValue = formatNumber(value)
-                      }
+                       if (column.formatter) {
+                         displayValue = column.formatter(value)
+                       } else if (typeof value === 'number') {
+                         displayValue = formatNumber(value)
+                       }
 
                       return (
                         <td
