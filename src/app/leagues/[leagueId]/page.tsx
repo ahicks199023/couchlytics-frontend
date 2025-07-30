@@ -8,6 +8,26 @@ import { fetchFromApi } from '@/lib/api'
 import { getTeamByName, getTeamByPartialName } from '@/lib/team-config'
 import TeamLogo from '@/components/TeamLogo'
 
+// Helper function to get team configuration
+const getTeamConfig = (teamName: string) => {
+  return getTeamByName(teamName) || getTeamByPartialName(teamName)
+}
+
+// Helper function to organize teams by division
+const organizeTeamsByDivision = (teams: LeagueData['teams']) => {
+  const divisions: { [key: string]: LeagueData['teams'] } = {}
+  
+  teams.forEach(team => {
+    const division = team.division || 'Unknown'
+    if (!divisions[division]) {
+      divisions[division] = []
+    }
+    divisions[division].push(team)
+  })
+  
+  return divisions
+}
+
 type LeagueData = {
   league: {
     leagueId: string
@@ -20,6 +40,7 @@ type LeagueData = {
     user: string
     record?: string
     overall?: number
+    division?: string
   }[]
   players: {
     name: string
@@ -67,60 +88,73 @@ export default function LeagueDetailPage() {
       </Link>
 
       <section className="mt-8 mb-8">
-        <h2 className="text-2xl font-semibold mb-2">Teams</h2>
+        <h2 className="text-2xl font-semibold mb-4">Teams by Division</h2>
         {league.teams?.length > 0 ? (
-          <ul className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8 gap-2">
-            {league.teams
-              .filter(team => team.name && team.name !== 'Unknown')
-              .map((team) => {
-                const teamConfig = getTeamByName(team.name) || getTeamByPartialName(team.name)
-                const teamColor = teamConfig?.colors?.primary || '#6B7280'
-                
-                return (
-                  <li key={team.id} className="relative group">
-                    <Link 
-                      href={`/leagues/${leagueId}/teams/${team.id}`}
-                      className="block"
-                    >
-                                             <div 
-                         className="aspect-square rounded-lg p-2 flex flex-col items-center justify-center text-center transition-transform group-hover:scale-105"
-                         style={{ backgroundColor: teamColor }}
-                       >
-                         {/* Team Helmet */}
-                         <div className="mb-1">
-                           <TeamLogo 
-                             teamName={team.name}
-                             size="3xl"
-                             variant="helmet"
-                             showName={false}
-                           />
-                         </div>
-                        
-                                                 {/* Team Name */}
-                         <div className="text-white font-bold text-xs mb-0.5">
-                           {team.name}
-                         </div>
-                         
-                         {/* User */}
-                         <div className="text-white/90 text-xs mb-0.5">
-                           {team.user || 'No Owner'}
-                         </div>
-                         
-                         {/* Record and Overall */}
-                         <div className="text-white/80 text-xs space-y-0">
-                           {team.record && (
-                             <div>Record: {team.record}</div>
-                           )}
-                           {team.overall && (
-                             <div>Overall: {team.overall}</div>
-                           )}
-                         </div>
-                      </div>
-                    </Link>
-                  </li>
-                )
-              })}
-          </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Object.entries(organizeTeamsByDivision(league.teams.filter(team => team.name && team.name !== 'Unknown')))
+              .map(([division, teams]) => (
+                <div key={division} className="space-y-3">
+                  {/* Division Header */}
+                  <div className="text-center">
+                    <h3 className="text-lg font-bold text-neon-green border-b-2 border-neon-green pb-1">
+                      {division}
+                    </h3>
+                  </div>
+                  
+                  {/* Teams Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-2 gap-2">
+                    {teams.map((team) => {
+                      const teamConfig = getTeamConfig(team.name)
+                      const teamColor = teamConfig?.colors?.primary || '#6B7280'
+                      
+                      return (
+                        <div key={team.id} className="relative group">
+                          <Link 
+                            href={`/leagues/${leagueId}/teams/${team.id}`}
+                            className="block"
+                          >
+                            <div 
+                              className="aspect-square rounded-lg p-2 flex flex-col items-center justify-center text-center transition-transform group-hover:scale-105"
+                              style={{ backgroundColor: teamColor }}
+                            >
+                              {/* Team Helmet */}
+                              <div className="mb-1">
+                                <TeamLogo 
+                                  teamName={team.name}
+                                  size="2xl"
+                                  variant="helmet"
+                                  showName={false}
+                                />
+                              </div>
+                              
+                              {/* Team Name */}
+                              <div className="text-white font-bold text-xs mb-0.5">
+                                {team.name}
+                              </div>
+                              
+                              {/* User */}
+                              <div className="text-white/90 text-xs mb-0.5">
+                                {team.user || 'No Owner'}
+                              </div>
+                              
+                              {/* Record and Overall */}
+                              <div className="text-white/80 text-xs space-y-0">
+                                {team.record && (
+                                  <div>Record: {team.record}</div>
+                                )}
+                                {team.overall && (
+                                  <div>Overall: {team.overall}</div>
+                                )}
+                              </div>
+                            </div>
+                          </Link>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+          </div>
         ) : (
           <p className="text-gray-500 text-sm italic">No teams available.</p>
         )}
