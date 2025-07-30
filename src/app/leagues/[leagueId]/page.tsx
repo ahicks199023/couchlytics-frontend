@@ -60,7 +60,7 @@ export default function LeagueDetailPage() {
       <p className="text-gray-400 mb-1">Season Year: {league.league.seasonYear}</p>
 
       <Link
-        href={`/leagues/${league.league.leagueId}/analytics`}
+        href={`/leagues/${leagueId}/analytics`}
         className="inline-block mt-2 text-sm text-blue-400 hover:underline"
       >
         View Analytics →
@@ -79,7 +79,7 @@ export default function LeagueDetailPage() {
                 return (
                   <li key={team.id} className="relative group">
                     <Link 
-                      href={`/leagues/${league.league.leagueId}/teams/${team.id}`}
+                      href={`/leagues/${leagueId}/teams/${team.id}`}
                       className="block"
                     >
                                              <div 
