@@ -94,13 +94,13 @@ export default function LeagueDetailPage() {
   if (error || !league) return <main className="p-6 text-red-400">{error || 'No data found.'}</main>
 
   return (
-    <main className="min-h-screen bg-black text-white p-6">
+    <main className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white p-6">
       <h1 className="text-3xl font-bold mb-2">{league.league.name}</h1>
       <p className="text-gray-400 mb-1">Season Year: {league.league.seasonYear}</p>
 
       <Link
         href={`/leagues/${leagueId}/analytics`}
-        className="inline-block mt-2 text-sm text-blue-400 hover:underline"
+        className="inline-block mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
       >
         View Analytics →
       </Link>
@@ -174,7 +174,7 @@ export default function LeagueDetailPage() {
                ))}
            </div>
         ) : (
-          <p className="text-gray-500 text-sm italic">No teams available.</p>
+          <p className="text-gray-600 dark:text-gray-500 text-sm italic">No teams available.</p>
         )}
       </section>
 
@@ -188,9 +188,9 @@ export default function LeagueDetailPage() {
               </li>
             ))}
           </ul>
-        ) : (
-          <p className="text-gray-500 text-sm italic">No games recorded yet.</p>
-        )}
+                 ) : (
+           <p className="text-gray-600 dark:text-gray-500 text-sm italic">No games recorded yet.</p>
+         )}
       </section>
 
       <section className="mb-8">
