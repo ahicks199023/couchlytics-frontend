@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { analyticsApi, formatRecord } from '@/lib/analytics'
 import { TeamStats as TeamStatsType } from '@/types/analytics'
+import TeamBadge from '@/components/TeamBadge'
 
 interface TeamStatsProps {
   leagueId: string | number
@@ -61,9 +62,17 @@ export default function TeamStats({ leagueId, teamId }: TeamStatsProps) {
   return (
     <div className="space-y-6">
       <div className="bg-gray-900/50 rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-neon-green mb-4">
-          {teamStats.city} {teamStats.teamName}
-        </h2>
+        <div className="flex items-center gap-4 mb-4">
+          <TeamBadge 
+            teamName={teamStats.teamName}
+            size="lg"
+            variant="logo"
+            showAbbr={true}
+          />
+          <h2 className="text-2xl font-bold text-neon-green">
+            {teamStats.city} {teamStats.teamName}
+          </h2>
+        </div>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="text-center">

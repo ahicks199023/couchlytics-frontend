@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { analyticsApi, getTeamRankingColor } from '@/lib/analytics'
 import { LeagueStandings as LeagueStandingsType } from '@/types/analytics'
+import TeamBadge from '@/components/TeamBadge'
 
 interface LeagueStandingsProps {
   leagueId: string | number
@@ -320,7 +321,14 @@ export default function LeagueStandings({ leagueId }: LeagueStandingsProps) {
                                       href={`/leagues/${leagueId}/teams/${team.teamId}`}
                                       className="hover:text-neon-green transition-colors"
                                     >
-                                      <div className="font-medium">{team.city || ''} {team.teamName || 'Unknown Team'}</div>
+                                      <div className="flex items-center gap-2">
+                                        <TeamBadge 
+                                          teamName={team.teamName || `${team.city} Team`}
+                                          size="sm"
+                                          variant="logo"
+                                          showAbbr={true}
+                                        />
+                                      </div>
                                     </Link>
                                     <div className="text-xs text-gray-400">
                                       Conf: {team.conferenceRank || '-'} | Overall: {team.overallRank || '-'}

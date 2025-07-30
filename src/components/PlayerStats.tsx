@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { analyticsApi } from '@/lib/analytics'
 import { PlayerStats as PlayerStatsType } from '@/types/analytics'
+import TeamBadge from '@/components/TeamBadge'
 
 interface PlayerStatsProps {
   leagueId: string | number
@@ -257,7 +258,14 @@ export default function PlayerStats({ leagueId, playerId }: PlayerStatsProps) {
           </div>
           <div className="text-center">
             <div className="text-gray-400 text-sm">Team</div>
-            <div className="text-white font-medium">{playerStats.teamName}</div>
+            <div className="flex justify-center">
+              <TeamBadge 
+                teamName={playerStats.teamName}
+                size="sm"
+                variant="logo"
+                showAbbr={true}
+              />
+            </div>
           </div>
           <div className="text-center">
             <div className="text-gray-400 text-sm">Season</div>
