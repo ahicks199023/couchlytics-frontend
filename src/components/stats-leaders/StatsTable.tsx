@@ -141,20 +141,21 @@ export function StatsTable({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-2 font-medium text-gray-900 dark:text-white">
-                  Rank
-                </th>
+                                 <th className="text-center py-3 px-2 font-medium text-gray-900 dark:text-white">
+                   Rank
+                 </th>
                 {columns.map((column) => (
-                  <th
-                    key={column.key}
-                    className={cn(
-                      'py-3 px-2 font-medium text-gray-900 dark:text-white',
-                      column.sortable && 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
-                      column.align === 'right' && 'text-right',
-                      column.align === 'center' && 'text-center'
-                    )}
-                    onClick={() => column.sortable && handleSort(column.key)}
-                  >
+                                     <th
+                     key={column.key}
+                     className={cn(
+                       'py-3 px-2 font-medium text-gray-900 dark:text-white',
+                       column.sortable && 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
+                       column.align === 'right' && 'text-right',
+                       column.align === 'center' && 'text-center',
+                       !column.align && 'text-left'
+                     )}
+                     onClick={() => column.sortable && handleSort(column.key)}
+                   >
                     <div className="flex items-center justify-between">
                       <span>{column.label}</span>
                       {column.sortable && sortColumn === column.key && (
@@ -181,9 +182,9 @@ export function StatsTable({
                     )}
                     onClick={() => onRowClick && handlePlayerClick(row)}
                   >
-                    <td className="py-3 px-2 text-gray-600 dark:text-gray-400">
-                      {index + 1}
-                    </td>
+                                         <td className="py-3 px-2 text-gray-600 dark:text-gray-400 text-center">
+                       {index + 1}
+                     </td>
                                          {columns.map((column) => {
                        const value = row[column.key]
                        let displayValue: string | number = String(value || '')
@@ -195,14 +196,15 @@ export function StatsTable({
                        }
 
                       return (
-                        <td
-                          key={column.key}
-                          className={cn(
-                            'py-3 px-2',
-                            column.align === 'right' && 'text-right',
-                            column.align === 'center' && 'text-center'
-                          )}
-                        >
+                                                 <td
+                           key={column.key}
+                           className={cn(
+                             'py-3 px-2',
+                             column.align === 'right' && 'text-right',
+                             column.align === 'center' && 'text-center',
+                             !column.align && 'text-left'
+                           )}
+                         >
                           {column.key === 'name' && row.espnId ? (
                             <div className="flex items-center space-x-2">
                                                              <Image
