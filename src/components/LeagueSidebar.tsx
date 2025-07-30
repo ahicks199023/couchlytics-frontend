@@ -9,6 +9,7 @@ import clsx from 'clsx'
 const links = [
   { label: 'Home', path: '' },
   { label: 'Analytics', path: 'analytics' },
+  { label: 'Schedule', path: 'schedule' },
   { label: 'Trades', path: 'trades' },
   { label: 'Trade Tool', path: 'trade-tool' },
   { label: 'Stats', path: 'stats', prefetch: false },

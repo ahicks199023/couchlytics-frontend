@@ -105,12 +105,6 @@ export default function LeagueDetailPage() {
         >
           View Analytics →
         </Link>
-        <Link
-          href={`/leagues/${leagueId}/schedule`}
-          className="inline-block text-sm text-green-600 dark:text-neon-green hover:underline"
-        >
-          View Schedule →
-        </Link>
       </div>
 
       <section className="mt-8 mb-8">
