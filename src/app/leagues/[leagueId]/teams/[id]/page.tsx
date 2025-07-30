@@ -146,16 +146,13 @@ export default function TeamDetailPage() {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'roster':
-                return (
-          <div className="bg-gray-900 p-4 rounded">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr>
-                    <th colSpan={11} className="h-1" style={{ backgroundColor: teamColor }}></th>
-                  </tr>
-                  <tr className="border-b border-gray-700">
+             case 'roster':
+                 return (
+           <div className="bg-gray-900 p-4 rounded border-4" style={{ borderColor: teamColor }}>
+             <div className="overflow-x-auto">
+               <table className="w-full text-sm">
+                 <thead>
+                   <tr className="border-b border-gray-700">
                     <th 
                       className="text-left py-2 px-1 text-gray-400 cursor-pointer hover:text-white"
                       onClick={() => handleRosterSort('name')}
@@ -261,9 +258,9 @@ export default function TeamDetailPage() {
           </div>
         )
 
-      case 'depth-chart':
-        return (
-          <div className="bg-gray-900 p-4 rounded">
+             case 'depth-chart':
+         return (
+           <div className="bg-gray-900 p-4 rounded border-4" style={{ borderColor: teamColor }}>
             {teamData.depthChart && Object.keys(teamData.depthChart).length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Object.entries(teamData.depthChart).map(([position, players]) => (
@@ -304,12 +301,12 @@ export default function TeamDetailPage() {
           </div>
         )
 
-      default:
-        return (
-          <div className="bg-gray-900 p-4 rounded">
-            <p className="text-gray-400">Content for {activeTab} tab coming soon...</p>
-          </div>
-        )
+             default:
+         return (
+           <div className="bg-gray-900 p-4 rounded border-4" style={{ borderColor: teamColor }}>
+             <p className="text-gray-400">Content for {activeTab} tab coming soon...</p>
+           </div>
+         )
     }
   }
 
@@ -336,15 +333,15 @@ export default function TeamDetailPage() {
       <div className="flex gap-6 p-6">
         {/* Main Content */}
         <div className="flex-1 space-y-6">
-          {/* Team Info Card */}
-          <div className="bg-gray-900 p-6 rounded-lg">
-            <div className="flex items-center gap-4 mb-4">
-              <TeamLogo 
-                teamName={teamData.team.name}
-                size="lg"
-                variant="logo"
-                showName={false}
-              />
+                     {/* Team Info Card */}
+           <div className="bg-gray-900 p-6 rounded-lg border-4" style={{ borderColor: teamColor }}>
+                         <div className="flex items-center gap-4 mb-4">
+               <TeamLogo 
+                 teamName={teamData.team.name}
+                 size="xl"
+                 variant="logo"
+                 showName={false}
+               />
               <div>
                 <h2 className="text-2xl font-bold">{teamData.team.name}</h2>
                 <p className="text-gray-400">
@@ -414,8 +411,8 @@ export default function TeamDetailPage() {
             </div>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="bg-gray-900 p-4 rounded-lg">
+                     {/* Tab Navigation */}
+           <div className="bg-gray-900 p-4 rounded-lg border-4" style={{ borderColor: teamColor }}>
             <div className="flex space-x-6 border-b border-gray-700">
               {tabs.map((tab) => (
                 <button
@@ -446,16 +443,13 @@ export default function TeamDetailPage() {
             {teamData.team.record}
           </div>
 
-          {/* On The Block */}
-          <div className="bg-gray-900 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold text-neon-green mb-3">On The Block</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr>
-                    <th colSpan={8} className="h-1" style={{ backgroundColor: teamColor }}></th>
-                  </tr>
-                  <tr className="border-b border-gray-700">
+                     {/* On The Block */}
+           <div className="bg-gray-900 p-4 rounded-lg border-4" style={{ borderColor: teamColor }}>
+             <h3 className="text-lg font-semibold text-neon-green mb-3">On The Block</h3>
+             <div className="overflow-x-auto">
+               <table className="w-full text-xs">
+                 <thead>
+                   <tr className="border-b border-gray-700">
                     <th className="text-left py-1 px-1 text-gray-400">Player</th>
                     <th className="text-left py-1 px-1 text-gray-400">POS</th>
                     <th className="text-left py-1 px-1 text-gray-400">DEV</th>
@@ -492,16 +486,13 @@ export default function TeamDetailPage() {
             </div>
           </div>
 
-          {/* Most Expensive */}
-          <div className="bg-gray-900 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold text-neon-green mb-3">Most Expensive</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr>
-                    <th colSpan={7} className="h-1" style={{ backgroundColor: teamColor }}></th>
-                  </tr>
-                  <tr className="border-b border-gray-700">
+                     {/* Most Expensive */}
+           <div className="bg-gray-900 p-4 rounded-lg border-4" style={{ borderColor: teamColor }}>
+             <h3 className="text-lg font-semibold text-neon-green mb-3">Most Expensive</h3>
+             <div className="overflow-x-auto">
+               <table className="w-full text-xs">
+                 <thead>
+                   <tr className="border-b border-gray-700">
                     <th className="text-left py-1 px-1 text-gray-400">Player</th>
                     <th className="text-left py-1 px-1 text-gray-400">POS</th>
                     <th className="text-left py-1 px-1 text-gray-400">DEV</th>
@@ -536,16 +527,13 @@ export default function TeamDetailPage() {
             </div>
           </div>
 
-          {/* Upcoming FA */}
-          <div className="bg-gray-900 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold text-neon-green mb-3">Upcoming FA</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr>
-                    <th colSpan={7} className="h-1" style={{ backgroundColor: teamColor }}></th>
-                  </tr>
-                  <tr className="border-b border-gray-700">
+                     {/* Upcoming FA */}
+           <div className="bg-gray-900 p-4 rounded-lg border-4" style={{ borderColor: teamColor }}>
+             <h3 className="text-lg font-semibold text-neon-green mb-3">Upcoming FA</h3>
+             <div className="overflow-x-auto">
+               <table className="w-full text-xs">
+                 <thead>
+                   <tr className="border-b border-gray-700">
                     <th className="text-left py-1 px-1 text-gray-400">Player</th>
                     <th className="text-left py-1 px-1 text-gray-400">POS</th>
                     <th className="text-left py-1 px-1 text-gray-400">DEV</th>
