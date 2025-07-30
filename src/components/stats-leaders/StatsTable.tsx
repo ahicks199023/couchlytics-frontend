@@ -18,11 +18,11 @@ interface Column {
 interface StatsTableProps {
   title: string
   columns: Column[]
-  data: unknown[]
+  data: Record<string, unknown>[]
   loading?: boolean
   error?: string | null
   leagueId: string
-  onRowClick?: (row: unknown) => void
+  onRowClick?: (row: Record<string, unknown>) => void
   highlightUserTeam?: boolean
   currentTeamId?: number | null
 }
@@ -73,7 +73,7 @@ export function StatsTable({
     }
   }
 
-  const handlePlayerClick = (player: unknown) => {
+  const handlePlayerClick = (player: Record<string, unknown>) => {
     if (onRowClick) {
       onRowClick(player)
     } else if (player.maddenId || player.playerId) {
@@ -169,7 +169,7 @@ export function StatsTable({
             </thead>
             <tbody>
               {sortedData.map((row, index) => {
-                const isUserTeam = highlightUserTeam && currentTeamId && row.teamId === currentTeamId
+                const isUserTeam = highlightUserTeam && currentTeamId && (row.teamId as number) === currentTeamId
                 
                 return (
                   <tr
@@ -206,8 +206,8 @@ export function StatsTable({
                           {column.key === 'name' && row.espnId ? (
                             <div className="flex items-center space-x-2">
                               <Image
-                                src={`/headshots/${row.espnId}.png`}
-                                alt={row.name}
+                                src={`/headshots/${row.espnId as string}.png`}
+                                alt={row.name as string}
                                 width={32}
                                 height={32}
                                 className="rounded-full"
