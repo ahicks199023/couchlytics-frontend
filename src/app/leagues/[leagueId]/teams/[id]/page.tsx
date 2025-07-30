@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { API_BASE, authenticatedFetch } from '@/lib/config'
 import { TeamDetailResponse } from '@/types/analytics'
+import { getTeamByName, getTeamByPartialName } from '@/lib/team-config'
+import TeamLogo from '@/components/TeamLogo'
 
 // Helper function to format currency values (values are already in millions)
 const formatCurrencyValue = (value: number | null | undefined): string => {
@@ -15,6 +17,11 @@ const formatCurrencyValue = (value: number | null | undefined): string => {
 // Helper function to format height
 const formatHeight = (height: string): string => {
   return height || 'N/A'
+}
+
+// Helper function to get team configuration
+const getTeamConfig = (teamName: string) => {
+  return getTeamByName(teamName) || getTeamByPartialName(teamName)
 }
 
 export default function TeamDetailPage() {
@@ -133,14 +140,21 @@ export default function TeamDetailPage() {
     { id: 'customization', label: 'CUSTOMIZATION' }
   ]
 
+  // Get team configuration for styling
+  const teamConfig = getTeamConfig(teamData.team.name)
+  const teamColor = teamConfig?.colors?.primary || '#00FF00'
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'roster':
-        return (
+                return (
           <div className="bg-gray-900 p-4 rounded">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
+                  <tr>
+                    <th colSpan={11} className="h-1" style={{ backgroundColor: teamColor }}></th>
+                  </tr>
                   <tr className="border-b border-gray-700">
                     <th 
                       className="text-left py-2 px-1 text-gray-400 cursor-pointer hover:text-white"
@@ -325,11 +339,12 @@ export default function TeamDetailPage() {
           {/* Team Info Card */}
           <div className="bg-gray-900 p-6 rounded-lg">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 bg-neon-green rounded-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-black">
-                  {teamData.team.name.split(' ').map(word => word[0]).join('')}
-                </span>
-              </div>
+              <TeamLogo 
+                teamName={teamData.team.name}
+                size="lg"
+                variant="logo"
+                showName={false}
+              />
               <div>
                 <h2 className="text-2xl font-bold">{teamData.team.name}</h2>
                 <p className="text-gray-400">
@@ -437,6 +452,9 @@ export default function TeamDetailPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
+                  <tr>
+                    <th colSpan={8} className="h-1" style={{ backgroundColor: teamColor }}></th>
+                  </tr>
                   <tr className="border-b border-gray-700">
                     <th className="text-left py-1 px-1 text-gray-400">Player</th>
                     <th className="text-left py-1 px-1 text-gray-400">POS</th>
@@ -480,6 +498,9 @@ export default function TeamDetailPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
+                  <tr>
+                    <th colSpan={7} className="h-1" style={{ backgroundColor: teamColor }}></th>
+                  </tr>
                   <tr className="border-b border-gray-700">
                     <th className="text-left py-1 px-1 text-gray-400">Player</th>
                     <th className="text-left py-1 px-1 text-gray-400">POS</th>
@@ -521,6 +542,9 @@ export default function TeamDetailPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
+                  <tr>
+                    <th colSpan={7} className="h-1" style={{ backgroundColor: teamColor }}></th>
+                  </tr>
                   <tr className="border-b border-gray-700">
                     <th className="text-left py-1 px-1 text-gray-400">Player</th>
                     <th className="text-left py-1 px-1 text-gray-400">POS</th>
