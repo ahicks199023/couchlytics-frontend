@@ -98,12 +98,20 @@ export default function LeagueDetailPage() {
       <h1 className="text-3xl font-bold mb-2">{league.league.name}</h1>
       <p className="text-gray-400 mb-1">Season Year: {league.league.seasonYear}</p>
 
-      <Link
-        href={`/leagues/${leagueId}/analytics`}
-        className="inline-block mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
-      >
-        View Analytics →
-      </Link>
+      <div className="flex gap-4 mt-2">
+        <Link
+          href={`/leagues/${leagueId}/analytics`}
+          className="inline-block text-sm text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          View Analytics →
+        </Link>
+        <Link
+          href={`/leagues/${leagueId}/schedule`}
+          className="inline-block text-sm text-green-600 dark:text-neon-green hover:underline"
+        >
+          View Schedule →
+        </Link>
+      </div>
 
       <section className="mt-8 mb-8">
         <h2 className="text-2xl font-semibold mb-4">Teams by Division</h2>
