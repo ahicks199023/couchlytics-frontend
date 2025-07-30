@@ -137,18 +137,18 @@ export default function LeagueDetailPage() {
                              >
                                {/* Team Helmet */}
                                <div className="mb-1">
-                                 <TeamLogo 
-                                   teamName={team.name}
-                                   size="lg"
-                                   variant="helmet"
-                                   showName={false}
-                                 />
+                                                                 <TeamLogo 
+                                  teamName={team.name}
+                                  size="3xl"
+                                  variant="helmet"
+                                  showName={false}
+                                />
                                </div>
                                
                                {/* Team Name */}
-                               <div className="text-white font-bold text-xs mb-0.5">
-                                 {team.name}
-                               </div>
+                                                               <div className="text-white font-bold text-sm mb-0.5">
+                                  {team.name}
+                                </div>
                                
                                {/* User */}
                                <div className="text-white/90 text-xs mb-0.5">
