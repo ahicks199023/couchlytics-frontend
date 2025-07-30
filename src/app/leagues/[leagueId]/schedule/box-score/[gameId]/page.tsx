@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { API_BASE } from '@/lib/config'
-import { getTeamConfig } from '@/lib/team-config'
+import { getTeamByAbbreviation } from '@/lib/team-config'
 
 type PlayerStats = {
   name: string
@@ -93,9 +93,9 @@ export default function BoxScorePage() {
 
   useEffect(() => {
     fetchBoxScore()
-  }, [leagueId, gameId])
+  }, [fetchBoxScore])
 
-  const fetchBoxScore = async () => {
+  const fetchBoxScore = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -114,7 +114,7 @@ export default function BoxScorePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [leagueId, gameId])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -172,8 +172,8 @@ export default function BoxScorePage() {
     else if (lastWord === '49ers') abbreviation = 'SF'
     else if (lastWord === 'Seahawks') abbreviation = 'SEA'
     
-    const teamConfig = getTeamConfig(abbreviation)
-    return teamConfig?.primaryColor || '#666666'
+    const teamConfig = getTeamByAbbreviation(abbreviation)
+    return teamConfig?.colors?.primary || '#666666'
   }
 
   if (loading) {

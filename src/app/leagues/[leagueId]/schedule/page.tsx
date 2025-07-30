@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { API_BASE } from '@/lib/config'
-import { getTeamConfig } from '@/lib/team-config'
+import { getTeamByAbbreviation } from '@/lib/team-config'
 
 type Game = {
   game_id: string
@@ -97,9 +97,9 @@ export default function SeasonSchedulePage() {
 
   useEffect(() => {
     fetchSchedule()
-  }, [leagueId, filters])
+  }, [fetchSchedule])
 
-  const fetchSchedule = async () => {
+  const fetchSchedule = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -128,7 +128,7 @@ export default function SeasonSchedulePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [leagueId, filters.status, filters.week, filters.page, filters.limit])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -146,14 +146,9 @@ export default function SeasonSchedulePage() {
     return `${displayHour}:${minutes} ${ampm}`
   }
 
-  const getTeamLogo = (abbreviation: string) => {
-    const teamConfig = getTeamConfig(abbreviation)
-    return teamConfig?.logo || `/team-logos/${abbreviation.toLowerCase()}.png`
-  }
-
   const getTeamColors = (abbreviation: string) => {
-    const teamConfig = getTeamConfig(abbreviation)
-    return teamConfig?.primaryColor || '#666666'
+    const teamConfig = getTeamByAbbreviation(abbreviation)
+    return teamConfig?.colors?.primary || '#666666'
   }
 
   if (loading) {
@@ -321,7 +316,6 @@ export default function SeasonSchedulePage() {
               key={game.game_id} 
               game={game} 
               leagueId={leagueId}
-              getTeamLogo={getTeamLogo}
               getTeamColors={getTeamColors}
               formatDate={formatDate}
               formatTime={formatTime}
@@ -371,14 +365,12 @@ export default function SeasonSchedulePage() {
 function GameCard({ 
   game, 
   leagueId, 
-  getTeamLogo, 
   getTeamColors, 
   formatDate, 
   formatTime 
 }: {
   game: Game
   leagueId: string
-  getTeamLogo: (abbr: string) => string
   getTeamColors: (abbr: string) => string
   formatDate: (date: string) => string
   formatTime: (time: string) => string
