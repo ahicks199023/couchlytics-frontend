@@ -69,7 +69,7 @@ export default function LeagueDetailPage() {
       <section className="mt-8 mb-8">
         <h2 className="text-2xl font-semibold mb-2">Teams</h2>
         {league.teams?.length > 0 ? (
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
             {league.teams
               .filter(team => team.name && team.name !== 'Unknown')
               .map((team) => {
@@ -82,39 +82,39 @@ export default function LeagueDetailPage() {
                       href={`/leagues/${league.league.leagueId}/teams/${team.id}`}
                       className="block"
                     >
-                      <div 
-                        className="aspect-square rounded-lg p-4 flex flex-col items-center justify-center text-center transition-transform group-hover:scale-105"
-                        style={{ backgroundColor: teamColor }}
-                      >
-                        {/* Team Helmet */}
-                        <div className="mb-3">
-                          <TeamLogo 
-                            teamName={team.name}
-                            size="lg"
-                            variant="helmet"
-                            showName={false}
-                          />
-                        </div>
+                                             <div 
+                         className="aspect-square rounded-lg p-3 flex flex-col items-center justify-center text-center transition-transform group-hover:scale-105"
+                         style={{ backgroundColor: teamColor }}
+                       >
+                         {/* Team Helmet */}
+                         <div className="mb-2">
+                           <TeamLogo 
+                             teamName={team.name}
+                             size="2xl"
+                             variant="helmet"
+                             showName={false}
+                           />
+                         </div>
                         
-                        {/* Team Name */}
-                        <div className="text-white font-bold text-lg mb-1">
-                          {team.name}
-                        </div>
-                        
-                        {/* User */}
-                        <div className="text-white/90 text-sm mb-2">
-                          {team.user || 'No Owner'}
-                        </div>
-                        
-                        {/* Record and Overall */}
-                        <div className="text-white/80 text-xs space-y-1">
-                          {team.record && (
-                            <div>Record: {team.record}</div>
-                          )}
-                          {team.overall && (
-                            <div>Overall: {team.overall}</div>
-                          )}
-                        </div>
+                                                 {/* Team Name */}
+                         <div className="text-white font-bold text-sm mb-1">
+                           {team.name}
+                         </div>
+                         
+                         {/* User */}
+                         <div className="text-white/90 text-xs mb-1">
+                           {team.user || 'No Owner'}
+                         </div>
+                         
+                         {/* Record and Overall */}
+                         <div className="text-white/80 text-xs space-y-0.5">
+                           {team.record && (
+                             <div>Record: {team.record}</div>
+                           )}
+                           {team.overall && (
+                             <div>Overall: {team.overall}</div>
+                           )}
+                         </div>
                       </div>
                     </Link>
                   </li>
