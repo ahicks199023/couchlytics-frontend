@@ -117,6 +117,7 @@ export default function BoxScorePage() {
   }, [fetchBoxScore])
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'TBD'
     return new Date(dateString).toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -126,6 +127,7 @@ export default function BoxScorePage() {
   }
 
   const formatTime = (timeString: string) => {
+    if (!timeString) return 'TBD'
     const [hours, minutes] = timeString.split(':')
     const hour = parseInt(hours)
     const ampm = hour >= 12 ? 'PM' : 'AM'
@@ -134,6 +136,9 @@ export default function BoxScorePage() {
   }
 
   const getTeamColors = (teamName: string) => {
+    // Handle null or undefined team names
+    if (!teamName) return '#666666'
+    
     // Extract abbreviation from team name (e.g., "Kansas City Chiefs" -> "KC")
     const words = teamName.split(' ')
     const lastWord = words[words.length - 1]

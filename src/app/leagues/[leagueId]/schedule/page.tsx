@@ -131,6 +131,7 @@ export default function SeasonSchedulePage() {
   }, [fetchSchedule])
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'TBD'
     return new Date(dateString).toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -139,6 +140,7 @@ export default function SeasonSchedulePage() {
   }
 
   const formatTime = (timeString: string) => {
+    if (!timeString) return 'TBD'
     const [hours, minutes] = timeString.split(':')
     const hour = parseInt(hours)
     const ampm = hour >= 12 ? 'PM' : 'AM'
