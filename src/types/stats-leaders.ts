@@ -10,6 +10,7 @@ export interface PlayerPassingLeader {
   attempts: number
   rating: number
   gamesPlayed: number
+  [key: string]: unknown
 }
 
 export interface PlayerRushingLeader {
@@ -21,6 +22,7 @@ export interface PlayerRushingLeader {
   attempts: number
   averagePerAttempt: number
   gamesPlayed: number
+  [key: string]: unknown
 }
 
 export interface PlayerReceivingLeader {
@@ -32,6 +34,7 @@ export interface PlayerReceivingLeader {
   catches: number
   averagePerCatch: number
   gamesPlayed: number
+  [key: string]: unknown
 }
 
 export interface PlayerTacklesLeader {
@@ -43,6 +46,7 @@ export interface PlayerTacklesLeader {
   interceptions: number
   fumbleRecoveries: number
   gamesPlayed: number
+  [key: string]: unknown
 }
 
 export interface PlayerSacksLeader {
@@ -54,6 +58,7 @@ export interface PlayerSacksLeader {
   interceptions: number
   forcedFumbles: number
   gamesPlayed: number
+  [key: string]: unknown
 }
 
 export interface PlayerInterceptionsLeader {
@@ -65,6 +70,7 @@ export interface PlayerInterceptionsLeader {
   touchdowns: number
   tackles: number
   gamesPlayed: number
+  [key: string]: unknown
 }
 
 // Team Stats Types
@@ -75,6 +81,7 @@ export interface TeamTotalYardsLeader {
   rushingYards: number
   yardsPerGame: number
   gamesPlayed: number
+  [key: string]: unknown
 }
 
 export interface TeamPassingLeader {
@@ -85,6 +92,7 @@ export interface TeamPassingLeader {
   sacksAllowed: number
   yardsPerGame: number
   gamesPlayed: number
+  [key: string]: unknown
 }
 
 export interface TeamRushingLeader {
@@ -94,6 +102,7 @@ export interface TeamRushingLeader {
   fumblesLost: number
   yardsPerGame: number
   gamesPlayed: number
+  [key: string]: unknown
 }
 
 export interface TeamYardsAllowedLeader {
@@ -103,6 +112,7 @@ export interface TeamYardsAllowedLeader {
   rushYardsAllowed: number
   yardsPerGame: number
   gamesPlayed: number
+  [key: string]: unknown
 }
 
 export interface TeamSacksLeader {
@@ -113,6 +123,7 @@ export interface TeamSacksLeader {
   fumbleRecoveries: number
   sacksPerGame: number
   gamesPlayed: number
+  [key: string]: unknown
 }
 
 export interface TeamTurnoversLeader {
@@ -123,6 +134,7 @@ export interface TeamTurnoversLeader {
   interceptions: number
   fumbleRecoveries: number
   gamesPlayed: number
+  [key: string]: unknown
 }
 
 // API Response Types
