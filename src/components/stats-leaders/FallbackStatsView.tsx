@@ -28,7 +28,7 @@ export function FallbackStatsView({ leagueId }: FallbackStatsViewProps) {
             <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
               <p>
                 The new comprehensive stats leaders system is not yet available. 
-                You're currently viewing the legacy stats system which provides individual stat categories.
+                You&apos;re currently viewing the legacy stats system which provides individual stat categories.
               </p>
             </div>
           </div>

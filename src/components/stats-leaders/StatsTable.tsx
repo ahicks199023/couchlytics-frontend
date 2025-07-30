@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
-import Link from 'next/link'
+
 import { useRouter } from 'next/navigation'
 
 interface Column {
@@ -12,17 +12,17 @@ interface Column {
   label: string
   sortable?: boolean
   align?: 'left' | 'right' | 'center'
-  formatter?: (value: any) => string
+  formatter?: (value: unknown) => string
 }
 
 interface StatsTableProps {
   title: string
   columns: Column[]
-  data: any[]
+  data: unknown[]
   loading?: boolean
   error?: string | null
   leagueId: string
-  onRowClick?: (row: any) => void
+  onRowClick?: (row: unknown) => void
   highlightUserTeam?: boolean
   currentTeamId?: number | null
 }
@@ -73,7 +73,7 @@ export function StatsTable({
     }
   }
 
-  const handlePlayerClick = (player: any) => {
+  const handlePlayerClick = (player: unknown) => {
     if (onRowClick) {
       onRowClick(player)
     } else if (player.maddenId || player.playerId) {
@@ -87,10 +87,7 @@ export function StatsTable({
     return value.toLocaleString()
   }
 
-  const formatDecimal = (value: number, decimals = 1): string => {
-    if (value === null || value === undefined) return '-'
-    return value.toFixed(decimals)
-  }
+
 
   if (loading) {
     return (

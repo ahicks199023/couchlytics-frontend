@@ -2,7 +2,6 @@
 
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { PlayersStatsTab } from '@/components/stats-leaders/PlayersStatsTab'
 import { TeamsStatsTab } from '@/components/stats-leaders/TeamsStatsTab'
