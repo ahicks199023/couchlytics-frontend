@@ -338,7 +338,7 @@ export default function TeamDetailPage() {
                          <div className="flex items-center gap-4 mb-4">
                <TeamLogo 
                  teamName={teamData.team.name}
-                 size="xl"
+                 size="2xl"
                  variant="logo"
                  showName={false}
                />

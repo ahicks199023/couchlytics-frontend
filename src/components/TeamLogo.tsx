@@ -7,7 +7,7 @@ interface TeamLogoProps {
   teamName?: string
   teamId?: number
   teamAbbr?: string
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
   variant?: 'logo' | 'helmet' | 'initials'
   className?: string
   showName?: boolean
@@ -19,6 +19,8 @@ const sizeClasses = {
   md: 'w-8 h-8 text-sm',
   lg: 'w-12 h-12 text-base',
   xl: 'w-16 h-16 text-lg',
+  '2xl': 'w-24 h-24 text-xl',
+  '3xl': 'w-32 h-32 text-2xl',
 }
 
 const nameSizeClasses = {
@@ -27,6 +29,8 @@ const nameSizeClasses = {
   md: 'text-sm',
   lg: 'text-base',
   xl: 'text-lg',
+  '2xl': 'text-xl',
+  '3xl': 'text-2xl',
 }
 
 export default function TeamLogo({ 
