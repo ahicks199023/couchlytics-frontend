@@ -11,7 +11,6 @@ interface TeamLogoProps {
   variant?: 'logo' | 'helmet' | 'initials'
   className?: string
   showName?: boolean
-  fallbackToInitials?: boolean
 }
 
 const sizeClasses = {
@@ -37,8 +36,7 @@ export default function TeamLogo({
   size = 'md', 
   variant = 'logo',
   className = '',
-  showName = false,
-  fallbackToInitials = true
+  showName = false
 }: TeamLogoProps) {
   // Find team configuration
   let team: TeamConfig | undefined
@@ -54,13 +52,13 @@ export default function TeamLogo({
   const sizeClass = sizeClasses[size]
   const nameSizeClass = nameSizeClasses[size]
 
-  // Fallback to initials if no team found or logo/helmet not available
-  if (!team || (variant !== 'initials' && fallbackToInitials)) {
+  // Fallback to initials if no team found
+  if (!team) {
     const initials = teamName ? 
       teamName.split(' ').map(word => word[0]).join('').substring(0, 2) : 
       'TM'
     
-    const fallbackColor = team?.colors?.primary || '#6B7280'
+    const fallbackColor = '#6B7280'
     
     return (
       <div className={`flex items-center gap-2 ${className}`}>
