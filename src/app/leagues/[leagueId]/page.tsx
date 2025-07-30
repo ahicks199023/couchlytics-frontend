@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { LeagueStatLeaders } from '@/components/LeagueStatLeaders'
 import { fetchFromApi } from '@/lib/api'
+import { getTeamByName, getTeamByPartialName } from '@/lib/team-config'
+import TeamLogo from '@/components/TeamLogo'
 
 type LeagueData = {
   league: {
@@ -16,6 +18,8 @@ type LeagueData = {
     id: number
     name: string
     user: string
+    record?: string
+    overall?: number
   }[]
   players: {
     name: string
@@ -65,20 +69,57 @@ export default function LeagueDetailPage() {
       <section className="mt-8 mb-8">
         <h2 className="text-2xl font-semibold mb-2">Teams</h2>
         {league.teams?.length > 0 ? (
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {league.teams
               .filter(team => team.name && team.name !== 'Unknown')
-              .map((team) => (
-                <li key={team.id} className="bg-gray-800 p-3 rounded">
-                  <Link 
-                    href={`/leagues/${league.league.leagueId}/teams/${team.id}`}
-                    className="hover:text-neon-green transition-colors"
-                  >
-                    <strong>{team.name}</strong>
-                  </Link>
-                  <div className="text-sm text-gray-400">User: {team.user}</div>
-                </li>
-              ))}
+              .map((team) => {
+                const teamConfig = getTeamByName(team.name) || getTeamByPartialName(team.name)
+                const teamColor = teamConfig?.colors?.primary || '#6B7280'
+                
+                return (
+                  <li key={team.id} className="relative group">
+                    <Link 
+                      href={`/leagues/${league.league.leagueId}/teams/${team.id}`}
+                      className="block"
+                    >
+                      <div 
+                        className="aspect-square rounded-lg p-4 flex flex-col items-center justify-center text-center transition-transform group-hover:scale-105"
+                        style={{ backgroundColor: teamColor }}
+                      >
+                        {/* Team Helmet */}
+                        <div className="mb-3">
+                          <TeamLogo 
+                            teamName={team.name}
+                            size="lg"
+                            variant="helmet"
+                            showName={false}
+                          />
+                        </div>
+                        
+                        {/* Team Name */}
+                        <div className="text-white font-bold text-lg mb-1">
+                          {team.name}
+                        </div>
+                        
+                        {/* User */}
+                        <div className="text-white/90 text-sm mb-2">
+                          {team.user || 'No Owner'}
+                        </div>
+                        
+                        {/* Record and Overall */}
+                        <div className="text-white/80 text-xs space-y-1">
+                          {team.record && (
+                            <div>Record: {team.record}</div>
+                          )}
+                          {team.overall && (
+                            <div>Overall: {team.overall}</div>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  </li>
+                )
+              })}
           </ul>
         ) : (
           <p className="text-gray-500 text-sm italic">No teams available.</p>
