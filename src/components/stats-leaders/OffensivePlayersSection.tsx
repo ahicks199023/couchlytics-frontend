@@ -96,7 +96,7 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
     { key: 'yards', label: 'Yards', sortable: true, align: 'right' as const },
     { key: 'touchdowns', label: 'TDs', sortable: true, align: 'right' as const },
     { key: 'interceptions', label: 'INTs', sortable: true, align: 'right' as const },
-    { key: 'rating', label: 'Rating', sortable: true, align: 'right' as const, formatter: (value: number) => value?.toFixed(1) || '-' },
+    { key: 'rating', label: 'Rating', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
     { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
@@ -107,7 +107,7 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
     { key: 'yards', label: 'Yards', sortable: true, align: 'right' as const },
     { key: 'touchdowns', label: 'TDs', sortable: true, align: 'right' as const },
     { key: 'attempts', label: 'Attempts', sortable: true, align: 'right' as const },
-    { key: 'averagePerAttempt', label: 'Avg/Att', sortable: true, align: 'right' as const, formatter: (value: number) => value?.toFixed(1) || '-' },
+    { key: 'averagePerAttempt', label: 'Avg/Att', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
     { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
@@ -118,7 +118,7 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
     { key: 'yards', label: 'Yards', sortable: true, align: 'right' as const },
     { key: 'touchdowns', label: 'TDs', sortable: true, align: 'right' as const },
     { key: 'catches', label: 'Catches', sortable: true, align: 'right' as const },
-    { key: 'averagePerCatch', label: 'Avg/Catch', sortable: true, align: 'right' as const, formatter: (value: number) => value?.toFixed(1) || '-' },
+    { key: 'averagePerCatch', label: 'Avg/Catch', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
     { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
   ]
 

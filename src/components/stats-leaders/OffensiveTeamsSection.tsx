@@ -94,7 +94,7 @@ export function OffensiveTeamsSection({ leagueId }: OffensiveTeamsSectionProps) 
     { key: 'totalYards', label: 'Total Yards', sortable: true, align: 'right' as const },
     { key: 'passingYards', label: 'Passing Yards', sortable: true, align: 'right' as const },
     { key: 'rushingYards', label: 'Rushing Yards', sortable: true, align: 'right' as const },
-    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: number) => value?.toFixed(1) || '-' },
+    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
     { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
@@ -104,7 +104,7 @@ export function OffensiveTeamsSection({ leagueId }: OffensiveTeamsSectionProps) 
     { key: 'passingTouchdowns', label: 'Passing TDs', sortable: true, align: 'right' as const },
     { key: 'interceptionsLost', label: 'INTs Lost', sortable: true, align: 'right' as const },
     { key: 'sacksAllowed', label: 'Sacks Allowed', sortable: true, align: 'right' as const },
-    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: number) => value?.toFixed(1) || '-' },
+    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
     { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
@@ -113,7 +113,7 @@ export function OffensiveTeamsSection({ leagueId }: OffensiveTeamsSectionProps) 
     { key: 'rushingYards', label: 'Rushing Yards', sortable: true, align: 'right' as const },
     { key: 'rushingTouchdowns', label: 'Rushing TDs', sortable: true, align: 'right' as const },
     { key: 'fumblesLost', label: 'Fumbles Lost', sortable: true, align: 'right' as const },
-    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: number) => value?.toFixed(1) || '-' },
+    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
     { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
   ]
 

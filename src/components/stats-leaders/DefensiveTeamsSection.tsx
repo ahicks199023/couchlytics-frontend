@@ -94,7 +94,7 @@ export function DefensiveTeamsSection({ leagueId }: DefensiveTeamsSectionProps) 
     { key: 'totalYardsAllowed', label: 'Total Yards Allowed', sortable: true, align: 'right' as const },
     { key: 'passYardsAllowed', label: 'Pass Yards Allowed', sortable: true, align: 'right' as const },
     { key: 'rushYardsAllowed', label: 'Rush Yards Allowed', sortable: true, align: 'right' as const },
-    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: number) => value?.toFixed(1) || '-' },
+    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
     { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
@@ -104,7 +104,7 @@ export function DefensiveTeamsSection({ leagueId }: DefensiveTeamsSectionProps) 
     { key: 'interceptions', label: 'INTs', sortable: true, align: 'right' as const },
     { key: 'forcedFumbles', label: 'Forced Fumbles', sortable: true, align: 'right' as const },
     { key: 'fumbleRecoveries', label: 'Fumble Recoveries', sortable: true, align: 'right' as const },
-    { key: 'sacksPerGame', label: 'Sacks/Game', sortable: true, align: 'right' as const, formatter: (value: number) => value?.toFixed(1) || '-' },
+    { key: 'sacksPerGame', label: 'Sacks/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
     { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
