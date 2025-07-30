@@ -74,7 +74,6 @@ export default function TeamBadge({
         teamAbbr={teamAbbr}
         size={size}
         variant={variant}
-        fallbackToInitials={true}
       />
       {showName && (
         <span className={`font-medium ${textSizeClass}`}>
