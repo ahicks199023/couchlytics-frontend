@@ -95,10 +95,6 @@ export default function SeasonSchedulePage() {
     limit: 20
   })
 
-  useEffect(() => {
-    fetchSchedule()
-  }, [fetchSchedule])
-
   const fetchSchedule = useCallback(async () => {
     try {
       setLoading(true)
@@ -129,6 +125,10 @@ export default function SeasonSchedulePage() {
       setLoading(false)
     }
   }, [leagueId, filters.status, filters.week, filters.page, filters.limit])
+
+  useEffect(() => {
+    fetchSchedule()
+  }, [fetchSchedule])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
