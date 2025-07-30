@@ -1,61 +1,140 @@
 'use client'
 
+import Image from 'next/image'
+import { getTeamById, getTeamByName, getTeamByAbbreviation, getTeamByPartialName, TeamConfig } from '@/lib/team-config'
+
 interface TeamLogoProps {
   teamName?: string
   teamId?: number
-  size?: 'sm' | 'md' | 'lg'
+  teamAbbr?: string
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  variant?: 'logo' | 'helmet' | 'initials'
   className?: string
-}
-
-const teamColors: { [key: string]: string } = {
-  'NY Giants': 'bg-blue-600',
-  'Dallas Cowboys': 'bg-blue-500',
-  'Philadelphia Eagles': 'bg-green-600',
-  'Washington Commanders': 'bg-red-600',
-  'New York Jets': 'bg-green-500',
-  'Buffalo Bills': 'bg-blue-700',
-  'New England Patriots': 'bg-blue-800',
-  'Miami Dolphins': 'bg-teal-500',
-  'Baltimore Ravens': 'bg-purple-600',
-  'Cincinnati Bengals': 'bg-orange-500',
-  'Cleveland Browns': 'bg-orange-600',
-  'Pittsburgh Steelers': 'bg-yellow-500',
-  'Houston Texans': 'bg-blue-600',
-  'Indianapolis Colts': 'bg-blue-500',
-  'Jacksonville Jaguars': 'bg-teal-600',
-  'Tennessee Titans': 'bg-blue-600',
-  'Denver Broncos': 'bg-orange-500',
-  'Kansas City Chiefs': 'bg-red-600',
-  'Las Vegas Raiders': 'bg-gray-600',
-  'Los Angeles Chargers': 'bg-blue-500',
-  'Arizona Cardinals': 'bg-red-600',
-  'Los Angeles Rams': 'bg-blue-600',
-  'San Francisco 49ers': 'bg-red-600',
-  'Seattle Seahawks': 'bg-green-600',
-  'Atlanta Falcons': 'bg-red-600',
-  'Carolina Panthers': 'bg-blue-600',
-  'New Orleans Saints': 'bg-yellow-500',
-  'Tampa Bay Buccaneers': 'bg-red-600',
-  'Chicago Bears': 'bg-blue-600',
-  'Detroit Lions': 'bg-blue-500',
-  'Green Bay Packers': 'bg-green-600',
-  'Minnesota Vikings': 'bg-purple-600',
+  showName?: boolean
+  fallbackToInitials?: boolean
 }
 
 const sizeClasses = {
+  xs: 'w-4 h-4 text-xs',
   sm: 'w-6 h-6 text-xs',
   md: 'w-8 h-8 text-sm',
-  lg: 'w-12 h-12 text-lg',
+  lg: 'w-12 h-12 text-base',
+  xl: 'w-16 h-16 text-lg',
 }
 
-export default function TeamLogo({ teamName, size = 'md', className = '' }: TeamLogoProps) {
-  const sizeClass = sizeClasses[size]
-  const teamColor = teamName ? teamColors[teamName] || 'bg-gray-600' : 'bg-gray-600'
-  const initials = teamName ? teamName.split(' ').map(word => word[0]).join('').substring(0, 2) : 'TM'
+const nameSizeClasses = {
+  xs: 'text-xs',
+  sm: 'text-sm',
+  md: 'text-sm',
+  lg: 'text-base',
+  xl: 'text-lg',
+}
 
+export default function TeamLogo({ 
+  teamName, 
+  teamId, 
+  teamAbbr,
+  size = 'md', 
+  variant = 'logo',
+  className = '',
+  showName = false,
+  fallbackToInitials = true
+}: TeamLogoProps) {
+  // Find team configuration
+  let team: TeamConfig | undefined
+  
+  if (teamId) {
+    team = getTeamById(teamId)
+  } else if (teamAbbr) {
+    team = getTeamByAbbreviation(teamAbbr)
+  } else if (teamName) {
+    team = getTeamByName(teamName) || getTeamByPartialName(teamName)
+  }
+
+  const sizeClass = sizeClasses[size]
+  const nameSizeClass = nameSizeClasses[size]
+
+  // Fallback to initials if no team found or logo/helmet not available
+  if (!team || (variant !== 'initials' && fallbackToInitials)) {
+    const initials = teamName ? 
+      teamName.split(' ').map(word => word[0]).join('').substring(0, 2) : 
+      'TM'
+    
+    const fallbackColor = team?.colors?.primary || '#6B7280'
+    
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <div 
+          className={`${sizeClass} rounded-full flex items-center justify-center font-bold text-white`}
+          style={{ backgroundColor: fallbackColor }}
+        >
+          {initials}
+        </div>
+        {showName && teamName && (
+          <span className={`font-medium ${nameSizeClass}`}>
+            {teamName}
+          </span>
+        )}
+      </div>
+    )
+  }
+
+  // Render logo or helmet
+  if (variant === 'logo' || variant === 'helmet') {
+    const imageUrl = variant === 'logo' ? team.logo.url : team.helmet.url
+    const imageAlt = variant === 'logo' ? team.logo.alt : team.helmet.alt
+    
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <div className={`${sizeClass} relative flex items-center justify-center`}>
+          <Image
+            src={imageUrl}
+            alt={imageAlt}
+            width={parseInt(sizeClass.split(' ')[0].replace('w-', '')) * 4}
+            height={parseInt(sizeClass.split(' ')[1].replace('h-', '')) * 4}
+            className="w-full h-full object-contain"
+            onError={(e) => {
+              // Fallback to initials on image error
+              const target = e.target as HTMLImageElement
+              const parent = target.parentElement
+              if (parent) {
+                parent.innerHTML = `
+                  <div class="w-full h-full rounded-full flex items-center justify-center font-bold text-white" 
+                       style="background-color: ${team.colors.primary}">
+                    ${team.abbreviation}
+                  </div>
+                `
+              }
+            }}
+          />
+        </div>
+        {showName && (
+          <span className={`font-medium ${nameSizeClass}`}>
+            {team.fullName}
+          </span>
+        )}
+      </div>
+    )
+  }
+
+  // Render initials with team colors
   return (
-    <div className={`${sizeClass} ${teamColor} rounded-full flex items-center justify-center font-bold text-white ${className}`}>
-      {initials}
+    <div className={`flex items-center gap-2 ${className}`}>
+      <div 
+        className={`${sizeClass} rounded-full flex items-center justify-center font-bold text-white`}
+        style={{ backgroundColor: team.colors.primary }}
+      >
+        {team.abbreviation}
+      </div>
+      {showName && (
+        <span className={`font-medium ${nameSizeClass}`}>
+          {team.fullName}
+        </span>
+      )}
     </div>
   )
-} 
+}
+
+// Export utility functions for use in other components
+export { getTeamById, getTeamByName, getTeamByAbbreviation, getTeamByPartialName }
+export type { TeamConfig } 

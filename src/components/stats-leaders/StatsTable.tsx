@@ -4,8 +4,8 @@ import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
-
 import { useRouter } from 'next/navigation'
+import TeamBadge from '@/components/TeamBadge'
 
 interface Column {
   key: string
@@ -205,26 +205,33 @@ export function StatsTable({
                              !column.align && 'text-left'
                            )}
                          >
-                          {column.key === 'name' && row.espnId ? (
-                            <div className="flex items-center space-x-2">
-                                                             <Image
+                                                     {column.key === 'name' && row.espnId ? (
+                             <div className="flex items-center space-x-2">
+                               <Image
                                  src={`/headshots/${row.espnId as string}.png`}
                                  alt={row.name as string}
-                                width={32}
-                                height={32}
-                                className="rounded-full"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement
-                                  target.src = '/default-avatar.png'
-                                }}
-                              />
-                              <span className="text-blue-600 dark:text-blue-400 hover:underline">
-                                {displayValue}
-                              </span>
-                            </div>
-                          ) : (
-                            displayValue
-                          )}
+                                 width={32}
+                                 height={32}
+                                 className="rounded-full"
+                                 onError={(e) => {
+                                   const target = e.target as HTMLImageElement
+                                   target.src = '/default-avatar.png'
+                                 }}
+                               />
+                               <span className="text-blue-600 dark:text-blue-400 hover:underline">
+                                 {displayValue}
+                               </span>
+                             </div>
+                           ) : column.key === 'teamName' ? (
+                             <TeamBadge 
+                               teamName={displayValue as string}
+                               size="sm"
+                               variant="initials"
+                               showAbbr={true}
+                             />
+                           ) : (
+                             displayValue
+                           )}
                         </td>
                       )
                     })}
