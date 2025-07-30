@@ -12,6 +12,7 @@ const links = [
   { label: 'Trades', path: 'trades' },
   { label: 'Trade Tool', path: 'trade-tool' },
   { label: 'Stats', path: 'stats', prefetch: false },
+  { label: 'Stats Leaders', path: 'stats-leaders', prefetch: false },
   { label: 'Players', path: 'players', prefetch: false }
 ]
 
