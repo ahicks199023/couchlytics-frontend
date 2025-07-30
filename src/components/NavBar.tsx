@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import NotificationDropdown from '@/components/NotificationDropdown'
 import LogoutButton from '@/components/LogoutButton'
+import ThemeToggle from '@/components/ThemeToggle'
 import { API_BASE } from '@/lib/config'
 
 type User = {
@@ -62,6 +63,9 @@ export default function NavBar() {
       <div className="flex items-center gap-4">
         {/* Notification Bell */}
         <NotificationDropdown />
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
 
         {/* Hamburger Toggle */}
         <button
