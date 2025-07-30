@@ -15,14 +15,32 @@ const getTeamConfig = (teamName: string) => {
 
 // Helper function to organize teams by division
 const organizeTeamsByDivision = (teams: LeagueData['teams']) => {
+  const divisionMap = {
+    'AFC North': ['Bengals', 'Browns', 'Ravens', 'Steelers'],
+    'AFC South': ['Colts', 'Jaguars', 'Texans', 'Titans'],
+    'AFC East': ['Bills', 'Dolphins', 'Jets', 'Patriots'],
+    'AFC West': ['Broncos', 'Chargers', 'Chiefs', 'Raiders'],
+    'NFC North': ['Bears', 'Lions', 'Packers', 'Vikings'],
+    'NFC South': ['Buccaneers', 'Falcons', 'Panthers', 'Saints'],
+    'NFC East': ['Commanders', 'Cowboys', 'Eagles', 'Giants'],
+    'NFC West': ['Cardinals', '49ers', 'Rams', 'Seahawks']
+  }
+  
   const divisions: { [key: string]: LeagueData['teams'] } = {}
   
+  // Initialize all divisions
+  Object.keys(divisionMap).forEach(division => {
+    divisions[division] = []
+  })
+  
+  // Assign teams to divisions based on their names
   teams.forEach(team => {
-    const division = team.division || 'Unknown'
-    if (!divisions[division]) {
-      divisions[division] = []
+    for (const [division, teamNames] of Object.entries(divisionMap)) {
+      if (teamNames.includes(team.name)) {
+        divisions[division].push(team)
+        break
+      }
     }
-    divisions[division].push(team)
   })
   
   return divisions
@@ -89,72 +107,72 @@ export default function LeagueDetailPage() {
 
       <section className="mt-8 mb-8">
         <h2 className="text-2xl font-semibold mb-4">Teams by Division</h2>
-        {league.teams?.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Object.entries(organizeTeamsByDivision(league.teams.filter(team => team.name && team.name !== 'Unknown')))
-              .map(([division, teams]) => (
-                <div key={division} className="space-y-3">
-                  {/* Division Header */}
-                  <div className="text-center">
-                    <h3 className="text-lg font-bold text-neon-green border-b-2 border-neon-green pb-1">
-                      {division}
-                    </h3>
-                  </div>
-                  
-                  {/* Teams Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-2 gap-2">
-                    {teams.map((team) => {
-                      const teamConfig = getTeamConfig(team.name)
-                      const teamColor = teamConfig?.colors?.primary || '#6B7280'
-                      
-                      return (
-                        <div key={team.id} className="relative group">
-                          <Link 
-                            href={`/leagues/${leagueId}/teams/${team.id}`}
-                            className="block"
-                          >
-                            <div 
-                              className="aspect-square rounded-lg p-2 flex flex-col items-center justify-center text-center transition-transform group-hover:scale-105"
-                              style={{ backgroundColor: teamColor }}
-                            >
-                              {/* Team Helmet */}
-                              <div className="mb-1">
-                                <TeamLogo 
-                                  teamName={team.name}
-                                  size="2xl"
-                                  variant="helmet"
-                                  showName={false}
-                                />
-                              </div>
-                              
-                              {/* Team Name */}
-                              <div className="text-white font-bold text-xs mb-0.5">
-                                {team.name}
-                              </div>
-                              
-                              {/* User */}
-                              <div className="text-white/90 text-xs mb-0.5">
-                                {team.user || 'No Owner'}
-                              </div>
-                              
-                              {/* Record and Overall */}
-                              <div className="text-white/80 text-xs space-y-0">
-                                {team.record && (
-                                  <div>Record: {team.record}</div>
-                                )}
-                                {team.overall && (
-                                  <div>Overall: {team.overall}</div>
-                                )}
-                              </div>
-                            </div>
-                          </Link>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              ))}
-          </div>
+                 {league.teams?.length > 0 ? (
+           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+             {Object.entries(organizeTeamsByDivision(league.teams.filter(team => team.name && team.name !== 'Unknown')))
+               .map(([division, teams]) => (
+                 <div key={division} className="space-y-3">
+                   {/* Division Header */}
+                   <div className="text-center">
+                     <h3 className="text-sm font-bold text-neon-green border-b border-neon-green pb-1">
+                       {division}
+                     </h3>
+                   </div>
+                   
+                   {/* Teams Stacked Vertically */}
+                   <div className="space-y-2">
+                     {teams.map((team) => {
+                       const teamConfig = getTeamConfig(team.name)
+                       const teamColor = teamConfig?.colors?.primary || '#6B7280'
+                       
+                       return (
+                         <div key={team.id} className="relative group">
+                           <Link 
+                             href={`/leagues/${leagueId}/teams/${team.id}`}
+                             className="block"
+                           >
+                             <div 
+                               className="aspect-square rounded-lg p-2 flex flex-col items-center justify-center text-center transition-transform group-hover:scale-105"
+                               style={{ backgroundColor: teamColor }}
+                             >
+                               {/* Team Helmet */}
+                               <div className="mb-1">
+                                 <TeamLogo 
+                                   teamName={team.name}
+                                   size="lg"
+                                   variant="helmet"
+                                   showName={false}
+                                 />
+                               </div>
+                               
+                               {/* Team Name */}
+                               <div className="text-white font-bold text-xs mb-0.5">
+                                 {team.name}
+                               </div>
+                               
+                               {/* User */}
+                               <div className="text-white/90 text-xs mb-0.5">
+                                 {team.user || 'No Owner'}
+                               </div>
+                               
+                               {/* Record and Overall */}
+                               <div className="text-white/80 text-xs space-y-0">
+                                 {team.record && (
+                                   <div>Record: {team.record}</div>
+                                 )}
+                                 {team.overall && (
+                                   <div>Overall: {team.overall}</div>
+                                 )}
+                               </div>
+                             </div>
+                           </Link>
+                         </div>
+                       )
+                     })}
+                   </div>
+                 </div>
+               ))}
+           </div>
         ) : (
           <p className="text-gray-500 text-sm italic">No teams available.</p>
         )}
