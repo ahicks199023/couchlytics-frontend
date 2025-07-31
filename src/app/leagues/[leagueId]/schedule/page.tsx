@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { API_BASE } from '@/lib/config'
-import { getTeamByAbbreviation } from '@/lib/team-config'
+import { getTeamByAbbreviation, getTeamByName, getTeamByPartialName } from '@/lib/team-config'
 import TeamLogo from '@/components/TeamLogo'
 
 type Game = {
