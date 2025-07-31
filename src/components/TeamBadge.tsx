@@ -34,7 +34,9 @@ export default function TeamBadge({
   } else if (teamAbbr) {
     team = getTeamByAbbreviation(teamAbbr)
   } else if (teamName) {
+    console.log('TeamBadge: Looking for team:', teamName)
     team = getTeamByName(teamName) || getTeamByPartialName(teamName)
+    console.log('TeamBadge: Found team config:', team)
   }
 
   const sizeClasses = {

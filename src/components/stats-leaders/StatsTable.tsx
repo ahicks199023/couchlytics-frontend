@@ -43,6 +43,12 @@ export function StatsTable({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   const sortedData = useMemo(() => {
+    console.log('StatsTable: Received data:', data)
+    console.log('StatsTable: Data length:', data.length)
+    if (data.length > 0) {
+      console.log('StatsTable: First row sample:', data[0])
+    }
+    
     if (!sortColumn) return data
 
     return [...data].sort((a, b) => {
