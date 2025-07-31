@@ -374,12 +374,28 @@ function GameCard({
 }) {
   // Get team colors for the split design
   const getTeamColor = (teamName: string) => {
-    const teamConfig = getTeamByAbbreviation(teamName.split(' ').pop() || '')
+    // Try multiple approaches to find the team
+    let teamConfig = getTeamByAbbreviation(teamName.split(' ').pop() || '')
+    
+    // If not found by abbreviation, try by full name
+    if (!teamConfig) {
+      teamConfig = getTeamByName(teamName)
+    }
+    
+    // If still not found, try by partial name
+    if (!teamConfig) {
+      teamConfig = getTeamByPartialName(teamName)
+    }
+    
     return teamConfig?.colors?.primary || '#666666'
   }
 
   const awayTeamColor = getTeamColor(game.away_team.name)
   const homeTeamColor = getTeamColor(game.home_team.name)
+  
+  // Debug logging
+  console.log(`Game: ${game.away_team.name} vs ${game.home_team.name}`)
+  console.log(`Colors: ${awayTeamColor} vs ${homeTeamColor}`)
 
   return (
     <div className="rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
@@ -418,19 +434,19 @@ function GameCard({
         </div>
       </div>
 
-      {/* Main Game Card with Split Colors */}
-      <div className="relative">
-        {/* Background with team colors split */}
-        <div className="absolute inset-0 flex">
-          <div 
-            className="w-1/2" 
-            style={{ backgroundColor: awayTeamColor }}
-          ></div>
-          <div 
-            className="w-1/2" 
-            style={{ backgroundColor: homeTeamColor }}
-          ></div>
-        </div>
+             {/* Main Game Card with Split Colors */}
+       <div className="relative min-h-[200px]">
+         {/* Background with team colors split */}
+         <div className="absolute inset-0 flex">
+           <div 
+             className="w-1/2 h-full" 
+             style={{ backgroundColor: awayTeamColor }}
+           ></div>
+           <div 
+             className="w-1/2 h-full" 
+             style={{ backgroundColor: homeTeamColor }}
+           ></div>
+         </div>
 
         {/* Content overlay */}
         <div className="relative z-10 p-6">
