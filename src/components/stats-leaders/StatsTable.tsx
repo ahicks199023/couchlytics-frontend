@@ -48,6 +48,14 @@ export function StatsTable({
     if (data.length > 0) {
       console.log('StatsTable: First row sample:', data[0])
       console.log('StatsTable: Available fields:', Object.keys(data[0]))
+      console.log('StatsTable: Team name value:', data[0].team_name)
+      console.log('StatsTable: Team name type:', typeof data[0].team_name)
+      // Check for any team-related fields
+      const teamFields = Object.keys(data[0]).filter(key => key.toLowerCase().includes('team'))
+      console.log('StatsTable: Team-related fields:', teamFields)
+      teamFields.forEach(field => {
+        console.log(`StatsTable: ${field} value:`, data[0][field])
+      })
     }
     
     if (!sortColumn) return data
