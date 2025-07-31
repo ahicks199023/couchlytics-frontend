@@ -61,16 +61,28 @@ export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }
   useEffect(() => {
     const loadTeams = async () => {
       try {
-        const response = await fetch(`https://api.couchlytics.com/ozzie/teams/${leagueId}`, {
+        // Use the existing teams endpoint instead of ozzie/teams
+        const response = await fetch(`https://api.couchlytics.com/leagues/${leagueId}/teams`, {
           credentials: 'include'
         })
         if (response.ok) {
           const data = await response.json()
-          setAvailableTeams(data.teams || [])
+          console.log('Teams response for Ozzie:', data)
+          
+          // Transform the teams data to match our interface
+          const transformedTeams = (data.teams || []).map((team: Record<string, unknown>) => ({
+            id: (team.id || team.team_id) as string,
+            name: (team.name || team.team_name || (team.city as string) + ' ' + (team.name as string)) as string,
+            abbreviation: (team.abbreviation || team.abbr || (team.name as string)?.substring(0, 3).toUpperCase()) as string
+          }))
+          
+          setAvailableTeams(transformedTeams)
           // Set default team if none selected
-          if (!selectedTeamId && data.teams && data.teams.length > 0) {
-            setSelectedTeamId(data.teams[0].id)
+          if (!selectedTeamId && transformedTeams.length > 0) {
+            setSelectedTeamId(transformedTeams[0].id)
           }
+        } else {
+          console.error('Failed to load teams for Ozzie:', response.status, response.statusText)
         }
       } catch (error) {
         console.error('Failed to load teams for Ozzie:', error)
