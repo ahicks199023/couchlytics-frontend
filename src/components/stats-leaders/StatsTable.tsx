@@ -228,14 +228,19 @@ export function StatsTable({
                                  {displayValue}
                                </span>
                              </div>
-                           ) : column.key === 'teamName' ? (
-                             <TeamBadge 
-                               teamName={displayValue as string}
-                               size="sm"
-                               variant="initials"
-                               showAbbr={true}
-                             />
-                           ) : (
+                                                       ) : column.key === 'team_name' ? (
+                              (() => {
+                                console.log('StatsTable: Rendering teamName column with value:', displayValue)
+                                return (
+                                  <TeamBadge 
+                                    teamName={displayValue as string}
+                                    size="sm"
+                                    variant="initials"
+                                    showAbbr={true}
+                                  />
+                                )
+                              })()
+                            ) : (
                              displayValue
                            )}
                         </td>

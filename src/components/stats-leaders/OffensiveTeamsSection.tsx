@@ -90,31 +90,31 @@ export function OffensiveTeamsSection({ leagueId }: OffensiveTeamsSectionProps) 
   }, [leagueId])
 
   const totalYardsColumns = [
-    { key: 'teamName', label: 'Team', sortable: true },
-    { key: 'totalYards', label: 'Total Yards', sortable: true, align: 'right' as const },
-    { key: 'passingYards', label: 'Passing Yards', sortable: true, align: 'right' as const },
-    { key: 'rushingYards', label: 'Rushing Yards', sortable: true, align: 'right' as const },
-    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
-    { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
+    { key: 'team_name', label: 'Team', sortable: true },
+    { key: 'total_yards', label: 'Total Yards', sortable: true, align: 'right' as const },
+    { key: 'passing_yards', label: 'Passing Yards', sortable: true, align: 'right' as const },
+    { key: 'rushing_yards', label: 'Rushing Yards', sortable: true, align: 'right' as const },
+    { key: 'yards_per_game', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
+    { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
   const passingColumns = [
-    { key: 'teamName', label: 'Team', sortable: true },
-    { key: 'passingYards', label: 'Passing Yards', sortable: true, align: 'right' as const },
-    { key: 'passingTouchdowns', label: 'Passing TDs', sortable: true, align: 'right' as const },
-    { key: 'interceptionsLost', label: 'INTs Lost', sortable: true, align: 'right' as const },
-    { key: 'sacksAllowed', label: 'Sacks Allowed', sortable: true, align: 'right' as const },
-    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
-    { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
+    { key: 'team_name', label: 'Team', sortable: true },
+    { key: 'passing_yards', label: 'Passing Yards', sortable: true, align: 'right' as const },
+    { key: 'passing_touchdowns', label: 'Passing TDs', sortable: true, align: 'right' as const },
+    { key: 'interceptions_lost', label: 'INTs Lost', sortable: true, align: 'right' as const },
+    { key: 'sacks_allowed', label: 'Sacks Allowed', sortable: true, align: 'right' as const },
+    { key: 'yards_per_game', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
+    { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
   const rushingColumns = [
-    { key: 'teamName', label: 'Team', sortable: true },
-    { key: 'rushingYards', label: 'Rushing Yards', sortable: true, align: 'right' as const },
-    { key: 'rushingTouchdowns', label: 'Rushing TDs', sortable: true, align: 'right' as const },
-    { key: 'fumblesLost', label: 'Fumbles Lost', sortable: true, align: 'right' as const },
-    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
-    { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
+    { key: 'team_name', label: 'Team', sortable: true },
+    { key: 'rushing_yards', label: 'Rushing Yards', sortable: true, align: 'right' as const },
+    { key: 'rushing_touchdowns', label: 'Rushing TDs', sortable: true, align: 'right' as const },
+    { key: 'fumbles_lost', label: 'Fumbles Lost', sortable: true, align: 'right' as const },
+    { key: 'yards_per_game', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
+    { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
   if (loading) {
