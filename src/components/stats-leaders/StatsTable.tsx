@@ -43,20 +43,7 @@ export function StatsTable({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   const sortedData = useMemo(() => {
-    console.log('StatsTable: Received data:', data)
-    console.log('StatsTable: Data length:', data.length)
-    if (data.length > 0) {
-      console.log('StatsTable: First row sample:', data[0])
-      console.log('StatsTable: Available fields:', Object.keys(data[0]))
-      console.log('StatsTable: Team name value:', data[0].team_name)
-      console.log('StatsTable: Team name type:', typeof data[0].team_name)
-      // Check for any team-related fields
-      const teamFields = Object.keys(data[0]).filter(key => key.toLowerCase().includes('team'))
-      console.log('StatsTable: Team-related fields:', teamFields)
-      teamFields.forEach(field => {
-        console.log(`StatsTable: ${field} value:`, data[0][field])
-      })
-    }
+    if (!sortColumn) return data
     
     if (!sortColumn) return data
 
@@ -238,17 +225,12 @@ export function StatsTable({
                                </span>
                              </div>
                                                        ) : column.key === 'team_name' || column.key === 'teamName' ? (
-                              (() => {
-                                console.log('StatsTable: Rendering team column with value:', displayValue)
-                                return (
-                                  <TeamBadge 
-                                    teamName={displayValue as string}
-                                    size="sm"
-                                    variant="logo"
-                                    showAbbr={false}
-                                  />
-                                )
-                              })()
+                              <TeamBadge 
+                                teamName={displayValue as string}
+                                size="sm"
+                                variant="logo"
+                                showAbbr={false}
+                              />
                             ) : (
                              displayValue
                            )}
