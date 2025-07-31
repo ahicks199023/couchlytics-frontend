@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import { api } from '@/lib/api'
 
 interface Message {
   id: string
