@@ -76,7 +76,12 @@ export function StatsTable({
   }
 
   const handlePlayerClick = (player: Record<string, unknown>) => {
+    console.log('=== handlePlayerClick called ===')
+    console.log('Player object:', player)
+    console.log('onRowClick exists:', !!onRowClick)
+    
     if (onRowClick) {
+      console.log('Calling onRowClick...')
       onRowClick(player)
     } else if (player.maddenId || player.playerId) {
       const idToUse = player.maddenId || player.playerId
