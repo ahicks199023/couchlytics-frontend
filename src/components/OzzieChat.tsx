@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { api } from '@/lib/api'
 
 interface Message {
@@ -32,11 +32,20 @@ const examplePrompts = [
 
 export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }: OzzieChatProps) {
   const params = useParams()
-  const searchParams = useSearchParams()
+  
+  // Only use searchParams in client-side rendering to avoid build errors
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null)
+  
+  useEffect(() => {
+    // Only access searchParams on the client side
+    if (typeof window !== 'undefined') {
+      setSearchParams(new URLSearchParams(window.location.search))
+    }
+  }, [])
   
   // Get leagueId and teamId from props, URL params, or search params
   const leagueId = propLeagueId || params.leagueId as string || '12335716'
-  const teamId = propTeamId || searchParams.get('teamId') || params.teamId as string
+  const teamId = propTeamId || searchParams?.get('teamId') || params.teamId as string
 
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
