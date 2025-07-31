@@ -152,9 +152,14 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
         onRowClick={(player) => {
-          const idToUse = player.maddenId || player.playerId
+          console.log('Player data for routing:', player)
+          console.log('Available fields:', Object.keys(player))
+          const idToUse = player.maddenId || player.playerId || player.id
+          console.log('ID to use for routing:', idToUse)
           if (idToUse) {
             window.location.href = `/leagues/${leagueId}/players/${idToUse}`
+          } else {
+            console.log('No valid ID found for player:', player.name)
           }
         }}
       />
@@ -168,9 +173,14 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
         onRowClick={(player) => {
-          const idToUse = player.maddenId || player.playerId
+          console.log('Player data for routing:', player)
+          console.log('Available fields:', Object.keys(player))
+          const idToUse = player.maddenId || player.playerId || player.id
+          console.log('ID to use for routing:', idToUse)
           if (idToUse) {
             window.location.href = `/leagues/${leagueId}/players/${idToUse}`
+          } else {
+            console.log('No valid ID found for player:', player.name)
           }
         }}
       />
@@ -184,9 +194,14 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
         onRowClick={(player) => {
-          const idToUse = player.maddenId || player.playerId
+          console.log('Player data for routing:', player)
+          console.log('Available fields:', Object.keys(player))
+          const idToUse = player.maddenId || player.playerId || player.id
+          console.log('ID to use for routing:', idToUse)
           if (idToUse) {
             window.location.href = `/leagues/${leagueId}/players/${idToUse}`
+          } else {
+            console.log('No valid ID found for player:', player.name)
           }
         }}
       />
