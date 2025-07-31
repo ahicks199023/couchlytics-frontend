@@ -225,12 +225,17 @@ export function StatsTable({
                                </span>
                              </div>
                                                        ) : column.key === 'team_name' || column.key === 'teamName' ? (
-                              <TeamBadge 
-                                teamName={displayValue as string}
-                                size="lg"
-                                variant="logo"
-                                showAbbr={false}
-                              />
+                              (() => {
+                                console.log('StatsTable - teamName value:', displayValue, 'type:', typeof displayValue)
+                                return (
+                                  <TeamBadge 
+                                    teamName={displayValue as string}
+                                    size="lg"
+                                    variant="logo"
+                                    showAbbr={false}
+                                  />
+                                )
+                              })()
                             ) : (
                              displayValue
                            )}
