@@ -3,6 +3,85 @@
 import { getTeamById, getTeamByName, getTeamByAbbreviation, getTeamByPartialName, TeamConfig } from '@/lib/team-config'
 import TeamLogo from './TeamLogo'
 
+// Enhanced team name mapping function
+function mapTeamName(teamName: string): string {
+  if (!teamName) return teamName
+  
+  // Common patterns from API responses
+  const teamNameMappings: Record<string, string> = {
+    // Handle "Team X" patterns
+    'team 1': 'Giants',
+    'team 2': 'Cowboys', 
+    'team 3': 'Eagles',
+    'team 4': 'Commanders',
+    'team 5': 'Bears',
+    'team 6': 'Lions',
+    'team 7': 'Packers',
+    'team 8': 'Vikings',
+    'team 9': 'Buccaneers',
+    'team 10': 'Falcons',
+    'team 11': 'Panthers',
+    'team 12': 'Saints',
+    'team 13': 'Cardinals',
+    'team 14': 'Rams',
+    'team 15': '49ers',
+    'team 16': 'Seahawks',
+    'team 17': 'Bills',
+    'team 18': 'Dolphins',
+    'team 19': 'Patriots',
+    'team 20': 'Jets',
+    'team 21': 'Bengals',
+    'team 22': 'Browns',
+    'team 23': 'Ravens',
+    'team 24': 'Steelers',
+    'team 25': 'Colts',
+    'team 26': 'Jaguars',
+    'team 27': 'Texans',
+    'team 28': 'Titans',
+    'team 29': 'Broncos',
+    'team 30': 'Chiefs',
+    'team 31': 'Raiders',
+    'team 32': 'Chargers',
+    
+    // Handle common abbreviations
+    'nyg': 'Giants',
+    'dal': 'Cowboys',
+    'phi': 'Eagles',
+    'was': 'Commanders',
+    'chi': 'Bears',
+    'det': 'Lions',
+    'gb': 'Packers',
+    'min': 'Vikings',
+    'tb': 'Buccaneers',
+    'atl': 'Falcons',
+    'car': 'Panthers',
+    'no': 'Saints',
+    'ari': 'Cardinals',
+    'lar': 'Rams',
+    'sf': '49ers',
+    'sea': 'Seahawks',
+    'buf': 'Bills',
+    'mia': 'Dolphins',
+    'ne': 'Patriots',
+    'nyj': 'Jets',
+    'cin': 'Bengals',
+    'cle': 'Browns',
+    'bal': 'Ravens',
+    'pit': 'Steelers',
+    'ind': 'Colts',
+    'jax': 'Jaguars',
+    'hou': 'Texans',
+    'ten': 'Titans',
+    'den': 'Broncos',
+    'kc': 'Chiefs',
+    'lv': 'Raiders',
+    'lac': 'Chargers',
+  }
+  
+  const normalizedName = teamName.toLowerCase().trim()
+  return teamNameMappings[normalizedName] || teamName
+}
+
 interface TeamBadgeProps {
   teamName?: string
   teamId?: number
@@ -35,7 +114,9 @@ export default function TeamBadge({
     team = getTeamByAbbreviation(teamAbbr)
   } else if (teamName) {
     console.log('TeamBadge lookup - teamName:', teamName)
-    team = getTeamByName(teamName) || getTeamByPartialName(teamName)
+    const mappedTeamName = mapTeamName(teamName)
+    console.log('TeamBadge lookup - mapped teamName:', mappedTeamName)
+    team = getTeamByName(mappedTeamName) || getTeamByPartialName(mappedTeamName)
     console.log('TeamBadge lookup - found team:', team)
   }
 
