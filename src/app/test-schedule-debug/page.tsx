@@ -86,7 +86,7 @@ export default function ScheduleDebugPage() {
           <h2 className="text-xl font-semibold mb-4">Test Results</h2>
           <div className="bg-white dark:bg-gray-800 rounded p-4 max-h-96 overflow-y-auto">
             {testResults.length === 0 ? (
-              <p className="text-gray-600 dark:text-gray-400">No tests run yet. Enter a League ID and click "Test Schedule Page".</p>
+              <p className="text-gray-600 dark:text-gray-400">No tests run yet. Enter a League ID and click &quot;Test Schedule Page&quot;.</p>
             ) : (
               <div className="space-y-2">
                 {testResults.map((result, index) => (
@@ -105,7 +105,7 @@ export default function ScheduleDebugPage() {
             <div>
               <h3 className="font-semibold text-red-600 dark:text-red-400">❌ 404 Error</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                The page route doesn't exist. Check if the file exists at: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">src/app/leagues/[leagueId]/schedule/page.tsx</code>
+                The page route doesn&apos;t exist. Check if the file exists at: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">src/app/leagues/[leagueId]/schedule/page.tsx</code>
               </p>
             </div>
             
@@ -119,7 +119,7 @@ export default function ScheduleDebugPage() {
             <div>
               <h3 className="font-semibold text-red-600 dark:text-red-400">❌ JavaScript Error</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                There's a JavaScript error in the page. Check the browser console for detailed error messages.
+                There&apos;s a JavaScript error in the page. Check the browser console for detailed error messages.
               </p>
             </div>
             
