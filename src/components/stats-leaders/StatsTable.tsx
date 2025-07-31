@@ -43,6 +43,19 @@ export function StatsTable({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   const sortedData = useMemo(() => {
+    // Debug: Log the data being processed
+    if (title === 'Yards Allowed Leaders') {
+      console.log('StatsTable: Processing Yards Allowed data:', data)
+      if (data.length > 0) {
+        console.log('StatsTable: First row:', data[0])
+        console.log('StatsTable: Available fields:', Object.keys(data[0]))
+        console.log('StatsTable: total_yards_allowed value:', data[0].total_yards_allowed)
+        console.log('StatsTable: passing_yards_allowed value:', data[0].passing_yards_allowed)
+        console.log('StatsTable: rushing_yards_allowed value:', data[0].rushing_yards_allowed)
+        console.log('StatsTable: yards_allowed_per_game value:', data[0].yards_allowed_per_game)
+      }
+    }
+    
     if (!sortColumn) return data
     
     if (!sortColumn) return data

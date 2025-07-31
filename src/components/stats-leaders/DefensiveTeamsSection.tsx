@@ -49,12 +49,18 @@ export function DefensiveTeamsSection({ leagueId }: DefensiveTeamsSectionProps) 
           StatsLeadersAPI.getTeamTurnoversLeaders(leagueId, 10),
         ])
 
-        // Handle yards allowed leaders
-        if (yardsAllowedRes.status === 'fulfilled') {
-          setYardsAllowedLeaders(yardsAllowedRes.value.leaders as TeamYardsAllowedLeader[])
-        } else {
-          console.error('Failed to fetch yards allowed leaders:', yardsAllowedRes.reason)
-        }
+                 // Handle yards allowed leaders
+         if (yardsAllowedRes.status === 'fulfilled') {
+           console.log('Yards Allowed API Response:', yardsAllowedRes.value)
+           console.log('Yards Allowed Leaders Data:', yardsAllowedRes.value.leaders)
+           if (yardsAllowedRes.value.leaders && yardsAllowedRes.value.leaders.length > 0) {
+             console.log('First Yards Allowed Leader:', yardsAllowedRes.value.leaders[0])
+             console.log('Available fields:', Object.keys(yardsAllowedRes.value.leaders[0]))
+           }
+           setYardsAllowedLeaders(yardsAllowedRes.value.leaders as TeamYardsAllowedLeader[])
+         } else {
+           console.error('Failed to fetch yards allowed leaders:', yardsAllowedRes.reason)
+         }
 
         // Handle sacks leaders
         if (sacksRes.status === 'fulfilled') {
@@ -94,7 +100,14 @@ export function DefensiveTeamsSection({ leagueId }: DefensiveTeamsSectionProps) 
     { key: 'total_yards_allowed', label: 'Total Yards Allowed', sortable: true, align: 'right' as const },
     { key: 'passing_yards_allowed', label: 'Pass Yards Allowed', sortable: true, align: 'right' as const },
     { key: 'rushing_yards_allowed', label: 'Rush Yards Allowed', sortable: true, align: 'right' as const },
-    { key: 'yards_allowed_per_game', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
+    { key: 'yards_allowed_per_game', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => {
+      if (typeof value === 'number') {
+        return value.toFixed(1)
+      } else if (typeof value === 'string' && value === '0E-20') {
+        return '0.0'
+      }
+      return '-'
+    }},
     { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
