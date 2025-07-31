@@ -89,8 +89,6 @@ export function StatsTable({
     return value.toLocaleString()
   }
 
-
-
   if (loading) {
     return (
       <Card>
@@ -99,7 +97,7 @@ export function StatsTable({
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-green"></div>
             <span className="ml-2 text-gray-600">Loading...</span>
           </div>
         </CardContent>
@@ -143,25 +141,22 @@ export function StatsTable({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
-                                 <th className="text-center py-3 px-2 font-medium text-gray-900 dark:text-white">
-                   Rank
-                 </th>
+                <th className="text-center py-3 px-2 font-medium text-gray-900 dark:text-white">
+                  Rank
+                </th>
                 {columns.map((column) => (
-                                                       <th
+                  <th
                     key={column.key}
                     className={cn(
-                      'py-3 px-2 font-medium text-gray-900 dark:text-white',
-                      column.sortable && 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
-                      column.align === 'right' && 'text-right',
-                      column.align === 'center' && 'text-center',
-                      !column.align && 'text-center'
+                      'py-3 px-2 font-medium text-gray-900 dark:text-white text-center',
+                      column.sortable && 'cursor-pointer hover:bg-neon-green/10 dark:hover:bg-neon-green/20 transition-colors'
                     )}
                     onClick={() => column.sortable && handleSort(column.key)}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-center">
                       <span>{column.label}</span>
                       {column.sortable && sortColumn === column.key && (
-                        <span className="ml-1">
+                        <span className="ml-1 text-neon-green">
                           {sortDirection === 'asc' ? '↑' : '↓'}
                         </span>
                       )}
@@ -178,62 +173,75 @@ export function StatsTable({
                   <tr
                     key={index}
                     className={cn(
-                      'border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors',
+                      'border-b border-gray-100 dark:border-gray-800 hover:bg-neon-green/10 dark:hover:bg-neon-green/20 transition-colors',
                       isUserTeam && 'bg-yellow-50 dark:bg-yellow-900/20 font-semibold',
                       onRowClick && 'cursor-pointer'
                     )}
                     onClick={() => onRowClick && handlePlayerClick(row)}
                   >
-                                         <td className="py-3 px-2 text-gray-600 dark:text-gray-400 text-center">
-                       {index + 1}
-                     </td>
-                                         {columns.map((column) => {
-                       const value = row[column.key]
-                       let displayValue: string | number = String(value || '')
+                    <td className="py-3 px-2 text-gray-600 dark:text-gray-400 text-center">
+                      {index + 1}
+                    </td>
+                    {columns.map((column) => {
+                      const value = row[column.key]
+                      let displayValue: string | number = String(value || '')
 
-                       if (column.formatter) {
-                         displayValue = column.formatter(value)
-                       } else if (typeof value === 'number') {
-                         displayValue = formatNumber(value)
-                       }
+                      if (column.formatter) {
+                        displayValue = column.formatter(value)
+                      } else if (typeof value === 'number') {
+                        displayValue = formatNumber(value)
+                      }
 
                       return (
-                                                                           <td
-                            key={column.key}
-                            className={cn(
-                              'py-3 px-2',
-                              column.align === 'right' && 'text-right',
-                              column.align === 'center' && 'text-center',
-                              !column.align && 'text-center'
-                            )}
-                          >
-                                                     {column.key === 'name' && row.espnId ? (
-                             <div className="flex items-center space-x-2">
-                               <Image
-                                 src={`/headshots/${row.espnId as string}.png`}
-                                 alt={row.name as string}
-                                 width={32}
-                                 height={32}
-                                 className="rounded-full"
-                                 onError={(e) => {
-                                   const target = e.target as HTMLImageElement
-                                   target.src = '/default-avatar.png'
-                                 }}
-                               />
-                               <span className="text-blue-600 dark:text-blue-400 hover:underline">
-                                 {displayValue}
-                               </span>
-                             </div>
-                                                       ) : column.key === 'team_name' || column.key === 'teamName' ? (
+                        <td
+                          key={column.key}
+                          className="py-3 px-2 text-center"
+                        >
+                          {column.key === 'name' && row.espnId ? (
+                            <div className="flex items-center justify-center space-x-2">
+                              <Image
+                                src={`/headshots/${row.espnId as string}.png`}
+                                alt={row.name as string}
+                                width={32}
+                                height={32}
+                                className="rounded-full"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement
+                                  target.src = '/default-avatar.png'
+                                }}
+                              />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handlePlayerClick(row)
+                                }}
+                                className="text-blue-600 dark:text-blue-400 hover:text-neon-green transition-colors font-medium"
+                              >
+                                {displayValue}
+                              </button>
+                            </div>
+                          ) : column.key === 'name' ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handlePlayerClick(row)
+                              }}
+                              className="text-blue-600 dark:text-blue-400 hover:text-neon-green transition-colors font-medium"
+                            >
+                              {displayValue}
+                            </button>
+                          ) : column.key === 'team_name' || column.key === 'teamName' ? (
+                            <div className="flex justify-center">
                               <TeamBadge 
                                 teamName={displayValue as string}
                                 size="lg"
                                 variant="logo"
                                 showAbbr={false}
                               />
-                            ) : (
-                             displayValue
-                           )}
+                            </div>
+                          ) : (
+                            displayValue
+                          )}
                         </td>
                       )
                     })}

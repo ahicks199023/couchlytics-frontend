@@ -151,6 +151,12 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
         leagueId={leagueId}
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
+        onRowClick={(player) => {
+          const idToUse = player.maddenId || player.playerId
+          if (idToUse) {
+            window.location.href = `/leagues/${leagueId}/players/${idToUse}`
+          }
+        }}
       />
 
       {/* Rushing Leaders */}
@@ -161,6 +167,12 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
         leagueId={leagueId}
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
+        onRowClick={(player) => {
+          const idToUse = player.maddenId || player.playerId
+          if (idToUse) {
+            window.location.href = `/leagues/${leagueId}/players/${idToUse}`
+          }
+        }}
       />
 
       {/* Receiving Leaders */}
@@ -171,6 +183,12 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
         leagueId={leagueId}
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
+        onRowClick={(player) => {
+          const idToUse = player.maddenId || player.playerId
+          if (idToUse) {
+            window.location.href = `/leagues/${leagueId}/players/${idToUse}`
+          }
+        }}
       />
     </div>
   )

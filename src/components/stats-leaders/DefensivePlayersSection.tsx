@@ -91,42 +91,42 @@ export function DefensivePlayersSection({ leagueId }: DefensivePlayersSectionPro
 
   const tacklesColumns = [
     { key: 'name', label: 'Player', sortable: true },
-    { key: 'teamName', label: 'Team', sortable: true },
+    { key: 'team_name', label: 'Team', sortable: true },
     { key: 'position', label: 'Pos', sortable: true },
     { key: 'tackles', label: 'Tackles', sortable: true, align: 'right' as const },
     { key: 'sacks', label: 'Sacks', sortable: true, align: 'right' as const },
     { key: 'interceptions', label: 'INTs', sortable: true, align: 'right' as const },
-    { key: 'fumbleRecoveries', label: 'Fum Rec', sortable: true, align: 'right' as const },
-    { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
+    { key: 'fumble_recoveries', label: 'Fum Rec', sortable: true, align: 'right' as const },
+    { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
   const sacksColumns = [
     { key: 'name', label: 'Player', sortable: true },
-    { key: 'teamName', label: 'Team', sortable: true },
+    { key: 'team_name', label: 'Team', sortable: true },
     { key: 'position', label: 'Pos', sortable: true },
     { key: 'sacks', label: 'Sacks', sortable: true, align: 'right' as const },
     { key: 'tackles', label: 'Tackles', sortable: true, align: 'right' as const },
     { key: 'interceptions', label: 'INTs', sortable: true, align: 'right' as const },
-    { key: 'forcedFumbles', label: 'Forced Fum', sortable: true, align: 'right' as const },
-    { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
+    { key: 'forced_fumbles', label: 'Forced Fum', sortable: true, align: 'right' as const },
+    { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
   const interceptionsColumns = [
     { key: 'name', label: 'Player', sortable: true },
-    { key: 'teamName', label: 'Team', sortable: true },
+    { key: 'team_name', label: 'Team', sortable: true },
     { key: 'position', label: 'Pos', sortable: true },
     { key: 'interceptions', label: 'INTs', sortable: true, align: 'right' as const },
-    { key: 'returnYards', label: 'Return Yds', sortable: true, align: 'right' as const },
+    { key: 'return_yards', label: 'Return Yds', sortable: true, align: 'right' as const },
     { key: 'touchdowns', label: 'TDs', sortable: true, align: 'right' as const },
     { key: 'tackles', label: 'Tackles', sortable: true, align: 'right' as const },
-    { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
+    { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
   if (loading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-green"></div>
           <span className="ml-3 text-lg text-gray-600">Loading defensive statistics...</span>
         </div>
       </div>
@@ -151,6 +151,12 @@ export function DefensivePlayersSection({ leagueId }: DefensivePlayersSectionPro
         leagueId={leagueId}
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
+        onRowClick={(player) => {
+          const idToUse = player.maddenId || player.playerId
+          if (idToUse) {
+            window.location.href = `/leagues/${leagueId}/players/${idToUse}`
+          }
+        }}
       />
 
       {/* Sacks Leaders */}
@@ -161,6 +167,12 @@ export function DefensivePlayersSection({ leagueId }: DefensivePlayersSectionPro
         leagueId={leagueId}
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
+        onRowClick={(player) => {
+          const idToUse = player.maddenId || player.playerId
+          if (idToUse) {
+            window.location.href = `/leagues/${leagueId}/players/${idToUse}`
+          }
+        }}
       />
 
       {/* Interceptions Leaders */}
@@ -171,6 +183,12 @@ export function DefensivePlayersSection({ leagueId }: DefensivePlayersSectionPro
         leagueId={leagueId}
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
+        onRowClick={(player) => {
+          const idToUse = player.maddenId || player.playerId
+          if (idToUse) {
+            window.location.href = `/leagues/${leagueId}/players/${idToUse}`
+          }
+        }}
       />
     </div>
   )
