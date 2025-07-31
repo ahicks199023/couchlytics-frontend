@@ -7,7 +7,7 @@ interface TeamBadgeProps {
   teamName?: string
   teamId?: number
   teamAbbr?: string
-  size?: 'xs' | 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl'
   variant?: 'logo' | 'helmet' | 'initials' | 'text'
   showAbbr?: boolean
   showName?: boolean

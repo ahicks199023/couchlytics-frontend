@@ -261,7 +261,7 @@ export default function PlayerStats({ leagueId, playerId }: PlayerStatsProps) {
             <div className="flex justify-center">
               <TeamBadge 
                 teamName={playerStats.teamName}
-                size="sm"
+                size="md"
                 variant="logo"
                 showAbbr={true}
               />

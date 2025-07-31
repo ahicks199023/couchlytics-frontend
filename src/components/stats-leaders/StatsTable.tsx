@@ -227,7 +227,7 @@ export function StatsTable({
                                                        ) : column.key === 'team_name' || column.key === 'teamName' ? (
                               <TeamBadge 
                                 teamName={displayValue as string}
-                                size="sm"
+                                size="lg"
                                 variant="logo"
                                 showAbbr={false}
                               />

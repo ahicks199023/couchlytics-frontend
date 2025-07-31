@@ -324,7 +324,7 @@ export default function LeagueStandings({ leagueId }: LeagueStandingsProps) {
                                       <div className="flex items-center gap-2">
                                         <TeamBadge 
                                           teamName={team.teamName || `${team.city} Team`}
-                                          size="sm"
+                                          size="md"
                                           variant="logo"
                                           showAbbr={true}
                                         />
