@@ -41,7 +41,12 @@ export default function TeamBadge({
     xs: 'text-xs',
     sm: 'text-sm',
     md: 'text-sm',
-    lg: 'text-base'
+    lg: 'text-base',
+    xl: 'text-lg',
+    '2xl': 'text-xl',
+    '3xl': 'text-2xl',
+    '4xl': 'text-3xl',
+    '5xl': 'text-4xl'
   }
 
   const textSizeClass = sizeClasses[size]
