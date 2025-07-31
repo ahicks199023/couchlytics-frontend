@@ -51,6 +51,8 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
 
         // Handle passing leaders
         if (passingRes.status === 'fulfilled') {
+          console.log('Passing leaders raw data:', passingRes.value.leaders)
+          console.log('First passing leader:', passingRes.value.leaders[0])
           setPassingLeaders(passingRes.value.leaders as PlayerPassingLeader[])
         } else {
           console.error('Failed to fetch passing leaders:', passingRes.reason)
