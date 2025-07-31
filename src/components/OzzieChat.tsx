@@ -140,13 +140,15 @@ export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }
         throw new Error('League ID is required')
       }
 
-      const requestBody: Record<string, unknown> = {
-        question: messageText, // Changed from 'message' to 'question'
+      // Create request body with exact field names backend expects
+      const requestBody = {
+        question: messageText,
         leagueId: leagueId,
-        teamId: selectedTeamId // Use the selected team ID
+        teamId: selectedTeamId
       }
 
       console.log('Sending Ozzie request:', requestBody)
+      console.log('Request body JSON:', JSON.stringify(requestBody))
 
       // Use direct fetch instead of api.post to avoid case conversion issues
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/ozzie/query`, {
