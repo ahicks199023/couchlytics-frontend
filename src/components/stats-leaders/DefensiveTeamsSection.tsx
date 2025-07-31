@@ -51,12 +51,6 @@ export function DefensiveTeamsSection({ leagueId }: DefensiveTeamsSectionProps) 
 
                  // Handle yards allowed leaders
          if (yardsAllowedRes.status === 'fulfilled') {
-           console.log('Yards Allowed API Response:', yardsAllowedRes.value)
-           console.log('Yards Allowed Leaders Data:', yardsAllowedRes.value.leaders)
-           if (yardsAllowedRes.value.leaders && yardsAllowedRes.value.leaders.length > 0) {
-             console.log('First Yards Allowed Leader:', yardsAllowedRes.value.leaders[0])
-             console.log('Available fields:', Object.keys(yardsAllowedRes.value.leaders[0]))
-           }
            setYardsAllowedLeaders(yardsAllowedRes.value.leaders as TeamYardsAllowedLeader[])
          } else {
            console.error('Failed to fetch yards allowed leaders:', yardsAllowedRes.reason)

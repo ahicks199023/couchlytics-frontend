@@ -1,55 +1,40 @@
-# Backend Issues Requiring Fix
+# Backend Issues
 
-## ✅ Issue 1: Team ID Mismatch Between APIs - RESOLVED
+## Current Issues
 
-**Status**: This issue has been resolved by the backend team.
+### 1. Team Detail API Inconsistency
+- **Issue**: The team detail API returns different field names than expected
+- **Impact**: Frontend cannot properly display team information
+- **Status**: Frontend has workarounds in place
 
-**Previous Problem**: The frontend was displaying "Team 759955462" instead of actual team names because the leaderboard API and teams API returned different team ID formats.
+### 2. Stats Leaders Defensive Data Issue
+- **Issue**: The defensive stats API (`/stats-leaders?type=teams&category=defensive&stat=yards_allowed`) is returning incorrect data
+- **Symptoms**: 
+  - `total_yards_allowed`, `passing_yards_allowed`, and `rushing_yards_allowed` all return the same value (e.g., 360)
+  - `yards_allowed_per_game` returns very low values (e.g., 1.87) that don't make sense for NFL statistics
+  - `points_allowed_per_game` returns `'0E-20'` string instead of numeric values
+- **Impact**: The "Yards Allowed Leaders" table displays incorrect or misleading statistics
+- **Evidence**: Console logs show API returning `{total_yards_allowed: 360, passing_yards_allowed: 360, rushing_yards_allowed: 360, yards_allowed_per_game: 1.8652849740932642}`
+- **Status**: Frontend is correctly processing the data, but the backend is providing incorrect values
 
-**Resolution**: The backend team standardized the team ID format across both APIs, ensuring consistent team identifier fields.
+### 3. Player Team Name Missing
+- **Issue**: Player statistics API does not include team names for players
+- **Impact**: Team logos cannot be displayed in player statistics tables
+- **Status**: Frontend has workarounds in place
 
----
+## Frontend Workarounds
 
-## ✅ Issue 2: Player Name Column Error - RESOLVED
+The frontend has been updated with workarounds for both issues, but these are temporary solutions. The proper fix requires backend changes to ensure API consistency and correct database queries.
 
-**Status**: This issue has been resolved by the backend team.
+## Recommended Backend Fixes
 
-**Previous Problem**: 500 Internal Server Errors on player detail pages, players list, and trade tool pages due to `psycopg2.errors.UndefinedColumn: column players.name does not exist`.
+1. **Fix Defensive Stats Calculation**: Ensure the defensive stats API properly calculates and returns:
+   - Correct `total_yards_allowed` (sum of passing + rushing yards allowed)
+   - Correct `passing_yards_allowed` (only passing yards)
+   - Correct `rushing_yards_allowed` (only rushing yards)
+   - Correct `yards_allowed_per_game` (total yards allowed / games played)
+   - Numeric `points_allowed_per_game` values
 
-**Resolution**: 
-1. **Fixed SQL queries** to use correct player name columns (`full_name` instead of `name`)
-2. **Enhanced player detail API** to return comprehensive player data including:
-   - All 47 Madden rating fields (speed, acceleration, awareness, etc.)
-   - Complete contract information (cap release penalty, net savings)
-   - Player biographical details (college, years pro, hometown, etc.)
-   - Headshot and metadata fields
+2. **Include Player Team Names**: Ensure player statistics include the player's team name in the response
 
-**Files Modified**: `routes/analytics_routes.py` - `get_player_details` function
-
-**Result**: Player detail pages now display complete player information with all rating values and contract details.
-
----
-
-## Implementation Status
-
-**All backend issues have been resolved!** ✅
-
-- ✅ Issue 1: Team ID Mismatch - RESOLVED
-- ✅ Issue 2: Player Name Column Error - RESOLVED
-
-## Testing Checklist
-
-After the fixes:
-
-- [x] Player detail pages load without 500 errors
-- [x] Players list page displays correctly
-- [x] Trade tool page works properly
-- [x] All player names show properly
-- [x] Team names display correctly in stat leaders
-- [x] Player detail pages show complete rating data
-- [x] Contract information displays properly
-- [x] No console errors related to player data
-
-## Frontend Status
-
-The frontend has been updated with workarounds for both issues, but these are temporary solutions. The proper fix requires backend changes to ensure API consistency and correct database queries. 
+3. **Standardize Field Names**: Ensure all APIs use consistent field naming conventions 
