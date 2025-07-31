@@ -51,10 +51,6 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
 
         // Handle passing leaders
         if (passingRes.status === 'fulfilled') {
-          console.log('Passing leaders raw data:', passingRes.value.leaders)
-          console.log('First passing leader:', passingRes.value.leaders[0])
-          console.log('First passing leader all fields:', Object.keys(passingRes.value.leaders[0]))
-          console.log('First passing leader full object:', JSON.stringify(passingRes.value.leaders[0], null, 2))
           setPassingLeaders(passingRes.value.leaders as PlayerPassingLeader[])
         } else {
           console.error('Failed to fetch passing leaders:', passingRes.reason)
@@ -95,35 +91,35 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
 
   const passingColumns = [
     { key: 'name', label: 'Player', sortable: true },
-    { key: 'teamName', label: 'Team', sortable: true },
+    { key: 'team_name', label: 'Team', sortable: true },
     { key: 'position', label: 'Pos', sortable: true },
     { key: 'yards', label: 'Yards', sortable: true, align: 'right' as const },
     { key: 'touchdowns', label: 'TDs', sortable: true, align: 'right' as const },
     { key: 'interceptions', label: 'INTs', sortable: true, align: 'right' as const },
     { key: 'rating', label: 'Rating', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
-    { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
+    { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
   const rushingColumns = [
     { key: 'name', label: 'Player', sortable: true },
-    { key: 'teamName', label: 'Team', sortable: true },
+    { key: 'team_name', label: 'Team', sortable: true },
     { key: 'position', label: 'Pos', sortable: true },
     { key: 'yards', label: 'Yards', sortable: true, align: 'right' as const },
     { key: 'touchdowns', label: 'TDs', sortable: true, align: 'right' as const },
     { key: 'attempts', label: 'Attempts', sortable: true, align: 'right' as const },
-    { key: 'averagePerAttempt', label: 'Avg/Att', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
-    { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
+    { key: 'average_per_attempt', label: 'Avg/Att', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
+    { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
   const receivingColumns = [
     { key: 'name', label: 'Player', sortable: true },
-    { key: 'teamName', label: 'Team', sortable: true },
+    { key: 'team_name', label: 'Team', sortable: true },
     { key: 'position', label: 'Pos', sortable: true },
     { key: 'yards', label: 'Yards', sortable: true, align: 'right' as const },
     { key: 'touchdowns', label: 'TDs', sortable: true, align: 'right' as const },
     { key: 'catches', label: 'Catches', sortable: true, align: 'right' as const },
-    { key: 'averagePerCatch', label: 'Avg/Catch', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
-    { key: 'gamesPlayed', label: 'Games', sortable: true, align: 'right' as const },
+    { key: 'average_per_catch', label: 'Avg/Catch', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
+    { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
   if (loading) {
