@@ -18,11 +18,19 @@ export default function StatsLeadersPage() {
   useEffect(() => {
     const checkApiAvailability = async () => {
       try {
+        console.log('Checking API availability for league:', leagueIdString)
+        console.log('API Base URL:', process.env.NEXT_PUBLIC_API_BASE || 'https://api.couchlytics.com')
+        
         // Try to fetch the summary endpoint to check if the new API is available
-        await StatsLeadersAPI.getSummary(leagueIdString)
+        const summary = await StatsLeadersAPI.getSummary(leagueIdString)
+        console.log('API Summary response:', summary)
         setApiAvailable(true)
       } catch (error) {
-        console.log('New stats leaders API not available, using fallback:', error)
+        console.error('New stats leaders API not available, using fallback:', error)
+        console.error('Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        })
         setApiAvailable(false)
       } finally {
         setLoading(false)
