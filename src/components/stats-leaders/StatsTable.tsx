@@ -47,6 +47,7 @@ export function StatsTable({
     console.log('StatsTable: Data length:', data.length)
     if (data.length > 0) {
       console.log('StatsTable: First row sample:', data[0])
+      console.log('StatsTable: Available fields:', Object.keys(data[0]))
     }
     
     if (!sortColumn) return data
@@ -151,17 +152,17 @@ export function StatsTable({
                    Rank
                  </th>
                 {columns.map((column) => (
-                                     <th
-                     key={column.key}
-                     className={cn(
-                       'py-3 px-2 font-medium text-gray-900 dark:text-white',
-                       column.sortable && 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
-                       column.align === 'right' && 'text-right',
-                       column.align === 'center' && 'text-center',
-                       !column.align && 'text-left'
-                     )}
-                     onClick={() => column.sortable && handleSort(column.key)}
-                   >
+                                                       <th
+                    key={column.key}
+                    className={cn(
+                      'py-3 px-2 font-medium text-gray-900 dark:text-white',
+                      column.sortable && 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
+                      column.align === 'right' && 'text-right',
+                      column.align === 'center' && 'text-center',
+                      !column.align && 'text-center'
+                    )}
+                    onClick={() => column.sortable && handleSort(column.key)}
+                  >
                     <div className="flex items-center justify-between">
                       <span>{column.label}</span>
                       {column.sortable && sortColumn === column.key && (
@@ -202,15 +203,15 @@ export function StatsTable({
                        }
 
                       return (
-                                                 <td
-                           key={column.key}
-                           className={cn(
-                             'py-3 px-2',
-                             column.align === 'right' && 'text-right',
-                             column.align === 'center' && 'text-center',
-                             !column.align && 'text-left'
-                           )}
-                         >
+                                                                           <td
+                            key={column.key}
+                            className={cn(
+                              'py-3 px-2',
+                              column.align === 'right' && 'text-right',
+                              column.align === 'center' && 'text-center',
+                              !column.align && 'text-center'
+                            )}
+                          >
                                                      {column.key === 'name' && row.espnId ? (
                              <div className="flex items-center space-x-2">
                                <Image
@@ -228,15 +229,15 @@ export function StatsTable({
                                  {displayValue}
                                </span>
                              </div>
-                                                       ) : column.key === 'team_name' ? (
+                                                       ) : column.key === 'team_name' || column.key === 'teamName' ? (
                               (() => {
-                                console.log('StatsTable: Rendering teamName column with value:', displayValue)
+                                console.log('StatsTable: Rendering team column with value:', displayValue)
                                 return (
                                   <TeamBadge 
                                     teamName={displayValue as string}
                                     size="sm"
-                                    variant="initials"
-                                    showAbbr={true}
+                                    variant="logo"
+                                    showAbbr={false}
                                   />
                                 )
                               })()
