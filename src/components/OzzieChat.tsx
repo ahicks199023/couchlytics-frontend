@@ -149,11 +149,27 @@ export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }
 
       console.log('Sending Ozzie request:', requestBody)
 
-      const response = await api.post('/ozzie/query', requestBody) as { response?: string }
+      // Use direct fetch instead of api.post to avoid case conversion issues
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/ozzie/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(requestBody),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`API error: ${response.status} - ${errorText}`)
+      }
+
+      const responseData = await response.json()
+      console.log('Ozzie response:', responseData)
 
       const ozzieMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response.response || "I'm sorry, I couldn't process your request right now.",
+        text: responseData.response || "I'm sorry, I couldn't process your request right now.",
         sender: 'ozzie',
         timestamp: new Date()
       }
