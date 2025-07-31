@@ -159,16 +159,18 @@ export function DefensivePlayersSection({ leagueId }: DefensivePlayersSectionPro
           const playerName = player.name as string
           if (playerName) {
             try {
-              // Search for the player by name
-              const searchResponse = await fetch(`/api/leagues/${leagueId}/players/search?name=${encodeURIComponent(playerName)}`, {
+              // Search for the player by name using the backend API
+              const searchResponse = await fetch(`https://api.couchlytics.com/leagues/${leagueId}/players/search?name=${encodeURIComponent(playerName)}`, {
                 credentials: 'include'
               })
               
               if (searchResponse.ok) {
                 const searchData = await searchResponse.json()
+                console.log('Search response:', searchData)
+                
                 if (searchData.players && searchData.players.length > 0) {
                   const foundPlayer = searchData.players[0]
-                  const playerId = foundPlayer.id || foundPlayer.maddenId
+                  const playerId = foundPlayer.id || foundPlayer.madden_id
                   console.log('Found player ID:', playerId)
                   if (playerId) {
                     window.location.href = `/leagues/${leagueId}/players/${playerId}`
@@ -177,9 +179,9 @@ export function DefensivePlayersSection({ leagueId }: DefensivePlayersSectionPro
                 }
               }
               
-              // Fallback: try to navigate using the player name as a slug
-              console.log('No player ID found, trying name-based routing')
-              window.location.href = `/leagues/${leagueId}/players/search?name=${encodeURIComponent(playerName)}`
+              // If search fails or no player found, show a message
+              console.log('No player found or search failed')
+              alert(`Player details for ${playerName} are not available yet.`)
               
             } catch (error) {
               console.error('Error searching for player:', error)
