@@ -99,7 +99,7 @@ export default function StatsLeadersPage() {
           className={cn(
             'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors',
             activeTab === 'players'
-              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+              ? 'bg-neon-green text-black shadow-sm font-semibold'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           )}
         >
@@ -110,7 +110,7 @@ export default function StatsLeadersPage() {
           className={cn(
             'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors',
             activeTab === 'teams'
-              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+              ? 'bg-neon-green text-black shadow-sm font-semibold'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           )}
         >

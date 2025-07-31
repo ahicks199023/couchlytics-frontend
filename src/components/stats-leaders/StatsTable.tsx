@@ -173,7 +173,7 @@ export function StatsTable({
                   <tr
                     key={index}
                     className={cn(
-                      'border-b border-gray-100 dark:border-gray-800 hover:bg-neon-green/10 dark:hover:bg-neon-green/20 transition-colors',
+                      'border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors',
                       isUserTeam && 'bg-yellow-50 dark:bg-yellow-900/20 font-semibold',
                       onRowClick && 'cursor-pointer'
                     )}

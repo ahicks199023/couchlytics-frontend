@@ -22,7 +22,7 @@ export function TeamsStatsTab({ leagueId }: TeamsStatsTabProps) {
           className={cn(
             'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors',
             activeCategory === 'offensive'
-              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+              ? 'bg-neon-green text-black shadow-sm font-semibold'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           )}
         >
@@ -33,7 +33,7 @@ export function TeamsStatsTab({ leagueId }: TeamsStatsTabProps) {
           className={cn(
             'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors',
             activeCategory === 'defensive'
-              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+              ? 'bg-neon-green text-black shadow-sm font-semibold'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           )}
         >
