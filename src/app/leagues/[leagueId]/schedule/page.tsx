@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { API_BASE } from '@/lib/config'
 import { getTeamByAbbreviation } from '@/lib/team-config'
+import TeamLogo from '@/components/TeamLogo'
 
 type Game = {
   game_id: string
@@ -148,10 +149,7 @@ export default function SeasonSchedulePage() {
     return `${displayHour}:${minutes} ${ampm}`
   }
 
-  const getTeamColors = (abbreviation: string) => {
-    const teamConfig = getTeamByAbbreviation(abbreviation)
-    return teamConfig?.colors?.primary || '#666666'
-  }
+
 
   if (loading) {
     return (
@@ -318,7 +316,6 @@ export default function SeasonSchedulePage() {
               key={game.game_id} 
               game={game} 
               leagueId={leagueId}
-              getTeamColors={getTeamColors}
               formatDate={formatDate}
               formatTime={formatTime}
             />
@@ -367,18 +364,14 @@ export default function SeasonSchedulePage() {
 function GameCard({ 
   game, 
   leagueId, 
-  getTeamColors, 
   formatDate, 
   formatTime 
 }: {
   game: Game
   leagueId: string
-  getTeamColors: (abbr: string) => string
   formatDate: (date: string) => string
   formatTime: (time: string) => string
 }) {
-  const homeTeamColor = getTeamColors(game.home_team.abbreviation)
-  const awayTeamColor = getTeamColors(game.away_team.abbreviation)
 
   return (
     <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
@@ -419,11 +412,13 @@ function GameCard({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
         {/* Away Team */}
         <div className="flex items-center space-x-3">
-          <div 
-            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
-            style={{ backgroundColor: awayTeamColor }}
-          >
-            {game.away_team.abbreviation}
+          <div className="w-12 h-12 flex items-center justify-center">
+            <TeamLogo 
+              teamName={game.away_team.name}
+              size="lg"
+              variant="helmet"
+              showName={false}
+            />
           </div>
           <div className="flex-1">
             <div className="font-semibold text-gray-900 dark:text-white">
@@ -477,11 +472,13 @@ function GameCard({
               {game.home_team.win_pct.toFixed(1)}% • {game.home_team.pts_for.toFixed(1)} PF
             </div>
           </div>
-          <div 
-            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
-            style={{ backgroundColor: homeTeamColor }}
-          >
-            {game.home_team.abbreviation}
+          <div className="w-12 h-12 flex items-center justify-center">
+            <TeamLogo 
+              teamName={game.home_team.name}
+              size="lg"
+              variant="helmet"
+              showName={false}
+            />
           </div>
         </div>
       </div>
