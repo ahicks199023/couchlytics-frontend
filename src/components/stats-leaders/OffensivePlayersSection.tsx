@@ -159,8 +159,8 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
           const playerName = player.name as string
           if (playerName) {
             try {
-              // Search for the player by name using the backend API
-              const searchResponse = await fetch(`https://api.couchlytics.com/leagues/${leagueId}/players/search?name=${encodeURIComponent(playerName)}`, {
+              // Search for the player by name using the players list endpoint
+              const searchResponse = await fetch(`https://api.couchlytics.com/leagues/${leagueId}/players?search=${encodeURIComponent(playerName)}&pageSize=10`, {
                 credentials: 'include'
               })
               
@@ -169,12 +169,19 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
                 console.log('Search response:', searchData)
                 
                 if (searchData.players && searchData.players.length > 0) {
-                  const foundPlayer = searchData.players[0]
-                  const playerId = foundPlayer.id || foundPlayer.madden_id
-                  console.log('Found player ID:', playerId)
-                  if (playerId) {
-                    window.location.href = `/leagues/${leagueId}/players/${playerId}`
-                    return
+                  // Find the exact match by name
+                  const foundPlayer = searchData.players.find((p: Record<string, unknown>) => 
+                    (p.name as string)?.toLowerCase() === playerName.toLowerCase() ||
+                    (p.fullName as string)?.toLowerCase() === playerName.toLowerCase()
+                  )
+                  
+                  if (foundPlayer) {
+                    const playerId = foundPlayer.id || foundPlayer.madden_id
+                    console.log('Found player ID:', playerId)
+                    if (playerId) {
+                      window.location.href = `/leagues/${leagueId}/players/${playerId}`
+                      return
+                    }
                   }
                 }
               }
