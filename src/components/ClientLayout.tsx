@@ -2,6 +2,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { Suspense } from 'react'
 import NavBar from './NavBar'
 import OzzieChat from './OzzieChat'
 
@@ -17,7 +18,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       </main>
       
       {/* Ozzie Chat - Show on all pages except login/register */}
-      {!hideNav && <OzzieChat />}
+      {!hideNav && (
+        <Suspense fallback={null}>
+          <OzzieChat />
+        </Suspense>
+      )}
     </>
   )
 }
