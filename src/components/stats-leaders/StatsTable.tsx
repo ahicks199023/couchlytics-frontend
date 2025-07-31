@@ -225,15 +225,12 @@ export function StatsTable({
                                </span>
                              </div>
                                                        ) : column.key === 'team_name' || column.key === 'teamName' ? (
-                              <div>
-                                {console.log('TeamBadge debug - teamName:', displayValue, 'column.key:', column.key)}
-                                <TeamBadge 
-                                  teamName={displayValue as string}
-                                  size="lg"
-                                  variant="logo"
-                                  showAbbr={false}
-                                />
-                              </div>
+                              <TeamBadge 
+                                teamName={displayValue as string}
+                                size="lg"
+                                variant="logo"
+                                showAbbr={false}
+                              />
                             ) : (
                              displayValue
                            )}
