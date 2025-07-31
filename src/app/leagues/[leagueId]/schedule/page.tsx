@@ -372,144 +372,178 @@ function GameCard({
   formatDate: (date: string) => string
   formatTime: (time: string) => string
 }) {
+  // Get team colors for the split design
+  const getTeamColor = (teamName: string) => {
+    const teamConfig = getTeamByAbbreviation(teamName.split(' ').pop() || '')
+    return teamConfig?.colors?.primary || '#666666'
+  }
+
+  const awayTeamColor = getTeamColor(game.away_team.name)
+  const homeTeamColor = getTeamColor(game.home_team.name)
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
+    <div className="rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
       {/* Game Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-4">
-          <span className="px-3 py-1 bg-blue-600 dark:bg-blue-500 text-white text-sm font-medium rounded-full">
-            Week {game.week}
-          </span>
-          <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-            game.is_complete 
-              ? 'bg-green-600 dark:bg-green-500 text-white' 
-              : 'bg-yellow-600 dark:bg-yellow-500 text-white'
-          }`}>
-            {game.is_complete ? '✅ Complete' : '⏳ Scheduled'}
-          </span>
-          {game.is_game_of_the_week && (
-            <span className="px-3 py-1 bg-purple-600 dark:bg-purple-500 text-white text-sm font-medium rounded-full">
-              🏆 Game of the Week
+      <div className="bg-gray-800 dark:bg-gray-900 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <span className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full">
+              Week {game.week}
             </span>
-          )}
-        </div>
-        
-        <div className="text-right">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            {formatDate(game.game_date)}
+            <span className={`px-3 py-1 text-sm font-medium rounded-full ${
+              game.is_complete 
+                ? 'bg-green-600 text-white' 
+                : 'bg-yellow-600 text-white'
+            }`}>
+              {game.is_complete ? '✅ Complete' : '⏳ Scheduled'}
+            </span>
+            {game.is_game_of_the_week && (
+              <span className="px-3 py-1 bg-purple-600 text-white text-sm font-medium rounded-full">
+                🏆 Game of the Week
+              </span>
+            )}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            {formatTime(game.game_time)}
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-500">
-            {game.venue}
+          
+          <div className="text-right text-white">
+            <div className="text-sm text-gray-300">
+              {formatDate(game.game_date)}
+            </div>
+            <div className="text-sm text-gray-300">
+              {formatTime(game.game_time)}
+            </div>
+            <div className="text-xs text-gray-400">
+              {game.venue}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Teams */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-        {/* Away Team */}
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 flex items-center justify-center">
-            <TeamLogo 
-              teamName={game.away_team.name}
-              size="lg"
-              variant="helmet"
-              showName={false}
-            />
-          </div>
-          <div className="flex-1">
-            <div className="font-semibold text-gray-900 dark:text-white">
-              {game.away_team.name}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {game.away_team.user} • ({game.away_team.record})
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-500">
-              {game.away_team.win_pct.toFixed(1)}% • {game.away_team.pts_for.toFixed(1)} PF
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">
-              {game.score.away_score !== null ? game.score.away_score : 'TBD'}
-            </div>
-            {game.is_complete && game.score.winner === 'away' && (
-              <div className="text-xs text-green-600 dark:text-neon-green font-medium">WIN</div>
-            )}
-          </div>
+      {/* Main Game Card with Split Colors */}
+      <div className="relative">
+        {/* Background with team colors split */}
+        <div className="absolute inset-0 flex">
+          <div 
+            className="w-1/2" 
+            style={{ backgroundColor: awayTeamColor }}
+          ></div>
+          <div 
+            className="w-1/2" 
+            style={{ backgroundColor: homeTeamColor }}
+          ></div>
         </div>
 
-        {/* VS */}
-        <div className="text-center">
-          <div className="text-lg font-bold text-gray-400 dark:text-gray-500">VS</div>
+        {/* Content overlay */}
+        <div className="relative z-10 p-6">
+          {/* Teams Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+            {/* Away Team */}
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-lg">
+                <TeamLogo 
+                  teamName={game.away_team.name}
+                  size="xl"
+                  variant="helmet"
+                  showName={false}
+                />
+              </div>
+              <div className="flex-1 text-white">
+                <div className="font-bold text-lg">
+                  {game.away_team.name}
+                </div>
+                <div className="text-sm text-gray-200">
+                  {game.away_team.user}
+                </div>
+                <div className="text-xs text-gray-300">
+                  ({game.away_team.record}) • {game.away_team.win_pct.toFixed(1)}% • {game.away_team.pts_for.toFixed(1)} PF
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-4xl font-bold text-white">
+                  {game.score.away_score !== null ? game.score.away_score : 'TBD'}
+                </div>
+                {game.is_complete && game.score.winner === 'away' && (
+                  <div className="text-sm text-green-300 font-bold">WIN</div>
+                )}
+              </div>
+            </div>
+
+            {/* VS Section */}
+            <div className="text-center">
+              <div className="text-2xl font-bold text-white mb-2">VS</div>
+              {game.is_complete && (
+                <div className="text-sm text-gray-200 font-medium">
+                  Final
+                </div>
+              )}
+              {/* Decorative lines */}
+              <div className="hidden md:block mt-4">
+                <div className="w-full h-1 bg-white opacity-30 rounded-full"></div>
+              </div>
+            </div>
+
+            {/* Home Team */}
+            <div className="flex items-center space-x-4">
+              <div className="text-left">
+                <div className="text-4xl font-bold text-white">
+                  {game.score.home_score !== null ? game.score.home_score : 'TBD'}
+                </div>
+                {game.is_complete && game.score.winner === 'home' && (
+                  <div className="text-sm text-green-300 font-bold">WIN</div>
+                )}
+              </div>
+              <div className="flex-1 text-white text-right">
+                <div className="font-bold text-lg">
+                  {game.home_team.name}
+                </div>
+                <div className="text-sm text-gray-200">
+                  {game.home_team.user}
+                </div>
+                <div className="text-xs text-gray-300">
+                  ({game.home_team.record}) • {game.home_team.win_pct.toFixed(1)}% • {game.home_team.pts_for.toFixed(1)} PF
+                </div>
+              </div>
+              <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-lg">
+                <TeamLogo 
+                  teamName={game.home_team.name}
+                  size="xl"
+                  variant="helmet"
+                  showName={false}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Weather Info */}
+          {game.weather && (
+            <div className="mt-6 pt-4 border-t border-white border-opacity-20">
+              <div className="flex items-center justify-center space-x-6 text-sm text-white">
+                <span>🌤️ {game.weather.condition}</span>
+                <span>🌡️ {game.weather.temperature}°F</span>
+                <span>💨 {game.weather.wind_speed} mph</span>
+                <span>💧 {game.weather.humidity}% humidity</span>
+                <span>☔ {game.weather.precipitation_chance}% rain</span>
+              </div>
+            </div>
+          )}
+
+          {/* Box Score Link */}
           {game.is_complete && (
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Final
+            <div className="mt-6 pt-4 border-t border-white border-opacity-20">
+              <div className="flex justify-center">
+                <Link
+                  href={`/leagues/${leagueId}/schedule/box-score/${game.game_id}`}
+                  className="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-lg"
+                >
+                  📊 View Box Score
+                  <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
             </div>
           )}
         </div>
-
-        {/* Home Team */}
-        <div className="flex items-center space-x-3">
-          <div className="text-left">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">
-              {game.score.home_score !== null ? game.score.home_score : 'TBD'}
-            </div>
-            {game.is_complete && game.score.winner === 'home' && (
-              <div className="text-xs text-green-600 dark:text-neon-green font-medium">WIN</div>
-            )}
-          </div>
-          <div className="flex-1">
-            <div className="font-semibold text-gray-900 dark:text-white text-right">
-              {game.home_team.name}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400 text-right">
-              {game.home_team.user} • ({game.home_team.record})
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-500 text-right">
-              {game.home_team.win_pct.toFixed(1)}% • {game.home_team.pts_for.toFixed(1)} PF
-            </div>
-          </div>
-          <div className="w-12 h-12 flex items-center justify-center">
-            <TeamLogo 
-              teamName={game.home_team.name}
-              size="lg"
-              variant="helmet"
-              showName={false}
-            />
-          </div>
-        </div>
       </div>
-
-      {/* Weather Info */}
-      {game.weather && (
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-            <span>🌤️ {game.weather.condition}</span>
-            <span>🌡️ {game.weather.temperature}°F</span>
-            <span>💨 {game.weather.wind_speed} mph {game.weather.wind_direction}</span>
-            <span>💧 {game.weather.humidity}% humidity</span>
-            <span>☔ {game.weather.precipitation_chance}% rain</span>
-          </div>
-        </div>
-      )}
-
-      {/* Box Score Link */}
-      {game.is_complete && (
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <Link
-            href={`/leagues/${leagueId}/schedule/box-score/${game.game_id}`}
-            className="inline-flex items-center px-4 py-2 bg-green-600 dark:bg-neon-green text-white rounded-md hover:bg-green-700 dark:hover:bg-green-500 transition-colors"
-          >
-            📊 View Box Score
-            <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
-      )}
     </div>
   )
 } 
