@@ -13,14 +13,37 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // The backend handles the OAuth callback and sets the session
-        // We just need to check if the user is now authenticated
+        // Check if we have OAuth callback parameters
+        const code = searchParams.get('code')
+        const state = searchParams.get('state')
+        const error = searchParams.get('error')
+
+        if (error) {
+          setStatus('error')
+          setMessage(`Authentication failed: ${error}`)
+          return
+        }
+
+        if (!code) {
+          setStatus('error')
+          setMessage('No authorization code received')
+          return
+        }
+
+        // The backend should handle the OAuth callback at /auth/callback
+        // Let's check if the session was established
+        console.log('Checking authentication status after OAuth callback...')
+        
         const response = await fetch(`${API_BASE}/auth/status`, {
           credentials: 'include'
         })
 
+        console.log('Auth status response:', response.status)
+
         if (response.ok) {
           const data = await response.json()
+          console.log('Auth status data:', data)
+          
           if (data.authenticated) {
             setStatus('success')
             setMessage('Authentication successful! Redirecting...')
@@ -31,9 +54,11 @@ export default function AuthCallback() {
             }, 1500)
           } else {
             setStatus('error')
-            setMessage('Authentication failed. Please try again.')
+            setMessage('Authentication failed. Session not established.')
           }
         } else {
+          const errorText = await response.text()
+          console.error('Auth status error:', errorText)
           setStatus('error')
           setMessage('Authentication failed. Please try again.')
         }
@@ -45,7 +70,7 @@ export default function AuthCallback() {
     }
 
     handleCallback()
-  }, [router])
+  }, [router, searchParams])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">

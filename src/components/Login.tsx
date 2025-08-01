@@ -22,7 +22,8 @@ export default function Login() {
     setIsLoading('google');
     setError(null);
     try {
-      loginWithGoogle();
+      console.log('Redirecting to Google OAuth...');
+      window.location.href = `${API_BASE}/auth/login/google`;
     } catch (err) {
       console.error("Google login error:", err);
       setError("Google login failed. Please try again.");
@@ -34,7 +35,8 @@ export default function Login() {
     setIsLoading('discord');
     setError(null);
     try {
-      loginWithDiscord();
+      console.log('Redirecting to Discord OAuth...');
+      window.location.href = `${API_BASE}/auth/login/discord`;
     } catch (err) {
       console.error("Discord login error:", err);
       setError("Discord login failed. Please try again.");

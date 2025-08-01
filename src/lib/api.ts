@@ -72,46 +72,38 @@ export const getCommissionerLeagues = async () => {
 }
 
 export const getLeagueSettings = async (leagueId: string) => {
-  // For now, we'll use a temporary user_id until OAuth is fully implemented
-  // TODO: Remove user_id parameter once OAuth authentication is working
-  const params = new URLSearchParams({ user_id: '1' })
-  return fetchFromApi(`/commissioner/league/${leagueId}/settings?${params}`)
+  return fetchFromApi(`/commissioner/league/${leagueId}/settings`)
 }
 
 export const updateLeagueSettings = async (leagueId: string, settings: any) => {
-  const params = new URLSearchParams({ user_id: '1' })
-  return fetchFromApi(`/commissioner/league/${leagueId}/update?${params}`, {
+  return fetchFromApi(`/commissioner/league/${leagueId}/update`, {
     method: 'PUT',
     body: JSON.stringify(settings)
   })
 }
 
 export const generateInviteLink = async (leagueId: string) => {
-  const params = new URLSearchParams({ user_id: '1' })
-  return fetchFromApi(`/commissioner/league/${leagueId}/invite?${params}`, {
+  return fetchFromApi(`/commissioner/league/${leagueId}/invite`, {
     method: 'POST'
   })
 }
 
 export const assignTeamToUser = async (leagueId: string, teamId: number, userEmail: string) => {
-  const params = new URLSearchParams({ user_id: '1' })
-  return fetchFromApi(`/commissioner/league/${leagueId}/assign-team?${params}`, {
+  return fetchFromApi(`/commissioner/league/${leagueId}/assign-team`, {
     method: 'POST',
     body: JSON.stringify({ team_id: teamId, user_email: userEmail })
   })
 }
 
 export const removeUserFromLeague = async (leagueId: string, userEmail: string) => {
-  const params = new URLSearchParams({ user_id: '1' })
-  return fetchFromApi(`/commissioner/league/${leagueId}/remove-user?${params}`, {
+  return fetchFromApi(`/commissioner/league/${leagueId}/remove-user`, {
     method: 'DELETE',
     body: JSON.stringify({ user_email: userEmail })
   })
 }
 
 export const getCompanionAppInfo = async (leagueId: string) => {
-  const params = new URLSearchParams({ user_id: '1' })
-  return fetchFromApi(`/commissioner/league/${leagueId}/companion-app?${params}`)
+  return fetchFromApi(`/commissioner/league/${leagueId}/companion-app`)
 }
 
 // Trade functions
