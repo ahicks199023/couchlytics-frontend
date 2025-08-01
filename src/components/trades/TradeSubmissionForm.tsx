@@ -77,6 +77,10 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
         setPlayers(playersData.players || [])
         
         console.log(`Loaded ${teamsData.teams?.length || 0} teams and ${playersData.players?.length || 0} players`)
+        console.log('Teams data:', teamsData)
+        console.log('Players data sample:', playersData.players?.slice(0, 3))
+        console.log('Team IDs in teams:', teamsData.teams?.map((t: Team) => t.id))
+        console.log('Team IDs in players:', [...new Set(playersData.players?.map((p: Player) => p.team_id) || [])])
         
       } catch (error) {
         console.error('Failed to load data:', error)
@@ -160,7 +164,11 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
   }
 
   const getTeamPlayers = (teamId: number) => {
-    return players.filter(player => player.team_id === teamId)
+    const teamPlayers = players.filter(player => player.team_id === teamId)
+    console.log(`Getting players for team ${teamId}:`, teamPlayers.length, 'players found')
+    console.log('All players:', players.slice(0, 5)) // Show first 5 players for debugging
+    console.log('Team IDs in players:', [...new Set(players.map(p => p.team_id))])
+    return teamPlayers
   }
 
   if (loading) {
