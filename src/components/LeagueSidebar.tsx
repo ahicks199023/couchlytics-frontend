@@ -16,7 +16,8 @@ const links = [
     path: 'trades',
     subItems: [
       { label: 'Trade History', path: 'trades' },
-      { label: 'Submit Trade', path: 'trades/submit' }
+      { label: 'Submit Trade', path: 'trades/submit' },
+      { label: 'Trade Analyzer', path: 'trade-tool' }
     ]
   },
   { label: 'Stats', path: 'stats', prefetch: false },

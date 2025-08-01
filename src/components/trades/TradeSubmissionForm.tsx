@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { submitTrade } from '@/lib/trades'
+import { API_BASE } from '@/lib/config'
 
 interface Team {
   id: number
@@ -28,6 +29,8 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
   const [teams, setTeams] = useState<Team[]>([])
   const [players, setPlayers] = useState<Player[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     teamFromId: '',
     teamToId: '',
@@ -44,36 +47,48 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
 
   // Load teams and players on component mount
   useEffect(() => {
-    const loadTeams = async () => {
+    const loadData = async () => {
+      setLoading(true)
+      setError(null)
+      
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/teams`, {
+        // Load teams
+        const teamsResponse = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, {
           credentials: 'include'
         })
-        if (response.ok) {
-          const data = await response.json()
-          setTeams(data.teams || [])
+        
+        if (!teamsResponse.ok) {
+          throw new Error(`Failed to load teams: ${teamsResponse.status}`)
         }
+        
+        const teamsData = await teamsResponse.json()
+        setTeams(teamsData.teams || [])
+        
+        // Load players
+        const playersResponse = await fetch(`${API_BASE}/leagues/${leagueId}/players?page=1&pageSize=5000`, {
+          credentials: 'include'
+        })
+        
+        if (!playersResponse.ok) {
+          throw new Error(`Failed to load players: ${playersResponse.status}`)
+        }
+        
+        const playersData = await playersResponse.json()
+        setPlayers(playersData.players || [])
+        
+        console.log(`Loaded ${teamsData.teams?.length || 0} teams and ${playersData.players?.length || 0} players`)
+        
       } catch (error) {
-        console.error('Failed to load teams:', error)
+        console.error('Failed to load data:', error)
+        setError(error instanceof Error ? error.message : 'Failed to load data')
+      } finally {
+        setLoading(false)
       }
     }
 
-    const loadPlayers = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players`, {
-          credentials: 'include'
-        })
-        if (response.ok) {
-          const data = await response.json()
-          setPlayers(data.players || [])
-        }
-      } catch (error) {
-        console.error('Failed to load players:', error)
-      }
+    if (leagueId) {
+      loadData()
     }
-
-    loadTeams()
-    loadPlayers()
   }, [leagueId])
 
   const addPlayerItem = (player: Player, fromTeamId: number, toTeamId: number) => {
@@ -137,8 +152,8 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
         onTradeSubmitted(result)
       }
     } catch (error) {
-      console.error('Trade submission error:', error)
-      alert(`Failed to submit trade: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Failed to submit trade:', error)
+      alert('Failed to submit trade. Please try again.')
     } finally {
       setSubmitting(false)
     }
@@ -146,6 +161,39 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
 
   const getTeamPlayers = (teamId: number) => {
     return players.filter(player => player.team_id === teamId)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading teams and players...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-red-500 mb-4">{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Retry
+        </button>
+      </div>
+    )
+  }
+
+  if (!teams.length || !players.length) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-gray-400">No teams or players found for this league.</p>
+      </div>
+    )
   }
 
   return (

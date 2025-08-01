@@ -3,17 +3,27 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import TradeSubmissionForm from './trades/TradeSubmissionForm'
+import TradeCalculatorForm from '@/app/leagues/[leagueId]/trade-tool/TradeCalculatorForm'
 
 interface TradeToolProps {
   leagueId?: string
 }
+
+type ToolMode = 'submission' | 'analyzer'
 
 export default function TradeTool({ leagueId: propLeagueId }: TradeToolProps) {
   const params = useParams()
   const leagueId = propLeagueId || params.leagueId as string || '12335716'
 
   const [isOpen, setIsOpen] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
+  const [mode, setMode] = useState<ToolMode>('submission')
+  const [position, setPosition] = useState({ x: 50, y: 50 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+  
   const modalRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLDivElement>(null)
 
   // Close modal when clicking outside
   useEffect(() => {
@@ -32,9 +42,56 @@ export default function TradeTool({ leagueId: propLeagueId }: TradeToolProps) {
     }
   }, [isOpen])
 
+  // Mouse event handlers for dragging
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (headerRef.current && headerRef.current.contains(e.target as Node)) {
+      setIsDragging(true)
+      const rect = modalRef.current?.getBoundingClientRect()
+      if (rect) {
+        setDragOffset({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        })
+      }
+    }
+  }
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setPosition({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y
+        })
+      }
+    }
+
+    const handleMouseUp = () => {
+      setIsDragging(false)
+    }
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDragging, dragOffset])
+
   const handleTradeSubmitted = () => {
     // Close the modal after successful trade submission
     setIsOpen(false)
+  }
+
+  const toggleMode = () => {
+    setMode(mode === 'submission' ? 'analyzer' : 'submission')
+  }
+
+  const toggleMinimize = () => {
+    setIsMinimized(!isMinimized)
   }
 
   return (
@@ -53,28 +110,95 @@ export default function TradeTool({ leagueId: propLeagueId }: TradeToolProps) {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
           <div 
             ref={modalRef}
-            className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+            className={`bg-gray-900 rounded-lg shadow-2xl transition-all duration-300 ${
+              isMinimized ? 'w-80 h-16' : 'w-full max-w-6xl h-full max-h-[90vh]'
+            }`}
+            style={{
+              position: 'absolute',
+              left: `${position.x}px`,
+              top: `${position.y}px`,
+              cursor: isDragging ? 'grabbing' : 'default'
+            }}
+            onMouseDown={handleMouseDown}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h2 className="text-2xl font-bold text-white">Trade Tool</h2>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            <div 
+              ref={headerRef}
+              className="flex items-center justify-between p-4 border-b border-gray-700 cursor-grab active:cursor-grabbing"
+            >
+              <div className="flex items-center space-x-4">
+                <h2 className="text-xl font-bold text-white">
+                  {isMinimized ? 'Trade Tool' : `Trade Tool - ${mode === 'submission' ? 'Submit Trade' : 'Trade Analyzer'}`}
+                </h2>
+                {!isMinimized && (
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={toggleMode}
+                      className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                        mode === 'submission'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      Submit
+                    </button>
+                    <button
+                      onClick={toggleMode}
+                      className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                        mode === 'analyzer'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      Analyze
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={toggleMinimize}
+                  className="text-gray-400 hover:text-white transition-colors p-1"
+                  title={isMinimized ? 'Maximize' : 'Minimize'}
+                >
+                  {isMinimized ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                    </svg>
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="text-gray-400 hover:text-white transition-colors p-1"
+                  title="Close"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Content */}
-            <div className="p-6">
-              <TradeSubmissionForm 
-                leagueId={leagueId}
-                onTradeSubmitted={handleTradeSubmitted}
-              />
-            </div>
+            {!isMinimized && (
+              <div className="p-6 overflow-y-auto h-full">
+                {mode === 'submission' ? (
+                  <TradeSubmissionForm 
+                    leagueId={leagueId}
+                    onTradeSubmitted={handleTradeSubmitted}
+                  />
+                ) : (
+                  <div className="h-full">
+                    <TradeCalculatorForm league_id={leagueId} />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
