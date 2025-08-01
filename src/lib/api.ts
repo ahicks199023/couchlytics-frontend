@@ -111,6 +111,16 @@ export const api = {
 };
 
 // Commissioner's Hub API functions
+interface CommissionerLeague {
+  league_id: string
+  name: string
+  role: string
+}
+
+interface CommissionerLeaguesResponse {
+  leagues: CommissionerLeague[]
+}
+
 export const checkCommissionerAccess = async (userId: number, leagueId: string) => {
   try {
     const response = await fetch(`${API_BASE}/commissioner/my-leagues?user_id=${userId}`, {
@@ -124,8 +134,8 @@ export const checkCommissionerAccess = async (userId: number, leagueId: string) 
       return false
     }
     
-    const data = await response.json()
-    return data.leagues.some((league: any) => league.league_id === leagueId)
+    const data: CommissionerLeaguesResponse = await response.json()
+    return data.leagues.some((league: CommissionerLeague) => league.league_id === leagueId)
   } catch (error) {
     console.error('Error checking commissioner access:', error)
     return false
@@ -172,7 +182,15 @@ export const getLeagueSettings = async (userId: number, leagueId: string) => {
   }
 }
 
-export const updateLeagueSettings = async (userId: number, leagueId: string, settings: any) => {
+interface LeagueSettings {
+  name?: string
+  description?: string
+  image_url?: string
+  invite_code?: string
+  setup_completed?: boolean
+}
+
+export const updateLeagueSettings = async (userId: number, leagueId: string, settings: LeagueSettings) => {
   try {
     const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/update`, {
       method: 'PUT',

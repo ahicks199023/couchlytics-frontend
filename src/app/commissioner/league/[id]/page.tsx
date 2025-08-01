@@ -6,7 +6,6 @@ import Image from 'next/image'
 import { API_BASE } from '@/lib/config'
 import { 
   getLeagueSettings, 
-  updateLeagueSettings, 
   generateInviteLink, 
   assignTeamToUser, 
   removeUserFromLeague, 
@@ -117,9 +116,9 @@ export default function LeagueManagement() {
         try {
           const companionData = await getCompanionAppInfo(userData.id, leagueId)
           setCompanionApp(companionData)
-        } catch (error) {
-          console.log('Companion app not set up yet')
-        }
+                 } catch {
+           console.log('Companion app not set up yet')
+         }
         
       } catch (err) {
         console.error('Failed to load commissioner data:', err)
@@ -232,7 +231,7 @@ export default function LeagueManagement() {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-500 mb-4">You don't have commissioner access to this league</p>
+          <p className="text-red-500 mb-4">You don&apos;t have commissioner access to this league</p>
           <button 
             onClick={() => router.push(`/leagues/${leagueId}`)} 
             className="bg-neon-green text-black px-4 py-2 rounded hover:bg-green-400"
