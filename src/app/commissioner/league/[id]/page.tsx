@@ -4,6 +4,15 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { API_BASE } from '@/lib/config'
+import { 
+  getLeagueSettings, 
+  updateLeagueSettings, 
+  generateInviteLink, 
+  assignTeamToUser, 
+  removeUserFromLeague, 
+  getCompanionAppInfo,
+  checkCommissionerAccess
+} from '@/lib/api'
 
 interface League {
   id: string
@@ -52,133 +61,143 @@ export default function LeagueManagement() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<TabType>('overview')
+  const [currentUser, setCurrentUser] = useState<{ id: number; email: string } | null>(null)
+  const [hasAccess, setHasAccess] = useState(false)
 
+  // Check commissioner access and load data
   useEffect(() => {
-    const loadLeagueData = async () => {
+    const checkAccessAndLoadData = async () => {
       try {
         setLoading(true)
         
-        // Load league settings
-        const leagueRes = await fetch(`${API_BASE}/commissioner/league/${leagueId}/settings`, {
+        // Get current user
+        const userRes = await fetch(`${API_BASE}/me`, {
           credentials: 'include'
         })
         
-        if (!leagueRes.ok) {
-          throw new Error('Failed to load league settings')
+        if (!userRes.ok) {
+          throw new Error('Not authenticated')
         }
         
-        const leagueData = await leagueRes.json()
-        setLeague(leagueData.league)
-        setTeams(leagueData.teams || [])
-        setUsers(leagueData.users || [])
+        const userData = await userRes.json()
+        setCurrentUser(userData)
         
-        // Load companion app info
-        const companionRes = await fetch(`${API_BASE}/commissioner/league/${leagueId}/companion-app`, {
+        // Check commissioner access for this league
+        const hasCommissionerAccess = await checkCommissionerAccess(userData.id, leagueId)
+        setHasAccess(hasCommissionerAccess)
+        
+        if (!hasCommissionerAccess && !userData.is_admin) {
+          router.push('/unauthorized')
+          return
+        }
+        
+        // Load league data
+        const leagueData = await getLeagueSettings(userData.id, leagueId)
+        setLeague(leagueData.league)
+        
+        // Load teams
+        const teamsRes = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, {
           credentials: 'include'
         })
+        if (teamsRes.ok) {
+          const teamsData = await teamsRes.json()
+          setTeams(teamsData.teams || [])
+        }
         
-        if (companionRes.ok) {
-          const companionData = await companionRes.json()
+        // Load users
+        const usersRes = await fetch(`${API_BASE}/leagues/${leagueId}/users`, {
+          credentials: 'include'
+        })
+        if (usersRes.ok) {
+          const usersData = await usersRes.json()
+          setUsers(usersData.users || [])
+        }
+        
+        // Load companion app info
+        try {
+          const companionData = await getCompanionAppInfo(userData.id, leagueId)
           setCompanionApp(companionData)
+        } catch (error) {
+          console.log('Companion app not set up yet')
         }
         
       } catch (err) {
-        console.error('Failed to load league data:', err)
-        setError('Failed to load league data')
+        console.error('Failed to load commissioner data:', err)
+        setError('Failed to load commissioner data')
       } finally {
         setLoading(false)
       }
     }
 
     if (leagueId) {
-      loadLeagueData()
+      checkAccessAndLoadData()
     }
-  }, [leagueId])
+  }, [leagueId, router])
 
-  const copyToClipboard = async (text: string, label: string) => {
+  const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
-      alert(`${label} copied to clipboard!`)
+      // You could add a toast notification here
+      alert('Copied to clipboard!')
     } catch (err) {
-      console.error('Failed to copy to clipboard:', err)
+      console.error('Failed to copy:', err)
     }
   }
 
-  const generateInviteLink = async () => {
+  const generateInvite = async () => {
+    if (!currentUser) return
+    
     try {
-      const res = await fetch(`${API_BASE}/commissioner/league/${leagueId}/invite`, {
-        method: 'POST',
+      const result = await generateInviteLink(currentUser.id, leagueId)
+      const inviteUrl = `${window.location.origin}/leagues/${leagueId}/join?code=${result.invite_code}`
+      copyToClipboard(inviteUrl)
+    } catch (error) {
+      console.error('Failed to generate invite:', error)
+      alert('Failed to generate invite link')
+    }
+  }
+
+  const assignTeam = async (teamId: number, userEmail: string) => {
+    if (!currentUser) return
+    
+    try {
+      await assignTeamToUser(currentUser.id, leagueId, teamId, userEmail)
+      // Refresh teams data
+      const teamsRes = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, {
         credentials: 'include'
       })
-      
-      if (res.ok) {
-        const data = await res.json()
-        setLeague(prev => prev ? { ...prev, invite_code: data.invite_code } : null)
-        alert('New invite link generated!')
+      if (teamsRes.ok) {
+        const teamsData = await teamsRes.json()
+        setTeams(teamsData.teams || [])
       }
-    } catch (err) {
-      console.error('Failed to generate invite link:', err)
+      alert('Team assigned successfully!')
+    } catch (error) {
+      console.error('Failed to assign team:', error)
+      alert('Failed to assign team')
     }
   }
 
-  const assignTeam = async (userId: number, teamId: number) => {
-    try {
-      const res = await fetch(`${API_BASE}/commissioner/league/${leagueId}/assign-team`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ user_id: userId, team_id: teamId })
-      })
-      
-      if (res.ok) {
-        // Reload data
-        window.location.reload()
-      } else {
-        const errorData = await res.json()
-        alert(`Failed to assign team: ${errorData.error}`)
-      }
-    } catch (err) {
-      console.error('Failed to assign team:', err)
-    }
-  }
-
-  const unassignTeam = async (teamId: number) => {
-    try {
-      const res = await fetch(`${API_BASE}/commissioner/league/${leagueId}/unassign-team`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ team_id: teamId })
-      })
-      
-      if (res.ok) {
-        // Reload data
-        window.location.reload()
-      }
-    } catch (err) {
-      console.error('Failed to unassign team:', err)
-    }
-  }
-
-  const removeUser = async (userId: number) => {
-    if (!confirm('Are you sure you want to remove this user from the league?')) {
+  const removeUser = async (userEmail: string) => {
+    if (!currentUser) return
+    
+    if (!confirm(`Are you sure you want to remove ${userEmail} from the league?`)) {
       return
     }
     
     try {
-      const res = await fetch(`${API_BASE}/commissioner/league/${leagueId}/remove-user`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ user_id: userId })
+      await removeUserFromLeague(currentUser.id, leagueId, userEmail)
+      // Refresh users data
+      const usersRes = await fetch(`${API_BASE}/leagues/${leagueId}/users`, {
+        credentials: 'include'
       })
-      
-      if (res.ok) {
-        // Reload data
-        window.location.reload()
+      if (usersRes.ok) {
+        const usersData = await usersRes.json()
+        setUsers(usersData.users || [])
       }
-    } catch (err) {
-      console.error('Failed to remove user:', err)
+      alert('User removed successfully!')
+    } catch (error) {
+      console.error('Failed to remove user:', error)
+      alert('Failed to remove user')
     }
   }
 
@@ -187,7 +206,7 @@ export default function LeagueManagement() {
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-green mx-auto mb-4"></div>
-          <p className="text-white">Loading League Management...</p>
+          <p className="text-white">Loading Commissioner Hub...</p>
         </div>
       </div>
     )
@@ -199,10 +218,26 @@ export default function LeagueManagement() {
         <div className="text-center">
           <p className="text-red-500 mb-4">{error || 'League not found'}</p>
           <button 
-            onClick={() => router.push('/commissioner')} 
+            onClick={() => router.push('/leagues')} 
             className="bg-neon-green text-black px-4 py-2 rounded hover:bg-green-400"
           >
-            Back to Commissioner Hub
+            Back to Leagues
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">You don't have commissioner access to this league</p>
+          <button 
+            onClick={() => router.push(`/leagues/${leagueId}`)} 
+            className="bg-neon-green text-black px-4 py-2 rounded hover:bg-green-400"
+          >
+            Back to League
           </button>
         </div>
       </div>
@@ -217,10 +252,10 @@ export default function LeagueManagement() {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <button
-                onClick={() => router.push('/commissioner')}
+                onClick={() => router.push(`/leagues/${leagueId}`)}
                 className="mr-4 text-gray-400 hover:text-white"
               >
-                ← Back to Commissioner Hub
+                ← Back to League
               </button>
               <div className="flex items-center">
                 {league.image_url ? (
@@ -288,42 +323,24 @@ export default function LeagueManagement() {
           {activeTab === 'overview' && (
             <div>
               <h2 className="text-2xl font-bold mb-4">League Overview</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div className="bg-gray-700 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-2">Members</h3>
-                  <p className="text-3xl font-bold text-neon-green">{users.length}</p>
-                </div>
-                <div className="bg-gray-700 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-2">Teams</h3>
-                  <p className="text-3xl font-bold text-blue-400">{teams.length}</p>
-                </div>
-                <div className="bg-gray-700 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-2">Assigned</h3>
-                  <p className="text-3xl font-bold text-purple-400">
-                    {teams.filter(t => t.user_id).length}
-                  </p>
-                </div>
-              </div>
-              
-              {league.description && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-2">Description</h3>
-                  <p className="text-gray-300">{league.description}</p>
-                </div>
-              )}
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Created</h3>
-                  <p className="text-gray-300">
-                    {new Date(league.created_at).toLocaleDateString()}
-                  </p>
+                  <h3 className="text-lg font-semibold mb-2">League Information</h3>
+                  <div className="space-y-2">
+                    <p><strong>Name:</strong> {league.name}</p>
+                    <p><strong>Description:</strong> {league.description || 'No description'}</p>
+                    <p><strong>Created:</strong> {new Date(league.created_at).toLocaleDateString()}</p>
+                    <p><strong>Status:</strong> {league.setup_completed ? 'Active' : 'Setup Required'}</p>
+                  </div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Last Updated</h3>
-                  <p className="text-gray-300">
-                    {new Date(league.updated_at).toLocaleDateString()}
-                  </p>
+                  <h3 className="text-lg font-semibold mb-2">Quick Stats</h3>
+                  <div className="space-y-2">
+                    <p><strong>Teams:</strong> {teams.length}</p>
+                    <p><strong>Members:</strong> {users.length}</p>
+                    <p><strong>Assigned Teams:</strong> {teams.filter(t => t.user_id).length}</p>
+                    <p><strong>Available Teams:</strong> {teams.filter(t => !t.user_id).length}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -335,43 +352,32 @@ export default function LeagueManagement() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {teams.map((team) => (
                   <div key={team.id} className="bg-gray-700 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold">{team.name}</h3>
-                      <span className="text-sm text-gray-400">{team.abbreviation}</span>
-                    </div>
-                    
-                    {team.user_id ? (
-                      <div className="mb-3">
-                        <p className="text-sm text-gray-400">Assigned to:</p>
-                        <p className="text-sm font-medium">
-                          {users.find(u => u.id === team.user_id)?.email || 'Unknown User'}
-                        </p>
+                    <h3 className="font-semibold mb-2">{team.city} {team.name}</h3>
+                    <p className="text-sm text-gray-400 mb-2">ID: {team.id}</p>
+                    {team.user ? (
+                      <div>
+                        <p className="text-sm text-green-400">Assigned to: {team.user}</p>
                         <button
-                          onClick={() => unassignTeam(team.id)}
-                          className="mt-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+                          onClick={() => assignTeam(team.id, '')}
+                          className="mt-2 bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs"
                         >
                           Unassign
                         </button>
                       </div>
                     ) : (
-                      <div className="mb-3">
-                        <p className="text-sm text-gray-400 mb-2">Available</p>
-                        <select
-                          onChange={(e) => {
-                            const userId = parseInt(e.target.value)
-                            if (userId) {
-                              assignTeam(userId, team.id)
+                      <div>
+                        <p className="text-sm text-gray-400">Unassigned</p>
+                        <input
+                          type="email"
+                          placeholder="Enter user email"
+                          className="mt-2 w-full px-2 py-1 rounded text-sm bg-gray-600 text-white"
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              const email = (e.target as HTMLInputElement).value
+                              if (email) assignTeam(team.id, email)
                             }
                           }}
-                          className="w-full bg-gray-600 text-white border border-gray-500 rounded px-2 py-1 text-sm"
-                        >
-                          <option value="">Assign to user...</option>
-                          {users.filter(u => !teams.find(t => t.user_id === u.id)).map(user => (
-                            <option key={user.id} value={user.id}>
-                              {user.email}
-                            </option>
-                          ))}
-                        </select>
+                        />
                       </div>
                     )}
                   </div>
@@ -385,38 +391,22 @@ export default function LeagueManagement() {
               <h2 className="text-2xl font-bold mb-4">User Management</h2>
               <div className="space-y-4">
                 {users.map((user) => (
-                  <div key={user.id} className="bg-gray-700 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold">{user.email}</h3>
-                        <p className="text-sm text-gray-400">
-                          Role: {user.role} | 
-                          Team: {user.team_id ? teams.find(t => t.id === user.team_id)?.name : 'None'}
+                  <div key={user.id} className="bg-gray-700 rounded-lg p-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold">{user.email}</p>
+                      <p className="text-sm text-gray-400">Role: {user.role}</p>
+                      {user.team_id && (
+                        <p className="text-sm text-green-400">
+                          Team: {teams.find(t => t.id === user.team_id)?.name || 'Unknown'}
                         </p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <select
-                          value={user.role}
-                          onChange={(e) => {
-                            // TODO: Implement role update
-                            console.log('Update role to:', e.target.value)
-                          }}
-                          className="bg-gray-600 text-white border border-gray-500 rounded px-2 py-1 text-sm"
-                        >
-                          <option value="member">Member</option>
-                          <option value="co-commissioner">Co-Commissioner</option>
-                          <option value="commissioner">Commissioner</option>
-                        </select>
-                        {user.role !== 'commissioner' && (
-                          <button
-                            onClick={() => removeUser(user.id)}
-                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
-                          >
-                            Remove
-                          </button>
-                        )}
-                      </div>
+                      )}
                     </div>
+                    <button
+                      onClick={() => removeUser(user.email)}
+                      className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs"
+                    >
+                      Remove
+                    </button>
                   </div>
                 ))}
               </div>
@@ -426,35 +416,36 @@ export default function LeagueManagement() {
           {activeTab === 'invites' && (
             <div>
               <h2 className="text-2xl font-bold mb-4">Invite Management</h2>
-              <div className="bg-gray-700 rounded-lg p-6">
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold mb-2">Invite Link</h3>
-                  {league.invite_code ? (
+              <div className="space-y-4">
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-2">Generate Invite Link</h3>
+                  <p className="text-gray-400 mb-4">
+                    Create a new invite link for this league. Share this link with new members.
+                  </p>
+                  <button
+                    onClick={generateInvite}
+                    className="bg-neon-green text-black px-4 py-2 rounded hover:bg-green-400"
+                  >
+                    Generate Invite Link
+                  </button>
+                </div>
+                
+                {league.invite_code && (
+                  <div className="bg-gray-700 rounded-lg p-4">
+                    <h3 className="text-lg font-semibold mb-2">Current Invite Code</h3>
                     <div className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={`${window.location.origin}/join/${league.invite_code}`}
-                        readOnly
-                        className="flex-1 bg-gray-600 text-white border border-gray-500 rounded px-3 py-2"
-                      />
+                      <code className="bg-gray-600 px-2 py-1 rounded text-sm">
+                        {league.invite_code}
+                      </code>
                       <button
-                        onClick={() => copyToClipboard(`${window.location.origin}/join/${league.invite_code}`, 'Invite link')}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                        onClick={() => copyToClipboard(league.invite_code!)}
+                        className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs"
                       >
                         Copy
                       </button>
                     </div>
-                  ) : (
-                    <p className="text-gray-400">No invite link generated</p>
-                  )}
-                </div>
-                
-                <button
-                  onClick={generateInviteLink}
-                  className="bg-neon-green text-black font-semibold px-4 py-2 rounded hover:bg-green-400"
-                >
-                  Generate New Invite Link
-                </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -463,44 +454,34 @@ export default function LeagueManagement() {
             <div>
               <h2 className="text-2xl font-bold mb-4">Companion App Setup</h2>
               {companionApp ? (
-                <div className="space-y-6">
-                  <div className="bg-gray-700 rounded-lg p-6">
+                <div className="space-y-4">
+                  <div className="bg-gray-700 rounded-lg p-4">
                     <h3 className="text-lg font-semibold mb-2">Ingestion URL</h3>
                     <div className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={companionApp.ingestion_url}
-                        readOnly
-                        className="flex-1 bg-gray-600 text-white border border-gray-500 rounded px-3 py-2"
-                      />
+                      <code className="bg-gray-600 px-2 py-1 rounded text-sm flex-1">
+                        {companionApp.ingestion_url}
+                      </code>
                       <button
-                        onClick={() => copyToClipboard(companionApp.ingestion_url, 'Ingestion URL')}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                        onClick={() => copyToClipboard(companionApp.ingestion_url)}
+                        className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs"
                       >
                         Copy
                       </button>
                     </div>
                   </div>
                   
-                  <div className="bg-gray-700 rounded-lg p-6">
+                  <div className="bg-gray-700 rounded-lg p-4">
                     <h3 className="text-lg font-semibold mb-2">Setup Instructions</h3>
-                    <div className="text-gray-300 whitespace-pre-line">
+                    <p className="text-gray-300 whitespace-pre-wrap">
                       {companionApp.setup_instructions}
-                    </div>
+                    </p>
                   </div>
                 </div>
               ) : (
-                <div className="bg-gray-700 rounded-lg p-6 text-center">
-                  <p className="text-gray-400 mb-4">Companion app not configured</p>
-                  <button
-                    onClick={() => {
-                      // TODO: Implement companion app setup
-                      console.log('Setup companion app')
-                    }}
-                    className="bg-neon-green text-black font-semibold px-4 py-2 rounded hover:bg-green-400"
-                  >
-                    Setup Companion App
-                  </button>
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <p className="text-gray-400">
+                    Companion app is not set up for this league yet. Contact support to enable this feature.
+                  </p>
                 </div>
               )}
             </div>
