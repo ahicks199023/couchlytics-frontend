@@ -13,7 +13,6 @@ export default function TradeTool({ leagueId: propLeagueId }: TradeToolProps) {
   const leagueId = propLeagueId || params.leagueId as string || '12335716'
 
   const [isOpen, setIsOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
 
   // Close modal when clicking outside
