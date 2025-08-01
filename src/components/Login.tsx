@@ -9,7 +9,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const router = useRouter();
-  const { user, loading, loginWithGoogle, loginWithDiscord } = useAuth();
+  const { user, loading } = useAuth();
 
   // Redirect if already authenticated
   useEffect(() => {

@@ -7,7 +7,6 @@ import { useParams, usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 import { API_BASE } from '@/lib/config'
-import { checkCommissionerAccess } from '@/lib/api'
 
 const links = [
   { label: 'Home', path: '' },
@@ -38,19 +37,14 @@ export default function LeagueSidebar() {
     const checkAccess = async () => {
       try {
         // Get current user
-        const userRes = await fetch(`${API_BASE}/me`, {
+        const userRes = await fetch(`${API_BASE}/auth/user`, {
           credentials: 'include'
         })
         
         if (userRes.ok) {
           const userData = await userRes.json()
           setIsGlobalCommissioner(userData.is_commissioner || false)
-          
-          // Check league-specific commissioner access
-          if (userData.id && leagueId) {
-            const hasAccess = await checkCommissionerAccess(userData.id, leagueId as string)
-            setHasCommissionerAccess(hasAccess)
-          }
+          setHasCommissionerAccess(userData.is_commissioner || false)
         }
       } catch (error) {
         console.error('Error checking commissioner access:', error)

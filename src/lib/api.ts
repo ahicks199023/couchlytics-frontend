@@ -75,7 +75,7 @@ export const getLeagueSettings = async (leagueId: string) => {
   return fetchFromApi(`/commissioner/league/${leagueId}/settings`)
 }
 
-export const updateLeagueSettings = async (leagueId: string, settings: any) => {
+export const updateLeagueSettings = async (leagueId: string, settings: Record<string, unknown>) => {
   return fetchFromApi(`/commissioner/league/${leagueId}/update`, {
     method: 'PUT',
     body: JSON.stringify(settings)
@@ -107,7 +107,7 @@ export const getCompanionAppInfo = async (leagueId: string) => {
 }
 
 // Trade functions
-export const submitTrade = async (leagueId: string, tradeData: any) => {
+export const submitTrade = async (leagueId: string, tradeData: Record<string, unknown>) => {
   return fetchFromApi(`/leagues/${leagueId}/trades`, {
     method: 'POST',
     body: JSON.stringify(tradeData)
@@ -131,7 +131,7 @@ export const getTradeToolData = async (leagueId: string) => {
 }
 
 // Ozzie chat
-export const sendOzzieQuery = async (queryData: any) => {
+export const sendOzzieQuery = async (queryData: Record<string, unknown>) => {
   return fetchFromApi('/ozzie/query', {
     method: 'POST',
     body: JSON.stringify(queryData)

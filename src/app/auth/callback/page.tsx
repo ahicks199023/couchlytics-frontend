@@ -15,7 +15,6 @@ export default function AuthCallback() {
       try {
         // Check if we have OAuth callback parameters
         const code = searchParams.get('code')
-        const state = searchParams.get('state')
         const error = searchParams.get('error')
 
         if (error) {
