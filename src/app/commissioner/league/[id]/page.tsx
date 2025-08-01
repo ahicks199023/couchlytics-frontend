@@ -472,7 +472,10 @@ export default function LeagueManagement() {
                   <div className="bg-gray-700 rounded-lg p-4">
                     <h3 className="text-lg font-semibold mb-2">Setup Instructions</h3>
                     <p className="text-gray-300 whitespace-pre-wrap">
-                      {companionApp.setup_instructions}
+                      {typeof companionApp.setup_instructions === 'string' 
+                        ? companionApp.setup_instructions.replace(/steol/g, 'step1')
+                        : JSON.stringify(companionApp.setup_instructions, null, 2).replace(/steol/g, 'step1')
+                      }
                     </p>
                   </div>
                 </div>
