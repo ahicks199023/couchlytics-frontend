@@ -3,12 +3,10 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
 import NotificationDropdown from '@/components/NotificationDropdown'
 import LogoutButton from '@/components/LogoutButton'
 import ThemeToggle from '@/components/ThemeToggle'
 import { API_BASE } from '@/lib/config'
-import { checkCommissionerAccess } from '@/lib/api'
 
 type User = {
   id: number
@@ -20,8 +18,6 @@ type User = {
 export default function NavBar() {
   const [user, setUser] = useState<User | null>(null)
   const [isOpen, setIsOpen] = useState(false)
-  const [hasCommissionerAccess, setHasCommissionerAccess] = useState(false)
-  const params = useParams()
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -36,13 +32,6 @@ export default function NavBar() {
         if (res.ok) {
           const data = await res.json()
           setUser(data)
-          
-          // Check if user has commissioner access for current league
-          if (data && params.leagueId) {
-            const leagueId = params.leagueId as string
-            const hasAccess = await checkCommissionerAccess(data.id, leagueId)
-            setHasCommissionerAccess(hasAccess)
-          }
         } else if (res.status === 401) {
           // User is not authenticated, this is normal
           setUser(null)
@@ -57,22 +46,7 @@ export default function NavBar() {
     }
 
     fetchUser()
-  }, [params.leagueId])
-
-  // Check commissioner access when league changes
-  useEffect(() => {
-    const checkAccess = async () => {
-      if (user && params.leagueId) {
-        const leagueId = params.leagueId as string
-        const hasAccess = await checkCommissionerAccess(user.id, leagueId)
-        setHasCommissionerAccess(hasAccess)
-      } else {
-        setHasCommissionerAccess(false)
-      }
-    }
-
-    checkAccess()
-  }, [user, params.leagueId])
+  }, [])
 
   return (
     <nav className="bg-gray-900 text-white px-6 py-4 flex justify-between items-center relative">
@@ -134,13 +108,6 @@ export default function NavBar() {
             <>
               <Link href="/dashboard" onClick={() => setIsOpen(false)}>Dashboard</Link>
               <Link href="/leagues" onClick={() => setIsOpen(false)}>Leagues</Link>
-              
-              {/* Show Commissioner's Hub if user has access to current league OR is global commissioner */}
-              {(hasCommissionerAccess || user.is_commissioner) && (
-                <Link href={`/commissioner/league/${params.leagueId}`} onClick={() => setIsOpen(false)}>
-                  Commissioner&apos;s Hub
-                </Link>
-              )}
               
               {/* Show global commissioner features for global commissioners */}
               {user.is_commissioner && (

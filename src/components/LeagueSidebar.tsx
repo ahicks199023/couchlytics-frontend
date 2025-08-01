@@ -4,8 +4,10 @@
 
 import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import clsx from 'clsx'
+import { API_BASE } from '@/lib/config'
+import { checkCommissionerAccess } from '@/lib/api'
 
 const links = [
   { label: 'Home', path: '' },
@@ -29,6 +31,34 @@ export default function LeagueSidebar() {
   const { leagueId } = useParams()
   const pathname = usePathname()
   const [expandedItems, setExpandedItems] = useState<string[]>([])
+  const [hasCommissionerAccess, setHasCommissionerAccess] = useState(false)
+  const [isGlobalCommissioner, setIsGlobalCommissioner] = useState(false)
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      try {
+        // Get current user
+        const userRes = await fetch(`${API_BASE}/me`, {
+          credentials: 'include'
+        })
+        
+        if (userRes.ok) {
+          const userData = await userRes.json()
+          setIsGlobalCommissioner(userData.is_commissioner || false)
+          
+          // Check league-specific commissioner access
+          if (userData.id && leagueId) {
+            const hasAccess = await checkCommissionerAccess(userData.id, leagueId as string)
+            setHasCommissionerAccess(hasAccess)
+          }
+        }
+      } catch (error) {
+        console.error('Error checking commissioner access:', error)
+      }
+    }
+
+    checkAccess()
+  }, [leagueId])
 
   const toggleExpanded = (path: string) => {
     setExpandedItems(prev => 
@@ -46,6 +76,10 @@ export default function LeagueSidebar() {
   const isSubItemActive = (path: string) => {
     const fullPath = `/leagues/${leagueId}/${path}`
     return pathname === fullPath
+  }
+
+  const isCommissionerHubActive = () => {
+    return pathname.includes('/commissioner/league/')
   }
 
   return (
@@ -104,6 +138,21 @@ export default function LeagueSidebar() {
             </div>
           )
         })}
+        
+        {/* Commissioner's Hub - Show if user has access */}
+        {(hasCommissionerAccess || isGlobalCommissioner) && (
+          <div className="pt-2 border-t border-gray-700">
+            <Link
+              href={`/commissioner/league/${leagueId}`}
+              className={clsx(
+                'block px-2 py-1 rounded hover:bg-gray-700 text-sm font-medium',
+                isCommissionerHubActive() && 'bg-blue-600 text-white'
+              )}
+            >
+              🏆 Commissioner&apos;s Hub
+            </Link>
+          </div>
+        )}
       </nav>
     </aside>
   )
