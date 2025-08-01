@@ -107,7 +107,10 @@ export default function NavBar() {
               <Link href="/dashboard" onClick={() => setIsOpen(false)}>Dashboard</Link>
               <Link href="/leagues" onClick={() => setIsOpen(false)}>Leagues</Link>
               {user.is_commissioner && (
-                <Link href="/import" onClick={() => setIsOpen(false)}>Import Madden League</Link>
+                <>
+                  <Link href="/commissioner" onClick={() => setIsOpen(false)}>Commissioner Hub</Link>
+                  <Link href="/import" onClick={() => setIsOpen(false)}>Import Madden League</Link>
+                </>
               )}
               {user.is_admin && (
                 <>
