@@ -10,7 +10,6 @@ import {
   assignTeamToUser, 
   removeUserFromLeague, 
   getCompanionAppInfo,
-  checkCommissionerAccess,
   updateLeagueSettings,
   getLeagueUsers
 } from '@/lib/api'
@@ -515,7 +514,13 @@ export default function LeagueManagement() {
                         />
                         {imagePreview && (
                           <div className="mt-2">
-                            <img src={imagePreview} alt="Preview" className="w-20 h-20 object-cover rounded" />
+                            <Image 
+                              src={imagePreview} 
+                              alt="Preview" 
+                              width={80} 
+                              height={80} 
+                              className="rounded"
+                            />
                           </div>
                         )}
                       </div>
