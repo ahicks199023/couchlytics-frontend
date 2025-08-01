@@ -11,7 +11,8 @@ import {
   removeUserFromLeague, 
   getCompanionAppInfo,
   checkCommissionerAccess,
-  updateLeagueSettings
+  updateLeagueSettings,
+  getLeagueUsers
 } from '@/lib/api'
 
 interface League {
@@ -36,15 +37,26 @@ interface Team {
 
 interface User {
   id: number
+  first_name?: string
+  last_name?: string
   email: string
+  name?: string
   role: 'commissioner' | 'co-commissioner' | 'member'
   team_id?: number
+  joined_at?: string
+  is_active?: boolean
 }
 
 interface CompanionAppInfo {
+  companion_app_url: string
+  ingestion_endpoint: string
   league_id: string
-  ingestion_url: string
-  setup_instructions: string
+  league_name: string
+  setup_instructions: {
+    step1: string
+    step2: string
+    step3: string
+  }
 }
 
 interface LeagueSettings {
@@ -82,37 +94,40 @@ export default function LeagueManagement() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  
+  // New states for companion app
+  const [companionAppUrl, setCompanionAppUrl] = useState<string>('')
+  const [setupInstructions, setSetupInstructions] = useState<{step1: string, step2: string, step3: string} | null>(null)
+  const [copyMessage, setCopyMessage] = useState<string>('')
 
   // Check commissioner access and load data
   useEffect(() => {
-    const checkAccessAndLoadData = async () => {
+    const loadData = async () => {
       try {
         setLoading(true)
+        setError(null)
         
-        // Get current user
-        const userRes = await fetch(`${API_BASE}/me`, {
-          credentials: 'include'
-        })
-        
-        if (!userRes.ok) {
-          throw new Error('Not authenticated')
-        }
-        
-        const userData = await userRes.json()
-        setCurrentUser(userData)
-        
-        // Check commissioner access for this league
-        const hasCommissionerAccess = await checkCommissionerAccess(userData.id, leagueId)
-        setHasAccess(hasCommissionerAccess)
-        
-        if (!hasCommissionerAccess && !userData.is_admin && !userData.is_commissioner) {
-          router.push('/unauthorized')
+        // Get current user from localStorage or context
+        const userStr = localStorage.getItem('user')
+        if (!userStr) {
+          setError('User not found')
           return
         }
         
-        // Load league data
-        const leagueData = await getLeagueSettings(userData.id, leagueId)
-        setLeague(leagueData.league)
+        const user = JSON.parse(userStr)
+        setCurrentUser(user)
+        
+        // Check commissioner access
+        try {
+          const leagueData = await getLeagueSettings(user.id, leagueId)
+          setLeague(leagueData.league)
+          setHasAccess(true)
+        } catch (error) {
+          console.error('Commissioner access check failed:', error)
+          setError('You do not have commissioner access to this league')
+          setHasAccess(false)
+          return
+        }
         
         // Load teams
         const teamsRes = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, {
@@ -123,44 +138,55 @@ export default function LeagueManagement() {
           setTeams(teamsData.teams || [])
         }
         
-        // Load users
-        const usersRes = await fetch(`${API_BASE}/leagues/${leagueId}/users`, {
-          credentials: 'include'
-        })
-        if (usersRes.ok) {
-          const usersData = await usersRes.json()
+        // Load users using the new function
+        try {
+          const usersData = await getLeagueUsers(leagueId)
           setUsers(usersData.users || [])
+        } catch (error) {
+          console.error('Failed to load users:', error)
+          setUsers([])
         }
         
         // Load companion app info
         try {
-          const companionData = await getCompanionAppInfo(userData.id, leagueId)
+          const companionData = await getCompanionAppInfo(user.id, leagueId)
           setCompanionApp(companionData)
-                 } catch {
-           console.log('Companion app not set up yet')
-         }
+          setCompanionAppUrl(companionData.companion_app_url)
+          setSetupInstructions(companionData.setup_instructions)
+        } catch (error) {
+          console.error('Failed to load companion app info:', error)
+          setCompanionApp(null)
+        }
         
-      } catch (err) {
-        console.error('Failed to load commissioner data:', err)
-        setError('Failed to load commissioner data')
+      } catch (error) {
+        console.error('Failed to load data:', error)
+        setError('Failed to load league data')
       } finally {
         setLoading(false)
       }
     }
-
+    
     if (leagueId) {
-      checkAccessAndLoadData()
+      loadData()
     }
-  }, [leagueId, router])
+  }, [leagueId])
 
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
-      setSuccessMessage('Copied to clipboard!')
-      setTimeout(() => setSuccessMessage(null), 3000)
+      setCopyMessage('URL copied to clipboard!')
+      setTimeout(() => setCopyMessage(''), 2000)
     } catch (err) {
-      console.error('Failed to copy:', err)
-      setError('Failed to copy to clipboard')
+      console.error('Failed to copy: ', err)
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea')
+      textArea.value = text
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      setCopyMessage('URL copied to clipboard!')
+      setTimeout(() => setCopyMessage(''), 2000)
     }
   }
 
@@ -582,27 +608,63 @@ export default function LeagueManagement() {
 
           {activeTab === 'users' && (
             <div>
-              <h2 className="text-2xl font-bold mb-4">User Management</h2>
-              <div className="space-y-4">
-                {users.map((user) => (
-                  <div key={user.id} className="bg-gray-700 rounded-lg p-4 flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold">{user.email}</p>
-                      <p className="text-sm text-gray-400">Role: {user.role}</p>
-                      {user.team_id && (
-                        <p className="text-sm text-green-400">
-                          Team: {teams.find(t => t.id === user.team_id)?.name || 'Unknown'}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => removeUser(user.email)}
-                      className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
+              <h2 className="text-2xl font-bold mb-4">League Members</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="text-left py-2 px-1">Name</th>
+                      <th className="text-left py-2 px-1">Email</th>
+                      <th className="text-left py-2 px-1">Role</th>
+                      <th className="text-left py-2 px-1">Team</th>
+                      <th className="text-left py-2 px-1">Joined</th>
+                      <th className="text-left py-2 px-1">Status</th>
+                      <th className="text-left py-2 px-1">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((user) => (
+                      <tr key={user.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                        <td className="py-2 px-1 text-white">
+                          {user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'N/A'}
+                        </td>
+                        <td className="py-2 px-1 text-white">{user.email}</td>
+                        <td className="py-2 px-1">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            user.role === 'commissioner' ? 'bg-red-600' :
+                            user.role === 'co-commissioner' ? 'bg-orange-600' :
+                            'bg-gray-600'
+                          }`}>
+                            {user.role}
+                          </span>
+                        </td>
+                        <td className="py-2 px-1 text-white">
+                          {user.team_id ? teams.find(t => t.id === user.team_id)?.name || 'Unknown' : 'Unassigned'}
+                        </td>
+                        <td className="py-2 px-1 text-white">
+                          {user.joined_at ? new Date(user.joined_at).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td className="py-2 px-1">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            user.is_active ? 'bg-green-600' : 'bg-red-600'
+                          }`}>
+                            {user.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="py-2 px-1">
+                          {user.role !== 'commissioner' && (
+                            <button
+                              onClick={() => removeUser(user.email)}
+                              className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
@@ -647,38 +709,73 @@ export default function LeagueManagement() {
           {activeTab === 'companion' && (
             <div>
               <h2 className="text-2xl font-bold mb-4">Companion App Setup</h2>
+              
+              {copyMessage && (
+                <div className="bg-green-600 text-white px-4 py-2 rounded mb-4">
+                  {copyMessage}
+                </div>
+              )}
+              
               {companionApp ? (
-                <div className="space-y-4">
-                  <div className="bg-gray-700 rounded-lg p-4">
-                    <h3 className="text-lg font-semibold mb-2">Ingestion URL</h3>
-                    <div className="flex items-center space-x-2">
-                      <code className="bg-gray-600 px-2 py-1 rounded text-sm flex-1">
-                        {companionApp.ingestion_url}
-                      </code>
-                      <button
-                        onClick={() => copyToClipboard(companionApp.ingestion_url)}
-                        className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs"
+                <div className="space-y-6">
+                  <div className="companion-app-section">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Companion App Ingestion URL:
+                    </label>
+                    <div className="url-input-container flex gap-3 items-center">
+                      <input 
+                        type="text" 
+                        value={companionAppUrl || 'Loading...'} 
+                        readOnly 
+                        className="url-input flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white font-mono text-sm focus:outline-none focus:border-blue-500"
+                        placeholder="https://api.couchlytics.com/companion/ingest"
+                      />
+                      <button 
+                        onClick={() => copyToClipboard(companionAppUrl)}
+                        className="copy-button bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!companionAppUrl}
                       >
                         Copy
                       </button>
                     </div>
                   </div>
                   
-                  <div className="bg-gray-700 rounded-lg p-4">
-                    <h3 className="text-lg font-semibold mb-2">Setup Instructions</h3>
-                    <p className="text-gray-300 whitespace-pre-wrap">
-                      {typeof companionApp.setup_instructions === 'string' 
-                        ? companionApp.setup_instructions.replace(/steol/g, 'step1')
-                        : JSON.stringify(companionApp.setup_instructions, null, 2).replace(/steol/g, 'step1')
-                      }
-                    </p>
+                  <div className="setup-instructions bg-gray-700 rounded-lg p-4">
+                    <h4 className="text-lg font-semibold mb-3">Setup Instructions:</h4>
+                    <ol className="space-y-2 text-gray-300">
+                      {setupInstructions?.step1 && (
+                        <li className="flex items-start">
+                          <span className="bg-neon-green text-black rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">1</span>
+                          <span>{setupInstructions.step1}</span>
+                        </li>
+                      )}
+                      {setupInstructions?.step2 && (
+                        <li className="flex items-start">
+                          <span className="bg-neon-green text-black rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">2</span>
+                          <span>{setupInstructions.step2}</span>
+                        </li>
+                      )}
+                      {setupInstructions?.step3 && (
+                        <li className="flex items-start">
+                          <span className="bg-neon-green text-black rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">3</span>
+                          <span>{setupInstructions.step3}</span>
+                        </li>
+                      )}
+                    </ol>
+                  </div>
+                  
+                  <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                    <h4 className="text-lg font-semibold mb-2 text-blue-300">League Information</h4>
+                    <div className="space-y-1 text-sm text-gray-300">
+                      <p><strong>League ID:</strong> {companionApp.league_id}</p>
+                      <p><strong>League Name:</strong> {companionApp.league_name}</p>
+                      <p><strong>Ingestion Endpoint:</strong> {companionApp.ingestion_endpoint}</p>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="bg-gray-700 rounded-lg p-4">
-                  <p className="text-gray-400">
-                    Companion app is not set up for this league yet. Contact support to enable this feature.
-                  </p>
+                <div className="text-center py-8">
+                  <p className="text-gray-400">Companion app information not available</p>
                 </div>
               )}
             </div>

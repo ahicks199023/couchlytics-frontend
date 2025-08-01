@@ -273,14 +273,39 @@ export const getCompanionAppInfo = async (userId: number, leagueId: string) => {
     const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/companion-app?user_id=${userId}`, {
       credentials: 'include'
     })
-    
     if (!response.ok) {
       throw new Error(`Failed to fetch companion app info: ${response.status}`)
     }
+    const data = await response.json()
     
-    return await response.json()
+    // The backend now returns:
+    // {
+    //   "companion_app_url": "https://api.couchlytics.com/companion/ingest",
+    //   "ingestion_endpoint": "/companion/ingest",
+    //   "league_id": "12335716",
+    //   "league_name": "League Name",
+    //   "setup_instructions": { "step1": "...", "step2": "...", "step3": "..." }
+    // }
+    
+    return data
   } catch (error) {
     console.error('Error fetching companion app info:', error)
+    throw error
+  }
+}
+
+export const getLeagueUsers = async (leagueId: string) => {
+  try {
+    const response = await fetch(`${API_BASE}/leagues/${leagueId}/users`, {
+      credentials: 'include'
+    })
+    if (!response.ok) {
+      throw new Error(`Failed to fetch league users: ${response.status}`)
+    }
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error fetching league users:', error)
     throw error
   }
 }
