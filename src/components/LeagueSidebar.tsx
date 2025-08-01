@@ -4,14 +4,21 @@
 
 import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
+import { useState } from 'react'
 import clsx from 'clsx'
 
 const links = [
   { label: 'Home', path: '' },
   { label: 'Analytics', path: 'analytics' },
   { label: 'Schedule', path: 'schedule' },
-  { label: 'Trades', path: 'trades' },
-  { label: 'Trade Tool', path: 'trade-tool' },
+  { 
+    label: 'Trades', 
+    path: 'trades',
+    subItems: [
+      { label: 'Trade History', path: 'trades' },
+      { label: 'Submit Trade', path: 'trades/submit' }
+    ]
+  },
   { label: 'Stats', path: 'stats', prefetch: false },
   { label: 'Stats Leaders', path: 'stats-leaders', prefetch: false },
   { label: 'Players', path: 'players', prefetch: false }
@@ -20,26 +27,80 @@ const links = [
 export default function LeagueSidebar() {
   const { leagueId } = useParams()
   const pathname = usePathname()
+  const [expandedItems, setExpandedItems] = useState<string[]>([])
+
+  const toggleExpanded = (path: string) => {
+    setExpandedItems(prev => 
+      prev.includes(path) 
+        ? prev.filter(item => item !== path)
+        : [...prev, path]
+    )
+  }
+
+  const isActive = (path: string) => {
+    const fullPath = `/leagues/${leagueId}/${path}`
+    return pathname === fullPath || (path === '' && pathname === `/leagues/${leagueId}`)
+  }
+
+  const isSubItemActive = (path: string) => {
+    const fullPath = `/leagues/${leagueId}/${path}`
+    return pathname === fullPath
+  }
 
   return (
     <aside className="w-48 bg-gray-900 text-white p-4 space-y-4 min-h-screen">
       <h2 className="text-lg font-bold mb-2">League Menu</h2>
-      <nav className="flex flex-col space-y-2">
-        {links.map(({ label, path, prefetch }) => {
-          const fullPath = `/leagues/${leagueId}/${path}`
-          const active = pathname === fullPath || (path === '' && pathname === `/leagues/${leagueId}`)
+      <nav className="flex flex-col space-y-1">
+        {links.map(({ label, path, prefetch, subItems }) => {
+          const hasSubItems = subItems && subItems.length > 0
+          const isExpanded = expandedItems.includes(path)
+          const active = isActive(path) || (hasSubItems && subItems.some(sub => isSubItemActive(sub.path)))
+
           return (
-            <Link
-              key={path}
-              href={fullPath}
-              prefetch={prefetch !== false}
-              className={clsx(
-                'px-2 py-1 rounded hover:bg-gray-700',
-                active && 'bg-blue-600 text-white'
+            <div key={path}>
+              <div className="flex items-center justify-between">
+                <Link
+                  href={hasSubItems ? '#' : `/leagues/${leagueId}/${path}`}
+                  prefetch={prefetch !== false}
+                  onClick={hasSubItems ? (e) => { e.preventDefault(); toggleExpanded(path) } : undefined}
+                  className={clsx(
+                    'px-2 py-1 rounded hover:bg-gray-700 flex-1 text-left',
+                    active && 'bg-blue-600 text-white'
+                  )}
+                >
+                  {label}
+                </Link>
+                {hasSubItems && (
+                  <button
+                    onClick={() => toggleExpanded(path)}
+                    className={clsx(
+                      'px-1 py-1 text-gray-400 hover:text-white transition-transform duration-200',
+                      isExpanded && 'rotate-90'
+                    )}
+                  >
+                    ▶
+                  </button>
+                )}
+              </div>
+              
+              {/* Sub-items */}
+              {hasSubItems && isExpanded && (
+                <div className="ml-4 mt-1 space-y-1">
+                  {subItems.map((subItem) => (
+                    <Link
+                      key={subItem.path}
+                      href={`/leagues/${leagueId}/${subItem.path}`}
+                      className={clsx(
+                        'block px-2 py-1 rounded text-sm hover:bg-gray-700',
+                        isSubItemActive(subItem.path) && 'bg-blue-600 text-white'
+                      )}
+                    >
+                      {subItem.label}
+                    </Link>
+                  ))}
+                </div>
               )}
-            >
-              {label}
-            </Link>
+            </div>
           )
         })}
       </nav>
