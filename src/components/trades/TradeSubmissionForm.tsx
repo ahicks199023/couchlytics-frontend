@@ -18,7 +18,7 @@ interface Player {
 
 interface TradeSubmissionFormProps {
   leagueId: string
-  onTradeSubmitted?: (result: any) => void
+  onTradeSubmitted?: (result: unknown) => void
 }
 
 const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({ 
@@ -27,7 +27,6 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
 }) => {
   const [teams, setTeams] = useState<Team[]>([])
   const [players, setPlayers] = useState<Player[]>([])
-  const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     teamFromId: '',
@@ -45,37 +44,37 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
 
   // Load teams and players on component mount
   useEffect(() => {
+    const loadTeams = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/teams`, {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setTeams(data.teams || [])
+        }
+      } catch (error) {
+        console.error('Failed to load teams:', error)
+      }
+    }
+
+    const loadPlayers = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players`, {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setPlayers(data.players || [])
+        }
+      } catch (error) {
+        console.error('Failed to load players:', error)
+      }
+    }
+
     loadTeams()
     loadPlayers()
   }, [leagueId])
-
-  const loadTeams = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/teams`, {
-        credentials: 'include'
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setTeams(data.teams || [])
-      }
-    } catch (error) {
-      console.error('Failed to load teams:', error)
-    }
-  }
-
-  const loadPlayers = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${leagueId}/players`, {
-        credentials: 'include'
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setPlayers(data.players || [])
-      }
-    } catch (error) {
-      console.error('Failed to load players:', error)
-    }
-  }
 
   const addPlayerItem = (player: Player, fromTeamId: number, toTeamId: number) => {
     const newItem = {

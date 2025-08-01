@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { fetchTradesHistory, cancelTrade, Trade, Pagination } from '@/lib/trades'
 
 interface TradesHistoryProps {
@@ -14,11 +14,7 @@ const TradesHistory: React.FC<TradesHistoryProps> = ({ leagueId }) => {
   const [pagination, setPagination] = useState<Pagination | null>(null)
   const [filters, setFilters] = useState({ status: 'all', page: 1 })
 
-  useEffect(() => {
-    loadTrades()
-  }, [leagueId, filters])
-
-  const loadTrades = async () => {
+  const loadTrades = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -30,7 +26,11 @@ const TradesHistory: React.FC<TradesHistoryProps> = ({ leagueId }) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [leagueId, filters])
+
+  useEffect(() => {
+    loadTrades()
+  }, [loadTrades])
 
   const handleCancelTrade = async (tradeId: string) => {
     if (!confirm('Are you sure you want to cancel this trade?')) {
