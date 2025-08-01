@@ -16,13 +16,6 @@ interface League {
   updated_at: string
 }
 
-interface User {
-  id: number
-  email: string
-  is_commissioner?: boolean
-  is_admin?: boolean
-}
-
 export default function CommissionerHub() {
   const router = useRouter()
   const [leagues, setLeagues] = useState<League[]>([])
