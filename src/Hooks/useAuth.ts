@@ -5,30 +5,62 @@ import { API_BASE } from '@/lib/config';
 export default function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [authenticated, setAuthenticated] = useState<boolean>(false);
+
+  const checkAuthStatus = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/auth/status`, {
+        credentials: "include",
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.authenticated) {
+          setUser(data.user);
+          setAuthenticated(true);
+        } else {
+          setUser(null);
+          setAuthenticated(false);
+        }
+      } else {
+        setUser(null);
+        setAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('Auth status check failed:', error);
+      setUser(null);
+      setAuthenticated(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const fetchUser = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/me`, {
+      const response = await fetch(`${API_BASE}/auth/user`, {
         credentials: "include",
       });
       
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
+        setAuthenticated(true);
       } else {
         setUser(null);
+        setAuthenticated(false);
       }
     } catch (error) {
       console.error('Auth error:', error);
       setUser(null);
+      setAuthenticated(false);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    checkAuthStatus();
+  }, [checkAuthStatus]);
 
   const hasPermission = useCallback((permission: Permission): boolean => {
     if (!user) return false;
@@ -50,25 +82,38 @@ export default function useAuth() {
 
   const logout = useCallback(async () => {
     try {
-      await fetch(`${API_BASE}/logout`, {
+      await fetch(`${API_BASE}/auth/logout`, {
         credentials: 'include',
-        method: 'POST',
+        method: 'GET',
       });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
+      setAuthenticated(false);
     }
+  }, []);
+
+  const loginWithGoogle = useCallback(() => {
+    window.location.href = `${API_BASE}/auth/login/google`;
+  }, []);
+
+  const loginWithDiscord = useCallback(() => {
+    window.location.href = `${API_BASE}/auth/login/discord`;
   }, []);
 
   return { 
     user, 
     loading, 
+    authenticated,
     hasPermission, 
     hasRole, 
     isCommissioner, 
     isAdmin, 
     logout,
-    refetch: fetchUser 
+    loginWithGoogle,
+    loginWithDiscord,
+    refetch: fetchUser,
+    checkAuthStatus
   };
 }

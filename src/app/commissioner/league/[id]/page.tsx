@@ -80,7 +80,6 @@ export default function LeagueManagement() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<TabType>('overview')
-  const [currentUser, setCurrentUser] = useState<{ id: number; email: string } | null>(null)
   const [hasAccess, setHasAccess] = useState(false)
   
   // New states for editing
@@ -106,19 +105,9 @@ export default function LeagueManagement() {
         setLoading(true)
         setError(null)
         
-        // Get current user from localStorage or context
-        const userStr = localStorage.getItem('user')
-        if (!userStr) {
-          setError('User not found')
-          return
-        }
-        
-        const user = JSON.parse(userStr)
-        setCurrentUser(user)
-        
-        // Check commissioner access
+        // Check commissioner access by trying to get league settings
         try {
-          const leagueData = await getLeagueSettings(user.id, leagueId)
+          const leagueData = await getLeagueSettings(leagueId)
           setLeague(leagueData.league)
           setHasAccess(true)
         } catch (error) {
@@ -148,7 +137,7 @@ export default function LeagueManagement() {
         
         // Load companion app info
         try {
-          const companionData = await getCompanionAppInfo(user.id, leagueId)
+          const companionData = await getCompanionAppInfo(leagueId)
           setCompanionApp(companionData)
           setCompanionAppUrl(companionData.companion_app_url)
           setSetupInstructions(companionData.setup_instructions)
@@ -190,11 +179,9 @@ export default function LeagueManagement() {
   }
 
   const generateInvite = async () => {
-    if (!currentUser) return
-    
     try {
       setError(null)
-      const result = await generateInviteLink(currentUser.id, leagueId)
+      const result = await generateInviteLink(leagueId)
       const inviteUrl = `${window.location.origin}/leagues/${leagueId}/join?code=${result.invite_code}`
       copyToClipboard(inviteUrl)
       setSuccessMessage('Invite link generated and copied to clipboard!')
@@ -206,11 +193,9 @@ export default function LeagueManagement() {
   }
 
   const assignTeam = async (teamId: number, userEmail: string) => {
-    if (!currentUser) return
-    
     try {
       setError(null)
-      await assignTeamToUser(currentUser.id, leagueId, teamId, userEmail)
+      await assignTeamToUser(leagueId, teamId, userEmail)
       // Refresh teams data
       const teamsRes = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, {
         credentials: 'include'
@@ -228,15 +213,13 @@ export default function LeagueManagement() {
   }
 
   const removeUser = async (userEmail: string) => {
-    if (!currentUser) return
-    
     if (!confirm(`Are you sure you want to remove ${userEmail} from the league?`)) {
       return
     }
     
     try {
       setError(null)
-      await removeUserFromLeague(currentUser.id, leagueId, userEmail)
+      await removeUserFromLeague(leagueId, userEmail)
       // Refresh users data
       const usersRes = await fetch(`${API_BASE}/leagues/${leagueId}/users`, {
         credentials: 'include'
@@ -284,7 +267,7 @@ export default function LeagueManagement() {
   }
 
   const saveChanges = async () => {
-    if (!currentUser || !league) return
+    if (!league) return
     
     setSaving(true)
     setError(null)
@@ -298,14 +281,14 @@ export default function LeagueManagement() {
       }
       
       // Update league settings
-      await updateLeagueSettings(currentUser.id, leagueId, updateData)
+      await updateLeagueSettings(leagueId, updateData)
       
       // Handle image upload if there's a new image
       if (imageFile) {
         const formData = new FormData()
         formData.append('image', imageFile)
         
-        const imageRes = await fetch(`${API_BASE}/commissioner/league/${leagueId}/upload-image?user_id=${currentUser.id}`, {
+        const imageRes = await fetch(`${API_BASE}/commissioner/league/${leagueId}/upload-image`, {
           method: 'POST',
           credentials: 'include',
           body: formData
@@ -317,7 +300,7 @@ export default function LeagueManagement() {
       }
       
       // Refresh league data
-      const leagueData = await getLeagueSettings(currentUser.id, leagueId)
+      const leagueData = await getLeagueSettings(leagueId)
       setLeague(leagueData.league)
       
       setSuccessMessage('League settings updated successfully!')

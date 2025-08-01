@@ -38,11 +38,18 @@ export enum Permission {
   SYSTEM_SETTINGS = 'system_settings'
 }
 
+export enum AuthProvider {
+  GOOGLE = 'google',
+  DISCORD = 'discord',
+  EMAIL = 'email' // For legacy support
+}
+
 export interface User {
   id: number
   email: string
   firstName?: string
   lastName?: string
+  name?: string // Full name from OAuth providers
   role: UserRole
   permissions: Permission[]
   isPremium: boolean
@@ -54,6 +61,14 @@ export interface User {
   createdAt: string
   lastLoginAt?: string
   avatar?: string
+  // OAuth-specific fields
+  authProvider?: AuthProvider
+  providerId?: string // ID from OAuth provider
+  providerData?: {
+    picture?: string
+    locale?: string
+    verified?: boolean
+  }
 }
 
 export interface UserProfile extends User {

@@ -1,136 +1,195 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { useEffect, useState } from 'react'
-import NotificationDropdown from '@/components/NotificationDropdown'
-import LogoutButton from '@/components/LogoutButton'
-import ThemeToggle from '@/components/ThemeToggle'
-import { API_BASE } from '@/lib/config'
-
-type User = {
-  id: number
-  email: string
-  is_commissioner?: boolean
-  is_admin?: boolean
-}
+import useAuth from '@/Hooks/useAuth'
+import { User } from '@/types/user'
 
 export default function NavBar() {
-  const [user, setUser] = useState<User | null>(null)
   const [isOpen, setIsOpen] = useState(false)
+  const { user, loading, logout, authenticated } = useAuth()
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/me`, { 
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/json'
-          }
-        })
-        
-        if (res.ok) {
-          const data = await res.json()
-          setUser(data)
-        } else if (res.status === 401) {
-          // User is not authenticated, this is normal
-          setUser(null)
-        } else {
-          console.error('Failed to fetch user:', res.status)
-          setUser(null)
-        }
-      } catch (error) {
-        console.error('Failed to fetch current user:', error)
-        setUser(null)
-      }
-    }
+  const handleLogout = async () => {
+    await logout()
+    // The logout function will handle clearing the user state
+  }
 
-    fetchUser()
-  }, [])
+  const getUserDisplayName = (user: User) => {
+    if (user.name) return user.name
+    if (user.firstName && user.lastName) return `${user.firstName} ${user.lastName}`
+    return user.email
+  }
+
+  const getUserAvatar = (user: User) => {
+    if (user.avatar) return user.avatar
+    if (user.providerData?.picture) return user.providerData.picture
+    return '/default-avatar.png'
+  }
 
   return (
     <nav className="bg-gray-900 text-white px-6 py-4 flex justify-between items-center relative">
-      {/* Logo + Brand */}
-      <Link href="/" className="flex items-center space-x-3">
-        <Image
-          src="/logo.png"
-          alt="Couchlytics"
-          width={96}
-          height={96}
-          className="h-20 w-auto"
-        />
-        <span className="text-2xl font-bold">Couchlytics</span>
-      </Link>
-
-      <div className="flex items-center gap-4">
-        {/* Notification Bell */}
-        <NotificationDropdown />
-
-        {/* Theme Toggle */}
-        <ThemeToggle />
-
-        {/* Hamburger Toggle */}
-        <button
-          className="sm:hidden focus:outline-none"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle Menu"
-        >
-          <div className="relative w-6 h-6">
-            <span
-              className={`absolute h-0.5 w-full bg-white left-0 transform transition duration-300 ease-in-out ${
-                isOpen ? 'rotate-45 top-2.5' : 'top-1'
-              }`}
-            />
-            <span
-              className={`absolute h-0.5 w-full bg-white left-0 transition-opacity duration-300 ease-in-out ${
-                isOpen ? 'opacity-0' : 'top-2.5'
-              }`}
-            />
-            <span
-              className={`absolute h-0.5 w-full bg-white left-0 transform transition duration-300 ease-in-out ${
-                isOpen ? '-rotate-45 bottom-2.5' : 'bottom-1'
-              }`}
-            />
+      <div className="flex items-center space-x-4">
+        <Link href="/" className="text-xl font-bold text-neon-green">
+          Couchlytics
+        </Link>
+        
+        {authenticated && (
+          <div className="hidden md:flex space-x-4">
+            <Link href="/leagues" className="hover:text-neon-green transition-colors">
+              Leagues
+            </Link>
+            <Link href="/dashboard" className="hover:text-neon-green transition-colors">
+              Dashboard
+            </Link>
+            <Link href="/analytics-engine" className="hover:text-neon-green transition-colors">
+              Analytics
+            </Link>
+            <Link href="/gm-toolkit" className="hover:text-neon-green transition-colors">
+              GM Toolkit
+            </Link>
+            <Link href="/upload" className="hover:text-neon-green transition-colors">
+              Upload
+            </Link>
           </div>
-        </button>
+        )}
       </div>
 
-      {/* Menu */}
-      <div
-        className={`sm:flex sm:items-center sm:space-x-4 absolute sm:static top-16 left-0 w-full sm:w-auto bg-gray-900 sm:bg-transparent z-50 transform transition-all duration-300 ease-in-out ${
-          isOpen
-            ? 'opacity-100 translate-y-0'
-            : 'opacity-0 -translate-y-4 pointer-events-none sm:opacity-100 sm:translate-y-0 sm:pointer-events-auto'
-        }`}
-      >
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 px-6 py-4 sm:p-0">
-          {user ? (
-            <>
-              <Link href="/dashboard" onClick={() => setIsOpen(false)}>Dashboard</Link>
-              <Link href="/leagues" onClick={() => setIsOpen(false)}>Leagues</Link>
-              
-              {/* Show global commissioner features for global commissioners */}
-              {user.is_commissioner && (
-                <Link href="/import" onClick={() => setIsOpen(false)}>Import Madden League</Link>
+      <div className="flex items-center space-x-4">
+        {loading ? (
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-neon-green"></div>
+        ) : authenticated && user ? (
+          <div className="flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-2">
+              <img
+                src={getUserAvatar(user)}
+                alt="User avatar"
+                className="w-8 h-8 rounded-full"
+                onError={(e) => {
+                  e.currentTarget.src = '/default-avatar.png'
+                }}
+              />
+              <span className="text-sm">{getUserDisplayName(user)}</span>
+              {user.authProvider && (
+                <span className="text-xs bg-gray-700 px-2 py-1 rounded">
+                  {user.authProvider}
+                </span>
               )}
-              
-              {user.is_admin && (
-                <>
-                  <Link href="/upload" onClick={() => setIsOpen(false)}>Upload</Link>
-                  <Link href="/admin/upload-logs" onClick={() => setIsOpen(false)}>Logs</Link>
-                </>
+            </div>
+            
+            <div className="relative">
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center space-x-2 hover:text-neon-green transition-colors"
+              >
+                <span className="md:hidden">Menu</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {isOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50">
+                  <Link
+                    href="/profile"
+                    className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout()
+                      setIsOpen(false)
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                  >
+                    Logout
+                  </button>
+                </div>
               )}
-              <Link href="/profile" onClick={() => setIsOpen(false)}>Profile</Link>
-              <LogoutButton />
-            </>
-          ) : (
-            <>
-              <Link href="/login" onClick={() => setIsOpen(false)}>Login</Link>
-              <Link href="/register" onClick={() => setIsOpen(false)}>Register</Link>
-            </>
+            </div>
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            className="bg-neon-green text-black px-4 py-2 rounded hover:bg-green-400 transition-colors"
+          >
+            Sign In
+          </Link>
+        )}
+      </div>
+
+      {/* Mobile menu */}
+      {authenticated && (
+        <div className="md:hidden">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="text-gray-300 hover:text-white"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          {isOpen && (
+            <div className="absolute top-full left-0 right-0 bg-gray-800 border-t border-gray-700">
+              <div className="px-4 py-2 space-y-2">
+                <Link
+                  href="/leagues"
+                  className="block py-2 text-gray-300 hover:text-white"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Leagues
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="block py-2 text-gray-300 hover:text-white"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/analytics-engine"
+                  className="block py-2 text-gray-300 hover:text-white"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Analytics
+                </Link>
+                <Link
+                  href="/gm-toolkit"
+                  className="block py-2 text-gray-300 hover:text-white"
+                  onClick={() => setIsOpen(false)}
+                >
+                  GM Toolkit
+                </Link>
+                <Link
+                  href="/upload"
+                  className="block py-2 text-gray-300 hover:text-white"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Upload
+                </Link>
+                <Link
+                  href="/profile"
+                  className="block py-2 text-gray-300 hover:text-white"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Profile
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout()
+                    setIsOpen(false)
+                  }}
+                  className="block w-full text-left py-2 text-gray-300 hover:text-white"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
           )}
         </div>
-      </div>
+      )}
     </nav>
   )
 }
