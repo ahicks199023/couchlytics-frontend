@@ -12,9 +12,17 @@ interface Team {
 
 interface Player {
   id: number
-  name: string
-  position: string
-  team_id: number
+  name?: string | null
+  team?: string | null
+  position?: string | null
+  ovr: number
+  teamId?: number
+  teamName?: string
+  user?: string
+  espnId?: string
+  devTrait?: string
+  age?: number
+  yearsPro?: number
 }
 
 interface TradeSubmissionFormProps {
@@ -27,7 +35,8 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
   onTradeSubmitted 
 }) => {
   const [teams, setTeams] = useState<Team[]>([])
-  const [players, setPlayers] = useState<Player[]>([])
+  const [teamFromPlayers, setTeamFromPlayers] = useState<Player[]>([])
+  const [teamToPlayers, setTeamToPlayers] = useState<Player[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -45,14 +54,13 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
     toTeamId: number
   }>>([])
 
-  // Load teams and players on component mount
+  // Load teams on component mount
   useEffect(() => {
-    const loadData = async () => {
+    const loadTeams = async () => {
       setLoading(true)
       setError(null)
       
       try {
-        // Load teams
         const teamsResponse = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, {
           credentials: 'include'
         })
@@ -63,37 +71,99 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
         
         const teamsData = await teamsResponse.json()
         setTeams(teamsData.teams || [])
-        
-        // Load players
-        const playersResponse = await fetch(`${API_BASE}/leagues/${leagueId}/players?page=1&pageSize=5000`, {
-          credentials: 'include'
-        })
-        
-        if (!playersResponse.ok) {
-          throw new Error(`Failed to load players: ${playersResponse.status}`)
-        }
-        
-        const playersData = await playersResponse.json()
-        setPlayers(playersData.players || [])
-        
-        console.log(`Loaded ${teamsData.teams?.length || 0} teams and ${playersData.players?.length || 0} players`)
+        console.log(`Loaded ${teamsData.teams?.length || 0} teams`)
         console.log('Teams data:', teamsData)
-        console.log('Players data sample:', playersData.players?.slice(0, 3))
-        console.log('Team IDs in teams:', teamsData.teams?.map((t: Team) => t.id))
-        console.log('Team IDs in players:', [...new Set(playersData.players?.map((p: Player) => p.team_id) || [])])
         
       } catch (error) {
-        console.error('Failed to load data:', error)
-        setError(error instanceof Error ? error.message : 'Failed to load data')
+        console.error('Failed to load teams:', error)
+        setError(error instanceof Error ? error.message : 'Failed to load teams')
       } finally {
         setLoading(false)
       }
     }
 
     if (leagueId) {
-      loadData()
+      loadTeams()
     }
   }, [leagueId])
+
+  // Load players for team from when team is selected
+  useEffect(() => {
+    const loadTeamFromPlayers = async () => {
+      if (!formData.teamFromId) {
+        setTeamFromPlayers([])
+        return
+      }
+
+      const selectedTeam = teams.find(t => t.id === parseInt(formData.teamFromId))
+      if (!selectedTeam) return
+
+      try {
+        const params = new URLSearchParams({
+          page: '1',
+          pageSize: '5000',
+          team: selectedTeam.name
+        })
+        
+        const response = await fetch(`${API_BASE}/leagues/${leagueId}/players?${params.toString()}`, {
+          credentials: 'include'
+        })
+        
+        if (!response.ok) {
+          throw new Error(`Failed to load players: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        setTeamFromPlayers(data.players || [])
+        console.log(`Loaded ${data.players?.length || 0} players for ${selectedTeam.name}`)
+        
+      } catch (error) {
+        console.error('Failed to load team from players:', error)
+        setTeamFromPlayers([])
+      }
+    }
+
+    loadTeamFromPlayers()
+  }, [leagueId, formData.teamFromId, teams])
+
+  // Load players for team to when team is selected
+  useEffect(() => {
+    const loadTeamToPlayers = async () => {
+      if (!formData.teamToId) {
+        setTeamToPlayers([])
+        return
+      }
+
+      const selectedTeam = teams.find(t => t.id === parseInt(formData.teamToId))
+      if (!selectedTeam) return
+
+      try {
+        const params = new URLSearchParams({
+          page: '1',
+          pageSize: '5000',
+          team: selectedTeam.name
+        })
+        
+        const response = await fetch(`${API_BASE}/leagues/${leagueId}/players?${params.toString()}`, {
+          credentials: 'include'
+        })
+        
+        if (!response.ok) {
+          throw new Error(`Failed to load players: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        setTeamToPlayers(data.players || [])
+        console.log(`Loaded ${data.players?.length || 0} players for ${selectedTeam.name}`)
+        
+      } catch (error) {
+        console.error('Failed to load team to players:', error)
+        setTeamToPlayers([])
+      }
+    }
+
+    loadTeamToPlayers()
+  }, [leagueId, formData.teamToId, teams])
 
   const addPlayerItem = (player: Player, fromTeamId: number, toTeamId: number) => {
     const newItem = {
@@ -163,20 +233,12 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
     }
   }
 
-  const getTeamPlayers = (teamId: number) => {
-    const teamPlayers = players.filter(player => player.team_id === teamId)
-    console.log(`Getting players for team ${teamId}:`, teamPlayers.length, 'players found')
-    console.log('All players:', players.slice(0, 5)) // Show first 5 players for debugging
-    console.log('Team IDs in players:', [...new Set(players.map(p => p.team_id))])
-    return teamPlayers
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading teams and players...</p>
+          <p className="text-gray-400">Loading teams...</p>
         </div>
       </div>
     )
@@ -196,10 +258,10 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
     )
   }
 
-  if (!teams.length || !players.length) {
+  if (!teams.length) {
     return (
       <div className="text-center p-8">
-        <p className="text-gray-400">No teams or players found for this league.</p>
+        <p className="text-gray-400">No teams found for this league.</p>
       </div>
     )
   }
@@ -281,8 +343,8 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
                     <div className="text-white">
                       {item.type === 'player' ? (
                         <span>
-                          Player: {players.find(p => p.id === item.playerId)?.name} 
-                          ({players.find(p => p.id === item.playerId)?.position})
+                          Player: {[...teamFromPlayers, ...teamToPlayers].find(p => p.id === item.playerId)?.name} 
+                          ({[...teamFromPlayers, ...teamToPlayers].find(p => p.id === item.playerId)?.position})
                         </span>
                       ) : (
                         <span>
@@ -315,7 +377,7 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
                       </label>
                       <select 
                         onChange={(e) => {
-                          const player = players.find(p => p.id === parseInt(e.target.value))
+                          const player = teamFromPlayers.find(p => p.id === parseInt(e.target.value))
                           if (player) {
                             addPlayerItem(player, parseInt(formData.teamFromId), parseInt(formData.teamToId))
                           }
@@ -324,7 +386,7 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
                         className="w-full bg-gray-600 text-white border border-gray-500 rounded px-2 py-1 text-sm"
                       >
                         <option value="">Select Player</option>
-                        {getTeamPlayers(parseInt(formData.teamFromId)).map(player => (
+                        {teamFromPlayers.map(player => (
                           <option key={player.id} value={player.id}>
                             {player.name} ({player.position})
                           </option>
@@ -339,7 +401,7 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
                       </label>
                       <select 
                         onChange={(e) => {
-                          const player = players.find(p => p.id === parseInt(e.target.value))
+                          const player = teamToPlayers.find(p => p.id === parseInt(e.target.value))
                           if (player) {
                             addPlayerItem(player, parseInt(formData.teamToId), parseInt(formData.teamFromId))
                           }
@@ -348,7 +410,7 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
                         className="w-full bg-gray-600 text-white border border-gray-500 rounded px-2 py-1 text-sm"
                       >
                         <option value="">Select Player</option>
-                        {getTeamPlayers(parseInt(formData.teamToId)).map(player => (
+                        {teamToPlayers.map(player => (
                           <option key={player.id} value={player.id}>
                             {player.name} ({player.position})
                           </option>
