@@ -124,10 +124,7 @@ interface CommissionerLeaguesResponse {
 export const checkCommissionerAccess = async (userId: number, leagueId: string) => {
   try {
     const response = await fetch(`${API_BASE}/commissioner/my-leagues?user_id=${userId}`, {
-      credentials: 'include',
-      headers: {
-        'X-User-ID': userId.toString()
-      }
+      credentials: 'include'
     })
     
     if (!response.ok) {
@@ -145,10 +142,7 @@ export const checkCommissionerAccess = async (userId: number, leagueId: string) 
 export const getCommissionerLeagues = async (userId: number) => {
   try {
     const response = await fetch(`${API_BASE}/commissioner/my-leagues?user_id=${userId}`, {
-      credentials: 'include',
-      headers: {
-        'X-User-ID': userId.toString()
-      }
+      credentials: 'include'
     })
     
     if (!response.ok) {
@@ -164,11 +158,8 @@ export const getCommissionerLeagues = async (userId: number) => {
 
 export const getLeagueSettings = async (userId: number, leagueId: string) => {
   try {
-    const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/settings`, {
-      credentials: 'include',
-      headers: {
-        'X-User-ID': userId.toString()
-      }
+    const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/settings?user_id=${userId}`, {
+      credentials: 'include'
     })
     
     if (!response.ok) {
@@ -192,12 +183,11 @@ interface LeagueSettings {
 
 export const updateLeagueSettings = async (userId: number, leagueId: string, settings: LeagueSettings) => {
   try {
-    const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/update`, {
+    const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/update?user_id=${userId}`, {
       method: 'PUT',
       credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
-        'X-User-ID': userId.toString()
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(settings)
     })
@@ -215,12 +205,11 @@ export const updateLeagueSettings = async (userId: number, leagueId: string, set
 
 export const generateInviteLink = async (userId: number, leagueId: string) => {
   try {
-    const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/invite`, {
+    const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/invite?user_id=${userId}`, {
       method: 'POST',
       credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
-        'X-User-ID': userId.toString()
+        'Content-Type': 'application/json'
       }
     })
     
@@ -237,12 +226,11 @@ export const generateInviteLink = async (userId: number, leagueId: string) => {
 
 export const assignTeamToUser = async (userId: number, leagueId: string, teamId: number, userEmail: string) => {
   try {
-    const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/assign-team`, {
+    const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/assign-team?user_id=${userId}`, {
       method: 'POST',
       credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
-        'X-User-ID': userId.toString()
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ team_id: teamId, user_email: userEmail })
     })
@@ -260,12 +248,11 @@ export const assignTeamToUser = async (userId: number, leagueId: string, teamId:
 
 export const removeUserFromLeague = async (userId: number, leagueId: string, userEmail: string) => {
   try {
-    const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/remove-user`, {
+    const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/remove-user?user_id=${userId}`, {
       method: 'DELETE',
       credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
-        'X-User-ID': userId.toString()
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ user_email: userEmail })
     })
@@ -283,11 +270,8 @@ export const removeUserFromLeague = async (userId: number, leagueId: string, use
 
 export const getCompanionAppInfo = async (userId: number, leagueId: string) => {
   try {
-    const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/companion-app`, {
-      credentials: 'include',
-      headers: {
-        'X-User-ID': userId.toString()
-      }
+    const response = await fetch(`${API_BASE}/commissioner/league/${leagueId}/companion-app?user_id=${userId}`, {
+      credentials: 'include'
     })
     
     if (!response.ok) {

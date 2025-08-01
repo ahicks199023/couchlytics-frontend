@@ -85,7 +85,7 @@ export default function LeagueManagement() {
         const hasCommissionerAccess = await checkCommissionerAccess(userData.id, leagueId)
         setHasAccess(hasCommissionerAccess)
         
-        if (!hasCommissionerAccess && !userData.is_admin) {
+        if (!hasCommissionerAccess && !userData.is_admin && !userData.is_commissioner) {
           router.push('/unauthorized')
           return
         }

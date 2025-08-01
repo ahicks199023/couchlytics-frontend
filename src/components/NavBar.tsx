@@ -135,8 +135,8 @@ export default function NavBar() {
               <Link href="/dashboard" onClick={() => setIsOpen(false)}>Dashboard</Link>
               <Link href="/leagues" onClick={() => setIsOpen(false)}>Leagues</Link>
               
-              {/* Show Commissioner's Hub if user has access to current league */}
-              {hasCommissionerAccess && (
+              {/* Show Commissioner's Hub if user has access to current league OR is global commissioner */}
+              {(hasCommissionerAccess || user.is_commissioner) && (
                 <Link href={`/commissioner/league/${params.leagueId}`} onClick={() => setIsOpen(false)}>
                   Commissioner&apos;s Hub
                 </Link>
