@@ -10,7 +10,8 @@ import {
   assignTeamToUser, 
   removeUserFromLeague, 
   getCompanionAppInfo,
-  checkCommissionerAccess
+  checkCommissionerAccess,
+  updateLeagueSettings
 } from '@/lib/api'
 
 interface League {
@@ -46,6 +47,14 @@ interface CompanionAppInfo {
   setup_instructions: string
 }
 
+interface LeagueSettings {
+  name?: string
+  description?: string
+  image_url?: string
+  invite_code?: string
+  setup_completed?: boolean
+}
+
 type TabType = 'overview' | 'teams' | 'users' | 'invites' | 'companion'
 
 export default function LeagueManagement() {
@@ -62,6 +71,17 @@ export default function LeagueManagement() {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [currentUser, setCurrentUser] = useState<{ id: number; email: string } | null>(null)
   const [hasAccess, setHasAccess] = useState(false)
+  
+  // New states for editing
+  const [isEditing, setIsEditing] = useState(false)
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: ''
+  })
+  const [saving, setSaving] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
 
   // Check commissioner access and load data
   useEffect(() => {
@@ -136,10 +156,11 @@ export default function LeagueManagement() {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
-      // You could add a toast notification here
-      alert('Copied to clipboard!')
+      setSuccessMessage('Copied to clipboard!')
+      setTimeout(() => setSuccessMessage(null), 3000)
     } catch (err) {
       console.error('Failed to copy:', err)
+      setError('Failed to copy to clipboard')
     }
   }
 
@@ -147,12 +168,15 @@ export default function LeagueManagement() {
     if (!currentUser) return
     
     try {
+      setError(null)
       const result = await generateInviteLink(currentUser.id, leagueId)
       const inviteUrl = `${window.location.origin}/leagues/${leagueId}/join?code=${result.invite_code}`
       copyToClipboard(inviteUrl)
+      setSuccessMessage('Invite link generated and copied to clipboard!')
+      setTimeout(() => setSuccessMessage(null), 3000)
     } catch (error) {
       console.error('Failed to generate invite:', error)
-      alert('Failed to generate invite link')
+      setError('Failed to generate invite link')
     }
   }
 
@@ -160,6 +184,7 @@ export default function LeagueManagement() {
     if (!currentUser) return
     
     try {
+      setError(null)
       await assignTeamToUser(currentUser.id, leagueId, teamId, userEmail)
       // Refresh teams data
       const teamsRes = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, {
@@ -169,10 +194,11 @@ export default function LeagueManagement() {
         const teamsData = await teamsRes.json()
         setTeams(teamsData.teams || [])
       }
-      alert('Team assigned successfully!')
+      setSuccessMessage('Team assigned successfully!')
+      setTimeout(() => setSuccessMessage(null), 3000)
     } catch (error) {
       console.error('Failed to assign team:', error)
-      alert('Failed to assign team')
+      setError('Failed to assign team')
     }
   }
 
@@ -184,6 +210,7 @@ export default function LeagueManagement() {
     }
     
     try {
+      setError(null)
       await removeUserFromLeague(currentUser.id, leagueId, userEmail)
       // Refresh users data
       const usersRes = await fetch(`${API_BASE}/leagues/${leagueId}/users`, {
@@ -193,10 +220,94 @@ export default function LeagueManagement() {
         const usersData = await usersRes.json()
         setUsers(usersData.users || [])
       }
-      alert('User removed successfully!')
+      setSuccessMessage('User removed successfully!')
+      setTimeout(() => setSuccessMessage(null), 3000)
     } catch (error) {
       console.error('Failed to remove user:', error)
-      alert('Failed to remove user')
+      setError('Failed to remove user')
+    }
+  }
+
+  // New functions for editing
+  const startEditing = () => {
+    if (league) {
+      setEditForm({
+        name: league.name,
+        description: league.description || ''
+      })
+      setIsEditing(true)
+    }
+  }
+
+  const cancelEditing = () => {
+    setIsEditing(false)
+    setEditForm({ name: '', description: '' })
+    setImageFile(null)
+    setImagePreview(null)
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const saveChanges = async () => {
+    if (!currentUser || !league) return
+    
+    setSaving(true)
+    setError(null)
+    setSuccessMessage(null)
+    
+    try {
+      // Prepare update data
+      const updateData: LeagueSettings = {
+        name: editForm.name,
+        description: editForm.description
+      }
+      
+      // Update league settings
+      await updateLeagueSettings(currentUser.id, leagueId, updateData)
+      
+      // Handle image upload if there's a new image
+      if (imageFile) {
+        const formData = new FormData()
+        formData.append('image', imageFile)
+        
+        const imageRes = await fetch(`${API_BASE}/commissioner/league/${leagueId}/upload-image?user_id=${currentUser.id}`, {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        })
+        
+        if (!imageRes.ok) {
+          throw new Error('Failed to upload image')
+        }
+      }
+      
+      // Refresh league data
+      const leagueData = await getLeagueSettings(currentUser.id, leagueId)
+      setLeague(leagueData.league)
+      
+      setSuccessMessage('League settings updated successfully!')
+      setIsEditing(false)
+      setImageFile(null)
+      setImagePreview(null)
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000)
+      
+    } catch (err) {
+      console.error('Failed to update league:', err)
+      setError(err instanceof Error ? err.message : 'Failed to update league settings')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -319,18 +430,102 @@ export default function LeagueManagement() {
 
         {/* Tab Content */}
         <div className="bg-gray-800 rounded-lg p-6">
+          {/* Success/Error Messages - Show on all tabs */}
+          {successMessage && (
+            <div className="bg-green-600 text-white px-4 py-2 rounded mb-4">
+              {successMessage}
+            </div>
+          )}
+          
+          {error && (
+            <div className="bg-red-600 text-white px-4 py-2 rounded mb-4">
+              {error}
+            </div>
+          )}
+
           {activeTab === 'overview' && (
             <div>
               <h2 className="text-2xl font-bold mb-4">League Overview</h2>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">League Information</h3>
-                  <div className="space-y-2">
-                    <p><strong>Name:</strong> {league.name}</p>
-                    <p><strong>Description:</strong> {league.description || 'No description'}</p>
-                    <p><strong>Created:</strong> {new Date(league.created_at).toLocaleDateString()}</p>
-                    <p><strong>Status:</strong> {league.setup_completed ? 'Active' : 'Setup Required'}</p>
-                  </div>
+                  
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                          League Name
+                        </label>
+                        <input
+                          type="text"
+                          value={editForm.name}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                          Description
+                        </label>
+                        <textarea
+                          value={editForm.description}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                          rows={3}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                          League Image
+                        </label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                        />
+                        {imagePreview && (
+                          <div className="mt-2">
+                            <img src={imagePreview} alt="Preview" className="w-20 h-20 object-cover rounded" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={saveChanges}
+                          disabled={saving}
+                          className="bg-neon-green text-black px-4 py-2 rounded hover:bg-green-400 disabled:opacity-50"
+                        >
+                          {saving ? 'Saving...' : 'Save Changes'}
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          disabled={saving}
+                          className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p><strong>Name:</strong> {league.name}</p>
+                      <p><strong>Description:</strong> {league.description || 'No description'}</p>
+                      <p><strong>Created:</strong> {new Date(league.created_at).toLocaleDateString()}</p>
+                      <p><strong>Status:</strong> {league.setup_completed ? 'Active' : 'Setup Required'}</p>
+                      
+                      <button
+                        onClick={startEditing}
+                        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                      >
+                        Edit League Settings
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Quick Stats</h3>
