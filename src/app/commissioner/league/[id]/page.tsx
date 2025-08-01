@@ -10,8 +10,7 @@ import {
   assignTeamToUser, 
   removeUserFromLeague, 
   getCompanionAppInfo,
-  updateLeagueSettings,
-  getLeagueUsers
+  updateLeagueSettings
 } from '@/lib/api'
 
 interface League {
@@ -23,6 +22,8 @@ interface League {
   setup_completed: boolean
   created_at: string
   updated_at: string
+  companion_app_url?: string
+  league_id?: string
 }
 
 interface Team {
@@ -32,6 +33,9 @@ interface Team {
   city: string
   user_id?: number
   user?: string
+  team_id?: number
+  assigned_user?: string
+  is_assigned?: boolean
 }
 
 interface User {
@@ -44,6 +48,20 @@ interface User {
   team_id?: number
   joined_at?: string
   is_active?: boolean
+  team_abbreviation?: string
+  team_name?: string
+}
+
+interface LeagueSettingsResponse {
+  league: League
+  members: User[]
+  stats: {
+    assigned_teams: number
+    available_teams: number
+    total_members: number
+    total_teams: number
+  }
+  teams: Team[]
 }
 
 interface CompanionAppInfo {
@@ -107,32 +125,16 @@ export default function LeagueManagement() {
         
         // Check commissioner access by trying to get league settings
         try {
-          const leagueData = await getLeagueSettings(leagueId)
+          const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
           setLeague(leagueData.league)
+          setTeams(leagueData.teams || [])
+          setUsers(leagueData.members || [])
           setHasAccess(true)
         } catch (error) {
           console.error('Commissioner access check failed:', error)
           setError('You do not have commissioner access to this league')
           setHasAccess(false)
           return
-        }
-        
-        // Load teams
-        const teamsRes = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, {
-          credentials: 'include'
-        })
-        if (teamsRes.ok) {
-          const teamsData = await teamsRes.json()
-          setTeams(teamsData.teams || [])
-        }
-        
-        // Load users using the new function
-        try {
-          const usersData = await getLeagueUsers(leagueId)
-          setUsers(usersData.users || [])
-        } catch (error) {
-          console.error('Failed to load users:', error)
-          setUsers([])
         }
         
         // Load companion app info
@@ -196,14 +198,10 @@ export default function LeagueManagement() {
     try {
       setError(null)
       await assignTeamToUser(leagueId, teamId, userEmail)
-      // Refresh teams data
-      const teamsRes = await fetch(`${API_BASE}/leagues/${leagueId}/teams`, {
-        credentials: 'include'
-      })
-      if (teamsRes.ok) {
-        const teamsData = await teamsRes.json()
-        setTeams(teamsData.teams || [])
-      }
+      // Refresh league data to get updated teams and users
+      const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
+      setTeams(leagueData.teams || [])
+      setUsers(leagueData.members || [])
       setSuccessMessage('Team assigned successfully!')
       setTimeout(() => setSuccessMessage(null), 3000)
     } catch (error) {
@@ -220,14 +218,10 @@ export default function LeagueManagement() {
     try {
       setError(null)
       await removeUserFromLeague(leagueId, userEmail)
-      // Refresh users data
-      const usersRes = await fetch(`${API_BASE}/leagues/${leagueId}/users`, {
-        credentials: 'include'
-      })
-      if (usersRes.ok) {
-        const usersData = await usersRes.json()
-        setUsers(usersData.users || [])
-      }
+      // Refresh league data to get updated teams and users
+      const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
+      setTeams(leagueData.teams || [])
+      setUsers(leagueData.members || [])
       setSuccessMessage('User removed successfully!')
       setTimeout(() => setSuccessMessage(null), 3000)
     } catch (error) {
@@ -546,8 +540,8 @@ export default function LeagueManagement() {
                   <div className="space-y-2">
                     <p><strong>Teams:</strong> {teams.length}</p>
                     <p><strong>Members:</strong> {users.length}</p>
-                    <p><strong>Assigned Teams:</strong> {teams.filter(t => t.user_id).length}</p>
-                    <p><strong>Available Teams:</strong> {teams.filter(t => !t.user_id).length}</p>
+                    <p><strong>Assigned Teams:</strong> {teams.filter(t => t.is_assigned).length}</p>
+                    <p><strong>Available Teams:</strong> {teams.filter(t => !t.is_assigned).length}</p>
                   </div>
                 </div>
               </div>
@@ -557,39 +551,51 @@ export default function LeagueManagement() {
           {activeTab === 'teams' && (
             <div>
               <h2 className="text-2xl font-bold mb-4">Team Management</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {teams.map((team) => (
-                  <div key={team.id} className="bg-gray-700 rounded-lg p-4">
-                    <h3 className="font-semibold mb-2">{team.city} {team.name}</h3>
-                    <p className="text-sm text-gray-400 mb-2">ID: {team.id}</p>
-                    {team.user ? (
-                      <div>
-                        <p className="text-sm text-green-400">Assigned to: {team.user}</p>
-                        <button
-                          onClick={() => assignTeam(team.id, '')}
-                          className="mt-2 bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs"
-                        >
-                          Unassign
-                        </button>
-                      </div>
-                    ) : (
-                      <div>
-                        <p className="text-sm text-gray-400">Unassigned</p>
-                        <input
-                          type="email"
-                          placeholder="Enter user email"
-                          className="mt-2 w-full px-2 py-1 rounded text-sm bg-gray-600 text-white"
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              const email = (e.target as HTMLInputElement).value
-                              if (email) assignTeam(team.id, email)
-                            }
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="text-left py-2 px-1">Team</th>
+                      <th className="text-left py-2 px-1">Abbreviation</th>
+                      <th className="text-left py-2 px-1">Status</th>
+                      <th className="text-left py-2 px-1">Assigned User</th>
+                      <th className="text-left py-2 px-1">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {teams.map((team) => (
+                      <tr key={team.team_id || team.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                        <td className="py-2 px-1 text-white">{team.name}</td>
+                        <td className="py-2 px-1 text-white">{team.abbreviation}</td>
+                        <td className="py-2 px-1">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            team.is_assigned ? 'bg-green-600' : 'bg-gray-600'
+                          }`}>
+                            {team.is_assigned ? 'Assigned' : 'Available'}
+                          </span>
+                        </td>
+                        <td className="py-2 px-1 text-white">
+                          {team.assigned_user || 'Unassigned'}
+                        </td>
+                        <td className="py-2 px-1">
+                          {!team.is_assigned && (
+                            <button
+                              onClick={() => {
+                                const email = prompt('Enter user email to assign:')
+                                if (email) {
+                                  assignTeam(team.team_id || team.id, email)
+                                }
+                              }}
+                              className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs"
+                            >
+                              Assign
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
@@ -606,7 +612,6 @@ export default function LeagueManagement() {
                       <th className="text-left py-2 px-1">Role</th>
                       <th className="text-left py-2 px-1">Team</th>
                       <th className="text-left py-2 px-1">Joined</th>
-                      <th className="text-left py-2 px-1">Status</th>
                       <th className="text-left py-2 px-1">Actions</th>
                     </tr>
                   </thead>
@@ -627,17 +632,10 @@ export default function LeagueManagement() {
                           </span>
                         </td>
                         <td className="py-2 px-1 text-white">
-                          {user.team_id ? teams.find(t => t.id === user.team_id)?.name || 'Unknown' : 'Unassigned'}
+                          {user.team_name || user.team_abbreviation || 'Unassigned'}
                         </td>
                         <td className="py-2 px-1 text-white">
                           {user.joined_at ? new Date(user.joined_at).toLocaleDateString() : 'N/A'}
-                        </td>
-                        <td className="py-2 px-1">
-                          <span className={`px-2 py-1 rounded text-xs ${
-                            user.is_active ? 'bg-green-600' : 'bg-red-600'
-                          }`}>
-                            {user.is_active ? 'Active' : 'Inactive'}
-                          </span>
                         </td>
                         <td className="py-2 px-1">
                           {user.role !== 'commissioner' && (
