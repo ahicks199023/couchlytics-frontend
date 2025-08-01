@@ -8,6 +8,12 @@ interface Message {
   text: string
   sender: 'user' | 'ozzie'
   timestamp: Date
+  warning?: string
+  teamInfo?: {
+    name: string
+    id: string
+    rosterSize?: number
+  }
 }
 
 interface Team {
@@ -22,11 +28,12 @@ interface OzzieChatProps {
 }
 
 const examplePrompts = [
+  "How are the Browns doing this season?",
+  "What are my team's weaknesses?",
+  "Tell me about the Patriots roster",
+  "What about the Bills defense?",
   "Should I re-sign my QB?",
-  "Who should I target in the draft?",
-  "What's my team's biggest weakness?",
-  "Should I make this trade?",
-  "How can I improve my roster?"
+  "Who should I target in the draft?"
 ]
 
 export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }: OzzieChatProps) {
@@ -53,6 +60,8 @@ export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }
   const [showPrompts, setShowPrompts] = useState(true)
   const [availableTeams, setAvailableTeams] = useState<Team[]>([])
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(teamId || null)
+  const [showTeamModal, setShowTeamModal] = useState(false)
+  const [teamModalData, setTeamModalData] = useState<{teams: string[], suggestion: string} | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -107,20 +116,65 @@ export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }
     }
   }, [isOpen])
 
+  // Improved Ozzie message function with better error handling
+  const sendOzzieMessage = async (question: string, leagueId: string, teamId: string | null = null) => {
+    try {
+      const requestData: Record<string, unknown> = {
+        question: question,
+        leagueId: leagueId
+      }
+      
+      // Only include teamId if explicitly provided
+      if (teamId) {
+        requestData.teamId = teamId
+      }
+      
+      console.log('Sending Ozzie request:', requestData)
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/ozzie/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(requestData),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Ozzie response:', data)
+        
+        // Handle warnings about default team usage
+        if (data.warning) {
+          console.warn('Ozzie Warning:', data.warning)
+          return { ...data, warning: data.warning }
+        }
+        
+        return data
+      } else {
+        const error = await response.json()
+        
+        // Handle team resolution errors with helpful suggestions
+        if (error.available_teams) {
+          console.error('Team not found. Available teams:', error.available_teams)
+          setTeamModalData({
+            teams: error.available_teams,
+            suggestion: error.suggestion || 'Please select a team from the list below:'
+          })
+          setShowTeamModal(true)
+          return null
+        }
+        
+        throw new Error(error.error || 'Failed to get Ozzie response')
+      }
+    } catch (error) {
+      console.error('Ozzie error:', error)
+      throw error
+    }
+  }
+
   const handleSubmit = async (messageText: string) => {
     if (!messageText.trim() || isLoading) return
-
-    // Check if team is selected
-    if (!selectedTeamId) {
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        text: "Please select a team first to ask Ozzie questions.",
-        sender: 'ozzie',
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, errorMessage])
-      return
-    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -140,42 +194,24 @@ export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }
         throw new Error('League ID is required')
       }
 
-      // Create request body with exact field names backend expects
-      const requestBody = {
-        question: messageText,
-        leagueId: leagueId,
-        teamId: selectedTeamId
+      const response = await sendOzzieMessage(messageText, leagueId, selectedTeamId)
+
+      if (response) {
+        const ozzieMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: response.response || "I'm sorry, I couldn't process your request right now.",
+          sender: 'ozzie',
+          timestamp: new Date(),
+          warning: response.warning,
+          teamInfo: response.team_name ? {
+            name: response.team_name,
+            id: response.team_id || '',
+            rosterSize: response.roster_size
+          } : undefined
+        }
+
+        setMessages(prev => [...prev, ozzieMessage])
       }
-
-      console.log('Sending Ozzie request:', requestBody)
-      console.log('Request body JSON:', JSON.stringify(requestBody))
-
-      // Use direct fetch instead of api.post to avoid case conversion issues
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/ozzie/query`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(requestBody),
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`API error: ${response.status} - ${errorText}`)
-      }
-
-      const responseData = await response.json()
-      console.log('Ozzie response:', responseData)
-
-      const ozzieMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: responseData.response || "I'm sorry, I couldn't process your request right now.",
-        sender: 'ozzie',
-        timestamp: new Date()
-      }
-
-      setMessages(prev => [...prev, ozzieMessage])
     } catch (error) {
       console.error('Error sending message to Ozzie:', error)
       
@@ -221,6 +257,12 @@ export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }
     handleSubmit(prompt)
   }
 
+  const handleTeamSelection = (teamId: string) => {
+    setSelectedTeamId(teamId)
+    setShowTeamModal(false)
+    setTeamModalData(null)
+  }
+
   return (
     <>
       {/* Floating Ozzie Button */}
@@ -252,33 +294,31 @@ export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }
             {/* Team Selector */}
             <div className="p-4 border-b border-gray-700">
               <label htmlFor="team-select" className="block text-sm font-medium text-gray-300 mb-2">
-                Select Team:
+                Select Team (Optional):
               </label>
               <select
                 id="team-select"
                 value={selectedTeamId || ''}
                 onChange={(e) => setSelectedTeamId(e.target.value)}
-                className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-neon-green"
               >
-                <option value="">Select a team...</option>
+                <option value="">Let Ozzie choose automatically</option>
                 {availableTeams.map((team) => (
                   <option key={team.id} value={team.id}>
                     {team.name} ({team.abbreviation})
                   </option>
                 ))}
               </select>
-              {!selectedTeamId && (
-                <p className="text-xs text-yellow-400 mt-1">
-                  Please select a team to ask Ozzie questions
-                </p>
-              )}
+              <p className="text-xs text-gray-400 mt-1">
+                Leave empty to let Ozzie detect the team from your question
+              </p>
             </div>
 
             {/* Chat Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 && showPrompts && (
                 <div className="space-y-2">
-                  <p className="text-gray-400 text-sm text-center mb-4">Try asking Ozzie about your team:</p>
+                  <p className="text-gray-400 text-sm text-center mb-4">Try asking Ozzie about any team:</p>
                   {examplePrompts.map((prompt, index) => (
                     <button
                       key={index}
@@ -292,22 +332,44 @@ export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }
               )}
 
               {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
+                <div key={message.id}>
                   <div
-                    className={`max-w-[80%] p-3 rounded-lg ${
-                      message.sender === 'user'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-700 text-gray-100'
-                    }`}
+                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    <p className="text-sm">{message.text}</p>
-                    <p className="text-xs opacity-70 mt-1">
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                    <div
+                      className={`max-w-[80%] p-3 rounded-lg ${
+                        message.sender === 'user'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-700 text-gray-100'
+                      }`}
+                    >
+                      <p className="text-sm">{message.text}</p>
+                      <p className="text-xs opacity-70 mt-1">
+                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
                   </div>
+                  
+                  {/* Warning Message */}
+                  {message.warning && (
+                    <div className="mt-2 ml-4">
+                      <div className="bg-yellow-900 border border-yellow-700 text-yellow-200 p-2 rounded text-xs flex justify-between items-center">
+                        <span>⚠️ {message.warning}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Team Info */}
+                  {message.teamInfo && (
+                    <div className="mt-2 ml-4">
+                      <div className="bg-blue-900 text-white p-2 rounded text-xs inline-block">
+                        <span className="font-semibold mr-2">{message.teamInfo.name}</span>
+                        {message.teamInfo.rosterSize && (
+                          <span className="opacity-80">{message.teamInfo.rosterSize} players</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
 
@@ -328,13 +390,6 @@ export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }
 
             {/* Input Area */}
             <div className="p-4 border-t border-gray-700">
-              {selectedTeamId && (
-                <div className="mb-2">
-                  <p className="text-xs text-green-400">
-                    ✓ Team selected: {availableTeams.find(t => t.id === selectedTeamId)?.name}
-                  </p>
-                </div>
-              )}
               <div className="flex space-x-2">
                 <input
                   ref={inputRef}
@@ -342,20 +397,51 @@ export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder={selectedTeamId ? "Ask Ozzie anything..." : "Select a team first..."}
-                  className="flex-1 bg-gray-800 text-white placeholder-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                  disabled={isLoading || !selectedTeamId}
+                  placeholder="Ask about any team: 'How are the Browns doing?' or 'What about my team?'"
+                  className="flex-1 bg-gray-800 text-white placeholder-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-neon-green disabled:opacity-50"
+                  disabled={isLoading}
                 />
                 <button
                   onClick={handleSendClick}
-                  disabled={!inputValue.trim() || isLoading || !selectedTeamId}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors"
+                  disabled={!inputValue.trim() || isLoading}
+                  className="bg-neon-green hover:bg-green-400 disabled:bg-gray-600 disabled:cursor-not-allowed text-black px-4 py-2 rounded-lg transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                   </svg>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Team Selection Modal */}
+      {showTeamModal && teamModalData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
+          <div className="bg-gray-800 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <h3 className="text-xl font-semibold text-white mb-2">Team Not Found</h3>
+              <p className="text-gray-300 mb-4">{teamModalData.suggestion}</p>
+              
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {teamModalData.teams.map((team, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleTeamSelection(team.split(' ')[0])}
+                    className="p-3 border border-gray-600 rounded bg-gray-700 hover:bg-gray-600 text-white text-sm transition-colors"
+                  >
+                    {team}
+                  </button>
+                ))}
+              </div>
+              
+              <button
+                onClick={() => setShowTeamModal(false)}
+                className="w-full bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded transition-colors"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
