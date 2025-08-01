@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { API_BASE } from '@/lib/config'
 
 interface League {
@@ -24,7 +25,6 @@ interface User {
 
 export default function CommissionerHub() {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
   const [leagues, setLeagues] = useState<League[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -44,7 +44,6 @@ export default function CommissionerHub() {
         }
         
         const userData = await userRes.json()
-        setUser(userData)
         
         if (!userData.is_commissioner && !userData.is_admin) {
           router.push('/unauthorized')
@@ -112,7 +111,7 @@ export default function CommissionerHub() {
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-neon-green mb-2">Commissioner's Hub</h1>
+          <h1 className="text-4xl font-bold text-neon-green mb-2">Commissioner&apos;s Hub</h1>
           <p className="text-gray-400">
             Manage your fantasy football leagues with comprehensive tools and controls
           </p>
@@ -151,7 +150,7 @@ export default function CommissionerHub() {
           
           {leagues.length === 0 ? (
             <div className="bg-gray-800 rounded-lg p-8 text-center">
-              <p className="text-gray-400 mb-4">You haven't created any leagues yet.</p>
+              <p className="text-gray-400 mb-4">You haven&apos;t created any leagues yet.</p>
               <button
                 onClick={createNewLeague}
                 className="bg-neon-green text-black font-semibold px-6 py-3 rounded-lg hover:bg-green-400 transition-colors"
@@ -165,11 +164,14 @@ export default function CommissionerHub() {
                 <div key={league.id} className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer" onClick={() => manageLeague(league.id)}>
                   <div className="flex items-center mb-4">
                     {league.image_url ? (
-                      <img 
-                        src={league.image_url} 
-                        alt={league.name}
-                        className="w-12 h-12 rounded-lg mr-4 object-cover"
-                      />
+                      <div className="relative w-12 h-12 mr-4">
+                        <Image 
+                          src={league.image_url} 
+                          alt={league.name}
+                          fill
+                          className="rounded-lg object-cover"
+                        />
+                      </div>
                     ) : (
                       <div className="w-12 h-12 bg-gray-600 rounded-lg mr-4 flex items-center justify-center">
                         <span className="text-gray-400 font-bold text-lg">

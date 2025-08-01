@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { API_BASE } from '@/lib/config'
 
 interface League {
@@ -37,6 +38,8 @@ interface CompanionAppInfo {
   setup_instructions: string
 }
 
+type TabType = 'overview' | 'teams' | 'users' | 'invites' | 'companion'
+
 export default function LeagueManagement() {
   const params = useParams()
   const router = useRouter()
@@ -48,7 +51,7 @@ export default function LeagueManagement() {
   const [companionApp, setCompanionApp] = useState<CompanionAppInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'overview' | 'teams' | 'users' | 'invites' | 'companion'>('overview')
+  const [activeTab, setActiveTab] = useState<TabType>('overview')
 
   useEffect(() => {
     const loadLeagueData = async () => {
@@ -221,11 +224,14 @@ export default function LeagueManagement() {
               </button>
               <div className="flex items-center">
                 {league.image_url ? (
-                  <img 
-                    src={league.image_url} 
-                    alt={league.name}
-                    className="w-16 h-16 rounded-lg mr-4 object-cover"
-                  />
+                  <div className="relative w-16 h-16 mr-4">
+                    <Image 
+                      src={league.image_url} 
+                      alt={league.name}
+                      fill
+                      className="rounded-lg object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="w-16 h-16 bg-gray-600 rounded-lg mr-4 flex items-center justify-center">
                     <span className="text-gray-400 font-bold text-2xl">
@@ -255,15 +261,15 @@ export default function LeagueManagement() {
         <div className="mb-6">
           <nav className="flex space-x-1 bg-gray-800 rounded-lg p-1">
             {[
-              { id: 'overview', label: 'Overview', icon: '📊' },
-              { id: 'teams', label: 'Teams', icon: '🏈' },
-              { id: 'users', label: 'Users', icon: '👥' },
-              { id: 'invites', label: 'Invites', icon: '📧' },
-              { id: 'companion', label: 'Companion App', icon: '📱' }
+              { id: 'overview' as TabType, label: 'Overview', icon: '📊' },
+              { id: 'teams' as TabType, label: 'Teams', icon: '🏈' },
+              { id: 'users' as TabType, label: 'Users', icon: '👥' },
+              { id: 'invites' as TabType, label: 'Invites', icon: '📧' },
+              { id: 'companion' as TabType, label: 'Companion App', icon: '📱' }
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   activeTab === tab.id
                     ? 'bg-neon-green text-black'
