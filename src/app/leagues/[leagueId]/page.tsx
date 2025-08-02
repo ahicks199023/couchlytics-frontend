@@ -134,6 +134,17 @@ export default function LeagueDetailPage() {
     fetchFromApi(`/leagues/${leagueId}`)
       .then(data => {
         console.log('LeagueDetailPage - Successfully fetched league data:', data)
+        console.log('LeagueDetailPage - Data type:', typeof data)
+        console.log('LeagueDetailPage - Is data an object?', typeof data === 'object')
+        console.log('LeagueDetailPage - Data keys:', Object.keys(data))
+        console.log('LeagueDetailPage - league property:', data.league)
+        console.log('LeagueDetailPage - teams property:', data.teams)
+        console.log('LeagueDetailPage - games property:', data.games)
+        console.log('LeagueDetailPage - players property:', data.players)
+        console.log('LeagueDetailPage - teams type:', typeof data.teams)
+        console.log('LeagueDetailPage - games type:', typeof data.games)
+        console.log('LeagueDetailPage - teams is array?', Array.isArray(data.teams))
+        console.log('LeagueDetailPage - games is array?', Array.isArray(data.games))
         setLeague(data as LeagueData)
         setLoading(false)
       })
@@ -146,6 +157,11 @@ export default function LeagueDetailPage() {
 
   if (loading) return <main className="p-6 text-white">Loading league details...</main>
   if (error || !league) return <main className="p-6 text-red-400">{error || 'No data found.'}</main>
+
+  console.log('LeagueDetailPage - Rendering with league data:', league)
+  console.log('LeagueDetailPage - league.teams:', league.teams)
+  console.log('LeagueDetailPage - league.games:', league.games)
+  console.log('LeagueDetailPage - league.league:', league.league)
 
   return (
     <main className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white p-6">
