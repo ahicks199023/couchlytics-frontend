@@ -6,6 +6,10 @@ import { API_BASE } from "@/lib/config";
 import useAuth from "@/Hooks/useAuth";
 
 export default function Login() {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const router = useRouter();
@@ -17,6 +21,53 @@ export default function Login() {
       router.push("/leagues");
     }
   }, [user, loading, router]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    if (error) setError(null);
+  };
+
+  const handleNativeLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading('native');
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.authenticated) {
+          router.push('/leagues');
+        } else {
+          setError('Invalid email or password');
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Login failed. Please try again.');
+      }
+    } catch (err) {
+      console.error("Native login error:", err);
+      setError("Login failed. Please try again.");
+    } finally {
+      setIsLoading(null);
+    }
+  };
 
   const handleGoogleLogin = async () => {
     setIsLoading('google');
@@ -72,7 +123,61 @@ export default function Login() {
         </div>
       )}
 
-      <div className="space-y-4">
+      {/* Native Login Form */}
+      <form onSubmit={handleNativeLogin} className="space-y-4 mb-6">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Email Address
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            required
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-neon-green focus:border-transparent"
+            placeholder="Enter your email"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Password
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            required
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-neon-green focus:border-transparent"
+            placeholder="Enter your password"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={isLoading !== null}
+          className="w-full bg-neon-green text-black font-semibold py-2 px-4 rounded-md hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neon-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {isLoading === 'native' ? 'Signing in...' : 'Sign In'}
+        </button>
+      </form>
+
+      {/* Divider */}
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-white dark:bg-gray-900 text-gray-500">Or continue with</span>
+        </div>
+      </div>
+
+      {/* OAuth Options */}
+      <div className="space-y-3">
         <button
           onClick={handleGoogleLogin}
           disabled={isLoading !== null}
@@ -121,6 +226,12 @@ export default function Login() {
 
       <div className="mt-8 text-center">
         <p className="text-sm text-gray-600 dark:text-gray-400">
+          Don't have an account?{" "}
+          <a href="/register" className="text-neon-green hover:underline">
+            Sign up
+          </a>
+        </p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
           By signing in, you agree to our{" "}
           <a href="#" className="text-neon-green hover:underline">
             Terms of Service
