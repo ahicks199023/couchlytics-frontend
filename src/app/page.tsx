@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 const features = [
@@ -11,14 +12,14 @@ const features = [
     link: '/trade-tool',
   },
   {
-    title: 'Analytics Engine',
-    icon: '📊',
-    description: 'Track leaderboards, efficiency metrics, and power rankings.',
+    title: 'League Messaging & Chat',
+    icon: '💬',
+    description: 'Real-time communication platform for league members and commissioners.',
   },
   {
-    title: 'GM Toolkit',
-    icon: '🧠',
-    description: 'Trade evaluator, cap analyzer, and free agent heatmaps.',
+    title: 'AI Assistant',
+    icon: '🤖',
+    description: 'Your personal AI companion for league management and decision-making.',
   },
   {
     title: 'Draft Assistant',
@@ -27,48 +28,31 @@ const features = [
   },
 ]
 
-const mockLeagues = [
-  { name: 'Lost Tapes League', teams: 32, season: '2025', id: 1 },
-  { name: 'NextGen Gridiron', teams: 24, season: '2024', id: 2 },
-  { name: 'Primetime Franchise', teams: 30, season: '2023', id: 3 },
-]
-
 export default function HomePage() {
-  const [carouselIndex, setCarouselIndex] = useState(0)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCarouselIndex((prev) => (prev + 1) % mockLeagues.length)
-    }, 3500)
-    return () => clearInterval(interval)
-  }, [])
-
   return (
     <main className="relative min-h-screen flex flex-col items-center justify-center px-4 py-12 overflow-hidden">
       {/* Animated Gradient Background */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-black via-gray-900 to-gray-800 animate-gradient-x" />
+      
       {/* Hero Section */}
       <section className="w-full max-w-4xl text-center mb-12">
+        {/* Logo */}
+        <div className="mb-8 flex justify-center">
+          <Image
+            src="/couch-commish-logo.png"
+            alt="Couchlytics Logo"
+            width={200}
+            height={80}
+            className="h-20 w-auto"
+          />
+        </div>
+        
         <h1 className="text-5xl sm:text-6xl font-extrabold mb-4 text-neon-green drop-shadow-lg">
           Welcome to Couchlytics
         </h1>
         <p className="text-xl sm:text-2xl max-w-2xl mx-auto mb-8 text-gray-200 font-medium">
-          The ultimate Madden league management platform. Upload league data, review stats, evaluate trades, and dominate every season.
+          The Ultimate Esports League Management Platform.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
-          <Link
-            href="/login"
-            className="bg-blue-600/90 hover:bg-blue-700/90 px-8 py-3 rounded-xl text-lg font-bold shadow-lg transition-colors border border-blue-400/30"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="bg-neon-green/90 hover:bg-neon-green/80 px-8 py-3 rounded-xl text-lg font-bold shadow-lg text-black transition-colors border border-green-400/30"
-          >
-            Create Account
-          </Link>
-        </div>
       </section>
 
       {/* Features Grid */}
@@ -85,25 +69,110 @@ export default function HomePage() {
         ))}
       </section>
 
-      {/* League Showcase */}
-      <section className="w-full max-w-xl mt-4 mb-10">
-        <div className="relative bg-gray-900/80 border border-gray-700/40 rounded-2xl shadow-2xl p-8 flex flex-col items-start backdrop-blur-md">
-          <h2 className="text-2xl font-extrabold mb-3 text-neon-green tracking-wide">Featured League</h2>
-          <div className="transition-all duration-500">
-            <p className="text-2xl font-bold mb-1 text-white">{mockLeagues[carouselIndex].name}</p>
-            <p className="text-base text-gray-400">
-              {mockLeagues[carouselIndex].teams} Teams • Season {mockLeagues[carouselIndex].season}
+      {/* Ozzie AI Assistant Section */}
+      <section className="w-full max-w-4xl mb-16">
+        <div className="backdrop-blur-md bg-gray-800/70 border border-gray-700/40 rounded-2xl shadow-2xl p-8">
+          <div className="text-center mb-8">
+            <div className="text-6xl mb-4 drop-shadow-lg">🤖</div>
+            <h2 className="text-4xl font-extrabold mb-4 text-neon-green tracking-wide">
+              Meet Ozzie - Your AI League Assistant
+            </h2>
+            <p className="text-xl text-gray-300 font-medium">
+              The most advanced AI companion ever created for esports league management
             </p>
           </div>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2">
-            {mockLeagues.map((_, idx) => (
-              <button
-                key={idx}
-                className={`w-3 h-3 rounded-full border-2 border-neon-green transition-all duration-200 ${carouselIndex === idx ? 'bg-neon-green' : 'bg-transparent'}`}
-                onClick={() => setCarouselIndex(idx)}
-                aria-label={`Show league ${idx + 1}`}
-              />
-            ))}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30">
+                <h3 className="text-2xl font-bold mb-3 text-white flex items-center">
+                  <span className="text-3xl mr-3">🧠</span>
+                  Natural Language Processing
+                </h3>
+                <p className="text-gray-300">
+                  Ask Ozzie anything in plain English! "Who should I trade for a quarterback?" 
+                  "What's the best draft strategy for my team?" "Show me the top performers this week." 
+                  Ozzie understands context and provides intelligent, actionable responses.
+                </p>
+              </div>
+              
+              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30">
+                <h3 className="text-2xl font-bold mb-3 text-white flex items-center">
+                  <span className="text-3xl mr-3">📊</span>
+                  Advanced Analytics
+                </h3>
+                <p className="text-gray-300">
+                  Get instant insights into player performance, team statistics, and league trends. 
+                  Ozzie analyzes thousands of data points to provide you with the most relevant 
+                  information for making informed decisions.
+                </p>
+              </div>
+              
+              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30">
+                <h3 className="text-2xl font-bold mb-3 text-white flex items-center">
+                  <span className="text-3xl mr-3">💡</span>
+                  Trade Analysis & Suggestions
+                </h3>
+                <p className="text-gray-300">
+                  Get instant trade evaluations with detailed breakdowns of value, risk assessment, 
+                  and strategic recommendations. Ozzie considers team needs, salary cap implications, 
+                  and future roster planning.
+                </p>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30">
+                <h3 className="text-2xl font-bold mb-3 text-white flex items-center">
+                  <span className="text-3xl mr-3">🎯</span>
+                  Draft Strategy & Scouting
+                </h3>
+                <p className="text-gray-300">
+                  Discover hidden gems and build the perfect draft board. Ozzie provides detailed 
+                  scouting reports, sleeper alerts, and position-specific rankings based on your 
+                  team's specific needs and league format.
+                </p>
+              </div>
+              
+              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30">
+                <h3 className="text-2xl font-bold mb-3 text-white flex items-center">
+                  <span className="text-3xl mr-3">⚡</span>
+                  Real-Time Updates
+                </h3>
+                <p className="text-gray-300">
+                  Stay ahead of the competition with instant notifications about injuries, 
+                  roster changes, and breaking news. Ozzie keeps you informed with the latest 
+                  updates that could impact your team.
+                </p>
+              </div>
+              
+              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30">
+                <h3 className="text-2xl font-bold mb-3 text-white flex items-center">
+                  <span className="text-3xl mr-3">🏆</span>
+                  Championship Intelligence
+                </h3>
+                <p className="text-gray-300">
+                  From preseason planning to playoff strategy, Ozzie helps you build a championship 
+                  roster. Get personalized advice on roster construction, waiver wire priorities, 
+                  and in-season management tactics.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-8 text-center">
+            <div className="bg-neon-green/20 border border-neon-green/30 rounded-xl p-6">
+              <h3 className="text-2xl font-bold mb-3 text-neon-green">
+                Ready to Dominate Your League?
+              </h3>
+              <p className="text-gray-300 mb-4">
+                Join thousands of commissioners who are already using Ozzie to gain the competitive edge. 
+                Experience the future of esports league management today.
+              </p>
+              <div className="text-sm text-gray-400">
+                <strong>Available 24/7</strong> • <strong>Multi-League Support</strong> • <strong>Advanced AI Technology</strong>
+              </div>
+            </div>
           </div>
         </div>
       </section>
