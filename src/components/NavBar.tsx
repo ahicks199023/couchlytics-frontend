@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import useAuth from '@/Hooks/useAuth'
 import { User } from '@/types/user'
 
@@ -60,9 +61,11 @@ export default function NavBar() {
         ) : authenticated && user ? (
           <div className="flex items-center space-x-4">
             <div className="hidden md:flex items-center space-x-2">
-              <img
+              <Image
                 src={getUserAvatar(user)}
                 alt="User avatar"
+                width={32}
+                height={32}
                 className="w-8 h-8 rounded-full"
                 onError={(e) => {
                   e.currentTarget.src = '/default-avatar.png'

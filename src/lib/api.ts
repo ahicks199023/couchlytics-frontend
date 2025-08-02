@@ -75,7 +75,7 @@ export const getLeagueSettings = async (leagueId: string) => {
   return fetchFromApi(`/commissioner/league/${leagueId}/settings`)
 }
 
-export const updateLeagueSettings = async (leagueId: string, settings: Record<string, unknown>) => {
+export const updateLeagueSettings = async (leagueId: string, settings: { name?: string; description?: string; image_url?: string; invite_code?: string; setup_completed?: boolean }) => {
   return fetchFromApi(`/commissioner/league/${leagueId}/update`, {
     method: 'PUT',
     body: JSON.stringify(settings)
