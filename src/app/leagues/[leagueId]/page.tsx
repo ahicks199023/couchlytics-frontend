@@ -149,6 +149,12 @@ export default function LeagueDetailPage() {
         console.log('LeagueDetailPage - games type:', typeof data.games)
         console.log('LeagueDetailPage - teams is array?', Array.isArray(data.teams))
         console.log('LeagueDetailPage - games is array?', Array.isArray(data.games))
+        console.log('LeagueDetailPage - Sample team data:', data.teams?.[0])
+        console.log('LeagueDetailPage - Sample game data:', data.games?.[0])
+        console.log('LeagueDetailPage - Sample player data:', data.players?.[0])
+        console.log('LeagueDetailPage - Teams array length:', data.teams?.length)
+        console.log('LeagueDetailPage - Games array length:', data.games?.length)
+        console.log('LeagueDetailPage - Players array length:', data.players?.length)
         setLeague(data as LeagueData)
         setLoading(false)
       })
@@ -166,6 +172,10 @@ export default function LeagueDetailPage() {
   console.log('LeagueDetailPage - league.teams:', league.teams)
   console.log('LeagueDetailPage - league.games:', league.games)
   console.log('LeagueDetailPage - league.league:', league.league)
+  console.log('LeagueDetailPage - First team name:', league.teams?.[0]?.name)
+  console.log('LeagueDetailPage - First game home team:', league.games?.[0]?.home_team?.name)
+  console.log('LeagueDetailPage - First game away team:', league.games?.[0]?.away_team?.name)
+  console.log('LeagueDetailPage - League ID from data:', league.league?.leagueId)
 
   return (
     <main className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white p-6">
