@@ -76,7 +76,11 @@ export default function LeagueDetailPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!leagueId) return
+    if (!leagueId || typeof leagueId !== 'string') {
+      setError('Invalid league ID')
+      setLoading(false)
+      return
+    }
 
     fetchFromApi(`/leagues/${leagueId}`)
       .then(data => {

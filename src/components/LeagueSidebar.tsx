@@ -36,6 +36,11 @@ export default function LeagueSidebar() {
   useEffect(() => {
     const checkAccess = async () => {
       try {
+        // Don't check access if leagueId is not available
+        if (!leagueId || typeof leagueId !== 'string') {
+          return
+        }
+
         // Get current user
         const userRes = await fetch(`${API_BASE}/auth/user`, {
           credentials: 'include'
@@ -63,11 +68,13 @@ export default function LeagueSidebar() {
   }
 
   const isActive = (path: string) => {
+    if (!leagueId || typeof leagueId !== 'string') return false
     const fullPath = `/leagues/${leagueId}/${path}`
     return pathname === fullPath || (path === '' && pathname === `/leagues/${leagueId}`)
   }
 
   const isSubItemActive = (path: string) => {
+    if (!leagueId || typeof leagueId !== 'string') return false
     const fullPath = `/leagues/${leagueId}/${path}`
     return pathname === fullPath
   }
@@ -84,6 +91,11 @@ export default function LeagueSidebar() {
           const hasSubItems = subItems && subItems.length > 0
           const isExpanded = expandedItems.includes(path)
           const active = isActive(path) || (hasSubItems && subItems.some(sub => isSubItemActive(sub.path)))
+
+          // Don't render links if leagueId is not available
+          if (!leagueId || typeof leagueId !== 'string') {
+            return null
+          }
 
           return (
             <div key={path}>
@@ -134,7 +146,7 @@ export default function LeagueSidebar() {
         })}
         
         {/* Commissioner's Hub - Show if user has access */}
-        {(hasCommissionerAccess || isGlobalCommissioner) && (
+        {(hasCommissionerAccess || isGlobalCommissioner) && leagueId && typeof leagueId === 'string' && (
           <div className="pt-2 border-t border-gray-700">
             <Link
               href={`/commissioner/league/${leagueId}`}
