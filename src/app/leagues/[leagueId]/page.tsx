@@ -262,6 +262,10 @@ export default function LeagueDetailPage() {
           <div className="space-y-6">
             {/* Group games by week */}
             {(() => {
+              console.log('LeagueDetailPage - Starting games processing')
+              console.log('LeagueDetailPage - league.games:', league.games)
+              console.log('LeagueDetailPage - league.games length:', league.games.length)
+              
               const gamesByWeek = league.games.reduce((acc, game) => {
                 const week = game.week
                 if (!acc[week]) acc[week] = []
@@ -269,121 +273,139 @@ export default function LeagueDetailPage() {
                 return acc
               }, {} as Record<number, typeof league.games>)
               
+              console.log('LeagueDetailPage - gamesByWeek:', gamesByWeek)
+              console.log('LeagueDetailPage - gamesByWeek keys:', Object.keys(gamesByWeek))
+              
               // Sort weeks in descending order (most recent first)
               const sortedWeeks = Object.keys(gamesByWeek)
                 .map(Number)
                 .sort((a, b) => b - a)
                 .slice(0, 3) // Show only the 3 most recent weeks
               
-              return sortedWeeks.map(week => (
-                <div key={week} className="bg-gray-900 rounded-lg p-6">
-                  <h3 className="text-xl font-bold text-neon-green mb-4 text-center">
-                    Week {week}
-                  </h3>
-                  <div className="grid gap-4">
-                    {gamesByWeek[week].map((game, i) => {
-                      const homeTeamConfig = getTeamConfig(game.homeTeam)
-                      const awayTeamConfig = getTeamConfig(game.awayTeam)
-                      const homeTeamColor = homeTeamConfig?.colors?.primary || '#6B7280'
-                      const awayTeamColor = awayTeamConfig?.colors?.primary || '#6B7280'
-                      
-                      return (
-                        <div 
-                          key={`${game.game_id}-${i}`} 
-                          className="bg-gray-800 rounded-lg p-4 relative overflow-hidden"
-                        >
-                          {/* Background gradient with team colors */}
-                          <div className="absolute inset-0 opacity-10">
-                            <div className="w-full h-full" style={{
-                              background: `linear-gradient(90deg, ${homeTeamColor} 0%, ${awayTeamColor} 100%)`
-                            }}></div>
-                          </div>
-                          
-                          <div className="relative z-10">
-                            <div className="grid grid-cols-3 gap-4 items-center">
-                              {/* Home Team */}
-                              <div className="text-center">
-                                <div className="flex justify-center mb-2">
-                                  <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-lg">
-                                    <TeamLogo 
-                                      teamName={game.homeTeam}
-                                      size="lg"
-                                      variant="helmet"
-                                      showName={false}
-                                    />
+              console.log('LeagueDetailPage - sortedWeeks:', sortedWeeks)
+              console.log('LeagueDetailPage - sortedWeeks type:', typeof sortedWeeks)
+              console.log('LeagueDetailPage - sortedWeeks is array?', Array.isArray(sortedWeeks))
+              
+              return sortedWeeks.map(week => {
+                console.log('LeagueDetailPage - Processing week:', week)
+                console.log('LeagueDetailPage - games for week:', gamesByWeek[week])
+                console.log('LeagueDetailPage - games for week type:', typeof gamesByWeek[week])
+                console.log('LeagueDetailPage - games for week is array?', Array.isArray(gamesByWeek[week]))
+                
+                return (
+                  <div key={week} className="bg-gray-900 rounded-lg p-6">
+                    <h3 className="text-xl font-bold text-neon-green mb-4 text-center">
+                      Week {week}
+                    </h3>
+                    <div className="grid gap-4">
+                      {gamesByWeek[week].map((game, i) => {
+                        console.log('LeagueDetailPage - Processing game:', game)
+                        console.log('LeagueDetailPage - game.homeTeam:', game.homeTeam)
+                        console.log('LeagueDetailPage - game.awayTeam:', game.awayTeam)
+                        
+                        const homeTeamConfig = getTeamConfig(game.homeTeam)
+                        const awayTeamConfig = getTeamConfig(game.awayTeam)
+                        const homeTeamColor = homeTeamConfig?.colors?.primary || '#6B7280'
+                        const awayTeamColor = awayTeamConfig?.colors?.primary || '#6B7280'
+                        
+                        return (
+                          <div 
+                            key={`${game.game_id}-${i}`} 
+                            className="bg-gray-800 rounded-lg p-4 relative overflow-hidden"
+                          >
+                            {/* Background gradient with team colors */}
+                            <div className="absolute inset-0 opacity-10">
+                              <div className="w-full h-full" style={{
+                                background: `linear-gradient(90deg, ${homeTeamColor} 0%, ${awayTeamColor} 100%)`
+                              }}></div>
+                            </div>
+                            
+                            <div className="relative z-10">
+                              <div className="grid grid-cols-3 gap-4 items-center">
+                                {/* Home Team */}
+                                <div className="text-center">
+                                  <div className="flex justify-center mb-2">
+                                    <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-lg">
+                                      <TeamLogo 
+                                        teamName={game.homeTeam}
+                                        size="lg"
+                                        variant="helmet"
+                                        showName={false}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="font-bold text-lg text-white mb-1">
+                                    {game.homeTeam}
+                                  </div>
+                                  <div className="text-sm text-gray-300 mb-1">
+                                    {/* User info not available in current structure */}
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    {/* Record info not available in current structure */}
                                   </div>
                                 </div>
-                                <div className="font-bold text-lg text-white mb-1">
-                                  {game.homeTeam}
-                                </div>
-                                <div className="text-sm text-gray-300 mb-1">
-                                  {/* User info not available in current structure */}
-                                </div>
-                                <div className="text-xs text-gray-400">
-                                  {/* Record info not available in current structure */}
-                                </div>
-                              </div>
-                              
-                              {/* Score */}
-                              <div className="text-center">
-                                <div className="text-3xl font-bold text-white mb-2">
-                                  {game.homeScore !== null && game.awayScore !== null ? (
-                                    <>
-                                      {game.homeScore} - {game.awayScore}
-                                    </>
-                                  ) : (
-                                    'TBD'
+                                
+                                {/* Score */}
+                                <div className="text-center">
+                                  <div className="text-3xl font-bold text-white mb-2">
+                                    {game.homeScore !== null && game.awayScore !== null ? (
+                                      <>
+                                        {game.homeScore} - {game.awayScore}
+                                      </>
+                                    ) : (
+                                      'TBD'
+                                    )}
+                                  </div>
+                                  <div className="text-sm text-gray-300">
+                                    {game.is_complete ? (
+                                      <span className="text-green-400 font-semibold">Final</span>
+                                    ) : (
+                                      <span className="text-yellow-400">Scheduled</span>
+                                    )}
+                                  </div>
+                                  {game.is_complete && game.winner && (
+                                    <div className="text-xs text-gray-400 mt-1">
+                                      Winner: {game.winner === 'home' ? game.homeTeam : game.awayTeam}
+                                    </div>
+                                  )}
+                                  {game.venue && (
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      {game.venue}
+                                    </div>
                                   )}
                                 </div>
-                                <div className="text-sm text-gray-300">
-                                  {game.is_complete ? (
-                                    <span className="text-green-400 font-semibold">Final</span>
-                                  ) : (
-                                    <span className="text-yellow-400">Scheduled</span>
-                                  )}
-                                </div>
-                                {game.is_complete && game.winner && (
-                                  <div className="text-xs text-gray-400 mt-1">
-                                    Winner: {game.winner === 'home' ? game.homeTeam : game.awayTeam}
+                                
+                                {/* Away Team */}
+                                <div className="text-center">
+                                  <div className="flex justify-center mb-2">
+                                    <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-lg">
+                                      <TeamLogo 
+                                        teamName={game.awayTeam}
+                                        size="lg"
+                                        variant="helmet"
+                                        showName={false}
+                                      />
+                                    </div>
                                   </div>
-                                )}
-                                {game.venue && (
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    {game.venue}
+                                  <div className="font-bold text-lg text-white mb-1">
+                                    {game.awayTeam}
                                   </div>
-                                )}
-                              </div>
-                              
-                              {/* Away Team */}
-                              <div className="text-center">
-                                <div className="flex justify-center mb-2">
-                                  <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-lg">
-                                    <TeamLogo 
-                                      teamName={game.awayTeam}
-                                      size="lg"
-                                      variant="helmet"
-                                      showName={false}
-                                    />
+                                  <div className="text-sm text-gray-300 mb-1">
+                                    {/* User info not available in current structure */}
                                   </div>
-                                </div>
-                                <div className="font-bold text-lg text-white mb-1">
-                                  {game.awayTeam}
-                                </div>
-                                <div className="text-sm text-gray-300 mb-1">
-                                  {/* User info not available in current structure */}
-                                </div>
-                                <div className="text-xs text-gray-400">
-                                  {/* Record info not available in current structure */}
+                                  <div className="text-xs text-gray-400">
+                                    {/* Record info not available in current structure */}
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      )
-                    })}
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))
+                )
+              })
             })()}
           </div>
         ) : (
