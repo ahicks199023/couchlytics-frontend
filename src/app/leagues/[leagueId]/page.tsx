@@ -236,7 +236,7 @@ export default function LeagueDetailPage() {
 
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Recent Week Results</h2>
-        {league.games?.length > 0 ? (
+        {league.games && league.games.length > 0 ? (
           <div className="space-y-6">
             {/* Group games by week */}
             {(() => {
