@@ -64,7 +64,7 @@ export default function HomePage() {
         {features.map((feature, idx) => (
           <div
             key={idx}
-            className="backdrop-blur-md bg-gray-800/70 border border-gray-700/40 p-8 rounded-2xl shadow-xl flex flex-col items-center hover:scale-105 hover:bg-gray-700/80 transition-all duration-300"
+            className="backdrop-blur-md bg-gray-800/70 border border-gray-700/40 p-8 rounded-2xl shadow-xl flex flex-col items-center text-center hover:scale-105 hover:bg-gray-700/80 transition-all duration-300"
           >
             <div className="mb-4 drop-shadow-lg">
               {feature.icon === 'ozzie' ? (
@@ -73,8 +73,8 @@ export default function HomePage() {
                 <div className="text-5xl">{feature.icon}</div>
               )}
             </div>
-            <h3 className="text-2xl font-bold mb-2 text-white">{feature.title}</h3>
-            <p className="text-base text-gray-300 font-medium">{feature.description}</p>
+            <h3 className="text-2xl font-bold mb-2 text-white text-center">{feature.title}</h3>
+            <p className="text-base text-gray-300 font-medium text-center">{feature.description}</p>
           </div>
         ))}
       </section>
@@ -86,46 +86,46 @@ export default function HomePage() {
             <div className="mb-4 flex justify-center">
               <OzzieIcon size={80} />
             </div>
-            <h2 className="text-4xl font-extrabold mb-4 text-neon-green tracking-wide">
+            <h2 className="text-4xl font-extrabold mb-4 text-neon-green tracking-wide text-center">
               Meet Ozzie - Your AI League Assistant
             </h2>
-            <p className="text-xl text-gray-300 font-medium">
+            <p className="text-xl text-gray-300 font-medium text-center">
               The most advanced AI companion ever created for esports league management
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
-              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30">
-                <h3 className="text-2xl font-bold mb-3 text-white flex items-center">
+              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30 text-center">
+                <h3 className="text-2xl font-bold mb-3 text-white flex items-center justify-center">
                   <span className="text-3xl mr-3">🧠</span>
                   Natural Language Processing
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-gray-300 text-center">
                   Ask Ozzie anything in plain English! &ldquo;Who should I trade for a quarterback?&rdquo; 
                   &ldquo;What&apos;s the best draft strategy for my team?&rdquo; &ldquo;Show me the top performers this week.&rdquo; 
                   Ozzie understands context and provides intelligent, actionable responses.
                 </p>
               </div>
               
-              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30">
-                <h3 className="text-2xl font-bold mb-3 text-white flex items-center">
+              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30 text-center">
+                <h3 className="text-2xl font-bold mb-3 text-white flex items-center justify-center">
                   <span className="text-3xl mr-3">📊</span>
                   Advanced Analytics
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-gray-300 text-center">
                   Get instant insights into player performance, team statistics, and league trends. 
                   Ozzie analyzes thousands of data points to provide you with the most relevant 
                   information for making informed decisions.
                 </p>
               </div>
               
-              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30">
-                <h3 className="text-2xl font-bold mb-3 text-white flex items-center">
+              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30 text-center">
+                <h3 className="text-2xl font-bold mb-3 text-white flex items-center justify-center">
                   <span className="text-3xl mr-3">💡</span>
                   Trade Analysis & Suggestions
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-gray-300 text-center">
                   Get instant trade evaluations with detailed breakdowns of value, risk assessment, 
                   and strategic recommendations. Ozzie considers team needs, salary cap implications, 
                   and future roster planning.
@@ -134,36 +134,36 @@ export default function HomePage() {
             </div>
             
             <div className="space-y-6">
-              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30">
-                <h3 className="text-2xl font-bold mb-3 text-white flex items-center">
+              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30 text-center">
+                <h3 className="text-2xl font-bold mb-3 text-white flex items-center justify-center">
                   <span className="text-3xl mr-3">🎯</span>
                   Draft Strategy & Scouting
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-gray-300 text-center">
                   Discover hidden gems and build the perfect draft board. Ozzie provides detailed 
                   scouting reports, sleeper alerts, and position-specific rankings based on your 
                   team&apos;s specific needs and league format.
                 </p>
               </div>
               
-              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30">
-                <h3 className="text-2xl font-bold mb-3 text-white flex items-center">
+              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30 text-center">
+                <h3 className="text-2xl font-bold mb-3 text-white flex items-center justify-center">
                   <span className="text-3xl mr-3">⚡</span>
                   Real-Time Updates
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-gray-300 text-center">
                   Stay ahead of the competition with instant notifications about injuries, 
                   roster changes, and breaking news. Ozzie keeps you informed with the latest 
                   updates that could impact your team.
                 </p>
               </div>
               
-              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30">
-                <h3 className="text-2xl font-bold mb-3 text-white flex items-center">
+              <div className="bg-gray-700/50 rounded-xl p-6 border border-gray-600/30 text-center">
+                <h3 className="text-2xl font-bold mb-3 text-white flex items-center justify-center">
                   <span className="text-3xl mr-3">🏆</span>
                   Championship Intelligence
                 </h3>
-                <p className="text-gray-300">
+                <p className="text-gray-300 text-center">
                   From preseason planning to playoff strategy, Ozzie helps you build a championship 
                   roster. Get personalized advice on roster construction, waiver wire priorities, 
                   and in-season management tactics.
@@ -173,15 +173,15 @@ export default function HomePage() {
           </div>
           
           <div className="mt-8 text-center">
-            <div className="bg-neon-green/20 border border-neon-green/30 rounded-xl p-6">
-              <h3 className="text-2xl font-bold mb-3 text-neon-green">
+            <div className="bg-neon-green/20 border border-neon-green/30 rounded-xl p-6 text-center">
+              <h3 className="text-2xl font-bold mb-3 text-neon-green text-center">
                 Ready to Dominate Your League?
               </h3>
-              <p className="text-gray-300 mb-4">
+              <p className="text-gray-300 mb-4 text-center">
                 Join thousands of commissioners who are already using Ozzie to gain the competitive edge. 
                 Experience the future of esports league management today.
               </p>
-              <div className="text-sm text-gray-400">
+              <div className="text-sm text-gray-400 text-center">
                 <strong>Available 24/7</strong> • <strong>Multi-League Support</strong> • <strong>Advanced AI Technology</strong>
               </div>
             </div>
