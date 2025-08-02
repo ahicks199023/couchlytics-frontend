@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LeagueStatLeaders } from '@/components/LeagueStatLeaders'
 import { fetchFromApi } from '@/lib/api'
@@ -71,6 +71,7 @@ type LeagueData = {
 
 export default function LeagueDetailPage() {
   const { leagueId } = useParams()
+  const router = useRouter()
   const [league, setLeague] = useState<LeagueData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -82,10 +83,9 @@ export default function LeagueDetailPage() {
   useEffect(() => {
     console.log('LeagueDetailPage useEffect - leagueId:', leagueId)
     
-    if (!leagueId || typeof leagueId !== 'string') {
-      console.log('LeagueDetailPage - Invalid leagueId, setting error')
-      setError('Invalid league ID')
-      setLoading(false)
+    if (!leagueId || typeof leagueId !== 'string' || leagueId === 'undefined') {
+      console.log('LeagueDetailPage - Invalid leagueId, redirecting to leagues page')
+      router.push('/leagues')
       return
     }
 
@@ -101,7 +101,7 @@ export default function LeagueDetailPage() {
         setError('League not found or access denied.')
         setLoading(false)
       })
-  }, [leagueId])
+  }, [leagueId, router])
 
   if (loading) return <main className="p-6 text-white">Loading league details...</main>
   if (error || !league) return <main className="p-6 text-red-400">{error || 'No data found.'}</main>
