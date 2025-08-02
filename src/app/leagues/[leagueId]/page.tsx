@@ -176,8 +176,18 @@ export default function LeagueDetailPage() {
         <h2 className="text-2xl font-semibold mb-4">Teams by Division</h2>
                  {league.teams && league.teams.length > 0 ? (
            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-             {Object.entries(organizeTeamsByDivision(league.teams?.filter(team => team.name && team.name !== 'Unknown') || []))
-               .map(([division, teams]) => (
+             {(() => {
+               const organizedTeams = organizeTeamsByDivision(league.teams?.filter(team => team.name && team.name !== 'Unknown') || [])
+               console.log('LeagueDetailPage - organizedTeams:', organizedTeams)
+               console.log('LeagueDetailPage - organizedTeams type:', typeof organizedTeams)
+               console.log('LeagueDetailPage - organizedTeams keys:', Object.keys(organizedTeams))
+               
+               const entries = Object.entries(organizedTeams)
+               console.log('LeagueDetailPage - Object.entries result:', entries)
+               console.log('LeagueDetailPage - entries type:', typeof entries)
+               console.log('LeagueDetailPage - entries is array?', Array.isArray(entries))
+               
+               return entries.map(([division, teams]) => (
                  <div key={division} className="space-y-3">
                    {/* Division Header */}
                    <div className="text-center">
@@ -238,7 +248,8 @@ export default function LeagueDetailPage() {
                      })}
                    </div>
                  </div>
-               ))}
+               ))
+             })()}
            </div>
         ) : (
           <p className="text-gray-600 dark:text-gray-500 text-sm italic">No teams available.</p>
