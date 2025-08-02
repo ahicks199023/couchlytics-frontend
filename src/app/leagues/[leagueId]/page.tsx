@@ -14,6 +14,11 @@ const getTeamConfig = (teamName: string) => {
 
 // Helper function to organize teams by division
 const organizeTeamsByDivision = (teams: LeagueData['teams']) => {
+  // Add null check to prevent TypeError
+  if (!teams || !Array.isArray(teams)) {
+    return {}
+  }
+
   const divisionMap = {
     'AFC North': ['Bengals', 'Browns', 'Ravens', 'Steelers'],
     'AFC South': ['Colts', 'Jaguars', 'Texans', 'Titans'],
