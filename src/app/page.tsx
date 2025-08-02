@@ -1,7 +1,5 @@
 'use client'
 
-import Image from 'next/image'
-
 // Custom Ozzie Icon Component
 const OzzieIcon = ({ size = 48 }: { size?: number }) => (
   <div 
@@ -53,17 +51,6 @@ export default function HomePage() {
       
       {/* Hero Section */}
       <section className="w-full max-w-4xl text-center mb-12">
-        {/* Logo */}
-        <div className="mb-8 flex justify-center">
-          <Image
-            src="/couch-commish-logo.png"
-            alt="Couchlytics Logo"
-            width={200}
-            height={80}
-            className="h-20 w-auto"
-          />
-        </div>
-        
         <h1 className="text-5xl sm:text-6xl font-extrabold mb-4 text-neon-green drop-shadow-lg">
           Welcome to Couchlytics
         </h1>

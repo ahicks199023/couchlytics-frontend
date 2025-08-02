@@ -131,8 +131,17 @@ export default function NavBar() {
   return (
     <nav className="bg-gray-900 text-white px-6 py-4 flex justify-between items-center relative">
       <div className="flex items-center space-x-4">
-        <Link href="/" className="text-xl font-bold text-neon-green">
-          Couchlytics
+        <Link href="/" className="flex items-center space-x-2 hover:text-neon-green transition-colors">
+          <Image
+            src="/couch-commish-logo.png"
+            alt="Couchlytics Logo"
+            width={32}
+            height={32}
+            className="h-8 w-auto"
+          />
+          <span className="text-xl font-bold text-neon-green">
+            Couchlytics
+          </span>
         </Link>
         
         {authenticated && (
