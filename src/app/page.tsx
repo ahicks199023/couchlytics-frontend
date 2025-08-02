@@ -2,6 +2,25 @@
 
 import Image from 'next/image'
 
+// Custom Ozzie Icon Component
+const OzzieIcon = ({ size = 48 }: { size?: number }) => (
+  <div 
+    className="flex items-center justify-center rounded-full shadow-lg"
+    style={{
+      width: size,
+      height: size,
+      background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+    }}
+  >
+    <span 
+      className="text-white font-bold"
+      style={{ fontSize: `${size * 0.4}px` }}
+    >
+      o
+    </span>
+  </div>
+)
+
 const features = [
   {
     title: 'Advanced Trade Tool',
@@ -16,7 +35,7 @@ const features = [
   },
   {
     title: 'AI Assistant',
-    icon: '🤖',
+    icon: 'ozzie',
     description: 'Your personal AI companion for league management and decision-making.',
   },
   {
@@ -60,7 +79,13 @@ export default function HomePage() {
             key={idx}
             className="backdrop-blur-md bg-gray-800/70 border border-gray-700/40 p-8 rounded-2xl shadow-xl flex flex-col items-center hover:scale-105 hover:bg-gray-700/80 transition-all duration-300"
           >
-            <div className="text-5xl mb-4 drop-shadow-lg">{feature.icon}</div>
+            <div className="mb-4 drop-shadow-lg">
+              {feature.icon === 'ozzie' ? (
+                <OzzieIcon size={48} />
+              ) : (
+                <div className="text-5xl">{feature.icon}</div>
+              )}
+            </div>
             <h3 className="text-2xl font-bold mb-2 text-white">{feature.title}</h3>
             <p className="text-base text-gray-300 font-medium">{feature.description}</p>
           </div>
@@ -71,7 +96,9 @@ export default function HomePage() {
       <section className="w-full max-w-4xl mb-16">
         <div className="backdrop-blur-md bg-gray-800/70 border border-gray-700/40 rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-8">
-            <div className="text-6xl mb-4 drop-shadow-lg">🤖</div>
+            <div className="mb-4 flex justify-center">
+              <OzzieIcon size={80} />
+            </div>
             <h2 className="text-4xl font-extrabold mb-4 text-neon-green tracking-wide">
               Meet Ozzie - Your AI League Assistant
             </h2>
