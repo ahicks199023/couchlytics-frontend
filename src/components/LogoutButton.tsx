@@ -13,7 +13,7 @@ export default function LogoutButton() {
     })
 
     if (res.ok) {
-      router.push('/login')
+      router.push('/')
     } else {
       alert('Logout failed')
     }

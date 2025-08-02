@@ -91,6 +91,8 @@ export default function useAuth() {
     } finally {
       setUser(null);
       setAuthenticated(false);
+      // Redirect to home page after logout
+      window.location.href = '/';
     }
   }, []);
 
