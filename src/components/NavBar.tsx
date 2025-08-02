@@ -135,9 +135,9 @@ export default function NavBar() {
           <Image
             src="/couch-commish-logo.png"
             alt="Couchlytics Logo"
-            width={32}
-            height={32}
-            className="h-8 w-auto"
+            width={128}
+            height={128}
+            className="h-32 w-auto"
           />
           <span className="text-xl font-bold text-neon-green">
             Couchlytics
