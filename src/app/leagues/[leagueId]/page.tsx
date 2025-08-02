@@ -163,9 +163,9 @@ export default function LeagueDetailPage() {
 
       <section className="mt-8 mb-8">
         <h2 className="text-2xl font-semibold mb-4">Teams by Division</h2>
-                 {league.teams?.length > 0 ? (
+                 {league.teams && league.teams.length > 0 ? (
            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-             {Object.entries(organizeTeamsByDivision(league.teams.filter(team => team.name && team.name !== 'Unknown')))
+             {Object.entries(organizeTeamsByDivision(league.teams?.filter(team => team.name && team.name !== 'Unknown') || []))
                .map(([division, teams]) => (
                  <div key={division} className="space-y-3">
                    {/* Division Header */}
@@ -371,7 +371,7 @@ export default function LeagueDetailPage() {
 
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-2">League Stat Leaders</h2>
-        <LeagueStatLeaders leagueId={league.league.leagueId} />
+        {league.league?.leagueId && <LeagueStatLeaders leagueId={league.league.leagueId} />}
       </section>
     </main>
   )
