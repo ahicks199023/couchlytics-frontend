@@ -1,8 +1,6 @@
 'use client'
 
-import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
 
 const features = [
   {
@@ -90,8 +88,8 @@ export default function HomePage() {
                   Natural Language Processing
                 </h3>
                 <p className="text-gray-300">
-                  Ask Ozzie anything in plain English! "Who should I trade for a quarterback?" 
-                  "What's the best draft strategy for my team?" "Show me the top performers this week." 
+                  Ask Ozzie anything in plain English! &ldquo;Who should I trade for a quarterback?&rdquo; 
+                  &ldquo;What&apos;s the best draft strategy for my team?&rdquo; &ldquo;Show me the top performers this week.&rdquo; 
                   Ozzie understands context and provides intelligent, actionable responses.
                 </p>
               </div>
@@ -130,7 +128,7 @@ export default function HomePage() {
                 <p className="text-gray-300">
                   Discover hidden gems and build the perfect draft board. Ozzie provides detailed 
                   scouting reports, sleeper alerts, and position-specific rankings based on your 
-                  team's specific needs and league format.
+                  team&apos;s specific needs and league format.
                 </p>
               </div>
               
