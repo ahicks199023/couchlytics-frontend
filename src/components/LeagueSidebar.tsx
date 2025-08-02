@@ -87,7 +87,7 @@ export default function LeagueSidebar() {
     <aside className="w-48 bg-gray-900 text-white p-4 space-y-4 min-h-screen">
       <h2 className="text-lg font-bold mb-2">League Menu</h2>
       <nav className="flex flex-col space-y-1">
-        {links.map(({ label, path, prefetch, subItems }) => {
+        {links && links.map(({ label, path, prefetch, subItems }) => {
           const hasSubItems = subItems && subItems.length > 0
           const isExpanded = expandedItems.includes(path)
           const active = isActive(path) || (hasSubItems && subItems.some(sub => isSubItemActive(sub.path)))
