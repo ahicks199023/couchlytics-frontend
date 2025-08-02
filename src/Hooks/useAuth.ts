@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { User, UserRole, Permission } from "@/types/user";
 import { API_BASE } from '@/lib/config';
 
@@ -6,8 +6,14 @@ export default function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [authenticated, setAuthenticated] = useState<boolean>(false);
+  const isLoggingOut = useRef<boolean>(false);
 
   const checkAuthStatus = useCallback(async () => {
+    // Don't check auth status if we're in the process of logging out
+    if (isLoggingOut.current) {
+      return;
+    }
+
     try {
       const response = await fetch(`${API_BASE}/auth/status`, {
         credentials: "include",
@@ -36,6 +42,11 @@ export default function useAuth() {
   }, []);
 
   const fetchUser = useCallback(async () => {
+    // Don't fetch user if we're logging out
+    if (isLoggingOut.current) {
+      return;
+    }
+
     try {
       const response = await fetch(`${API_BASE}/auth/user`, {
         credentials: "include",
@@ -81,18 +92,48 @@ export default function useAuth() {
   }, [hasRole]);
 
   const logout = useCallback(async () => {
+    // Set logging out flag to prevent auth checks
+    isLoggingOut.current = true;
+    
     try {
+      // Clear local state immediately
+      setUser(null);
+      setAuthenticated(false);
+      setLoading(false);
+      
+      // Call logout endpoint
       await fetch(`${API_BASE}/auth/logout`, {
         credentials: 'include',
         method: 'GET',
       });
+      
+      // Clear any cached data
+      if (typeof window !== 'undefined') {
+        // Clear any localStorage/sessionStorage if used
+        localStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_token');
+        
+        // Clear any cached API responses
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => {
+              caches.delete(name);
+            });
+          });
+        }
+      }
+      
+      // Add a small delay before redirect to ensure logout completes
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
+      
     } catch (error) {
       console.error('Logout error:', error);
-    } finally {
-      setUser(null);
-      setAuthenticated(false);
-      // Redirect to home page after logout
-      window.location.href = '/';
+      // Even if logout fails, redirect to home
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
     }
   }, []);
 
