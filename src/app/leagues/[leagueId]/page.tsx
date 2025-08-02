@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LeagueStatLeaders } from '@/components/LeagueStatLeaders'
 import { fetchFromApi } from '@/lib/api'
 import { getTeamByName, getTeamByPartialName } from '@/lib/team-config'
 import TeamLogo from '@/components/TeamLogo'
@@ -387,7 +386,9 @@ export default function LeagueDetailPage() {
 
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-2">League Stat Leaders</h2>
-        {league.league?.leagueId && <LeagueStatLeaders leagueId={league.league.leagueId} />}
+        {/* Temporarily disabled to debug TypeError */}
+        {/* {league.league?.leagueId && <LeagueStatLeaders leagueId={league.league.leagueId} />} */}
+        <p className="text-gray-600 dark:text-gray-500 text-sm italic">Stat leaders temporarily disabled for debugging.</p>
       </section>
     </main>
   )
