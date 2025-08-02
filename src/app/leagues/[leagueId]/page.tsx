@@ -78,31 +78,12 @@ type LeagueData = {
     game_type: string
     game_status: string
     is_game_of_the_week: boolean
-    home_team: {
-      id: number
-      name: string
-      abbreviation: string
-      user: string
-      record: string
-      win_pct: number
-      pts_for: number
-      pts_against: number
-    }
-    away_team: {
-      id: number
-      name: string
-      abbreviation: string
-      user: string
-      record: string
-      win_pct: number
-      pts_for: number
-      pts_against: number
-    }
-    score: {
-      home_score: number | null
-      away_score: number | null
-      winner: string | null
-    }
+    // Updated to match actual backend structure
+    homeTeam: string
+    awayTeam: string
+    homeScore: number | null
+    awayScore: number | null
+    winner: string | null
     weather?: {
       condition: string
       temperature: number
@@ -173,8 +154,8 @@ export default function LeagueDetailPage() {
   console.log('LeagueDetailPage - league.games:', league.games)
   console.log('LeagueDetailPage - league.league:', league.league)
   console.log('LeagueDetailPage - First team name:', league.teams?.[0]?.name)
-  console.log('LeagueDetailPage - First game home team:', league.games?.[0]?.home_team?.name)
-  console.log('LeagueDetailPage - First game away team:', league.games?.[0]?.away_team?.name)
+  console.log('LeagueDetailPage - First game home team:', league.games?.[0]?.homeTeam)
+  console.log('LeagueDetailPage - First game away team:', league.games?.[0]?.awayTeam)
   console.log('LeagueDetailPage - League ID from data:', league.league?.leagueId)
 
   return (
@@ -290,8 +271,8 @@ export default function LeagueDetailPage() {
                   </h3>
                   <div className="grid gap-4">
                     {gamesByWeek[week].map((game, i) => {
-                      const homeTeamConfig = getTeamConfig(game.home_team.name)
-                      const awayTeamConfig = getTeamConfig(game.away_team.name)
+                      const homeTeamConfig = getTeamConfig(game.homeTeam)
+                      const awayTeamConfig = getTeamConfig(game.awayTeam)
                       const homeTeamColor = homeTeamConfig?.colors?.primary || '#6B7280'
                       const awayTeamColor = awayTeamConfig?.colors?.primary || '#6B7280'
                       
@@ -314,7 +295,7 @@ export default function LeagueDetailPage() {
                                 <div className="flex justify-center mb-2">
                                   <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-lg">
                                     <TeamLogo 
-                                      teamName={game.home_team.name}
+                                      teamName={game.homeTeam}
                                       size="lg"
                                       variant="helmet"
                                       showName={false}
@@ -322,22 +303,22 @@ export default function LeagueDetailPage() {
                                   </div>
                                 </div>
                                 <div className="font-bold text-lg text-white mb-1">
-                                  {game.home_team.name}
+                                  {game.homeTeam}
                                 </div>
                                 <div className="text-sm text-gray-300 mb-1">
-                                  {game.home_team.user}
+                                  {/* User info not available in current structure */}
                                 </div>
                                 <div className="text-xs text-gray-400">
-                                  {game.home_team.record} • {game.home_team.win_pct.toFixed(1)}%
+                                  {/* Record info not available in current structure */}
                                 </div>
                               </div>
                               
                               {/* Score */}
                               <div className="text-center">
                                 <div className="text-3xl font-bold text-white mb-2">
-                                  {game.score.home_score !== null && game.score.away_score !== null ? (
+                                  {game.homeScore !== null && game.awayScore !== null ? (
                                     <>
-                                      {game.score.home_score} - {game.score.away_score}
+                                      {game.homeScore} - {game.awayScore}
                                     </>
                                   ) : (
                                     'TBD'
@@ -350,9 +331,9 @@ export default function LeagueDetailPage() {
                                     <span className="text-yellow-400">Scheduled</span>
                                   )}
                                 </div>
-                                {game.is_complete && game.score.winner && (
+                                {game.is_complete && game.winner && (
                                   <div className="text-xs text-gray-400 mt-1">
-                                    Winner: {game.score.winner === 'home' ? game.home_team.name : game.away_team.name}
+                                    Winner: {game.winner === 'home' ? game.homeTeam : game.awayTeam}
                                   </div>
                                 )}
                                 {game.venue && (
@@ -367,7 +348,7 @@ export default function LeagueDetailPage() {
                                 <div className="flex justify-center mb-2">
                                   <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-lg">
                                     <TeamLogo 
-                                      teamName={game.away_team.name}
+                                      teamName={game.awayTeam}
                                       size="lg"
                                       variant="helmet"
                                       showName={false}
@@ -375,13 +356,13 @@ export default function LeagueDetailPage() {
                                   </div>
                                 </div>
                                 <div className="font-bold text-lg text-white mb-1">
-                                  {game.away_team.name}
+                                  {game.awayTeam}
                                 </div>
                                 <div className="text-sm text-gray-300 mb-1">
-                                  {game.away_team.user}
+                                  {/* User info not available in current structure */}
                                 </div>
                                 <div className="text-xs text-gray-400">
-                                  {game.away_team.record} • {game.away_team.win_pct.toFixed(1)}%
+                                  {/* Record info not available in current structure */}
                                 </div>
                               </div>
                             </div>
