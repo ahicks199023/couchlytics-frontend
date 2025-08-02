@@ -266,7 +266,20 @@ export default function LeagueDetailPage() {
               console.log('LeagueDetailPage - league.games:', league.games)
               console.log('LeagueDetailPage - league.games length:', league.games.length)
               
-              const gamesByWeek = league.games.reduce((acc, game) => {
+              // Filter out games with undefined week and add debugging
+              const validGames = league.games.filter(game => {
+                console.log('LeagueDetailPage - Game week:', game.week, 'Type:', typeof game.week)
+                return game.week !== undefined && game.week !== null && !isNaN(game.week)
+              })
+              
+              console.log('LeagueDetailPage - Valid games count:', validGames.length)
+              console.log('LeagueDetailPage - Invalid games count:', league.games.length - validGames.length)
+              
+              if (validGames.length === 0) {
+                return <p className="text-gray-600 dark:text-gray-500 text-sm italic">No games with valid week data available.</p>
+              }
+              
+              const gamesByWeek = validGames.reduce((acc, game) => {
                 const week = game.week
                 if (!acc[week]) acc[week] = []
                 acc[week].push(game)
