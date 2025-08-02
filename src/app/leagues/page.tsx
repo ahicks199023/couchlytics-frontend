@@ -38,7 +38,10 @@ export default function LeaguesPage() {
   useEffect(() => {
     fetchFromApi('/leagues')
       .then((data) => {
-        setLeagues((data as LeaguesResponse).leagues || [])
+        const leaguesData = (data as LeaguesResponse).leagues || []
+        console.log('Fetched leagues data:', leaguesData)
+        console.log('League IDs:', leaguesData.map(l => l.leagueId))
+        setLeagues(leaguesData)
         setLoading(false)
       })
       .catch(err => {

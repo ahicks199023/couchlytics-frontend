@@ -75,15 +75,24 @@ export default function LeagueDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Debug logging
+  console.log('LeagueDetailPage - leagueId from params:', leagueId)
+  console.log('LeagueDetailPage - leagueId type:', typeof leagueId)
+
   useEffect(() => {
+    console.log('LeagueDetailPage useEffect - leagueId:', leagueId)
+    
     if (!leagueId || typeof leagueId !== 'string') {
+      console.log('LeagueDetailPage - Invalid leagueId, setting error')
       setError('Invalid league ID')
       setLoading(false)
       return
     }
 
+    console.log('LeagueDetailPage - Fetching league data for ID:', leagueId)
     fetchFromApi(`/leagues/${leagueId}`)
       .then(data => {
+        console.log('LeagueDetailPage - Successfully fetched league data:', data)
         setLeague(data as LeagueData)
         setLoading(false)
       })
