@@ -74,7 +74,7 @@ interface TradeAnalysis {
 
 interface EnhancedTradeSubmissionFormProps {
   leagueId: string
-  onTradeSubmitted?: (result: any) => void
+  onTradeSubmitted?: (result: unknown) => void
 }
 
 const EnhancedTradeSubmissionForm: React.FC<EnhancedTradeSubmissionFormProps> = ({ 

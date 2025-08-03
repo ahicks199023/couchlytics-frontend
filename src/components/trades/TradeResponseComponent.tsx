@@ -92,7 +92,6 @@ const TradeResponseComponent: React.FC<TradeResponseComponentProps> = ({
   const [showAnalysis, setShowAnalysis] = useState(false)
 
   const isRecipient = trade.team_to.id === userTeamId
-  const isProposer = trade.team_from.id === userTeamId
 
   const handleRespond = async (action: 'accept' | 'decline') => {
     if (!isRecipient) {
