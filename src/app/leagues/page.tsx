@@ -126,7 +126,7 @@ export default function LeaguesPage() {
                     </p>
                   </div>
                                      <Link
-                     href={`/leagues/${league.leagueId || league.id || 'unknown'}`}
+                     href={`/leagues/${league.leagueId || 'unknown'}`}
                      className="text-sm text-neon-green underline hover:text-green-400"
                    >
                      View Details
