@@ -41,6 +41,7 @@ export default function LeaguesPage() {
         const leaguesData = (data as LeaguesResponse).leagues || []
         console.log('Fetched leagues data:', leaguesData)
         console.log('League IDs:', leaguesData.map(l => l.leagueId))
+        console.log('Full league objects:', JSON.stringify(leaguesData, null, 2))
         setLeagues(leaguesData)
         setLoading(false)
       })
@@ -124,12 +125,12 @@ export default function LeaguesPage() {
                       Season {league.seasonYear ?? '?'} — Week {league.week ?? '?'}
                     </p>
                   </div>
-                  <Link
-                    href={`/leagues/${league.leagueId}`}
-                    className="text-sm text-neon-green underline hover:text-green-400"
-                  >
-                    View Details
-                  </Link>
+                                     <Link
+                     href={`/leagues/${league.leagueId || league.id || 'unknown'}`}
+                     className="text-sm text-neon-green underline hover:text-green-400"
+                   >
+                     View Details
+                   </Link>
                 </div>
 
                 {expandedLeagueId === league.leagueId && (
