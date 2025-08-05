@@ -313,8 +313,7 @@ export default function LeaguePlayersPage() {
     return value;
   };
 
-  const frozenColumns = columns.filter(col => col.frozen);
-  const scrollableColumns = columns.filter(col => !col.frozen);
+
 
   return (
     <main className="min-h-screen bg-black text-white p-6">
