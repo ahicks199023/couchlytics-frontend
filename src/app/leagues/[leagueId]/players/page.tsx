@@ -59,9 +59,6 @@ const allColumns = [
   { key: "devTrait", label: "Dev Trait", width: "100px" },
   { key: "capHit", label: "Cap Hit", width: "100px" },
   { key: "contractYearsLeft", label: "Years Left", width: "100px" },
-  { key: "headshotUrl", label: "Headshot", width: "100px" },
-  { key: "headshotConfidence", label: "Headshot Conf", width: "120px" },
-  { key: "headshotSource", label: "Headshot Source", width: "120px" },
 ];
 
 
@@ -154,15 +151,6 @@ export default function LeaguePlayersPage() {
       case "devTrait":
         value = player.dev_trait;
         break;
-      case "headshotUrl":
-        value = player.headshot_url;
-        break;
-      case "headshotConfidence":
-        value = player.headshot_confidence;
-        break;
-      case "headshotSource":
-        value = player.headshot_source;
-        break;
       default:
         value = player[columnKey];
     }
@@ -175,8 +163,10 @@ export default function LeaguePlayersPage() {
       return `$${(value / 1000000).toFixed(1)}M`;
     }
     
-    if (columnKey === "headshotUrl" && value) {
-      return "Yes";
+    if (columnKey === "height" && typeof value === 'number') {
+      const feet = Math.floor(value / 12);
+      const inches = value % 12;
+      return `${feet}'${inches}"`;
     }
     
     if (value === undefined || value === null) {
