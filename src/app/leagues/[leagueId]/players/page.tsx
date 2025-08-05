@@ -10,105 +10,25 @@ interface Player {
   name: string;
   position: string;
   teamName?: string;
+  team?: string;
+  team_name?: string;
   overall?: number;
   speed?: number;
+  age?: number;
+  height?: number;
+  weight?: number;
+  durability?: number;
+  dev_trait?: string;
+  cap_hit?: number;
+  contract_years_left?: number;
+  headshot_url?: string;
+  headshot_confidence?: number;
+  headshot_source?: string;
+  
+  // Legacy fields for backward compatibility
   devTrait?: string;
   value?: number;
   maddenId?: string;
-  
-  // Core Attributes
-  speedRating?: number;
-  accelerationRating?: number;
-  agilityRating?: number;
-  strengthRating?: number;
-  awareRating?: number;
-  jumpRating?: number;
-  staminaRating?: number;
-  toughnessRating?: number;
-  injuryRating?: number;
-  
-  // Passing Attributes
-  throwPowerRating?: number;
-  throwAccRating?: number;
-  shortAccuracyRating?: number;
-  midAccuracyRating?: number;
-  deepAccuracyRating?: number;
-  throwOnRunRating?: number;
-  playActionRating?: number;
-  breakSackRating?: number;
-  underPressureRating?: number;
-  
-  // Rushing Attributes
-  carryRating?: number;
-  changeOfDirectionRating?: number;
-  spinMoveRating?: number;
-  jukeMoveRating?: number;
-  breakTackleRating?: number;
-  ballCarryVisionRating?: number;
-  truckingRating?: number;
-  stiffArmRating?: number;
-  
-  // Receiving Attributes
-  catchRating?: number;
-  specCatchRating?: number;
-  releaseRating?: number;
-  catchInTrafficRating?: number;
-  routeRunShortRating?: number;
-  medRouteRunRating?: number;
-  deepRouteRunRating?: number;
-  kickReturnRating?: number;
-  
-  // Blocking Attributes
-  passBlockRating?: number;
-  passBlockPowerRating?: number;
-  passBlockFinesseRating?: number;
-  runBlockRating?: number;
-  runBlockPowerRating?: number;
-  runBlockFinesseRating?: number;
-  leadBlockRating?: number;
-  impactBlockRating?: number;
-  
-  // Defense Attributes
-  tackleRating?: number;
-  hitPowerRating?: number;
-  pursuitRating?: number;
-  playRecognitionRating?: number;
-  blockShedRating?: number;
-  finesseMovesRating?: number;
-  powerMovesRating?: number;
-  manCoverRating?: number;
-  zoneCoverRating?: number;
-  pressRating?: number;
-  
-  // Kicking Attributes
-  kickPowerRating?: number;
-  kickAccuracyRating?: number;
-  
-  // Contract & Financial
-  capHit?: number;
-  salary?: number;
-  bonus?: number;
-  yearsLeft?: number;
-  contractLength?: number;
-  releaseNetSavings?: number;
-  totalReleasePenalty?: number;
-  
-  // Additional Player Details
-  jerseyNumber?: string;
-  yearsPro?: number;
-  rookieYear?: number;
-  draftRound?: number;
-  draftPick?: number;
-  college?: string;
-  height?: number;
-  weight?: number;
-  age?: number;
-  hometown?: string;
-  homeState?: string;
-  durabilityRating?: number;
-  experiencePoints?: number;
-  skillPoints?: number;
-  legacyScore?: number;
   
   [key: string]: string | number | undefined;
 }
@@ -125,106 +45,23 @@ const devTraits = [
   { value: "3", label: "X-Factor" },
 ];
 
-// Define all columns in order
+// Define all columns in order - based on actual API response fields
 const allColumns = [
   { key: "name", label: "Name", width: "200px" },
   { key: "position", label: "Position", width: "100px" },
   { key: "teamName", label: "Team", width: "150px" },
   { key: "overall", label: "OVR", width: "80px" },
   { key: "speed", label: "Speed", width: "80px" },
-  { key: "acceleration", label: "Accel", width: "80px" },
-  { key: "agility", label: "Agility", width: "80px" },
-  { key: "strength", label: "Strength", width: "80px" },
-  { key: "awareness", label: "Aware", width: "80px" },
-  { key: "jumping", label: "Jump", width: "80px" },
-  { key: "stamina", label: "Stamina", width: "80px" },
-  { key: "toughness", label: "Tough", width: "80px" },
-  { key: "injury", label: "Injury", width: "80px" },
-  
-  // Passing
-  { key: "throwPower", label: "Throw Power", width: "100px" },
-  { key: "throwAccuracy", label: "Throw Acc", width: "100px" },
-  { key: "shortAccuracy", label: "Short Acc", width: "100px" },
-  { key: "midAccuracy", label: "Mid Acc", width: "100px" },
-  { key: "deepAccuracy", label: "Deep Acc", width: "100px" },
-  { key: "throwOnRun", label: "Throw Run", width: "100px" },
-  { key: "playAction", label: "Play Action", width: "100px" },
-  { key: "breakSack", label: "Break Sack", width: "100px" },
-  { key: "underPressure", label: "Under Press", width: "100px" },
-  
-  // Rushing
-  { key: "carrying", label: "Carry", width: "80px" },
-  { key: "changeOfDirection", label: "COD", width: "80px" },
-  { key: "spinMove", label: "Spin", width: "80px" },
-  { key: "jukeMove", label: "Juke", width: "80px" },
-  { key: "breakTackle", label: "Break Tackle", width: "100px" },
-  { key: "ballCarrierVision", label: "BCV", width: "80px" },
-  { key: "trucking", label: "Trucking", width: "80px" },
-  { key: "stiffArm", label: "Stiff Arm", width: "80px" },
-  
-  // Receiving
-  { key: "catching", label: "Catch", width: "80px" },
-  { key: "spectacularCatch", label: "Spec Catch", width: "100px" },
-  { key: "release", label: "Release", width: "80px" },
-  { key: "catchInTraffic", label: "CIT", width: "80px" },
-  { key: "routeRunShort", label: "Short Route", width: "100px" },
-  { key: "routeRunMedium", label: "Med Route", width: "100px" },
-  { key: "routeRunDeep", label: "Deep Route", width: "100px" },
-  { key: "kickReturn", label: "Kick Return", width: "100px" },
-  
-  // Blocking
-  { key: "passBlock", label: "Pass Block", width: "100px" },
-  { key: "passBlockPower", label: "PB Power", width: "100px" },
-  { key: "passBlockFinesse", label: "PB Finesse", width: "100px" },
-  { key: "runBlock", label: "Run Block", width: "100px" },
-  { key: "runBlockPower", label: "RB Power", width: "100px" },
-  { key: "runBlockFinesse", label: "RB Finesse", width: "100px" },
-  { key: "leadBlock", label: "Lead Block", width: "100px" },
-  { key: "impactBlock", label: "Impact Block", width: "100px" },
-  
-  // Defense
-  { key: "tackle", label: "Tackle", width: "80px" },
-  { key: "hitPower", label: "Hit Power", width: "100px" },
-  { key: "pursuit", label: "Pursuit", width: "80px" },
-  { key: "playRecognition", label: "Play Rec", width: "100px" },
-  { key: "blockShedding", label: "Block Shed", width: "100px" },
-  { key: "finesseMoves", label: "Finesse", width: "80px" },
-  { key: "powerMoves", label: "Power", width: "80px" },
-  { key: "manCoverage", label: "Man Cover", width: "100px" },
-  { key: "zoneCoverage", label: "Zone Cover", width: "100px" },
-  { key: "press", label: "Press", width: "80px" },
-  
-  // Kicking
-  { key: "kickPower", label: "Kick Power", width: "100px" },
-  { key: "kickAccuracy", label: "Kick Acc", width: "100px" },
-  
-  // Contract & Financial
-  { key: "capHit", label: "Cap Hit", width: "100px" },
-  { key: "salary", label: "Salary", width: "100px" },
-  { key: "bonus", label: "Bonus", width: "100px" },
-  { key: "yearsLeft", label: "Years Left", width: "100px" },
-  { key: "contractLength", label: "Contract Length", width: "120px" },
-  { key: "releaseNetSavings", label: "Release Savings", width: "120px" },
-  { key: "totalReleasePenalty", label: "Release Penalty", width: "120px" },
-  
-  // Additional Details
-  { key: "jerseyNumber", label: "Jersey", width: "80px" },
-  { key: "yearsPro", label: "Years Pro", width: "100px" },
-  { key: "rookieYear", label: "Rookie Year", width: "100px" },
-  { key: "draftRound", label: "Draft Round", width: "100px" },
-  { key: "draftPick", label: "Draft Pick", width: "100px" },
-  { key: "college", label: "College", width: "150px" },
+  { key: "age", label: "Age", width: "80px" },
   { key: "height", label: "Height", width: "80px" },
   { key: "weight", label: "Weight", width: "80px" },
-  { key: "age", label: "Age", width: "80px" },
-  { key: "hometown", label: "Hometown", width: "150px" },
-  { key: "homeState", label: "State", width: "80px" },
   { key: "durability", label: "Durability", width: "100px" },
-  { key: "experiencePoints", label: "XP", width: "80px" },
-  { key: "skillPoints", label: "Skill Points", width: "100px" },
-  { key: "legacyScore", label: "Legacy", width: "80px" },
   { key: "devTrait", label: "Dev Trait", width: "100px" },
-  { key: "value", label: "Value", width: "100px" },
+  { key: "capHit", label: "Cap Hit", width: "100px" },
+  { key: "contractYearsLeft", label: "Years Left", width: "100px" },
+  { key: "headshotUrl", label: "Headshot", width: "100px" },
+  { key: "headshotConfidence", label: "Headshot Conf", width: "120px" },
+  { key: "headshotSource", label: "Headshot Source", width: "120px" },
 ];
 
 
@@ -304,10 +141,42 @@ export default function LeaguePlayersPage() {
   }, [search, position, team, devTrait, sortKey, sortDir, pageSize]);
 
   const getColumnValue = (player: Player, columnKey: string): string | number => {
-    const value = player[columnKey];
+    // Handle snake_case field names from API
+    let value;
+    
+    switch (columnKey) {
+      case "capHit":
+        value = player.cap_hit;
+        break;
+      case "contractYearsLeft":
+        value = player.contract_years_left;
+        break;
+      case "devTrait":
+        value = player.dev_trait;
+        break;
+      case "headshotUrl":
+        value = player.headshot_url;
+        break;
+      case "headshotConfidence":
+        value = player.headshot_confidence;
+        break;
+      case "headshotSource":
+        value = player.headshot_source;
+        break;
+      default:
+        value = player[columnKey];
+    }
     
     if (columnKey === "devTrait") {
       return devTraits.find(dt => dt.value === value)?.label || '-';
+    }
+    
+    if (columnKey === "capHit" && typeof value === 'number') {
+      return `$${(value / 1000000).toFixed(1)}M`;
+    }
+    
+    if (columnKey === "headshotUrl" && value) {
+      return "Yes";
     }
     
     if (value === undefined || value === null) {
