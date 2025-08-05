@@ -125,15 +125,11 @@ const devTraits = [
   { value: "3", label: "X-Factor" },
 ];
 
-// Define frozen columns (first 3)
-const frozenColumns = [
+// Define all columns in order
+const allColumns = [
   { key: "name", label: "Name", width: "200px" },
   { key: "position", label: "Position", width: "100px" },
   { key: "teamName", label: "Team", width: "150px" },
-];
-
-// Define scrollable columns (all other attributes)
-const scrollableColumns = [
   { key: "overall", label: "OVR", width: "80px" },
   { key: "speedRating", label: "Speed", width: "80px" },
   { key: "accelerationRating", label: "Accel", width: "80px" },
@@ -231,6 +227,8 @@ const scrollableColumns = [
   { key: "value", label: "Value", width: "100px" },
 ];
 
+
+
 export default function LeaguePlayersPage() {
   const { leagueId } = useParams();
   const [players, setPlayers] = useState<Player[]>([]);
@@ -314,6 +312,52 @@ export default function LeaguePlayersPage() {
     return value;
   };
 
+  const renderTableRow = (player: Player) => (
+    <tr key={player.id} className="hover:bg-gray-800">
+      {allColumns.map((column) => (
+        <td 
+          key={column.key}
+          className="px-3 py-2 border-b border-gray-700"
+          style={{ width: column.width, minWidth: column.width }}
+        >
+          {column.key === "name" ? (
+            <Link href={`/leagues/${leagueId}/players/${player.id}`} className="text-blue-400 hover:underline">
+              {player.name}
+            </Link>
+          ) : (
+            <span className={typeof getColumnValue(player, column.key) === 'number' ? 'text-right block' : ''}>
+              {getColumnValue(player, column.key)}
+            </span>
+          )}
+        </td>
+      ))}
+    </tr>
+  );
+
+  const renderLoadingRow = () => (
+    <tr>
+      <td colSpan={allColumns.length} className="text-center py-8 text-gray-400">
+        Loading players...
+      </td>
+    </tr>
+  );
+
+  const renderErrorRow = () => (
+    <tr>
+      <td colSpan={allColumns.length} className="text-center py-8 text-red-400">
+        {error}
+      </td>
+    </tr>
+  );
+
+  const renderEmptyRow = () => (
+    <tr>
+      <td colSpan={allColumns.length} className="text-center py-8 text-gray-400">
+        No players found.
+      </td>
+    </tr>
+  );
+
   return (
     <main className="min-h-screen bg-black text-white p-6">
       <h1 className="text-3xl font-bold mb-6">Players Database</h1>
@@ -369,17 +413,16 @@ export default function LeaguePlayersPage() {
         Showing {players.length} of {totalResults} players (Page {page} of {totalPages})
       </div>
       
-      {/* Two-Panel Table Layout */}
-      <div className="flex bg-gray-900 rounded border border-gray-700">
-        {/* Left Panel - Frozen Columns */}
-        <div className="flex-shrink-0">
-          <table className="text-sm">
+      {/* Table Container */}
+      <div className="bg-gray-900 rounded border border-gray-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
             <thead>
               <tr>
-                {frozenColumns.map((column) => (
+                {allColumns.map((column) => (
                   <th 
                     key={column.key}
-                    className="px-3 py-2 text-left border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors"
+                    className="px-3 py-2 text-left border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors sticky top-0 bg-gray-900 z-10"
                     style={{ width: column.width, minWidth: column.width }}
                     onClick={() => handleSort(column.key)}
                   >
@@ -396,109 +439,10 @@ export default function LeaguePlayersPage() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={frozenColumns.length} className="text-center py-8 text-gray-400">
-                    Loading players...
-                  </td>
-                </tr>
-              ) : error ? (
-                <tr>
-                  <td colSpan={frozenColumns.length} className="text-center py-8 text-red-400">
-                    {error}
-                  </td>
-                </tr>
-              ) : players.length === 0 ? (
-                <tr>
-                  <td colSpan={frozenColumns.length} className="text-center py-8 text-gray-400">
-                    No players found.
-                  </td>
-                </tr>
-              ) : (
-                players.map((player) => (
-                  <tr key={player.id} className="hover:bg-gray-800">
-                    {frozenColumns.map((column) => (
-                      <td 
-                        key={column.key}
-                        className="px-3 py-2 border-b border-gray-700"
-                        style={{ width: column.width, minWidth: column.width }}
-                      >
-                        {column.key === "name" ? (
-                          <Link href={`/leagues/${leagueId}/players/${player.id}`} className="text-blue-400 hover:underline">
-                            {player.name}
-                          </Link>
-                        ) : (
-                          <span>{getColumnValue(player, column.key)}</span>
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        
-        {/* Right Panel - Scrollable Columns */}
-        <div className="flex-1 overflow-x-auto">
-          <table className="text-sm" style={{ minWidth: "max-content" }}>
-            <thead>
-              <tr>
-                {scrollableColumns.map((column) => (
-                  <th 
-                    key={column.key}
-                    className="px-3 py-2 text-left border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors"
-                    style={{ width: column.width, minWidth: column.width }}
-                    onClick={() => handleSort(column.key)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span>{column.label}</span>
-                      {sortKey === column.key && (
-                        <span className="ml-1">
-                          {sortDir === "asc" ? "↑" : "↓"}
-                        </span>
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={scrollableColumns.length} className="text-center py-8 text-gray-400">
-                    Loading players...
-                  </td>
-                </tr>
-              ) : error ? (
-                <tr>
-                  <td colSpan={scrollableColumns.length} className="text-center py-8 text-red-400">
-                    {error}
-                  </td>
-                </tr>
-              ) : players.length === 0 ? (
-                <tr>
-                  <td colSpan={scrollableColumns.length} className="text-center py-8 text-gray-400">
-                    No players found.
-                  </td>
-                </tr>
-              ) : (
-                players.map((player) => (
-                  <tr key={player.id} className="hover:bg-gray-800">
-                    {scrollableColumns.map((column) => (
-                      <td 
-                        key={column.key}
-                        className="px-3 py-2 border-b border-gray-700"
-                        style={{ width: column.width, minWidth: column.width }}
-                      >
-                        <span className={typeof getColumnValue(player, column.key) === 'number' ? 'text-right block' : ''}>
-                          {getColumnValue(player, column.key)}
-                        </span>
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              )}
+              {loading ? renderLoadingRow() : 
+               error ? renderErrorRow() : 
+               players.length === 0 ? renderEmptyRow() : 
+               players.map(renderTableRow)}
             </tbody>
           </table>
         </div>
