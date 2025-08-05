@@ -414,9 +414,9 @@ export default function LeaguePlayersPage() {
       </div>
       
       {/* Table Container */}
-      <div className="bg-gray-900 rounded border border-gray-700 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+      <div className="bg-gray-900 rounded border border-gray-700" style={{ width: '100%', overflow: 'hidden' }}>
+        <div className="overflow-x-auto" style={{ width: '100%' }}>
+          <table className="text-sm" style={{ minWidth: 'max-content' }}>
             <thead>
               <tr>
                 {allColumns.map((column) => (
