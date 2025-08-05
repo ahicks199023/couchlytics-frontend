@@ -370,9 +370,9 @@ export default function LeaguePlayersPage() {
       </div>
       
       {/* Two-Panel Table Layout */}
-      <div className="flex">
+      <div className="flex bg-gray-900 rounded border border-gray-700">
         {/* Left Panel - Frozen Columns */}
-        <div className="flex-shrink-0 bg-gray-900 rounded-l border border-gray-700">
+        <div className="flex-shrink-0">
           <table className="text-sm">
             <thead>
               <tr>
@@ -440,7 +440,7 @@ export default function LeaguePlayersPage() {
         </div>
         
         {/* Right Panel - Scrollable Columns */}
-        <div className="flex-1 overflow-x-auto bg-gray-900 rounded-r border border-gray-700 border-l-0">
+        <div className="flex-1 overflow-x-auto">
           <table className="text-sm" style={{ minWidth: "max-content" }}>
             <thead>
               <tr>
