@@ -33,8 +33,12 @@ interface Player {
   [key: string]: string | number | undefined;
 }
 
+// Available positions for filtering
 const positions = [
-  "QB", "RB", "WR", "TE", "K", "DEF", "OL", "DL", "LB", "CB", "S"
+  'QB', 'RB', 'FB', 'WR', 'TE', 
+  'LT', 'LG', 'C', 'RG', 'RT',
+  'LE', 'DT', 'RE', 'LOLB', 'MLB', 'ROLB',
+  'CB', 'FS', 'SS', 'K', 'P'
 ];
 
 const devTraits = [
@@ -193,6 +197,7 @@ export default function LeaguePlayersPage() {
           className="px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
         >
           <option value="">All Positions</option>
+          {/* Available positions for filtering */}
           {positions.map((pos) => (
             <option key={pos} value={pos}>{pos}</option>
           ))}
@@ -230,7 +235,7 @@ export default function LeaguePlayersPage() {
         Showing {players.length} of {totalResults} players (Page {page} of {totalPages})
       </div>
 
-      {/* Two-Panel Table Layout */}
+      {/* Two-Panel Table Layout - Updated with frozen columns and scrollbar */}
       <div className="flex bg-gray-900 rounded border border-gray-700">
         {/* Left Panel - Frozen Columns (Name, Position, Team) */}
         <div className="flex-shrink-0">
