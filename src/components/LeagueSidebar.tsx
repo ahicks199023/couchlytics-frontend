@@ -31,7 +31,8 @@ const links = [
   },
   { label: 'Stats', path: 'stats', prefetch: false },
   { label: 'Stats Leaders', path: 'stats-leaders', prefetch: false },
-  { label: 'Players', path: 'players', prefetch: false }
+  { label: 'Players', path: 'players', prefetch: false },
+  { label: '🤖 AI Commissioner', path: 'ai-commissioner', prefetch: false }
 ]
 
 export default function LeagueSidebar() {
@@ -156,14 +157,24 @@ export default function LeagueSidebar() {
         {/* Commissioner's Hub - Show if user has access */}
         {(hasCommissionerAccess || isGlobalCommissioner) && leagueId && typeof leagueId === 'string' && (
           <div className="pt-2 border-t border-gray-700 mt-auto">
+            <div className="text-xs text-gray-400 mb-2 px-2">Commissioner Tools</div>
             <Link
               href={`/commissioner/league/${leagueId}`}
               className={clsx(
-                'block px-2 py-1 rounded hover:bg-gray-700 text-sm font-medium',
+                'block px-2 py-1 rounded hover:bg-gray-700 text-sm font-medium mb-1',
                 isCommissionerHubActive() && 'bg-blue-600 text-white'
               )}
             >
               🏆 Commissioner&apos;s Hub
+            </Link>
+            <Link
+              href={`/leagues/${leagueId}/ai-commissioner`}
+              className={clsx(
+                'block px-2 py-1 rounded hover:bg-gray-700 text-sm font-medium',
+                pathname.includes('/ai-commissioner') && 'bg-blue-600 text-white'
+              )}
+            >
+              🤖 AI Commissioner
             </Link>
           </div>
         )}

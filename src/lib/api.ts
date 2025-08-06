@@ -204,3 +204,40 @@ export const getOzzieStats = async () => {
 export const getOzzieTeams = async (leagueId: string) => {
   return fetchFromApi(`/leagues/${leagueId}/teams`)
 }
+
+// AI Commissioner API Functions
+export const evaluateTrade = async (leagueId: string, tradeData: {
+  team1_id: number
+  team2_id: number
+  team1_players: Array<{player_id: number, name: string, position: string, value: number}>
+  team2_players: Array<{player_id: number, name: string, position: string, value: number}>
+}) => {
+  return fetchFromApi(`/ai-commissioner/league/${leagueId}/evaluate-trade`, {
+    method: 'POST',
+    body: JSON.stringify(tradeData)
+  })
+}
+
+export const getRuleSuggestions = async (leagueId: string) => {
+  return fetchFromApi(`/ai-commissioner/league/${leagueId}/rule-suggestions`)
+}
+
+export const resolveDispute = async (leagueId: string, disputeData: {
+  dispute_type: string
+  teams_involved: number[]
+  description: string
+  evidence?: string
+}) => {
+  return fetchFromApi(`/ai-commissioner/league/${leagueId}/resolve-dispute`, {
+    method: 'POST',
+    body: JSON.stringify(disputeData)
+  })
+}
+
+export const getLeagueReport = async (leagueId: string) => {
+  return fetchFromApi(`/ai-commissioner/league/${leagueId}/report`)
+}
+
+export const getAICommissionerHealth = async (leagueId: string) => {
+  return fetchFromApi(`/ai-commissioner/league/${leagueId}/health`)
+}
