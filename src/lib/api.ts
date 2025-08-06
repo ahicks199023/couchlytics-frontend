@@ -138,6 +138,69 @@ export const sendOzzieQuery = async (queryData: Record<string, unknown>) => {
   })
 }
 
+// Enhanced Ozzie features
+export const sendEnhancedOzzieQuery = async (queryData: Record<string, unknown>) => {
+  return fetchFromApi('/ozzie-enhanced/query', {
+    method: 'POST',
+    body: JSON.stringify(queryData)
+  })
+}
+
+export const getOzzieConversations = async (folderId?: number) => {
+  const params = new URLSearchParams()
+  if (folderId) params.append('folderId', folderId.toString())
+  return fetchFromApi(`/ozzie-enhanced/conversations?${params}`)
+}
+
+export const getOzzieConversation = async (conversationId: number) => {
+  return fetchFromApi(`/ozzie-enhanced/conversations/${conversationId}`)
+}
+
+export const updateOzzieConversation = async (conversationId: number, updateData: Record<string, unknown>) => {
+  return fetchFromApi(`/ozzie-enhanced/conversations/${conversationId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updateData)
+  })
+}
+
+export const deleteOzzieConversation = async (conversationId: number) => {
+  return fetchFromApi(`/ozzie-enhanced/conversations/${conversationId}`, {
+    method: 'DELETE'
+  })
+}
+
+export const getOzzieFolders = async () => {
+  return fetchFromApi('/ozzie-enhanced/folders')
+}
+
+export const createOzzieFolder = async (folderData: { name: string; color: string }) => {
+  return fetchFromApi('/ozzie-enhanced/folders', {
+    method: 'POST',
+    body: JSON.stringify(folderData)
+  })
+}
+
+export const updateOzzieFolder = async (folderId: number, folderData: Record<string, unknown>) => {
+  return fetchFromApi(`/ozzie-enhanced/folders/${folderId}`, {
+    method: 'PUT',
+    body: JSON.stringify(folderData)
+  })
+}
+
+export const deleteOzzieFolder = async (folderId: number) => {
+  return fetchFromApi(`/ozzie-enhanced/folders/${folderId}`, {
+    method: 'DELETE'
+  })
+}
+
+export const searchOzzieConversations = async (query: string) => {
+  return fetchFromApi(`/ozzie-enhanced/search?q=${encodeURIComponent(query)}`)
+}
+
+export const getOzzieStats = async () => {
+  return fetchFromApi('/ozzie-enhanced/stats')
+}
+
 export const getOzzieTeams = async (leagueId: string) => {
   return fetchFromApi(`/leagues/${leagueId}/teams`)
 }

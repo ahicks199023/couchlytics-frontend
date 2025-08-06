@@ -3,7 +3,7 @@
 
 import { usePathname } from 'next/navigation'
 import NavBar from './NavBar'
-import OzzieChat from './OzzieChat'
+import EnhancedOzzieChat from './EnhancedOzzieChat'
 import TradeTool from './TradeTool'
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -20,8 +20,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         {children}
       </main>
       
-      {/* Ozzie Chat - Show on all pages except login/register */}
-      {!hideNav && <OzzieChat />}
+      {/* Enhanced Ozzie Chat - Show on all pages except login/register */}
+      {!hideNav && <EnhancedOzzieChat />}
       
       {/* Trade Tool - Show on league pages */}
       {showFloatingTools && <TradeTool />}
