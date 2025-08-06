@@ -13,6 +13,14 @@ const links = [
   { label: 'Analytics', path: 'analytics' },
   { label: 'Schedule', path: 'schedule' },
   { 
+    label: 'Standings', 
+    path: 'standings',
+    subItems: [
+      { label: 'Conference', path: 'standings' },
+      { label: 'Division', path: 'standings/division' }
+    ]
+  },
+  { 
     label: 'Trades', 
     path: 'trades',
     subItems: [
