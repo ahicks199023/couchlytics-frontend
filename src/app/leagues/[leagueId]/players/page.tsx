@@ -243,21 +243,21 @@ export default function LeaguePlayersPage() {
             <thead>
               <tr>
                 <th 
-                  className="px-3 py-2 text-left border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors sticky top-0 bg-gray-900 z-10"
+                  className="px-3 py-2 text-center border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors sticky top-0 bg-gray-900 z-10"
                   style={{ width: "200px", minWidth: "200px" }}
                   onClick={() => handleSort("name")}
                 >
                   Name {sortKey === "name" && (sortDir === "asc" ? "↑" : "↓")}
                 </th>
                 <th 
-                  className="px-3 py-2 text-left border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors sticky top-0 bg-gray-900 z-10"
+                  className="px-3 py-2 text-center border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors sticky top-0 bg-gray-900 z-10"
                   style={{ width: "100px", minWidth: "100px" }}
                   onClick={() => handleSort("position")}
                 >
                   Position {sortKey === "position" && (sortDir === "asc" ? "↑" : "↓")}
                 </th>
                 <th 
-                  className="px-3 py-2 text-left border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors sticky top-0 bg-gray-900 z-10"
+                  className="px-3 py-2 text-center border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors sticky top-0 bg-gray-900 z-10"
                   style={{ width: "150px", minWidth: "150px" }}
                   onClick={() => handleSort("teamName")}
                 >
@@ -288,7 +288,7 @@ export default function LeaguePlayersPage() {
                 players.map((player) => (
                   <tr key={player.id} className="hover:bg-gray-800">
                     <td 
-                      className="px-3 py-2 border-b border-gray-700"
+                      className="px-3 py-2 border-b border-gray-700 text-center"
                       style={{ width: "200px", minWidth: "200px" }}
                     >
                       <Link href={`/leagues/${leagueId}/players/${player.id}`} className="text-blue-400 hover:underline">
@@ -296,13 +296,13 @@ export default function LeaguePlayersPage() {
                       </Link>
                     </td>
                     <td 
-                      className="px-3 py-2 border-b border-gray-700"
+                      className="px-3 py-2 border-b border-gray-700 text-center"
                       style={{ width: "100px", minWidth: "100px" }}
                     >
                       {player.position}
                     </td>
                     <td 
-                      className="px-3 py-2 border-b border-gray-700"
+                      className="px-3 py-2 border-b border-gray-700 text-center"
                       style={{ width: "150px", minWidth: "150px" }}
                     >
                       {player.teamName}
@@ -322,7 +322,7 @@ export default function LeaguePlayersPage() {
                 {allColumns.slice(3).map((column) => (
                   <th 
                     key={column.key}
-                    className="px-3 py-2 text-left border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors sticky top-0 bg-gray-900 z-10"
+                    className="px-3 py-2 text-center border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors sticky top-0 bg-gray-900 z-10"
                     style={{ width: column.width, minWidth: column.width }}
                     onClick={() => handleSort(column.key)}
                   >
@@ -356,10 +356,10 @@ export default function LeaguePlayersPage() {
                     {allColumns.slice(3).map((column) => (
                       <td 
                         key={column.key}
-                        className="px-3 py-2 border-b border-gray-700"
+                        className="px-3 py-2 border-b border-gray-700 text-center"
                         style={{ width: column.width, minWidth: column.width }}
                       >
-                        <span className={typeof getColumnValue(player, column.key) === 'number' ? 'text-right block' : ''}>
+                        <span className={typeof getColumnValue(player, column.key) === 'number' ? 'text-center block' : ''}>
                           {getColumnValue(player, column.key)}
                         </span>
                       </td>
