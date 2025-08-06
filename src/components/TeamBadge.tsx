@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { getTeamById, getTeamByName, getTeamByAbbreviation, getTeamByPartialName, TeamConfig } from '@/lib/team-config'
 import TeamLogo from './TeamLogo'
 
@@ -92,6 +93,9 @@ interface TeamBadgeProps {
   showName?: boolean
   className?: string
   onClick?: () => void
+  // Link to team detail page
+  leagueId?: string
+  linkToTeam?: boolean
 }
 
 export default function TeamBadge({
@@ -103,7 +107,9 @@ export default function TeamBadge({
   showAbbr = false,
   showName = false,
   className = '',
-  onClick
+  onClick,
+  leagueId,
+  linkToTeam = false
 }: TeamBadgeProps) {
   // Find team configuration
   let team: TeamConfig | undefined
@@ -134,47 +140,66 @@ export default function TeamBadge({
 
   const textSizeClass = sizeClasses[size]
 
-  if (variant === 'text') {
+  // Determine if we should link and the team ID to use
+  const shouldLink = linkToTeam && leagueId && (team?.id || teamId)
+  const teamIdForLink = team?.id || teamId
+
+  const renderContent = () => {
+    if (variant === 'text') {
+      return (
+        <span 
+          className={`inline-flex items-center gap-1 px-2 py-1 rounded-md font-medium ${textSizeClass} ${className} ${onClick || shouldLink ? 'cursor-pointer hover:opacity-80' : ''}`}
+          style={team ? { 
+            backgroundColor: team.colors.primary,
+            color: team.colors.text
+          } : { backgroundColor: '#6B7280', color: '#FFFFFF' }}
+          onClick={!shouldLink ? onClick : undefined}
+        >
+          {showAbbr && team && team.abbreviation}
+          {showName && (team ? team.fullName : teamName || 'Unknown')}
+          {!showAbbr && !showName && (team ? team.abbreviation : 'TM')}
+        </span>
+      )
+    }
+
     return (
-      <span 
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded-md font-medium ${textSizeClass} ${className} ${onClick ? 'cursor-pointer hover:opacity-80' : ''}`}
-        style={team ? { 
-          backgroundColor: team.colors.primary,
-          color: team.colors.text
-        } : { backgroundColor: '#6B7280', color: '#FFFFFF' }}
-        onClick={onClick}
+      <div 
+        className={`inline-flex items-center gap-2 ${className} ${onClick || shouldLink ? 'cursor-pointer hover:opacity-80' : ''}`}
+        onClick={!shouldLink ? onClick : undefined}
       >
-        {showAbbr && team && team.abbreviation}
-        {showName && (team ? team.fullName : teamName || 'Unknown')}
-        {!showAbbr && !showName && (team ? team.abbreviation : 'TM')}
-      </span>
+        <TeamLogo 
+          teamId={team?.id}
+          teamName={teamName}
+          teamAbbr={teamAbbr}
+          size={size}
+          variant={variant}
+        />
+        {showName && (
+          <span className={`font-medium ${textSizeClass}`}>
+            {team ? team.fullName : teamName || 'Unknown Team'}
+          </span>
+        )}
+        {showAbbr && !showName && (
+          <span className={`font-medium ${textSizeClass}`}>
+            {team ? team.abbreviation : 'TM'}
+          </span>
+        )}
+      </div>
     )
   }
 
-  return (
-    <div 
-      className={`inline-flex items-center gap-2 ${className} ${onClick ? 'cursor-pointer hover:opacity-80' : ''}`}
-      onClick={onClick}
-    >
-      <TeamLogo 
-        teamId={team?.id}
-        teamName={teamName}
-        teamAbbr={teamAbbr}
-        size={size}
-        variant={variant}
-      />
-      {showName && (
-        <span className={`font-medium ${textSizeClass}`}>
-          {team ? team.fullName : teamName || 'Unknown Team'}
-        </span>
-      )}
-      {showAbbr && !showName && (
-        <span className={`font-medium ${textSizeClass}`}>
-          {team ? team.abbreviation : 'TM'}
-        </span>
-      )}
-    </div>
-  )
+  if (shouldLink) {
+    return (
+      <Link 
+        href={`/leagues/${leagueId}/teams/${teamIdForLink}`}
+        className="hover:text-neon-green transition-colors"
+      >
+        {renderContent()}
+      </Link>
+    )
+  }
+
+  return renderContent()
 }
 
 // Export utility functions for use in other components

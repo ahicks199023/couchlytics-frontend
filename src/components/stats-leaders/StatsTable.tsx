@@ -242,6 +242,8 @@ export function StatsTable({
                                 size="lg"
                                 variant="logo"
                                 showAbbr={false}
+                                leagueId={leagueId}
+                                linkToTeam={true}
                               />
                             </div>
                           ) : (

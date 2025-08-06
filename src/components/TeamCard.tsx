@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getTeamById, getTeamByName, getTeamByAbbreviation, getTeamByPartialName, TeamConfig } from '@/lib/team-config'
 import TeamLogo from './TeamLogo'
@@ -25,6 +26,9 @@ interface TeamCardProps {
   className?: string
   variant?: 'compact' | 'detailed' | 'stats'
   onClick?: () => void
+  // Link to team detail page
+  leagueId?: string
+  linkToTeam?: boolean
 }
 
 export default function TeamCard({
@@ -47,7 +51,9 @@ export default function TeamCard({
   available,
   className = '',
   variant = 'detailed',
-  onClick
+  onClick,
+  leagueId,
+  linkToTeam = false
 }: TeamCardProps) {
   // Find team configuration
   let team: TeamConfig | undefined
@@ -78,11 +84,27 @@ export default function TeamCard({
 
   const teamGradient = `linear-gradient(135deg, ${team.colors.primary} 0%, ${team.colors.secondary} 100%)`
 
+  // Determine if we should link and the team ID to use
+  const shouldLink = linkToTeam && leagueId && (team?.id || teamId)
+  const teamIdForLink = team?.id || teamId
+
+  // Helper function to wrap content with Link if needed
+  const wrapWithLink = (content: React.ReactNode) => {
+    if (shouldLink) {
+      return (
+        <Link href={`/leagues/${leagueId}/teams/${teamIdForLink}`} className="block">
+          {content}
+        </Link>
+      )
+    }
+    return content
+  }
+
   if (variant === 'compact') {
-    return (
+    return wrapWithLink(
       <Card 
-        className={`${className} ${onClick ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`} 
-        onClick={onClick}
+        className={`${className} ${onClick || shouldLink ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`} 
+        onClick={!shouldLink ? onClick : undefined}
         style={{ borderColor: team.colors.accent }}
       >
         <CardContent className="p-3">
