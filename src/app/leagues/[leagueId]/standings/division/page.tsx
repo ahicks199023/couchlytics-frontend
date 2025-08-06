@@ -84,7 +84,7 @@ export default function DivisionStandingsPage() {
   }, [leagueId])
 
   const getDivisionTeams = (divisionName: string, expectedTeams: string[]) => {
-    return expectedTeams
+    const foundTeams = expectedTeams
       .map(teamName => {
         // Find team by name, trying different variations
         const team = teams.find(t => 
@@ -96,21 +96,22 @@ export default function DivisionStandingsPage() {
         )
         return team
       })
-      .filter(team => team !== undefined) as Team[]
-      .sort((a, b) => {
-        // Sort by win percentage first
-        if (b.winPercentage !== a.winPercentage) {
-          return b.winPercentage - a.winPercentage
-        }
-        // Then by division record
-        const aDivPct = a.divisionWins / (a.divisionWins + a.divisionLosses) || 0
-        const bDivPct = b.divisionWins / (b.divisionWins + b.divisionLosses) || 0
-        if (bDivPct !== aDivPct) {
-          return bDivPct - aDivPct
-        }
-        // Then by point differential
-        return b.pointsDifferential - a.pointsDifferential
-      })
+      .filter((team): team is Team => team !== undefined)
+    
+    return foundTeams.sort((a, b) => {
+      // Sort by win percentage first
+      if (b.winPercentage !== a.winPercentage) {
+        return b.winPercentage - a.winPercentage
+      }
+      // Then by division record
+      const aDivPct = a.divisionWins / (a.divisionWins + a.divisionLosses) || 0
+      const bDivPct = b.divisionWins / (b.divisionWins + b.divisionLosses) || 0
+      if (bDivPct !== aDivPct) {
+        return bDivPct - aDivPct
+      }
+      // Then by point differential
+      return b.pointsDifferential - a.pointsDifferential
+    })
   }
 
   const formatRecord = (wins: number, losses: number, ties: number = 0) => {
