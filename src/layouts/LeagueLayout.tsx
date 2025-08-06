@@ -13,7 +13,7 @@ export default function LeagueLayout({ children }: { children: React.ReactNode }
       {/* Sidebar (desktop + mobile toggleable) */}
       <div
         className={`fixed z-40 inset-y-0 left-0 transform transition-transform duration-200 ease-in-out 
-          bg-gray-900 w-64 p-4 overflow-y-auto
+          bg-gray-900 w-64
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
           md:translate-x-0 md:static md:block`}
       >

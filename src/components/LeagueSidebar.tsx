@@ -84,9 +84,9 @@ export default function LeagueSidebar() {
   }
 
   return (
-    <aside className="w-48 bg-gray-900 text-white p-4 space-y-4 h-screen overflow-hidden">
+    <aside className="w-full h-full bg-gray-900 text-white p-4 flex flex-col">
       <h2 className="text-lg font-bold mb-2">League Menu</h2>
-      <nav className="flex flex-col space-y-1 overflow-y-auto h-full">
+      <nav className="flex flex-col space-y-1 flex-1">
         {links && links.map(({ label, path, prefetch, subItems }) => {
           const hasSubItems = subItems && subItems.length > 0
           const isExpanded = expandedItems.includes(path)
@@ -147,7 +147,7 @@ export default function LeagueSidebar() {
         
         {/* Commissioner's Hub - Show if user has access */}
         {(hasCommissionerAccess || isGlobalCommissioner) && leagueId && typeof leagueId === 'string' && (
-          <div className="pt-2 border-t border-gray-700">
+          <div className="pt-2 border-t border-gray-700 mt-auto">
             <Link
               href={`/commissioner/league/${leagueId}`}
               className={clsx(
