@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { 
   evaluateTrade, 
@@ -46,6 +46,30 @@ interface LeagueReport {
   generated_at: string
 }
 
+interface TradeEvaluation {
+  approved: boolean
+  confidence: number
+  reasoning: string
+  recommendations?: string[]
+  league_impact: string
+  fairness_score: number
+}
+
+interface DisputeResolution {
+  resolution: string
+  reasoning: string
+  recommended_action: string
+  confidence: number
+  affected_teams: number[]
+}
+
+interface HealthStatus {
+  status: string
+  service: string
+  league_id: string
+  timestamp: string
+}
+
 export default function AICommissioner() {
   const params = useParams()
   const leagueId = params.leagueId as string
@@ -62,7 +86,7 @@ export default function AICommissioner() {
     team1_players: [],
     team2_players: []
   })
-  const [tradeEvaluation, setTradeEvaluation] = useState<any>(null)
+  const [tradeEvaluation, setTradeEvaluation] = useState<TradeEvaluation | null>(null)
 
   // Rule suggestions state
   const [ruleSuggestions, setRuleSuggestions] = useState<RuleSuggestion[]>([])
@@ -74,22 +98,13 @@ export default function AICommissioner() {
     description: '',
     evidence: ''
   })
-  const [disputeResolution, setDisputeResolution] = useState<any>(null)
+  const [disputeResolution, setDisputeResolution] = useState<DisputeResolution | null>(null)
 
   // League report state
   const [leagueReport, setLeagueReport] = useState<LeagueReport | null>(null)
-  const [healthStatus, setHealthStatus] = useState<any>(null)
+  const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null)
 
-  // Load initial data
-  useEffect(() => {
-    if (leagueId) {
-      loadLeagueReport()
-      loadRuleSuggestions()
-      checkHealth()
-    }
-  }, [leagueId])
-
-  const loadLeagueReport = async () => {
+  const loadLeagueReport = useCallback(async () => {
     try {
       setIsLoading(true)
       const report = await getLeagueReport(leagueId)
@@ -100,25 +115,34 @@ export default function AICommissioner() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [leagueId])
 
-  const loadRuleSuggestions = async () => {
+  const loadRuleSuggestions = useCallback(async () => {
     try {
       const suggestions = await getRuleSuggestions(leagueId)
       setRuleSuggestions(suggestions.suggestions || [])
     } catch (err) {
       console.error('Failed to load rule suggestions:', err)
     }
-  }
+  }, [leagueId])
 
-  const checkHealth = async () => {
+  const checkHealth = useCallback(async () => {
     try {
       const health = await getAICommissionerHealth(leagueId)
       setHealthStatus(health)
     } catch (err) {
       console.error('Failed to check AI Commissioner health:', err)
     }
-  }
+  }, [leagueId])
+
+  // Load initial data
+  useEffect(() => {
+    if (leagueId) {
+      loadLeagueReport()
+      loadRuleSuggestions()
+      checkHealth()
+    }
+  }, [leagueId, loadLeagueReport, loadRuleSuggestions, checkHealth])
 
   const handleTradeEvaluation = async () => {
     try {
@@ -146,13 +170,6 @@ export default function AICommissioner() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const addPlayerToTrade = (team: 'team1' | 'team2', player: {player_id: number, name: string, position: string, value: number}) => {
-    setTradeData(prev => ({
-      ...prev,
-      [`${team}_players`]: [...prev[`${team}_players`], player]
-    }))
   }
 
   const removePlayerFromTrade = (team: 'team1' | 'team2', playerId: number) => {
@@ -222,7 +239,7 @@ export default function AICommissioner() {
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'overview' | 'trades' | 'rules' | 'disputes')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'bg-blue-600 text-white'
