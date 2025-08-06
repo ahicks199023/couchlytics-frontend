@@ -1,8 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams } from 'next/navigation'
-import Link from 'next/link'
 
 // Types for enhanced features
 interface Message {
@@ -138,15 +137,7 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
     }
   }, [leagueId, selectedTeamId])
 
-  // Load conversations and folders
-  useEffect(() => {
-    if (isOpen) {
-      loadConversations()
-      loadFolders()
-    }
-  }, [isOpen, selectedFolder])
-
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       if (selectedFolder) params.append('folderId', selectedFolder.toString())
@@ -162,9 +153,9 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
     } catch (error) {
       console.error('Failed to load conversations:', error)
     }
-  }
+  }, [selectedFolder])
 
-  const loadFolders = async () => {
+  const loadFolders = useCallback(async () => {
     try {
       const response = await fetch('https://api.couchlytics.com/ozzie-enhanced/folders', {
         credentials: 'include'
@@ -177,7 +168,15 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
     } catch (error) {
       console.error('Failed to load folders:', error)
     }
-  }
+  }, [])
+
+  // Load conversations and folders
+  useEffect(() => {
+    if (isOpen) {
+      loadConversations()
+      loadFolders()
+    }
+  }, [isOpen, loadConversations, loadFolders])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -278,7 +277,7 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
 
       const response = await sendOzzieMessage(messageText, leagueId, selectedTeamId, {
         saveConversation: true,
-        folderId: selectedFolder
+        folderId: selectedFolder || undefined
       })
 
       if (response) {
