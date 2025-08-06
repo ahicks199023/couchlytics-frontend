@@ -132,7 +132,7 @@ export default function ConferenceStandingsPage() {
                 </tr>
               </thead>
               <tbody>
-                {afcTeams.map((team, index) => (
+                {afcTeams.map((team) => (
                   <tr key={team.id} className="border-b border-gray-800 hover:bg-gray-800">
                     <td className="py-2 px-3">
                       <div className="font-medium">{team.city} {team.name}</div>
@@ -180,7 +180,7 @@ export default function ConferenceStandingsPage() {
                 </tr>
               </thead>
               <tbody>
-                {nfcTeams.map((team, index) => (
+                {nfcTeams.map((team) => (
                   <tr key={team.id} className="border-b border-gray-800 hover:bg-gray-800">
                     <td className="py-2 px-3">
                       <div className="font-medium">{team.city} {team.name}</div>
