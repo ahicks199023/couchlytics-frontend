@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import { fetchFromApi } from '@/lib/api'
+import TeamLogo from '@/components/TeamLogo'
 
 interface Team {
   id: number
@@ -135,8 +137,21 @@ export default function ConferenceStandingsPage() {
                 {afcTeams.map((team) => (
                   <tr key={team.id} className="border-b border-gray-800 hover:bg-gray-800">
                     <td className="py-2 px-3">
-                      <div className="font-medium">{team.city} {team.name}</div>
-                      <div className="text-xs text-gray-400">{team.division}</div>
+                      <Link 
+                        href={`/leagues/${leagueId}/teams/${team.id}`}
+                        className="flex items-center gap-3 hover:text-neon-green transition-colors group"
+                      >
+                        <TeamLogo 
+                          teamName={`${team.city} ${team.name}`}
+                          teamId={team.id}
+                          variant="helmet"
+                          size="sm"
+                        />
+                        <div>
+                          <div className="font-medium group-hover:text-neon-green">{team.city} {team.name}</div>
+                          <div className="text-xs text-gray-400">{team.division}</div>
+                        </div>
+                      </Link>
                     </td>
                     <td className="text-center py-2 px-3 font-medium">
                       {formatRecord(team.wins, team.losses, team.ties)}
@@ -183,8 +198,21 @@ export default function ConferenceStandingsPage() {
                 {nfcTeams.map((team) => (
                   <tr key={team.id} className="border-b border-gray-800 hover:bg-gray-800">
                     <td className="py-2 px-3">
-                      <div className="font-medium">{team.city} {team.name}</div>
-                      <div className="text-xs text-gray-400">{team.division}</div>
+                      <Link 
+                        href={`/leagues/${leagueId}/teams/${team.id}`}
+                        className="flex items-center gap-3 hover:text-neon-green transition-colors group"
+                      >
+                        <TeamLogo 
+                          teamName={`${team.city} ${team.name}`}
+                          teamId={team.id}
+                          variant="helmet"
+                          size="sm"
+                        />
+                        <div>
+                          <div className="font-medium group-hover:text-neon-green">{team.city} {team.name}</div>
+                          <div className="text-xs text-gray-400">{team.division}</div>
+                        </div>
+                      </Link>
                     </td>
                     <td className="text-center py-2 px-3 font-medium">
                       {formatRecord(team.wins, team.losses, team.ties)}

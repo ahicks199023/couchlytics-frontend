@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import { fetchFromApi } from '@/lib/api'
+import TeamLogo from '@/components/TeamLogo'
 
 interface Team {
   id: number
@@ -138,10 +140,21 @@ export default function DivisionStandingsPage() {
             {divisionTeams.map((team, index) => (
               <tr key={team.id} className={`border-b border-gray-800 hover:bg-gray-800 ${index === 0 ? 'bg-green-900/20' : ''}`}>
                 <td className="py-2 px-2">
-                  <div className="font-medium text-sm">
-                    {team.city} {team.name}
-                    {index === 0 && <span className="ml-2 text-xs text-green-400">DIV LEADER</span>}
-                  </div>
+                  <Link 
+                    href={`/leagues/${leagueId}/teams/${team.id}`}
+                    className="flex items-center gap-2 hover:text-neon-green transition-colors group"
+                  >
+                    <TeamLogo 
+                      teamName={`${team.city} ${team.name}`}
+                      teamId={team.id}
+                      variant="helmet"
+                      size="xs"
+                    />
+                    <div className="font-medium text-sm group-hover:text-neon-green">
+                      {team.city} {team.name}
+                      {index === 0 && <span className="ml-2 text-xs text-green-400">DIV LEADER</span>}
+                    </div>
+                  </Link>
                 </td>
                 <td className="text-center py-2 px-2 font-medium text-sm">
                   {formatRecord(team.wins, team.losses, team.ties)}
