@@ -8,6 +8,7 @@ export { default as ChatMessage } from './ChatMessage'
 export { useLeagueChat } from '@/hooks/useLeagueChat'
 export { useGlobalChat } from '@/hooks/useGlobalChat'
 export { useDMChat } from '@/hooks/useDMChat'
+export { useFirebaseAuth } from '@/hooks/useFirebaseAuth'
 
 // Chat Types
 export type {
@@ -28,4 +29,13 @@ export {
   canModerate,
   canEditMessage,
   canDeleteAnyMessage
-} from '@/lib/chatUtils' 
+} from '@/lib/chatUtils'
+
+// Firebase Functions
+export {
+  getFirebaseToken,
+  signInWithCouchlytics,
+  getCurrentFirebaseUser,
+  onFirebaseAuthStateChanged,
+  signOutFromFirebase
+} from '@/lib/firebase' 

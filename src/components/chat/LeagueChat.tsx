@@ -2,26 +2,33 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { useLeagueChat } from '@/hooks/useLeagueChat'
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
 
 interface LeagueChatProps {
   leagueId: string
-  currentUser: string
-  currentUserName?: string
+  currentUser?: string // Now optional, will use Firebase user if not provided
+  currentUserName?: string // Now optional, will use Firebase user if not provided
   isCommissioner?: boolean
 }
 
 export default function LeagueChat({ 
   leagueId, 
-  currentUser, 
-  currentUserName = 'User',
+  currentUser: propCurrentUser,
+  currentUserName: propCurrentUserName,
   isCommissioner = false 
 }: LeagueChatProps) {
   const [messageText, setMessageText] = useState('')
   const [isSending, setIsSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  const { firebaseUser, isFirebaseAuthenticated, firebaseError } = useFirebaseAuth()
+
+  // Use Firebase user if available, otherwise fall back to props
+  const currentUser = firebaseUser?.email || propCurrentUser
+  const currentUserName = firebaseUser?.displayName || firebaseUser?.email?.split('@')[0] || propCurrentUserName || 'User'
 
   const {
     messages,
@@ -45,7 +52,7 @@ export default function LeagueChat({
   }, [])
 
   const handleSendMessage = async () => {
-    if (!messageText.trim() || isSending) return
+    if (!messageText.trim() || isSending || !currentUser) return
 
     setIsSending(true)
     try {
@@ -87,6 +94,43 @@ export default function LeagueChat({
 
   const messageGroups = groupMessagesBySender(messages)
 
+  // Show Firebase authentication error
+  if (firebaseError) {
+    return (
+      <div className="flex flex-col h-full bg-gray-900 rounded-lg">
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <div>
+            <h3 className="text-lg font-semibold text-white">🔥 League Chat</h3>
+            <p className="text-sm text-gray-400">League members only</p>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="text-red-400 text-center">
+            <p className="mb-2">❌ Firebase Authentication Error</p>
+            <p className="text-sm">{firebaseError}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show loading state while Firebase is initializing
+  if (!isFirebaseAuthenticated && !propCurrentUser) {
+    return (
+      <div className="flex flex-col h-full bg-gray-900 rounded-lg">
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <div>
+            <h3 className="text-lg font-semibold text-white">🔥 League Chat</h3>
+            <p className="text-sm text-gray-400">League members only</p>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="text-gray-400">Initializing Firebase authentication...</div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-full bg-gray-900 rounded-lg">
       {/* Header */}
@@ -94,6 +138,9 @@ export default function LeagueChat({
         <div>
           <h3 className="text-lg font-semibold text-white">🔥 League Chat</h3>
           <p className="text-sm text-gray-400">League members only</p>
+          {firebaseUser && (
+            <p className="text-xs text-green-400">✅ Firebase Connected</p>
+          )}
         </div>
         {isCommissioner && (
           <div className="text-xs text-blue-400 bg-blue-900/20 px-2 py-1 rounded">
@@ -133,7 +180,7 @@ export default function LeagueChat({
                   <ChatMessage
                     key={message.id}
                     message={message}
-                    currentUserEmail={currentUser}
+                    currentUserEmail={currentUser || ''}
                     isCommissioner={isCommissioner}
                     onDelete={handleDelete}
                     onEdit={handleEdit}
@@ -155,14 +202,14 @@ export default function LeagueChat({
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="Type your message..."
+            placeholder={currentUser ? "Type your message..." : "Connecting to Firebase..."}
             className="flex-1 bg-gray-800 text-white px-3 py-2 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={Math.max(1, Math.min(4, messageText.split('\n').length))}
-            disabled={isSending}
+            disabled={isSending || !currentUser}
           />
           <button
             onClick={handleSendMessage}
-            disabled={!messageText.trim() || isSending}
+            disabled={!messageText.trim() || isSending || !currentUser}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
           >
             {isSending ? 'Sending...' : 'Send'}

@@ -2,21 +2,88 @@
 
 import React, { useState } from 'react'
 import { LeagueChat, GlobalChat, DMChat } from '@/components/chat'
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth'
 
 export default function ChatDemoPage() {
   const [activeChat, setActiveChat] = useState<'league' | 'global' | 'dm'>('league')
-  const [currentUser, setCurrentUser] = useState('user@example.com')
-  const [currentUserName, setCurrentUserName] = useState('Demo User')
   const [recipient, setRecipient] = useState('recipient@example.com')
   const [recipientName, setRecipientName] = useState('Demo Recipient')
   const [leagueId, setLeagueId] = useState('12335716')
   const [isAdmin, setIsAdmin] = useState(false)
   const [isCommissioner, setIsCommissioner] = useState(false)
 
+  const { 
+    firebaseUser, 
+    isFirebaseAuthenticated, 
+    isFirebaseLoading, 
+    firebaseError,
+    initializeFirebaseAuth,
+    refreshFirebaseAuth 
+  } = useFirebaseAuth()
+
   return (
     <div className="min-h-screen bg-gray-900 p-6">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-6">Couchlytics Chat System Demo</h1>
+        
+        {/* Firebase Authentication Status */}
+        <div className="bg-gray-800 p-4 rounded-lg mb-6">
+          <h2 className="text-xl font-semibold text-white mb-4">Firebase Authentication Status</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <p className="text-sm text-gray-300 mb-2">Status:</p>
+              <div className="flex items-center space-x-2">
+                {isFirebaseLoading ? (
+                  <div className="text-yellow-400">🔄 Loading...</div>
+                ) : isFirebaseAuthenticated ? (
+                  <div className="text-green-400">✅ Connected</div>
+                ) : (
+                  <div className="text-red-400">❌ Disconnected</div>
+                )}
+              </div>
+            </div>
+            
+            <div>
+              <p className="text-sm text-gray-300 mb-2">User:</p>
+              <div className="text-white">
+                {firebaseUser ? (
+                  <div>
+                    <p className="font-medium">{firebaseUser.email}</p>
+                    <p className="text-sm text-gray-400">UID: {firebaseUser.uid}</p>
+                  </div>
+                ) : (
+                  <p className="text-gray-400">Not authenticated</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {firebaseError && (
+            <div className="bg-red-900/20 border border-red-500 rounded-lg p-3 mb-4">
+              <p className="text-red-400 text-sm">Error: {firebaseError}</p>
+            </div>
+          )}
+
+          <div className="flex space-x-2">
+            <button
+              onClick={initializeFirebaseAuth}
+              disabled={isFirebaseLoading || isFirebaseAuthenticated}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+            >
+              {isFirebaseLoading ? 'Connecting...' : 'Connect to Firebase'}
+            </button>
+            
+            {isFirebaseAuthenticated && (
+              <button
+                onClick={refreshFirebaseAuth}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              >
+                Refresh Token
+              </button>
+            )}
+          </div>
+        </div>
         
         {/* Controls */}
         <div className="bg-gray-800 p-4 rounded-lg mb-6">
@@ -35,28 +102,6 @@ export default function ChatDemoPage() {
                 <option value="global">🌎 Global Chat</option>
                 <option value="dm">📬 Direct Message</option>
               </select>
-            </div>
-
-            {/* Current User */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Current User Email</label>
-              <input
-                type="email"
-                value={currentUser}
-                onChange={(e) => setCurrentUser(e.target.value)}
-                className="w-full bg-gray-700 text-white px-3 py-2 rounded-md"
-              />
-            </div>
-
-            {/* Current User Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Current User Name</label>
-              <input
-                type="text"
-                value={currentUserName}
-                onChange={(e) => setCurrentUserName(e.target.value)}
-                className="w-full bg-gray-700 text-white px-3 py-2 rounded-md"
-              />
             </div>
 
             {/* League ID (for League Chat) */}
@@ -125,25 +170,19 @@ export default function ChatDemoPage() {
           {activeChat === 'league' && (
             <LeagueChat
               leagueId={leagueId}
-              currentUser={currentUser}
-              currentUserName={currentUserName}
               isCommissioner={isCommissioner}
             />
           )}
           
           {activeChat === 'global' && (
             <GlobalChat
-              currentUser={currentUser}
-              currentUserName={currentUserName}
               isAdmin={isAdmin}
             />
           )}
           
           {activeChat === 'dm' && (
             <DMChat
-              currentUser={currentUser}
               recipient={recipient}
-              currentUserName={currentUserName}
               recipientName={recipientName}
             />
           )}
@@ -153,6 +192,7 @@ export default function ChatDemoPage() {
         <div className="mt-6 bg-gray-800 p-4 rounded-lg">
           <h3 className="text-lg font-semibold text-white mb-2">How to Use</h3>
           <ul className="text-gray-300 space-y-1 text-sm">
+            <li>• <strong>Firebase Authentication:</strong> Click "Connect to Firebase" to authenticate with your Couchlytics account</li>
             <li>• <strong>League Chat:</strong> Messages are stored in <code>leagueChats/{leagueId}/messages</code></li>
             <li>• <strong>Global Chat:</strong> Messages are stored in <code>globalChat/messages</code></li>
             <li>• <strong>Direct Messages:</strong> Messages are stored in <code>privateMessages/{conversationId}/messages</code></li>
