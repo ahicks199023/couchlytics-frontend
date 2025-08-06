@@ -55,7 +55,6 @@ const allColumns = [
   { key: "age", label: "Age", width: "80px" },
   { key: "height", label: "Height", width: "80px" },
   { key: "weight", label: "Weight", width: "80px" },
-  { key: "durability", label: "Durability", width: "100px" },
   { key: "devTrait", label: "Dev Trait", width: "100px" },
   { key: "capHit", label: "Cap Hit", width: "100px" },
   { key: "contractYearsLeft", label: "Years Left", width: "100px" },
@@ -128,14 +127,8 @@ export default function LeaguePlayersPage() {
   };
 
   const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages) return;
     setPage(newPage);
   };
-
-  // Reset to page 1 when filters/search/sort/pageSize change
-  useEffect(() => {
-    setPage(1);
-  }, [search, position, team, devTrait, sortKey, sortDir, pageSize]);
 
   const getColumnValue = (player: Player, columnKey: string): string | number => {
     // Handle snake_case field names from API
@@ -176,51 +169,10 @@ export default function LeaguePlayersPage() {
     return value;
   };
 
-  const renderTableRow = (player: Player) => (
-    <tr key={player.id} className="hover:bg-gray-800">
-      {allColumns.map((column) => (
-        <td 
-          key={column.key}
-          className="px-3 py-2 border-b border-gray-700"
-          style={{ width: column.width, minWidth: column.width }}
-        >
-          {column.key === "name" ? (
-            <Link href={`/leagues/${leagueId}/players/${player.id}`} className="text-blue-400 hover:underline">
-              {player.name}
-            </Link>
-          ) : (
-            <span className={typeof getColumnValue(player, column.key) === 'number' ? 'text-right block' : ''}>
-              {getColumnValue(player, column.key)}
-            </span>
-          )}
-        </td>
-      ))}
-    </tr>
-  );
-
-  const renderLoadingRow = () => (
-    <tr>
-      <td colSpan={allColumns.length} className="text-center py-8 text-gray-400">
-        Loading players...
-      </td>
-    </tr>
-  );
-
-  const renderErrorRow = () => (
-    <tr>
-      <td colSpan={allColumns.length} className="text-center py-8 text-red-400">
-        {error}
-      </td>
-    </tr>
-  );
-
-  const renderEmptyRow = () => (
-    <tr>
-      <td colSpan={allColumns.length} className="text-center py-8 text-gray-400">
-        No players found.
-      </td>
-    </tr>
-  );
+  // Reset to page 1 when filters/search/sort/pageSize change
+  useEffect(() => {
+    setPage(1);
+  }, [search, position, team, devTrait, sortKey, sortDir, pageSize]);
 
   return (
     <main className="min-h-screen bg-black text-white p-6">
@@ -263,75 +215,180 @@ export default function LeaguePlayersPage() {
         </select>
         <select
           value={pageSize}
-          onChange={e => setPageSize(Number(e.target.value))}
+          onChange={(e) => setPageSize(Number(e.target.value))}
           className="px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
         >
+          <option value={10}>10</option>
           <option value={20}>20</option>
           <option value={50}>50</option>
           <option value={100}>100</option>
         </select>
       </div>
-      
-      {/* Player Count */}
-      <div className="mb-4 text-gray-400 text-sm">
+
+      {/* Pagination Info */}
+      <div className="text-sm text-gray-400 mb-4">
         Showing {players.length} of {totalResults} players (Page {page} of {totalPages})
       </div>
-      
-      {/* Table Container */}
-      <div className="bg-gray-900 rounded border border-gray-700" style={{ width: '100%', overflow: 'hidden' }}>
-        <div className="overflow-x-auto" style={{ width: '100%' }}>
-          <table className="text-sm" style={{ minWidth: 'max-content' }}>
+
+      {/* Two-Panel Table Layout */}
+      <div className="flex bg-gray-900 rounded border border-gray-700">
+        {/* Left Panel - Frozen Columns (Name, Position, Team) */}
+        <div className="flex-shrink-0">
+          <table className="text-sm">
             <thead>
               <tr>
-                {allColumns.map((column) => (
+                <th 
+                  className="px-3 py-2 text-left border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors sticky top-0 bg-gray-900 z-10"
+                  style={{ width: "200px", minWidth: "200px" }}
+                  onClick={() => handleSort("name")}
+                >
+                  Name {sortKey === "name" && (sortDir === "asc" ? "↑" : "↓")}
+                </th>
+                <th 
+                  className="px-3 py-2 text-left border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors sticky top-0 bg-gray-900 z-10"
+                  style={{ width: "100px", minWidth: "100px" }}
+                  onClick={() => handleSort("position")}
+                >
+                  Position {sortKey === "position" && (sortDir === "asc" ? "↑" : "↓")}
+                </th>
+                <th 
+                  className="px-3 py-2 text-left border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors sticky top-0 bg-gray-900 z-10"
+                  style={{ width: "150px", minWidth: "150px" }}
+                  onClick={() => handleSort("teamName")}
+                >
+                  Team {sortKey === "teamName" && (sortDir === "asc" ? "↑" : "↓")}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={3} className="text-center py-8 text-gray-400">
+                    Loading players...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={3} className="text-center py-8 text-red-400">
+                    {error}
+                  </td>
+                </tr>
+              ) : players.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="text-center py-8 text-gray-400">
+                    No players found.
+                  </td>
+                </tr>
+              ) : (
+                players.map((player) => (
+                  <tr key={player.id} className="hover:bg-gray-800">
+                    <td 
+                      className="px-3 py-2 border-b border-gray-700"
+                      style={{ width: "200px", minWidth: "200px" }}
+                    >
+                      <Link href={`/leagues/${leagueId}/players/${player.id}`} className="text-blue-400 hover:underline">
+                        {player.name}
+                      </Link>
+                    </td>
+                    <td 
+                      className="px-3 py-2 border-b border-gray-700"
+                      style={{ width: "100px", minWidth: "100px" }}
+                    >
+                      {player.position}
+                    </td>
+                    <td 
+                      className="px-3 py-2 border-b border-gray-700"
+                      style={{ width: "150px", minWidth: "150px" }}
+                    >
+                      {player.teamName}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Right Panel - Scrollable Columns */}
+        <div className="flex-1 overflow-x-auto">
+          <table className="text-sm" style={{ minWidth: "max-content" }}>
+            <thead>
+              <tr>
+                {allColumns.slice(3).map((column) => (
                   <th 
                     key={column.key}
                     className="px-3 py-2 text-left border-b border-gray-700 cursor-pointer hover:bg-gray-800 transition-colors sticky top-0 bg-gray-900 z-10"
                     style={{ width: column.width, minWidth: column.width }}
                     onClick={() => handleSort(column.key)}
                   >
-                    <div className="flex items-center justify-between">
-                      <span>{column.label}</span>
-                      {sortKey === column.key && (
-                        <span className="ml-1">
-                          {sortDir === "asc" ? "↑" : "↓"}
-                        </span>
-                      )}
-                    </div>
+                    {column.label} {sortKey === column.key && (sortDir === "asc" ? "↑" : "↓")}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {loading ? renderLoadingRow() : 
-               error ? renderErrorRow() : 
-               players.length === 0 ? renderEmptyRow() : 
-               players.map(renderTableRow)}
+              {loading ? (
+                <tr>
+                  <td colSpan={allColumns.length - 3} className="text-center py-8 text-gray-400">
+                    Loading players...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={allColumns.length - 3} className="text-center py-8 text-red-400">
+                    {error}
+                  </td>
+                </tr>
+              ) : players.length === 0 ? (
+                <tr>
+                  <td colSpan={allColumns.length - 3} className="text-center py-8 text-gray-400">
+                    No players found.
+                  </td>
+                </tr>
+              ) : (
+                players.map((player) => (
+                  <tr key={player.id} className="hover:bg-gray-800">
+                    {allColumns.slice(3).map((column) => (
+                      <td 
+                        key={column.key}
+                        className="px-3 py-2 border-b border-gray-700"
+                        style={{ width: column.width, minWidth: column.width }}
+                      >
+                        <span className={typeof getColumnValue(player, column.key) === 'number' ? 'text-right block' : ''}>
+                          {getColumnValue(player, column.key)}
+                        </span>
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
-      
+
       {/* Pagination */}
-      <div className="flex items-center justify-center gap-4 mt-6">
-        <button
-          onClick={() => handlePageChange(page - 1)}
-          disabled={page === 1}
-          className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span className="text-gray-300">
-          Page {page} of {totalPages}
-        </span>
-        <button
-          onClick={() => handlePageChange(page + 1)}
-          disabled={page === totalPages}
-          className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
-        >
-          Next
-        </button>
+      <div className="flex justify-between items-center mt-6">
+        <div className="flex gap-2">
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page <= 1}
+            className="px-3 py-1 rounded bg-gray-800 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700"
+          >
+            Previous
+          </button>
+          <span className="px-3 py-1 text-gray-400">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page >= totalPages}
+            className="px-3 py-1 rounded bg-gray-800 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </main>
-  );
+  )
 } 
