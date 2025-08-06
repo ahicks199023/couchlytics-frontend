@@ -479,6 +479,107 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
     setShowPrompts(true)
   }
 
+  // Format Ozzie's messages with proper spacing, bullet points, and emojis
+  const formatOzzieMessage = (text: string) => {
+    if (!text) return text
+
+    // Split into paragraphs
+    const paragraphs = text.split('\n\n').filter(p => p.trim())
+    
+    return paragraphs.map((paragraph, index) => {
+      const trimmed = paragraph.trim()
+      
+      // Check for bullet points
+      if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('*')) {
+        return (
+          <div key={index} className="ozzie-bullet-point">
+            <span className="ozzie-bullet-marker">•</span>
+            <span className="flex-1">{trimmed.replace(/^[•\-*]\s*/, '')}</span>
+          </div>
+        )
+      }
+      
+      // Check for numbered lists
+      if (/^\d+\./.test(trimmed)) {
+        return (
+          <div key={index} className="ozzie-numbered-item">
+            <span className="ozzie-number-marker">{trimmed.match(/^\d+\./)?.[0]}</span>
+            <span className="flex-1">{trimmed.replace(/^\d+\.\s*/, '')}</span>
+          </div>
+        )
+      }
+      
+      // Check for headers (lines that end with :)
+      if (trimmed.endsWith(':') && trimmed.length < 50) {
+        return (
+          <div key={index} className="ozzie-header">
+            {trimmed}
+          </div>
+        )
+      }
+      
+      // Regular paragraph
+      return (
+        <div key={index}>
+          <p>{trimmed}</p>
+        </div>
+      )
+    })
+  }
+
+  // Add emojis based on content context
+  const getContextEmoji = (text: string) => {
+    const lowerText = text.toLowerCase()
+    
+    // Team analysis
+    if (lowerText.includes('team') || lowerText.includes('roster') || lowerText.includes('players')) {
+      return '🏈'
+    }
+    
+    // Statistics
+    if (lowerText.includes('stats') || lowerText.includes('statistics') || lowerText.includes('numbers')) {
+      return '📊'
+    }
+    
+    // Trade advice
+    if (lowerText.includes('trade') || lowerText.includes('deal') || lowerText.includes('exchange')) {
+      return '🤝'
+    }
+    
+    // Draft advice
+    if (lowerText.includes('draft') || lowerText.includes('pick') || lowerText.includes('selection')) {
+      return '🎯'
+    }
+    
+    // Weaknesses/problems
+    if (lowerText.includes('weakness') || lowerText.includes('problem') || lowerText.includes('issue')) {
+      return '⚠️'
+    }
+    
+    // Strengths/positives
+    if (lowerText.includes('strength') || lowerText.includes('strong') || lowerText.includes('excellent')) {
+      return '💪'
+    }
+    
+    // Recommendations
+    if (lowerText.includes('recommend') || lowerText.includes('suggest') || lowerText.includes('advice')) {
+      return '💡'
+    }
+    
+    // Financial/cap related
+    if (lowerText.includes('cap') || lowerText.includes('salary') || lowerText.includes('money')) {
+      return '💰'
+    }
+    
+    // Schedule/games
+    if (lowerText.includes('schedule') || lowerText.includes('game') || lowerText.includes('matchup')) {
+      return '📅'
+    }
+    
+    // Default
+    return '🤖'
+  }
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -633,9 +734,11 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
                           onClick={() => loadConversation(conv.id)}
                         >
                           <div className="flex items-start justify-between">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-white font-medium text-sm truncate">{conv.title}</h4>
-                              <p className="text-gray-300 text-xs mt-1 line-clamp-2">{conv.question}</p>
+                                                         <div className="flex-1 min-w-0">
+                               <h4 className="text-white font-medium text-sm truncate">{conv.title}</h4>
+                               <p className="text-gray-300 text-xs mt-1 line-clamp-2">
+                                 {conv.question.length > 60 ? `${conv.question.substring(0, 60)}...` : conv.question}
+                               </p>
                               <div className="flex items-center gap-2 mt-2">
                                 <span className="text-gray-400 text-xs">{conv.team_name}</span>
                                 <span className="text-gray-500 text-xs">•</span>
@@ -712,30 +815,42 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
                     </div>
                   )}
 
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`mb-4 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[80%] p-3 rounded-lg ${
-                          message.sender === 'user'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-700 text-white'
-                        }`}
-                      >
-                        <p className="text-sm">{message.text}</p>
-                        {message.warning && (
-                          <p className="text-yellow-300 text-xs mt-2">{message.warning}</p>
-                        )}
-                        {message.teamInfo && (
-                          <p className="text-blue-300 text-xs mt-2">
-                            Analyzing: {message.teamInfo.name}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                                     {messages.map((message) => (
+                     <div
+                       key={message.id}
+                       className={`mb-4 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                     >
+                       <div
+                         className={`max-w-[80%] p-3 rounded-lg ${
+                           message.sender === 'user'
+                             ? 'bg-blue-600 text-white'
+                             : 'bg-gray-700 text-white'
+                         }`}
+                       >
+                         {message.sender === 'user' ? (
+                           <p className="text-sm">{message.text}</p>
+                         ) : (
+                           <div className="text-sm ozzie-message">
+                             <div className="flex items-center gap-2 mb-2">
+                               <span className="ozzie-context-emoji">{getContextEmoji(message.text)}</span>
+                               <span className="text-blue-300 text-xs font-medium">Ozzie</span>
+                             </div>
+                             <div className="space-y-1">
+                               {formatOzzieMessage(message.text)}
+                             </div>
+                           </div>
+                         )}
+                         {message.warning && (
+                           <p className="text-yellow-300 text-xs mt-2">⚠️ {message.warning}</p>
+                         )}
+                         {message.teamInfo && (
+                           <p className="text-blue-300 text-xs mt-2">
+                             🏈 Analyzing: {message.teamInfo.name}
+                           </p>
+                         )}
+                       </div>
+                     </div>
+                   ))}
 
                   {isLoading && (
                     <div className="flex justify-start mb-4">
