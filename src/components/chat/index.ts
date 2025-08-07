@@ -5,31 +5,16 @@ export { default as DMChat } from './DMChat'
 export { default as ChatMessage } from './ChatMessage'
 
 // Chat Hooks
-export { useLeagueChat } from '@/hooks/useLeagueChat'
-export { useGlobalChat } from '@/hooks/useGlobalChat'
-export { useDMChat } from '@/hooks/useDMChat'
-export { useFirebaseAuth } from '@/hooks/useFirebaseAuth'
+export { useLeagueChat } from '@/Hooks/useLeagueChat'
+export { useGlobalChat } from '@/Hooks/useGlobalChat'
+export { useDMChat } from '@/Hooks/useDMChat'
+export { useFirebaseAuth } from '@/Hooks/useFirebaseAuth'
 
 // Chat Types
-export type {
-  ChatMessage,
-  LeagueChatMessage,
-  GlobalChatMessage,
-  DirectMessage,
-  ChatState,
-  SendMessageParams,
-  UseChatReturn
-} from '@/types/chat'
+export type { ChatMessage as ChatMessageType } from '@/types/chat'
 
 // Chat Utils
-export {
-  generateConversationId,
-  formatTimestamp,
-  groupMessagesBySender,
-  canModerate,
-  canEditMessage,
-  canDeleteAnyMessage
-} from '@/lib/chatUtils'
+export { groupMessagesBySender, formatTimestamp, generateConversationId } from '@/lib/chatUtils'
 
 // Firebase Functions
 export {
