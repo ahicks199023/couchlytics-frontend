@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import useDMChat from '@/Hooks/useDirectMessages'
-import useFirebaseAuth from '@/Hooks/useFirebaseAuth'
+import useFirebase from '@/Hooks/useFirebase'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
 
@@ -24,7 +24,7 @@ export default function DMChat({
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const { firebaseUser, isFirebaseAuthenticated, firebaseError } = useFirebaseAuth()
+  const { firebaseUser, isFirebaseAuthenticated, firebaseError } = useFirebase()
 
   // Use Firebase user if available, otherwise fall back to props
   const currentUser = firebaseUser?.email || propCurrentUser
