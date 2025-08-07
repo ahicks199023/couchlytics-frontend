@@ -253,7 +253,7 @@ function ChatDemoContent() {
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• Private conversations between two users</li>
                 <li>• Auto-generated conversation ID</li>
-                <li>• Messages stored in: <code>privateMessages/{conversationId}/messages</code></li>
+                <li>• Messages stored in: <code>privateMessages/[conversationId]/messages</code></li>
               </ul>
             </div>
             <div>
