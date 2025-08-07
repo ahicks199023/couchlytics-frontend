@@ -20,7 +20,6 @@ export { groupMessagesBySender, formatTimestamp, generateConversationId } from '
 export {
   getFirebaseToken,
   signInWithCouchlytics,
-  getCurrentFirebaseUser,
   onFirebaseAuthStateChanged,
   signOutFromFirebase
 } from '@/lib/firebase' 
