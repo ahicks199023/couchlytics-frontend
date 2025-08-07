@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import useDMChat from '@/Hooks/useDirectMessages'
-import useFirebaseAuth, { UseFirebaseAuthReturn } from '@/Hooks/useFirebaseAuth'
+import useFirebaseAuth from '@/Hooks/useFirebaseAuth'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
 
