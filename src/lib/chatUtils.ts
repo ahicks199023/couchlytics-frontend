@@ -1,4 +1,4 @@
-import { ChatMessage, LeagueChatMessage, GlobalChatMessage, DirectMessage } from '@/types/chat'
+import { ChatMessage } from '@/types/chat'
 
 /**
  * Generate a consistent conversation ID for two users

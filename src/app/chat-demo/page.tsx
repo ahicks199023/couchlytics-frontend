@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { FirebaseAuthProvider, useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
-import { useAuth } from '@/Hooks/useAuth'
+import useAuth from '@/Hooks/useAuth'
 import { LeagueChat, GlobalChat, DMChat } from '@/components/chat'
 
 function ChatDemoContent() {
@@ -194,8 +194,8 @@ function ChatDemoContent() {
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-md mx-auto">
                 <h3 className="font-medium text-yellow-800 mb-2">Next Steps:</h3>
                 <ol className="text-sm text-yellow-700 space-y-1 text-left">
-                  <li>1. Ensure you're logged into Couchlytics</li>
-                  <li>2. Click "Sign in to Firebase" in the authentication section</li>
+                  <li>1. Ensure you&apos;re logged into Couchlytics</li>
+                  <li>2. Click &quot;Sign in to Firebase&quot; in the authentication section</li>
                   <li>3. Wait for Firebase authentication to complete</li>
                   <li>4. Return to this page to test chat functionality</li>
                 </ol>

@@ -3,7 +3,7 @@
 import React from 'react'
 import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext'
 import FirebaseAuth from '@/components/FirebaseAuth'
-import { useAuth } from '@/Hooks/useAuth'
+import useAuth from '@/Hooks/useAuth'
 
 function FirebaseAuthDemoContent() {
   const { authenticated, user: couchlyticsUser } = useAuth()
@@ -96,7 +96,7 @@ function FirebaseAuthDemoContent() {
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <h3 className="font-medium text-yellow-800 mb-2">Step 1: Check Prerequisites</h3>
               <ul className="text-sm text-yellow-700 space-y-1">
-                <li>• Ensure you're logged into Couchlytics (see status above)</li>
+                <li>• Ensure you&apos;re logged into Couchlytics (see status above)</li>
                 <li>• Verify backend is running and accessible</li>
                 <li>• Check Firebase project configuration</li>
               </ul>
@@ -104,15 +104,15 @@ function FirebaseAuthDemoContent() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h3 className="font-medium text-blue-800 mb-2">Step 2: Test Health</h3>
               <ul className="text-sm text-blue-700 space-y-1">
-                <li>• Click "Test Health" button to verify backend connectivity</li>
-                <li>• Should return "✅ Healthy" if everything is working</li>
+                <li>• Click &quot;Test Health&quot; button to verify backend connectivity</li>
+                <li>• Should return &quot;✅ Healthy&quot; if everything is working</li>
                 <li>• If unhealthy, check backend logs and configuration</li>
               </ul>
             </div>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <h3 className="font-medium text-green-800 mb-2">Step 3: Authenticate with Firebase</h3>
               <ul className="text-sm text-green-700 space-y-1">
-                <li>• Click "Sign in to Firebase" button</li>
+                <li>• Click &quot;Sign in to Firebase&quot; button</li>
                 <li>• Should automatically get token from Couchlytics backend</li>
                 <li>• Firebase user should appear with email and UID</li>
                 <li>• Custom claims should show Couchlytics user ID</li>
@@ -121,8 +121,8 @@ function FirebaseAuthDemoContent() {
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
               <h3 className="font-medium text-purple-800 mb-2">Step 4: Test Features</h3>
               <ul className="text-sm text-purple-700 space-y-1">
-                <li>• Try "Refresh Token" to test token refresh</li>
-                <li>• Test "Sign Out from Firebase" to verify logout</li>
+                <li>• Try &quot;Refresh Token&quot; to test token refresh</li>
+                <li>• Test &quot;Sign Out from Firebase&quot; to verify logout</li>
                 <li>• Check browser console for detailed logs</li>
                 <li>• Verify user claims contain Couchlytics user ID</li>
               </ul>
@@ -140,19 +140,19 @@ function FirebaseAuthDemoContent() {
               <h3 className="font-medium text-red-800">Common Issues</h3>
               <div className="mt-2 space-y-2 text-sm text-gray-700">
                 <div>
-                  <strong>❌ "User not authenticated with Couchlytics"</strong>
+                  <strong>❌ &quot;User not authenticated with Couchlytics&quot;</strong>
                   <p>Solution: Log into Couchlytics first, then try Firebase authentication</p>
                 </div>
                 <div>
-                  <strong>❌ "Failed to get Firebase token"</strong>
+                  <strong>❌ &quot;Failed to get Firebase token&quot;</strong>
                   <p>Solution: Check backend is running and Firebase service account is configured</p>
                 </div>
                 <div>
-                  <strong>❌ "signInWithCustomToken failed"</strong>
+                  <strong>❌ &quot;signInWithCustomToken failed&quot;</strong>
                   <p>Solution: Verify Firebase project configuration and API keys</p>
                 </div>
                 <div>
-                  <strong>❌ "Health check failed"</strong>
+                  <strong>❌ &quot;Health check failed&quot;</strong>
                   <p>Solution: Check backend logs and ensure Firebase service is initialized</p>
                 </div>
               </div>
