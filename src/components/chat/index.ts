@@ -7,7 +7,7 @@ export { default as ChatMessage } from './ChatMessage'
 // Chat Hooks
 export { useLeagueChat } from '@/Hooks/useLeagueChat'
 export { useGlobalChat } from '@/Hooks/useGlobalChat'
-export { useDMChat } from '@/Hooks/useDMChat'
+export { default as useDMChat } from '@/Hooks/useDMChat'
 export { useFirebaseAuth } from '@/Hooks/useFirebaseAuth'
 
 // Chat Types
