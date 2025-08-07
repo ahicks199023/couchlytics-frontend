@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from 'react'
 import { 
   collection, 
   query, 
@@ -12,16 +12,14 @@ import {
   startAfter,
   getDocs,
   DocumentSnapshot
-} from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import { DirectMessage, SendMessageParams, UseChatReturn } from "@/types/chat"
-import { generateConversationId } from "@/lib/chatUtils"
+} from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { DirectMessage, SendMessageParams, UseChatReturn } from '@/types/chat'
+import { generateConversationId } from '@/lib/chatUtils'
 
 const MESSAGES_PER_PAGE = 50
 
-export interface UseDMChatReturn extends UseChatReturn {}
-
-function useDMChat(currentUserEmail: string, recipientEmail: string): UseDMChatReturn {
+function useDirectMessages(currentUserEmail: string, recipientEmail: string): UseChatReturn {
   const [messages, setMessages] = useState<DirectMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -30,16 +28,17 @@ function useDMChat(currentUserEmail: string, recipientEmail: string): UseDMChatR
 
   const conversationId = generateConversationId(currentUserEmail, recipientEmail)
 
+  // Load initial messages
   useEffect(() => {
     if (!currentUserEmail || !recipientEmail) return
 
     setLoading(true)
     setError(null)
 
-    const messagesRef = collection(db, "privateMessages", conversationId, "messages")
+    const messagesRef = collection(db, 'privateMessages', conversationId, 'messages')
     const q = query(
       messagesRef,
-      orderBy("timestamp", "desc"),
+      orderBy('timestamp', 'desc'),
       limit(MESSAGES_PER_PAGE)
     )
 
@@ -65,6 +64,7 @@ function useDMChat(currentUserEmail: string, recipientEmail: string): UseDMChatR
           })
         })
 
+        // Reverse to show newest at bottom
         setMessages(newMessages.reverse())
         setLoading(false)
 
@@ -74,8 +74,8 @@ function useDMChat(currentUserEmail: string, recipientEmail: string): UseDMChatR
         setHasMore(snapshot.docs.length === MESSAGES_PER_PAGE)
       },
       (err) => {
-        console.error("Error loading DM messages:", err)
-        setError("Failed to load messages")
+        console.error('Error loading DM messages:', err)
+        setError('Failed to load messages')
         setLoading(false)
       }
     )
@@ -87,7 +87,7 @@ function useDMChat(currentUserEmail: string, recipientEmail: string): UseDMChatR
     if (!text.trim() || !currentUserEmail || !recipientEmail) return
 
     try {
-      const messagesRef = collection(db, "privateMessages", conversationId, "messages")
+      const messagesRef = collection(db, 'privateMessages', conversationId, 'messages')
       await addDoc(messagesRef, {
         text: text.trim(),
         sender,
@@ -97,8 +97,8 @@ function useDMChat(currentUserEmail: string, recipientEmail: string): UseDMChatR
         recipient: recipientEmail
       })
     } catch (err) {
-      console.error("Error sending DM:", err)
-      setError("Failed to send message")
+      console.error('Error sending DM:', err)
+      setError('Failed to send message')
     }
   }, [currentUserEmail, recipientEmail, conversationId])
 
@@ -106,14 +106,14 @@ function useDMChat(currentUserEmail: string, recipientEmail: string): UseDMChatR
     if (!currentUserEmail || !recipientEmail) return
 
     try {
-      const messageRef = doc(db, "privateMessages", conversationId, "messages", messageId)
+      const messageRef = doc(db, 'privateMessages', conversationId, 'messages', messageId)
       await updateDoc(messageRef, {
         deleted: true,
         deletedAt: serverTimestamp()
       })
     } catch (err) {
-      console.error("Error deleting DM:", err)
-      setError("Failed to delete message")
+      console.error('Error deleting DM:', err)
+      setError('Failed to delete message')
     }
   }, [currentUserEmail, recipientEmail, conversationId])
 
@@ -121,15 +121,15 @@ function useDMChat(currentUserEmail: string, recipientEmail: string): UseDMChatR
     if (!newText.trim() || !currentUserEmail || !recipientEmail) return
 
     try {
-      const messageRef = doc(db, "privateMessages", conversationId, "messages", messageId)
+      const messageRef = doc(db, 'privateMessages', conversationId, 'messages', messageId)
       await updateDoc(messageRef, {
         text: newText.trim(),
         edited: true,
         editedAt: serverTimestamp()
       })
     } catch (err) {
-      console.error("Error editing DM:", err)
-      setError("Failed to edit message")
+      console.error('Error editing DM:', err)
+      setError('Failed to edit message')
     }
   }, [currentUserEmail, recipientEmail, conversationId])
 
@@ -137,10 +137,10 @@ function useDMChat(currentUserEmail: string, recipientEmail: string): UseDMChatR
     if (!hasMore || !lastMessage || !currentUserEmail || !recipientEmail) return
 
     try {
-      const messagesRef = collection(db, "privateMessages", conversationId, "messages")
+      const messagesRef = collection(db, 'privateMessages', conversationId, 'messages')
       const q = query(
         messagesRef,
-        orderBy("timestamp", "desc"),
+        orderBy('timestamp', 'desc'),
         startAfter(lastMessage),
         limit(MESSAGES_PER_PAGE)
       )
@@ -173,8 +173,8 @@ function useDMChat(currentUserEmail: string, recipientEmail: string): UseDMChatR
         setLastMessage(snapshot.docs[snapshot.docs.length - 1])
       }
     } catch (err) {
-      console.error("Error loading more messages:", err)
-      setError("Failed to load more messages")
+      console.error('Error loading more messages:', err)
+      setError('Failed to load more messages')
     }
   }, [hasMore, lastMessage, currentUserEmail, recipientEmail, conversationId])
 
@@ -190,4 +190,4 @@ function useDMChat(currentUserEmail: string, recipientEmail: string): UseDMChatR
   }
 }
 
-export default useDMChat
+export default useDirectMessages
