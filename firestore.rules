@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global chat messages
+    match /globalChat/messages/{messageId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+      allow update, delete: if request.auth != null && (
+        resource.data.senderEmail == request.auth.token.email ||
+        request.auth.token.isAdmin == true
+      );
+    }
+    
+    // League chat messages
+    match /leagueChats/{leagueId}/messages/{messageId} {
+      allow read: if request.auth != null && (
+        exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid))
+      );
+      allow write: if request.auth != null && (
+        exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid))
+      );
+      allow update, delete: if request.auth != null && (
+        resource.data.senderEmail == request.auth.token.email ||
+        exists(/databases/$(database)/documents/leagues/$(leagueId)/commissioners/$(request.auth.uid))
+      );
+    }
+    
+    // Private messages
+    match /privateMessages/{conversationId}/messages/{messageId} {
+      allow read: if request.auth != null && (
+        conversationId.matches(request.auth.token.email + '_.*') ||
+        conversationId.matches('.*_' + request.auth.token.email)
+      );
+      allow write: if request.auth != null && (
+        conversationId.matches(request.auth.token.email + '_.*') ||
+        conversationId.matches('.*_' + request.auth.token.email)
+      );
+      allow update, delete: if request.auth != null && (
+        resource.data.senderEmail == request.auth.token.email
+      );
+    }
+  }
+}
