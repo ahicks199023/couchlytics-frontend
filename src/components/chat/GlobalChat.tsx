@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import useGlobalChat from '@/Hooks/useGlobalChat'
+import useGlobalMessages from '@/Hooks/useGlobalMessages'
 import useFirebase from '@/Hooks/useFirebase'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
@@ -37,7 +37,7 @@ export default function GlobalChat({
     deleteMessage,
     editMessage,
     loadMoreMessages
-  } = useGlobalChat()
+  } = useGlobalMessages()
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
