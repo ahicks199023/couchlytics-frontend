@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import type { User } from '@/lib/firebase'
+import { debugFirebaseAuth } from '@/lib/firebase'
 
 interface FirebaseAuthProps {
   onAuthStateChange?: (user: User | null) => void
@@ -94,8 +95,21 @@ export default function FirebaseAuth({
   }
 
   const handleTestHealth = async () => {
-    const isHealthy = await testHealth()
-    setHealthStatus(isHealthy)
+    try {
+      const isHealthy = await testHealth()
+      setHealthStatus(isHealthy)
+    } catch (error) {
+      console.error('Health test failed:', error)
+      setHealthStatus(false)
+    }
+  }
+
+  const handleDebugAuth = async () => {
+    try {
+      await debugFirebaseAuth()
+    } catch (error) {
+      console.error('Debug failed:', error)
+    }
   }
 
   if (isLoading) {
@@ -180,6 +194,12 @@ export default function FirebaseAuth({
               className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 transition-colors"
             >
               Test Health
+            </button>
+            <button 
+              onClick={handleDebugAuth}
+              className="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition-colors"
+            >
+              Debug Auth
             </button>
             <button 
               onClick={handleSignOut}

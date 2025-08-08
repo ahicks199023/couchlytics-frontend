@@ -98,6 +98,34 @@ class FirebaseAuthService {
       this.isAuthenticated = !!userCredential.user
       
       if (userCredential.user) {
+        // Get the email from the token response, not from user.email
+        const tokenResponse = await fetch(`${API_BASE}/api/firebase-token`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        let tokenData: { email?: string; token?: string } | null = null
+        if (tokenResponse.ok) {
+          tokenData = await tokenResponse.json()
+          console.log('🔑 Token data with email:', tokenData)
+          
+          // Update the user profile with email if it's not set
+          if (tokenData && tokenData.email && !userCredential.user.email) {
+            try {
+              const { updateProfile } = await import('firebase/auth')
+              await updateProfile(userCredential.user, {
+                displayName: tokenData.email.split('@')[0]
+              })
+              console.log('✅ Updated Firebase user profile with display name')
+            } catch (profileError) {
+              console.warn('⚠️ Could not update user profile:', profileError)
+            }
+          }
+        }
+        
         // Force refresh the user to get updated claims
         await userCredential.user.reload()
         console.log('👤 After reload - User email:', userCredential.user.email)
@@ -107,8 +135,14 @@ class FirebaseAuthService {
         const idTokenResult = await userCredential.user.getIdTokenResult()
         console.log('👤 User claims:', idTokenResult.claims)
         
-        console.log('✅ Successfully signed into Firebase:', userCredential.user.email)
-        return userCredential.user
+        // Create a user object with the email from token data
+        const userWithEmail = {
+          ...userCredential.user,
+          email: tokenData?.email || userCredential.user.email || ''
+        }
+        
+        console.log('✅ Successfully signed into Firebase:', userWithEmail.email)
+        return userWithEmail as User
       } else {
         throw new Error('Firebase sign-in succeeded but user object is null')
       }
@@ -212,6 +246,53 @@ class FirebaseAuthService {
       return false
     }
   }
+
+  /**
+   * Debug Firebase authentication
+   */
+  async debugFirebaseAuth(): Promise<void> {
+    try {
+      console.log('🔍 Debugging Firebase Authentication...')
+      
+      // 1. Check Firebase config
+      console.log('Firebase config available:', !!this.auth)
+      
+      // 2. Get token from backend
+      const tokenResponse = await fetch(`${API_BASE}/api/firebase-token`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (tokenResponse.ok) {
+        const tokenData = await tokenResponse.json()
+        console.log('Token response:', tokenData)
+        
+        // 3. Sign in with token
+        const userCredential = await signInWithCustomToken(this.auth, tokenData.token)
+        const user = userCredential.user
+        console.log('Firebase user object:', user)
+        console.log('User email:', user.email)
+        console.log('User UID:', user.uid)
+        
+        // 4. Check if user is authenticated
+        console.log('Is authenticated:', !!user)
+        console.log('Auth state:', this.auth.currentUser)
+        
+        // 5. Get user claims
+        const idTokenResult = await user.getIdTokenResult()
+        console.log('User claims:', idTokenResult.claims)
+        
+      } else {
+        console.error('Token request failed:', tokenResponse.status, tokenResponse.statusText)
+      }
+      
+    } catch (error) {
+      console.error('❌ Debug error:', error)
+    }
+  }
 }
 
 // Export singleton instance
@@ -236,6 +317,10 @@ export const onFirebaseAuthStateChanged = (callback: (user: User | null) => void
 
 export const signOutFromFirebase = async (): Promise<void> => {
   return firebaseAuthService.signOutFromFirebase()
+}
+
+export const debugFirebaseAuth = async (): Promise<void> => {
+  return firebaseAuthService.debugFirebaseAuth()
 }
 
 export default app 
