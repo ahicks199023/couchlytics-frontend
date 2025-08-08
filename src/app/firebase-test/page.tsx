@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react'
 import { getFirebaseToken, signInWithCouchlytics, getCurrentFirebaseUser } from '@/lib/firebase'
+import { User } from 'firebase/auth'
 
 export default function FirebaseTestPage() {
   const [status, setStatus] = useState<string>('Initializing...')
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
