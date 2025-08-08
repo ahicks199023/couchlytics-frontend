@@ -42,6 +42,8 @@ class FirebaseAuthService {
    */
   async getFirebaseToken(): Promise<string> {
     try {
+      console.log('🔑 Requesting Firebase token from:', `${API_BASE}/api/firebase-token`)
+      
       const response = await fetch(`${API_BASE}/api/firebase-token`, {
         method: 'GET',
         credentials: 'include', // Important: Include session cookies
@@ -49,6 +51,9 @@ class FirebaseAuthService {
           'Content-Type': 'application/json'
         }
       })
+
+      console.log('🔑 Token response status:', response.status)
+      console.log('🔑 Token response ok:', response.ok)
 
       if (!response.ok) {
         if (response.status === 302) {
@@ -58,13 +63,17 @@ class FirebaseAuthService {
         }
         
         const errorData = await response.json().catch(() => ({}))
+        console.error('🔑 Token error data:', errorData)
         throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`)
       }
 
       const data = await response.json()
+      console.log('🔑 Token response data:', data)
+      console.log('🔑 Token received:', data.token ? 'Yes' : 'No')
+      
       return data.token
     } catch (error) {
-      console.error('Error getting Firebase token:', error)
+      console.error('❌ Error getting Firebase token:', error)
       throw new Error(`Failed to get Firebase token: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -76,17 +85,27 @@ class FirebaseAuthService {
     try {
       // Get custom token from Couchlytics backend
       const customToken = await this.getFirebaseToken()
+      console.log('🔑 Got custom token:', customToken ? 'Token received' : 'No token')
       
       // Sign into Firebase with custom token
       const userCredential = await signInWithCustomToken(this.auth, customToken)
-      this.user = userCredential.user
-      this.isAuthenticated = true
+      console.log('👤 User credential:', userCredential)
+      console.log('👤 User object:', userCredential.user)
+      console.log('👤 User email:', userCredential.user?.email)
       
-      console.log('✅ Successfully signed into Firebase:', userCredential.user.email)
-      return userCredential.user
+      this.user = userCredential.user
+      this.isAuthenticated = !!userCredential.user
+      
+      if (userCredential.user) {
+        console.log('✅ Successfully signed into Firebase:', userCredential.user.email)
+        return userCredential.user
+      } else {
+        throw new Error('Firebase sign-in succeeded but user object is null')
+      }
     } catch (error) {
       console.error('❌ Error signing into Firebase:', error)
       this.isAuthenticated = false
+      this.user = null
       throw error
     }
   }
