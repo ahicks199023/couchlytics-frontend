@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { FirebaseAuthProvider, useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import useAuth from '@/Hooks/useAuth'
 import { LeagueChat, GlobalChat, DMChat } from '@/components/chat'
+import { completeFirestoreSetup } from '@/lib/setupFirestore'
 
 function ChatDemoContent() {
   const { authenticated, user: couchlyticsUser } = useAuth()
@@ -14,6 +15,29 @@ function ChatDemoContent() {
   const [recipientEmail, setRecipientEmail] = useState('test@example.com')
   const [isAdmin, setIsAdmin] = useState(false)
   const [isCommissioner, setIsCommissioner] = useState(false)
+  const [isSettingUpFirestore, setIsSettingUpFirestore] = useState(false)
+  const [firestoreSetupComplete, setFirestoreSetupComplete] = useState(false)
+
+  const handleFirestoreSetup = async () => {
+    if (!firebaseUser || !couchlyticsUser) return
+    
+    setIsSettingUpFirestore(true)
+    try {
+      const success = await completeFirestoreSetup(
+        firebaseUser.uid,
+        firebaseUser.email || couchlyticsUser.email,
+        leagueId
+      )
+      if (success) {
+        setFirestoreSetupComplete(true)
+        console.log('✅ Firestore setup completed successfully')
+      }
+    } catch (error) {
+      console.error('❌ Firestore setup failed:', error)
+    } finally {
+      setIsSettingUpFirestore(false)
+    }
+  }
 
   if (!authenticated) {
     return (
@@ -202,26 +226,47 @@ function ChatDemoContent() {
               </div>
             </div>
           ) : (
-            <div className="h-96">
-              {selectedChat === 'league' && (
-                <LeagueChat 
-                  leagueId={leagueId}
-                  currentUser={firebaseUser?.email || ''}
-                  isCommissioner={isCommissioner}
-                />
-              )}
-              {selectedChat === 'global' && (
-                <GlobalChat 
-                  currentUser={firebaseUser?.email || ''}
-                  isAdmin={isAdmin}
-                />
-              )}
-              {selectedChat === 'dm' && (
-                <DMChat 
-                  currentUser={firebaseUser?.email || ''}
-                  recipient={recipientEmail}
-                />
-              )}
+            <div className="space-y-4">
+              {/* Firestore Setup Section */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-medium text-blue-800 mb-2">🔧 Firestore Setup</h3>
+                <p className="text-sm text-blue-700 mb-3">
+                  {firestoreSetupComplete 
+                    ? '✅ Firestore documents are set up and ready for chat'
+                    : 'Set up the required Firestore documents for chat functionality'
+                  }
+                </p>
+                {!firestoreSetupComplete && (
+                  <button
+                    onClick={handleFirestoreSetup}
+                    disabled={isSettingUpFirestore}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isSettingUpFirestore ? 'Setting up...' : 'Setup Firestore Documents'}
+                  </button>
+                )}
+              </div>
+              <div className="h-96">
+                {selectedChat === 'league' && (
+                  <LeagueChat 
+                    leagueId={leagueId}
+                    currentUser={firebaseUser?.email || ''}
+                    isCommissioner={isCommissioner}
+                  />
+                )}
+                {selectedChat === 'global' && (
+                  <GlobalChat 
+                    currentUser={firebaseUser?.email || ''}
+                    isAdmin={isAdmin}
+                  />
+                )}
+                {selectedChat === 'dm' && (
+                  <DMChat 
+                    currentUser={firebaseUser?.email || ''}
+                    recipient={recipientEmail}
+                  />
+                )}
+              </div>
             </div>
           )}
         </div>
