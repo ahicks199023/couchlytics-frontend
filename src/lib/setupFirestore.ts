@@ -1,5 +1,5 @@
 import { db } from './firebase'
-import { doc, setDoc, collection } from 'firebase/firestore'
+import { doc, setDoc } from 'firebase/firestore'
 
 /**
  * Setup Firestore documents for chat functionality
