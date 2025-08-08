@@ -1,0 +1,25 @@
+# Firebase Functions (not needed for frontend)
+functions/
+
+# Firebase configuration files
+firebase.json
+firestore.rules
+firestore.indexes.json
+
+# DataConnect generated files
+dataconnect/
+dataconnect-generated/
+
+# Development files
+*.md
+BACKEND_ISSUES.md
+TEAM_CONFIGURATION_SYSTEM.md
+STATS_LEADERS_README.md
+TEAM_DETAIL_BACKEND_API_PROMPT.md
+GAME_LOG_INTEGRATION.md
+inspect_players_table.sql
+BACKEND_API_UPDATE_PROMPT.md
+ANALYTICS_INTEGRATION.md
+
+# SQL files
+*.sql 
