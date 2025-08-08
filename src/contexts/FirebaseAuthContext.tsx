@@ -27,6 +27,7 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [hasAttemptedAutoInit, setHasAttemptedAutoInit] = useState(false)
   const { authenticated, user: couchlyticsUser } = useAuth()
 
   useEffect(() => {
@@ -43,11 +44,12 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
 
   // Auto-initialize Firebase authentication when Couchlytics user is authenticated
   useEffect(() => {
-    if (authenticated && couchlyticsUser && !isFirebaseAuthenticated && !isLoading) {
+    if (authenticated && couchlyticsUser && !isFirebaseAuthenticated && !isLoading && !hasAttemptedAutoInit) {
       console.log('🔄 Auto-initializing Firebase authentication...')
+      setHasAttemptedAutoInit(true)
       signInToFirebase().catch(console.error)
     }
-  }, [authenticated, couchlyticsUser, isFirebaseAuthenticated, isLoading])
+  }, [authenticated, couchlyticsUser, isFirebaseAuthenticated, isLoading, hasAttemptedAutoInit])
 
   const signInToFirebase = async () => {
     try {
@@ -58,6 +60,7 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed'
       setError(errorMessage)
       console.error('Failed to sign into Firebase:', error)
+      setHasAttemptedAutoInit(false) // Reset flag on error so user can retry
       throw error
     } finally {
       setIsLoading(false)
@@ -69,6 +72,7 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
       setIsLoading(true)
       setError(null)
       await firebaseAuthService.signOutFromFirebase()
+      setHasAttemptedAutoInit(false) // Reset flag on sign out
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Sign out failed'
       setError(errorMessage)
@@ -103,12 +107,17 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
     }
   }
 
+  const manualSignInToFirebase = async () => {
+    setHasAttemptedAutoInit(false) // Reset flag for manual sign-in
+    return signInToFirebase()
+  }
+
   const value: FirebaseAuthContextType = {
     isFirebaseAuthenticated,
     firebaseUser,
     isLoading,
     error,
-    signInToFirebase,
+    signInToFirebase: manualSignInToFirebase,
     signOutFromFirebase,
     refreshToken,
     testHealth
