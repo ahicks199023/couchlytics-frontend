@@ -1,8 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import useDMChat from '@/Hooks/useDirectMessages'
-import useFirebase from '@/Hooks/useFirebase'
+import { useParams } from 'next/navigation'
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
+import { db } from '@/lib/firebase'
+import useDirectMessages from '@/Hooks/useDirectMessages'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
 
@@ -24,7 +26,7 @@ export default function DMChat({
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const { firebaseUser, isFirebaseAuthenticated, firebaseError } = useFirebase()
+  const { firebaseUser, isFirebaseAuthenticated, firebaseError } = useFirebaseAuth()
 
   // Use Firebase user if available, otherwise fall back to props
   const currentUser = firebaseUser?.email || propCurrentUser
@@ -39,7 +41,7 @@ export default function DMChat({
     deleteMessage,
     editMessage,
     loadMoreMessages
-  } = useDMChat(currentUser || '', recipient)
+  } = useDirectMessages(currentUser || '', recipient)
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {

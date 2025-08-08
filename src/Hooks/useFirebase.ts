@@ -53,12 +53,14 @@ export default function useFirebase(): UseFirebaseReturn {
 
   // Initialize Firebase authentication when Couchlytics user is authenticated
   useEffect(() => {
-    if (authenticated && couchlyticsUser && !firebaseUser) {
-      initializeFirebaseAuth()
-    } else if (!authenticated && firebaseUser) {
-      // Sign out from Firebase when Couchlytics user is not authenticated
-      handleFirebaseSignOut()
-    }
+    // Temporarily disabled to prevent conflicts with new authentication system
+    // if (authenticated && couchlyticsUser && !firebaseUser) {
+    //   initializeFirebaseAuth()
+    // } else if (!authenticated && firebaseUser) {
+    //   // Sign out from Firebase when Couchlytics user is not authenticated
+    //   handleFirebaseSignOut()
+    // }
+    console.log('⚠️ Old useFirebase hook disabled - using new FirebaseAuthContext instead')
   }, [authenticated, couchlyticsUser, firebaseUser, initializeFirebaseAuth, handleFirebaseSignOut])
 
   // Listen to Firebase auth state changes

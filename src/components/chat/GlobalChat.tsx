@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
+import { db } from '@/lib/firebase'
 import useGlobalMessages from '@/Hooks/useGlobalMessages'
-import useFirebase from '@/Hooks/useFirebase'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
 
@@ -22,7 +23,7 @@ export default function GlobalChat({
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const { firebaseUser, isFirebaseAuthenticated, firebaseError } = useFirebase()
+  const { firebaseUser, isFirebaseAuthenticated, firebaseError } = useFirebaseAuth()
 
   // Use Firebase user if available, otherwise fall back to props
   const currentUser = firebaseUser?.email || propCurrentUser
