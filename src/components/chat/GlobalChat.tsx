@@ -22,7 +22,7 @@ export default function GlobalChat({
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const { firebaseUser, isFirebaseAuthenticated, firebaseError } = useFirebaseAuth()
+  const { firebaseUser, isFirebaseAuthenticated, error: firebaseError } = useFirebaseAuth()
 
   // Use Firebase user if available, otherwise fall back to props
   const currentUser = firebaseUser?.email || propCurrentUser
