@@ -92,11 +92,21 @@ class FirebaseAuthService {
       console.log('👤 User credential:', userCredential)
       console.log('👤 User object:', userCredential.user)
       console.log('👤 User email:', userCredential.user?.email)
+      console.log('👤 User UID:', userCredential.user?.uid)
       
       this.user = userCredential.user
       this.isAuthenticated = !!userCredential.user
       
       if (userCredential.user) {
+        // Force refresh the user to get updated claims
+        await userCredential.user.reload()
+        console.log('👤 After reload - User email:', userCredential.user.email)
+        console.log('👤 After reload - User UID:', userCredential.user.uid)
+        
+        // Get user claims
+        const idTokenResult = await userCredential.user.getIdTokenResult()
+        console.log('👤 User claims:', idTokenResult.claims)
+        
         console.log('✅ Successfully signed into Firebase:', userCredential.user.email)
         return userCredential.user
       } else {
