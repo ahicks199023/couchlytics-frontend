@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
-import { db } from '@/lib/firebase'
 import useGlobalMessages from '@/Hooks/useGlobalMessages'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'

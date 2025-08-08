@@ -1,9 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { useParams } from 'next/navigation'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
-import { db } from '@/lib/firebase'
 import useLeagueMessages from '@/Hooks/useLeagueMessages'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
