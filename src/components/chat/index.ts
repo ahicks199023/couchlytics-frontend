@@ -5,10 +5,10 @@ export { default as DMChat } from './DMChat'
 export { default as ChatMessage } from './ChatMessage'
 
 // Chat Hooks
-export { useLeagueChat } from '@/Hooks/useLeagueChat'
-export { useGlobalChat } from '@/Hooks/useGlobalChat'
+export { default as useLeagueChat } from '@/Hooks/useLeagueChat'
+export { default as useGlobalChat } from '@/Hooks/useGlobalChat'
 export { default as useDMChat } from '@/Hooks/useDirectMessages'
-export { default as useFirebaseAuth, UseFirebaseReturn } from '@/Hooks/useFirebase'
+export { default as useFirebaseAuth } from '@/Hooks/useFirebase'
 
 // Chat Types
 export type { ChatMessage as ChatMessageType } from '@/types/chat'

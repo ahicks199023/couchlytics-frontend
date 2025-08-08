@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { useLeagueChat } from '@/Hooks/useLeagueChat'
+import useLeagueChat from '@/Hooks/useLeagueChat'
 import useFirebase from '@/Hooks/useFirebase'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
