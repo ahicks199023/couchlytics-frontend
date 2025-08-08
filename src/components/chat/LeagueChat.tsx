@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import useLeagueChat from '@/Hooks/useLeagueChat'
+import useLeagueMessages from '@/Hooks/useLeagueMessages'
 import useFirebase from '@/Hooks/useFirebase'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
@@ -39,7 +39,7 @@ export default function LeagueChat({
     deleteMessage,
     editMessage,
     loadMoreMessages
-  } = useLeagueChat(leagueId)
+  } = useLeagueMessages(leagueId)
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
