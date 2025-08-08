@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { firebaseAuthService } from '@/lib/firebase'
 import type { User } from '@/lib/firebase'
+import useAuth from '@/Hooks/useAuth'
 
 interface FirebaseAuthContextType {
   isFirebaseAuthenticated: boolean
@@ -26,6 +27,7 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { authenticated, user: couchlyticsUser } = useAuth()
 
   useEffect(() => {
     // Listen to Firebase auth state changes
@@ -38,6 +40,14 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
 
     return () => unsubscribe()
   }, [])
+
+  // Auto-initialize Firebase authentication when Couchlytics user is authenticated
+  useEffect(() => {
+    if (authenticated && couchlyticsUser && !isFirebaseAuthenticated && !isLoading) {
+      console.log('🔄 Auto-initializing Firebase authentication...')
+      signInToFirebase().catch(console.error)
+    }
+  }, [authenticated, couchlyticsUser, isFirebaseAuthenticated, isLoading])
 
   const signInToFirebase = async () => {
     try {
