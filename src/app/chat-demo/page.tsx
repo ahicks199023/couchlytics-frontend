@@ -356,4 +356,7 @@ export default function ChatDemoPage() {
       </div>
     </div>
   )
-} 
+}
+
+// Force dynamic rendering to prevent build-time errors
+export const dynamic = 'force-dynamic'
