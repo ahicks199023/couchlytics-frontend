@@ -9,19 +9,17 @@ export interface ChatMessage {
   deleted?: boolean
   deletedAt?: Date
   deletedBy?: string
+  moderated?: boolean
+  moderatedBy?: string
+  moderatedAt?: Date
+  // Enhanced features
+  reactions?: MessageReaction[]
+  attachments?: FileAttachment[]
+  replyTo?: string // ID of message being replied to
 }
 
 export interface LeagueChatMessage extends ChatMessage {
   leagueId: string
-  moderated?: boolean
-  moderatedBy?: string
-  moderatedAt?: Date
-}
-
-export interface GlobalChatMessage extends ChatMessage {
-  moderated?: boolean
-  moderatedBy?: string
-  moderatedAt?: Date
 }
 
 export interface DirectMessage extends ChatMessage {
@@ -29,11 +27,34 @@ export interface DirectMessage extends ChatMessage {
   recipient: string
 }
 
+export interface MessageReaction {
+  emoji: string
+  users: string[] // Array of user emails who reacted
+  count: number
+}
+
+export interface FileAttachment {
+  id: string
+  name: string
+  url: string
+  type: 'image' | 'document' | 'video' | 'audio'
+  size: number
+  uploadedAt: Date
+}
+
+export interface TypingIndicator {
+  userEmail: string
+  userName: string
+  timestamp: Date
+}
+
 export interface ChatState {
   messages: ChatMessage[]
   loading: boolean
   error: string | null
   hasMore: boolean
+  typingUsers: TypingIndicator[]
+  reactions: Record<string, MessageReaction[]>
 }
 
 export interface SendMessageParams {
