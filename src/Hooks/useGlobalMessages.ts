@@ -14,12 +14,12 @@ import {
   DocumentSnapshot
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { GlobalChatMessage, SendMessageParams, UseChatReturn } from '@/types/chat'
+import { ChatMessage, SendMessageParams, UseChatReturn } from '@/types/chat'
 
 const MESSAGES_PER_PAGE = 50
 
 export default function useGlobalMessages(): UseChatReturn {
-  const [messages, setMessages] = useState<GlobalChatMessage[]>([])
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
@@ -40,7 +40,7 @@ export default function useGlobalMessages(): UseChatReturn {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const newMessages: GlobalChatMessage[] = []
+        const newMessages: ChatMessage[] = []
         snapshot.forEach((doc) => {
           const data = doc.data()
           newMessages.push({
@@ -139,7 +139,7 @@ export default function useGlobalMessages(): UseChatReturn {
       )
 
       const snapshot = await getDocs(q)
-      const newMessages: GlobalChatMessage[] = []
+      const newMessages: ChatMessage[] = []
       
       snapshot.forEach((doc) => {
         const data = doc.data()
@@ -177,6 +177,8 @@ export default function useGlobalMessages(): UseChatReturn {
     loading,
     error,
     hasMore,
+    typingUsers: [], // TODO: Implement typing indicators
+    reactions: {}, // TODO: Implement reactions
     sendMessage,
     deleteMessage,
     editMessage,

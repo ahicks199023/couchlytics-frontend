@@ -184,6 +184,8 @@ export default function useLeagueMessages(leagueId: string): UseChatReturn {
     loading,
     error,
     hasMore,
+    typingUsers: [], // TODO: Implement typing indicators
+    reactions: {}, // TODO: Implement reactions
     sendMessage,
     deleteMessage,
     editMessage,

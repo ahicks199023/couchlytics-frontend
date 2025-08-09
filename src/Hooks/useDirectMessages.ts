@@ -183,6 +183,8 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string): Us
     loading,
     error,
     hasMore,
+    typingUsers: [], // TODO: Implement typing indicators
+    reactions: {}, // TODO: Implement reactions
     sendMessage,
     deleteMessage,
     editMessage,
