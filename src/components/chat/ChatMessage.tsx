@@ -8,6 +8,7 @@ interface ChatMessageProps {
   message: ChatMessageType
   currentUserEmail: string
   isAdmin?: boolean
+  isCommissioner?: boolean
   onDelete?: (messageId: string) => void
   onEdit?: (messageId: string, newText: string) => void
   onReact?: (messageId: string, emoji: string) => void
@@ -20,6 +21,7 @@ export default function ChatMessage({
   message,
   currentUserEmail,
   isAdmin = false,
+  isCommissioner = false,
   onDelete,
   onEdit,
   onReact,
@@ -31,8 +33,8 @@ export default function ChatMessage({
 
   const isOwnMessage = message.senderEmail === currentUserEmail
   const canEdit = isOwnMessage && !message.deleted
-  const canDelete = isOwnMessage || isAdmin
-  const canModerate = isAdmin
+  const canDelete = isOwnMessage || isAdmin || isCommissioner
+  const canModerate = isAdmin || isCommissioner
 
   const handleEdit = () => {
     if (editText.trim() && editText !== message.text) {
