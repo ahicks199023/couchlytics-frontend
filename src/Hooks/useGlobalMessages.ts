@@ -30,7 +30,7 @@ export default function useGlobalMessages(): UseChatReturn {
     setLoading(true)
     setError(null)
 
-    const messagesRef = collection(db, 'globalChat', 'messages')
+    const messagesRef = collection(db, 'globalChatMessages')
     const q = query(
       messagesRef,
       orderBy('timestamp', 'desc'),
@@ -83,7 +83,7 @@ export default function useGlobalMessages(): UseChatReturn {
     if (!text.trim()) return
 
     try {
-      const messagesRef = collection(db, 'globalChat', 'messages')
+      const messagesRef = collection(db, 'globalChatMessages')
       await addDoc(messagesRef, {
         text: text.trim(),
         sender,
@@ -99,7 +99,7 @@ export default function useGlobalMessages(): UseChatReturn {
 
   const deleteMessage = useCallback(async (messageId: string) => {
     try {
-      const messageRef = doc(db, 'globalChat', 'messages', messageId)
+      const messageRef = doc(db, 'globalChatMessages', messageId)
       await updateDoc(messageRef, {
         deleted: true,
         deletedAt: serverTimestamp()
@@ -114,7 +114,7 @@ export default function useGlobalMessages(): UseChatReturn {
     if (!newText.trim()) return
 
     try {
-      const messageRef = doc(db, 'globalChat', 'messages', messageId)
+      const messageRef = doc(db, 'globalChatMessages', messageId)
       await updateDoc(messageRef, {
         text: newText.trim(),
         edited: true,
