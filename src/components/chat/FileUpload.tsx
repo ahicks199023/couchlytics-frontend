@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import { FileAttachment } from '@/types/chat'
 
 interface FileUploadProps {
   onFileSelect: (files: File[]) => void
@@ -17,7 +16,6 @@ export default function FileUpload({
   allowedTypes = ['image/*', 'application/pdf', 'text/*', 'video/*', 'audio/*']
 }: FileUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = (files: FileList | null) => {

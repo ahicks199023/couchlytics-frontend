@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { ChatMessage as ChatMessageType, MessageReaction } from '@/types/chat'
+import { ChatMessage as ChatMessageType } from '@/types/chat'
 import { formatTimestamp } from '@/lib/chatUtils'
 
 interface ChatMessageProps {
@@ -46,9 +46,7 @@ export default function ChatMessage({
     setShowReactions(false)
   }
 
-  const getReactionCount = (emoji: string) => {
-    return message.reactions?.find(r => r.emoji === emoji)?.count || 0
-  }
+
 
   const hasUserReacted = (emoji: string) => {
     return message.reactions?.find(r => r.emoji === emoji)?.users.includes(currentUserEmail) || false

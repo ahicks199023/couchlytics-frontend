@@ -36,7 +36,6 @@ export default function MobileChatLayout({
   hasMore,
   typingUsers,
   currentUser,
-  currentUserName,
   isAdmin = false,
   chatType,
   onSendMessage,

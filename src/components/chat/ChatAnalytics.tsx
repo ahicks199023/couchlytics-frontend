@@ -20,7 +20,7 @@ interface AnalyticsData {
   userActivity: Array<{ user: string; messageCount: number }>
 }
 
-export default function ChatAnalytics({ messages, chatType, isAdmin = false }: ChatAnalyticsProps) {
+export default function ChatAnalytics({ messages, isAdmin = false }: ChatAnalyticsProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('7d')
 

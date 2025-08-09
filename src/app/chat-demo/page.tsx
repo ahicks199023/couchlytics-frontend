@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import useAuth from '@/Hooks/useAuth'
 import LeagueChat from '@/components/chat/LeagueChat'
@@ -20,9 +20,8 @@ export default function ChatDemoPage() {
   const [isCommissioner, setIsCommissioner] = useState(false)
   const [isSettingUpFirestore, setIsSettingUpFirestore] = useState(false)
   const [firestoreSetupComplete, setFirestoreSetupComplete] = useState(false)
-  const [showMobileLayout, setShowMobileLayout] = useState(false)
 
-  const { firebaseUser, isFirebaseAuthenticated, error: firebaseError } = useFirebaseAuth()
+  const { firebaseUser } = useFirebaseAuth()
   const { user: couchlyticsUser } = useAuth()
 
   const currentUser = firebaseUser?.email || couchlyticsUser?.email || ''
@@ -295,8 +294,6 @@ export default function ChatDemoPage() {
                   currentUser={currentUser}
                   currentUserName={currentUserName}
                   leagueId={leagueId}
-                  isAdmin={isAdmin}
-                  isCommissioner={isCommissioner}
                 />
               )}
               {chatType === 'global' && (
