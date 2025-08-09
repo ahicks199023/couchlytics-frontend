@@ -89,7 +89,7 @@ export default function FileUpload({
         <div className="text-gray-500">
           <div className="text-lg mb-2">📎</div>
           <div className="text-sm">
-            {uploading ? 'Uploading...' : 'Click to upload or drag files here'}
+            Click to upload or drag files here
           </div>
           <div className="text-xs mt-1">
             Max {maxFiles} files, {maxSize}MB each
