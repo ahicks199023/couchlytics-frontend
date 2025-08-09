@@ -38,6 +38,7 @@ export default function GlobalChat({
     sendMessage,
     deleteMessage,
     editMessage,
+    reactToMessage,
     loadMoreMessages
   } = useGlobalMessages()
 
@@ -89,6 +90,14 @@ export default function GlobalChat({
       await editMessage(messageId, newText)
     } catch (err) {
       console.error('Failed to edit message:', err)
+    }
+  }
+
+  const handleReact = async (messageId: string, emoji: string) => {
+    try {
+      await reactToMessage(messageId, emoji, currentUser)
+    } catch (err) {
+      console.error('Failed to react to message:', err)
     }
   }
 
@@ -177,14 +186,15 @@ export default function GlobalChat({
             {messageGroups.map((group, groupIndex) => (
               <div key={`${group.senderEmail}-${groupIndex}`} className="space-y-1">
                 {group.messages.map((message) => (
-                  <ChatMessage
-                    key={message.id}
-                    message={message}
-                    currentUserEmail={currentUser || ''}
-                    isAdmin={isAdmin}
-                    onDelete={handleDelete}
-                    onEdit={handleEdit}
-                  />
+                                     <ChatMessage
+                     key={message.id}
+                     message={message}
+                     currentUserEmail={currentUser || ''}
+                     isAdmin={isAdmin}
+                     onDelete={handleDelete}
+                     onEdit={handleEdit}
+                     onReact={handleReact}
+                   />
                 ))}
               </div>
             ))}
@@ -197,6 +207,17 @@ export default function GlobalChat({
       {/* Input Area */}
       <div className="p-4 border-t border-gray-700">
         <div className="flex space-x-2">
+          <button
+            onClick={() => {
+              // TODO: Implement file upload
+              alert('File upload feature coming soon! 📎')
+            }}
+            disabled={!currentUser}
+            className="px-3 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed transition-colors"
+            title="Upload files"
+          >
+            📎
+          </button>
           <textarea
             ref={inputRef}
             value={messageText}
@@ -216,7 +237,7 @@ export default function GlobalChat({
           </button>
         </div>
         <div className="text-xs text-gray-500 mt-1">
-          Press Enter to send, Shift+Enter for new line
+          Press Enter to send, Shift+Enter for new line • 📎 Upload files
         </div>
       </div>
     </div>

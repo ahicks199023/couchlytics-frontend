@@ -57,7 +57,8 @@ export default function useGlobalMessages(): UseChatReturn {
             deletedBy: data.deletedBy,
             moderated: data.moderated || false,
             moderatedBy: data.moderatedBy,
-            moderatedAt: data.moderatedAt?.toDate()
+            moderatedAt: data.moderatedAt?.toDate(),
+            reactions: data.reactions || []
           })
         })
 
@@ -141,7 +142,7 @@ export default function useGlobalMessages(): UseChatReturn {
       const currentReactions = messageData.reactions || []
       
       // Find existing reaction for this emoji
-      const existingReactionIndex = currentReactions.findIndex((r: any) => r.emoji === emoji)
+      const existingReactionIndex = currentReactions.findIndex((r: { emoji: string; users: string[]; count: number }) => r.emoji === emoji)
       
       let updatedReactions
       if (existingReactionIndex >= 0) {
@@ -156,7 +157,7 @@ export default function useGlobalMessages(): UseChatReturn {
           
           if (existingReaction.count === 0) {
             // Remove reaction entirely if no users
-            updatedReactions = currentReactions.filter((_: any, index: number) => index !== existingReactionIndex)
+            updatedReactions = currentReactions.filter((_: { emoji: string; users: string[]; count: number }, index: number) => index !== existingReactionIndex)
           } else {
             updatedReactions = [...currentReactions]
             updatedReactions[existingReactionIndex] = existingReaction
@@ -217,7 +218,8 @@ export default function useGlobalMessages(): UseChatReturn {
           deletedBy: data.deletedBy,
           moderated: data.moderated || false,
           moderatedBy: data.moderatedBy,
-          moderatedAt: data.moderatedAt?.toDate()
+          moderatedAt: data.moderatedAt?.toDate(),
+          reactions: data.reactions || []
         })
       })
 
