@@ -161,6 +161,9 @@ export default function NavBar() {
             <Link href="/upload" className="hover:text-neon-green transition-colors">
               Upload
             </Link>
+            <Link href="/chat-demo" className="hover:text-neon-green transition-colors">
+              💬 Chat Demo
+            </Link>
           </div>
         )}
       </div>
@@ -409,6 +412,13 @@ export default function NavBar() {
                   onClick={() => setIsOpen(false)}
                 >
                   Upload
+                </Link>
+                <Link
+                  href="/chat-demo"
+                  className="block py-2 text-gray-300 hover:text-white"
+                  onClick={() => setIsOpen(false)}
+                >
+                  💬 Chat Demo
                 </Link>
                 <Link
                   href="/profile"
