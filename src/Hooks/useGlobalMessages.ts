@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   startAfter,
   getDocs,
+  getDoc,
   DocumentSnapshot
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -126,6 +127,66 @@ export default function useGlobalMessages(): UseChatReturn {
     }
   }, [])
 
+  const reactToMessage = useCallback(async (messageId: string, emoji: string, userEmail: string) => {
+    try {
+      const messageRef = doc(db, 'globalChatMessages', messageId)
+      const messageDoc = await getDoc(messageRef)
+      
+      if (!messageDoc.exists()) {
+        console.error('Message not found')
+        return
+      }
+
+      const messageData = messageDoc.data()
+      const currentReactions = messageData.reactions || []
+      
+      // Find existing reaction for this emoji
+      const existingReactionIndex = currentReactions.findIndex((r: any) => r.emoji === emoji)
+      
+      let updatedReactions
+      if (existingReactionIndex >= 0) {
+        // Update existing reaction
+        const existingReaction = currentReactions[existingReactionIndex]
+        const userIndex = existingReaction.users.indexOf(userEmail)
+        
+        if (userIndex >= 0) {
+          // Remove user's reaction
+          existingReaction.users.splice(userIndex, 1)
+          existingReaction.count = Math.max(0, existingReaction.count - 1)
+          
+          if (existingReaction.count === 0) {
+            // Remove reaction entirely if no users
+            updatedReactions = currentReactions.filter((_: any, index: number) => index !== existingReactionIndex)
+          } else {
+            updatedReactions = [...currentReactions]
+            updatedReactions[existingReactionIndex] = existingReaction
+          }
+        } else {
+          // Add user's reaction
+          existingReaction.users.push(userEmail)
+          existingReaction.count += 1
+          updatedReactions = [...currentReactions]
+          updatedReactions[existingReactionIndex] = existingReaction
+        }
+      } else {
+        // Create new reaction
+        const newReaction = {
+          emoji,
+          users: [userEmail],
+          count: 1
+        }
+        updatedReactions = [...currentReactions, newReaction]
+      }
+
+      await updateDoc(messageRef, {
+        reactions: updatedReactions
+      })
+    } catch (err) {
+      console.error('Error reacting to message:', err)
+      setError('Failed to react to message')
+    }
+  }, [])
+
   const loadMoreMessages = useCallback(async () => {
     if (!hasMore || !lastMessage) return
 
@@ -182,6 +243,7 @@ export default function useGlobalMessages(): UseChatReturn {
     sendMessage,
     deleteMessage,
     editMessage,
+    reactToMessage,
     loadMoreMessages
   }
 } 

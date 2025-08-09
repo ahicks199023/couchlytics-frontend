@@ -67,5 +67,6 @@ export interface UseChatReturn extends ChatState {
   sendMessage: (params: SendMessageParams) => Promise<void>
   deleteMessage: (messageId: string) => Promise<void>
   editMessage: (messageId: string, newText: string) => Promise<void>
+  reactToMessage: (messageId: string, emoji: string, userEmail: string) => Promise<void>
   loadMoreMessages: () => Promise<void>
 } 
