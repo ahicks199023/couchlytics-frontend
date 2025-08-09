@@ -25,7 +25,7 @@ export default function LeagueChatPage() {
             💬 League Chat
           </h1>
           <p className="text-gray-400">
-            Real-time messaging for league members • League ID: {leagueId}
+            Real-time messaging for league members • League: {leagueId}
           </p>
           {currentUser && (
             <p className="text-sm text-green-400 mt-1">

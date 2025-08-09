@@ -32,7 +32,7 @@ const links = [
   { label: 'Stats', path: 'stats', prefetch: false },
   { label: 'Stats Leaders', path: 'stats-leaders', prefetch: false },
   { label: 'Players', path: 'players', prefetch: false },
-  { label: '💬 League Chat', path: 'chat', prefetch: false },
+  { label: '💬 Chat', path: 'chat', prefetch: false },
   { label: '🤖 AI Commissioner', path: 'ai-commissioner', prefetch: false }
 ]
 
