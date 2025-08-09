@@ -130,7 +130,7 @@ export default function useGlobalMessages(): UseChatReturn {
     if (!hasMore || !lastMessage) return
 
     try {
-      const messagesRef = collection(db, 'globalChat', 'messages')
+      const messagesRef = collection(db, 'globalChatMessages')
       const q = query(
         messagesRef,
         orderBy('timestamp', 'desc'),
