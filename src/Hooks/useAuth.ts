@@ -76,7 +76,7 @@ export default function useAuth() {
     if (!isLoggingOut.current) {
       checkAuthStatus();
     }
-  }, []) // Remove checkAuthStatus dependency to prevent circular re-renders
+  }, [checkAuthStatus]) // Include checkAuthStatus dependency
 
   const hasPermission = useCallback((permission: Permission): boolean => {
     if (!user) return false;

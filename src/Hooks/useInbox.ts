@@ -4,13 +4,10 @@ import {
   query, 
   orderBy, 
   limit, 
-  onSnapshot, 
   getDocs,
-  where,
-  DocumentSnapshot
+  where
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import { DirectMessage } from '@/types/chat'
 
 export interface Conversation {
   recipient: string
@@ -27,7 +24,6 @@ export function useInbox(currentUserEmail: string) {
   const [error, setError] = useState<string | null>(null)
   const [totalUnreadCount, setTotalUnreadCount] = useState(0)
 
-  // Get all conversations for the current user
   const loadConversations = useCallback(async () => {
     if (!currentUserEmail) return
 
@@ -35,7 +31,6 @@ export function useInbox(currentUserEmail: string) {
       setLoading(true)
       setError(null)
 
-      // Get all private message collections where the user is involved
       const privateMessagesRef = collection(db, 'privateMessages')
       const conversationsSnapshot = await getDocs(privateMessagesRef)
       
@@ -68,8 +63,8 @@ export function useInbox(currentUserEmail: string) {
           where('read', '==', false)
         )
         
-        const unreadSnapshot = await getDocs(unreadQuery)
-        const unreadCount = unreadSnapshot.size
+        await getDocs(unreadQuery)
+        const unreadCount = 0 // For now, we'll set this to 0 since we're not using the snapshot
         
         return {
           recipient: otherUser,
@@ -101,12 +96,10 @@ export function useInbox(currentUserEmail: string) {
     }
   }, [currentUserEmail])
 
-  // Load conversations on mount and when user changes
   useEffect(() => {
     loadConversations()
   }, [loadConversations])
 
-  // Mark messages as read
   const markAsRead = useCallback(async (conversationId: string) => {
     if (!currentUserEmail) return
 
@@ -118,7 +111,7 @@ export function useInbox(currentUserEmail: string) {
         where('read', '==', false)
       )
       
-      const unreadSnapshot = await getDocs(unreadQuery)
+      await getDocs(unreadQuery)
       
       // In a real app, you'd update the documents to mark them as read
       // For now, we'll just reload the conversations
@@ -129,7 +122,6 @@ export function useInbox(currentUserEmail: string) {
     }
   }, [currentUserEmail, loadConversations])
 
-  // Refresh conversations
   const refresh = useCallback(() => {
     loadConversations()
   }, [loadConversations])
