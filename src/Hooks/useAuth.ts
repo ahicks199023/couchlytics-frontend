@@ -70,8 +70,11 @@ export default function useAuth() {
   }, []);
 
   useEffect(() => {
-    checkAuthStatus();
-  }, [checkAuthStatus]);
+    // Only check auth status if we're not in the process of logging out
+    if (!isLoggingOut.current) {
+      checkAuthStatus();
+    }
+  }, []) // Remove checkAuthStatus dependency to prevent circular re-renders
 
   const hasPermission = useCallback((permission: Permission): boolean => {
     if (!user) return false;

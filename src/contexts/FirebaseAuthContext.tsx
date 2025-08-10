@@ -5,6 +5,11 @@ import { firebaseAuthService, getFirebaseUserEmail } from '@/lib/firebase'
 import type { User } from '@/lib/firebase'
 import useAuth from '@/Hooks/useAuth'
 
+// Global flag to prevent auto-initialization after logout
+// This persists across component re-renders and context resets
+let globalUserExplicitlySignedOut = false
+let globalLastSignOutTime: number | null = null
+
 interface FirebaseAuthContextType {
   isFirebaseAuthenticated: boolean
   firebaseUser: User | null
@@ -31,15 +36,20 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
   const [hasAttemptedAutoInit, setHasAttemptedAutoInit] = useState(false)
   const [userExplicitlySignedOut, setUserExplicitlySignedOut] = useState(false)
   const [lastSignOutTime, setLastSignOutTime] = useState<number | null>(null)
+  const [isLoggingOut, setIsLoggingOut] = useState(false) // Add explicit logout state
   const { authenticated, user: couchlyticsUser } = useAuth()
 
   // Check if enough time has passed since last sign-out to allow auto-initialization
   const canAutoInitialize = useCallback(() => {
-    if (!lastSignOutTime) return true
-    const timeSinceSignOut = Date.now() - lastSignOutTime
-    const minDelay = 5000 // 5 seconds minimum delay
-    return timeSinceSignOut > minDelay
-  }, [lastSignOutTime])
+    // Check both local and global flags
+    if (globalUserExplicitlySignedOut || userExplicitlySignedOut) return false
+    if (globalLastSignOutTime || lastSignOutTime) {
+      const timeSinceSignOut = Date.now() - (globalLastSignOutTime || lastSignOutTime || 0)
+      const minDelay = 10000 // 10 seconds minimum delay
+      return timeSinceSignOut > minDelay
+    }
+    return true
+  }, [lastSignOutTime, userExplicitlySignedOut])
 
   useEffect(() => {
     // Listen to Firebase auth state changes
@@ -73,27 +83,52 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
       isLoading,
       hasAttemptedAutoInit,
       userExplicitlySignedOut,
-      canAutoInit: canAutoInitialize()
+      isLoggingOut,
+      globalUserExplicitlySignedOut,
+      globalLastSignOutTime,
+      canAutoInit: canAutoInitialize(),
+      lastSignOutTime
     })
     
+    // Don't auto-initialize if user explicitly signed out (check both local and global)
+    if (userExplicitlySignedOut || globalUserExplicitlySignedOut) {
+      console.log('🚫 Skipping auto-initialization - user explicitly signed out (local or global)')
+      return
+    }
+    
+    // Don't auto-initialize if we're in the process of logging out
+    if (isLoggingOut) {
+      console.log('🚫 Skipping auto-initialization - user is logging out')
+      return
+    }
+    
+    // Don't auto-initialize if it's too soon since last sign-out
+    if (!canAutoInitialize()) {
+      console.log('⏰ Skipping auto-initialization - too soon since last sign-out')
+      return
+    }
+    
+    // Only auto-initialize if all conditions are met
     if (
       authenticated && 
       couchlyticsUser && 
       !isFirebaseAuthenticated && 
       !isLoading && 
-      !hasAttemptedAutoInit && 
-      !userExplicitlySignedOut &&
-      canAutoInitialize()
+      !hasAttemptedAutoInit
     ) {
       console.log('🔄 Auto-initializing Firebase authentication...')
       setHasAttemptedAutoInit(true)
       signInToFirebase().catch(console.error)
-    } else if (userExplicitlySignedOut) {
-      console.log('🚫 Skipping auto-initialization - user explicitly signed out')
-    } else if (!canAutoInitialize()) {
-      console.log('⏰ Skipping auto-initialization - too soon since last sign-out')
+    } else {
+      console.log('🔄 Skipping auto-initialization - conditions not met:', {
+        authenticated,
+        hasCouchlyticsUser: !!couchlyticsUser,
+        isFirebaseAuthenticated,
+        isLoading,
+        hasAttemptedAutoInit
+      })
     }
-  }, [authenticated, couchlyticsUser, isFirebaseAuthenticated, isLoading, hasAttemptedAutoInit, userExplicitlySignedOut, canAutoInitialize])
+  }, [authenticated, couchlyticsUser, isFirebaseAuthenticated, isLoading, hasAttemptedAutoInit, userExplicitlySignedOut, isLoggingOut, canAutoInitialize, lastSignOutTime])
 
   const signInToFirebase = async () => {
     try {
@@ -116,15 +151,28 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
       console.log('🚪 Starting Firebase sign-out process...')
       setIsLoading(true)
       setError(null)
+      setIsLoggingOut(true) // Set explicit logout state
       setUserExplicitlySignedOut(true) // Mark that user explicitly signed out
       setLastSignOutTime(Date.now()) // Record the time of the sign-out
-      console.log('🚪 Set userExplicitlySignedOut to true')
+      
+      // Set global flags to prevent auto-initialization across re-renders
+      globalUserExplicitlySignedOut = true
+      globalLastSignOutTime = Date.now()
+      
+      console.log('🚪 Set userExplicitlySignedOut to true and isLoggingOut to true')
+      console.log('🚪 Set global flags to prevent auto-initialization')
       
       await firebaseAuthService.signOutFromFirebase()
       console.log('🚪 Firebase sign-out completed successfully')
       
       setHasAttemptedAutoInit(false) // Reset flag on sign out
       console.log('🚪 Reset hasAttemptedAutoInit to false')
+      
+      // Force clear Firebase authentication state
+      setIsFirebaseAuthenticated(false)
+      setFirebaseUser(null)
+      console.log('🚪 Cleared Firebase authentication state')
+      
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Sign out failed'
       setError(errorMessage)
@@ -164,6 +212,12 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
     setHasAttemptedAutoInit(false) // Reset flag for manual sign-in
     setUserExplicitlySignedOut(false) // Clear explicit sign-out flag for manual sign-in
     setLastSignOutTime(null) // Clear the last sign-out time for manual sign-in
+    setIsLoggingOut(false) // Clear logout state for manual sign-in
+    
+    // Clear global flags as well
+    globalUserExplicitlySignedOut = false
+    globalLastSignOutTime = null
+    
     return signInToFirebase()
   }
 
@@ -171,6 +225,12 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
     setUserExplicitlySignedOut(false)
     setLastSignOutTime(null)
     setHasAttemptedAutoInit(false)
+    setIsLoggingOut(false) // Also clear the logout state
+    
+    // Clear global flags as well
+    globalUserExplicitlySignedOut = false
+    globalLastSignOutTime = null
+    
     console.log('🧹 Cleared sign-out state - ready for new authentication')
   }
 
