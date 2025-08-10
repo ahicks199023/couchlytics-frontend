@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "@/lib/config";
 import useAuth from "@/Hooks/useAuth";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
+import { signInWithCustomToken } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -14,6 +17,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { signInToFirebase } = useFirebaseAuth();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -38,6 +42,7 @@ export default function Login() {
     setError(null);
 
     try {
+      console.log('🔐 Attempting native login...');
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
@@ -50,9 +55,59 @@ export default function Login() {
         })
       });
 
+      console.log('🔐 Login response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('🔐 Login response data:', data);
+        
         if (data.authenticated) {
+          console.log('✅ Couchlytics authentication successful');
+          
+          // Check if we have a Firebase token in the response
+          if (data.firebase_token) {
+            console.log('🔥 Firebase token received, signing in with Firebase...');
+            
+            try {
+              // Sign in with Firebase using the custom token
+              const userCredential = await signInWithCustomToken(auth, data.firebase_token);
+              console.log('✅ Successfully signed in with Firebase:', userCredential.user?.email);
+              
+              // Update the user profile with the email from the response
+              if (data.user?.email && userCredential.user) {
+                try {
+                  const { updateProfile } = await import('firebase/auth');
+                  await updateProfile(userCredential.user, {
+                    displayName: data.user.email.split('@')[0]
+                  });
+                  console.log('✅ Updated Firebase user profile with display name');
+                } catch (profileError) {
+                  console.warn('⚠️ Could not update user profile:', profileError);
+                }
+              }
+              
+              // Force refresh the user to get updated claims
+              await userCredential.user.reload();
+              console.log('👤 After reload - User email:', userCredential.user.email);
+              
+            } catch (firebaseError) {
+              console.error('❌ Firebase sign-in failed:', firebaseError);
+              // Don't fail the login if Firebase fails, just log it
+              // The user can still access the app via Couchlytics auth
+            }
+          } else {
+            console.log('⚠️ No Firebase token in response, attempting manual Firebase sign-in...');
+            // Try to manually sign in with Firebase using the existing method
+            try {
+              await signInToFirebase();
+              console.log('✅ Manual Firebase sign-in successful');
+            } catch (firebaseError) {
+              console.error('❌ Manual Firebase sign-in failed:', firebaseError);
+              // Don't fail the login if Firebase fails
+            }
+          }
+          
+          // Redirect to leagues page
           router.push('/leagues');
         } else {
           setError('Invalid email or password');
