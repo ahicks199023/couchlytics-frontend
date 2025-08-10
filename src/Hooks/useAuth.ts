@@ -12,6 +12,7 @@ export default function useAuth() {
   const checkAuthStatus = useCallback(async () => {
     // Don't check auth status if we're in the process of logging out
     if (isLoggingOut.current) {
+      console.log('🚫 Auth check blocked - logout in progress');
       return;
     }
 
@@ -136,6 +137,12 @@ export default function useAuth() {
           });
         }
       }
+      
+      // Keep the logout flag active for a longer period to prevent re-auth
+      setTimeout(() => {
+        isLoggingOut.current = false;
+        console.log('🔓 Logout protection disabled');
+      }, 5000); // 5 second protection
       
       // Add a small delay before redirect to ensure logout completes
       setTimeout(() => {

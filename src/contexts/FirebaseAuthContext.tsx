@@ -27,22 +27,27 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   useEffect(() => {
-    // Listen to Firebase auth state changes
+    // Don't listen to auth changes if we're logging out
+    if (isLoggingOut) {
+      console.log('🚫 Firebase auth listener disabled - logout in progress')
+      return
+    }
+
     const unsubscribe = firebaseAuthService.onAuthStateChanged((user: User | null) => {
       console.log('🔥 Firebase auth state changed:', user ? 'User signed in' : 'User signed out')
-      
-      // Ensure user has email from our custom property
+
       if (user && !getFirebaseUserEmail(user)) {
         console.warn('⚠️ Firebase user missing email, may need re-authentication')
       }
-      
+
       setIsFirebaseAuthenticated(!!user)
       setFirebaseUser(user)
       setIsLoading(false)
       setError(null)
-      
+
       if (user) {
         console.log('✅ Firebase user authenticated:', getFirebaseUserEmail(user))
       } else {
@@ -51,7 +56,7 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
     })
 
     return () => unsubscribe()
-  }, [])
+  }, [isLoggingOut])
 
   const signInToFirebase = async () => {
     try {
@@ -73,6 +78,7 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
       console.log('🚪 Starting Firebase sign-out process...')
       setIsLoading(true)
       setError(null)
+      setIsLoggingOut(true) // Set logout flag
       
       await firebaseAuthService.signOutFromFirebase()
       console.log('🚪 Firebase sign-out completed successfully')
@@ -91,6 +97,12 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
       setIsLoading(false)
       console.log('🚪 Sign-out process completed, isLoading set to false')
     }
+    
+    // Keep logout flag active for a longer period to prevent re-auth
+    setTimeout(() => {
+      setIsLoggingOut(false)
+      console.log('🔓 Firebase logout protection disabled')
+    }, 5000) // 5 second protection
   }
 
   const refreshToken = async () => {
