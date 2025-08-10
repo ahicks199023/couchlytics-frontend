@@ -238,7 +238,7 @@ export default function NavBar() {
             {showLoginDropdown && (
               <div className="absolute right-0 mt-2 w-80 bg-gray-800 rounded-md shadow-lg p-4 z-50" ref={loginDropdownRef}>
                 <div className="text-center mb-4">
-                  <h3 className="text-lg font-semibold text-white">Sign In</h3>
+                  <h3 className="text-lg font-semibold text-white">Sign In/Register</h3>
                   <p className="text-sm text-gray-400">Welcome to Couchlytics</p>
                 </div>
 
@@ -287,7 +287,7 @@ export default function NavBar() {
                     disabled={isLoginLoading !== null}
                     className="w-full bg-neon-green text-black font-semibold py-2 px-4 rounded-md hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neon-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                   >
-                    {isLoginLoading === 'native' ? 'Signing in...' : 'Sign In'}
+                    {isLoginLoading === 'native' ? 'Signing in...' : 'Sign In/Register'}
                   </button>
                 </form>
 
