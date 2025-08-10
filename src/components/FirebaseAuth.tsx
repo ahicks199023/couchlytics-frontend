@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import type { User } from '@/lib/firebase'
-import { debugFirebaseAuth } from '@/lib/firebase'
+import { debugFirebaseAuth, getFirebaseUserEmail } from '@/lib/firebase'
 
 interface FirebaseAuthProps {
   onAuthStateChange?: (user: User | null) => void
@@ -147,7 +147,7 @@ export default function FirebaseAuth({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <div>
                   <span className="font-medium text-gray-700">Email:</span>
-                  <span className="ml-2 text-gray-900">{firebaseUser.email}</span>
+                  <span className="ml-2 text-gray-900">{getFirebaseUserEmail(firebaseUser)}</span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">UID:</span>

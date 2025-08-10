@@ -9,6 +9,7 @@ import DMChat from '@/components/chat/DMChat'
 import MobileChatLayout from '@/components/chat/MobileChatLayout'
 import { completeFirestoreSetup } from '@/lib/setupFirestore'
 import { ChatMessage } from '@/types/chat'
+import { getFirebaseUserEmail } from '@/lib/firebase'
 
 type ChatType = 'league' | 'global' | 'direct' | 'mobile'
 
@@ -24,8 +25,8 @@ export default function ChatDemoComponent() {
   const { firebaseUser } = useFirebaseAuth()
   const { user: couchlyticsUser } = useAuth()
 
-  const currentUser = firebaseUser?.email || couchlyticsUser?.email || ''
-  const currentUserName = firebaseUser?.displayName || firebaseUser?.email?.split('@')[0] || couchlyticsUser?.email?.split('@')[0] || 'User'
+  const currentUser = getFirebaseUserEmail(firebaseUser) || couchlyticsUser?.email || ''
+  const currentUserName = firebaseUser?.displayName || getFirebaseUserEmail(firebaseUser)?.split('@')[0] || couchlyticsUser?.email?.split('@')[0] || 'User'
 
   const handleFirestoreSetup = async () => {
     if (!currentUser) {

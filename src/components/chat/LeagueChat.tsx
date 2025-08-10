@@ -6,6 +6,7 @@ import useAuth from '@/Hooks/useAuth'
 import useLeagueMessages from '@/Hooks/useLeagueMessages'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
+import { getFirebaseUserEmail } from '@/lib/firebase'
 
 interface LeagueChatProps {
   leagueId: string
@@ -29,8 +30,8 @@ export default function LeagueChat({
   const { user: couchlyticsUser } = useAuth()
 
   // Use Firebase user if available, otherwise fall back to props
-  const currentUser = firebaseUser?.email || couchlyticsUser?.email || propCurrentUser || ''
-  const currentUserName = firebaseUser?.displayName || firebaseUser?.email?.split('@')[0] || couchlyticsUser?.email?.split('@')[0] || propCurrentUserName || 'User'
+  const currentUser = getFirebaseUserEmail(firebaseUser) || couchlyticsUser?.email || propCurrentUser || ''
+  const currentUserName = firebaseUser?.displayName || getFirebaseUserEmail(firebaseUser)?.split('@')[0] || couchlyticsUser?.email?.split('@')[0] || propCurrentUserName || 'User'
 
   const {
     messages,

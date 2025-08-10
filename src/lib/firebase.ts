@@ -12,6 +12,20 @@ import { API_BASE } from './config'
 // Export User type for use in other components
 export type { User } from 'firebase/auth'
 
+// Helper function to get email from Firebase user
+export const getFirebaseUserEmail = (user: User | null): string => {
+  if (!user) return ''
+  
+  // Check for custom email property first (from Couchlytics)
+  const userWithCustomEmail = user as User & { couchlyticsEmail?: string }
+  if (userWithCustomEmail.couchlyticsEmail) {
+    return userWithCustomEmail.couchlyticsEmail
+  }
+  
+  // Fall back to standard email field
+  return user.email || ''
+}
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyC...", // Replace with your actual config
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "couchlytics-3a2b5.firebaseapp.com",
@@ -94,9 +108,6 @@ class FirebaseAuthService {
       console.log('👤 User email:', userCredential.user?.email)
       console.log('👤 User UID:', userCredential.user?.uid)
       
-      this.user = userCredential.user
-      this.isAuthenticated = !!userCredential.user
-      
       if (userCredential.user) {
         // Get the email from the token response, not from user.email
         const tokenResponse = await fetch(`${API_BASE}/api/firebase-token`, {
@@ -112,8 +123,8 @@ class FirebaseAuthService {
           tokenData = await tokenResponse.json()
           console.log('🔑 Token data with email:', tokenData)
           
-          // Update the user profile with email if it's not set
-          if (tokenData && tokenData.email && !userCredential.user.email) {
+          // Update the user profile with display name if email is available
+          if (tokenData && tokenData.email && !userCredential.user.displayName) {
             try {
               const { updateProfile } = await import('firebase/auth')
               await updateProfile(userCredential.user, {
@@ -135,14 +146,18 @@ class FirebaseAuthService {
         const idTokenResult = await userCredential.user.getIdTokenResult()
         console.log('👤 User claims:', idTokenResult.claims)
         
-        // Create a user object with the email from token data
-        const userWithEmail = {
-          ...userCredential.user,
-          email: tokenData?.email || userCredential.user.email || ''
+        // Store the email in the user object for later use
+        // Note: We can't modify the email field directly, but we can store it in a custom property
+        const userWithEmail = userCredential.user as User & { couchlyticsEmail?: string }
+        if (tokenData?.email) {
+          (userWithEmail as User & { couchlyticsEmail?: string }).couchlyticsEmail = tokenData.email
         }
         
-        console.log('✅ Successfully signed into Firebase:', userWithEmail.email)
-        return userWithEmail as User
+        this.user = userWithEmail
+        this.isAuthenticated = true
+        
+        console.log('✅ Successfully signed into Firebase:', tokenData?.email || userCredential.user.email || 'No email')
+        return userWithEmail
       } else {
         throw new Error('Firebase sign-in succeeded but user object is null')
       }

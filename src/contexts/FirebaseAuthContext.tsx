@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { firebaseAuthService } from '@/lib/firebase'
+import { firebaseAuthService, getFirebaseUserEmail } from '@/lib/firebase'
 import type { User } from '@/lib/firebase'
 import useAuth from '@/Hooks/useAuth'
 
@@ -33,6 +33,11 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
   useEffect(() => {
     // Listen to Firebase auth state changes
     const unsubscribe = firebaseAuthService.onAuthStateChanged((user: User | null) => {
+      // Ensure user has email from our custom property
+      if (user && !getFirebaseUserEmail(user)) {
+        console.warn('⚠️ Firebase user missing email, may need re-authentication')
+      }
+      
       setIsFirebaseAuthenticated(!!user)
       setFirebaseUser(user)
       setIsLoading(false)

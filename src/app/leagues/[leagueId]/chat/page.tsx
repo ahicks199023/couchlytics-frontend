@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 import useAuth from '@/Hooks/useAuth'
 import LeagueChat from '@/components/chat/LeagueChat'
+import { getFirebaseUserEmail } from '@/lib/firebase'
 
 export default function LeagueChatPage() {
   const params = useParams()
@@ -13,8 +14,8 @@ export default function LeagueChatPage() {
   const { firebaseUser } = useFirebaseAuth()
   const { user: couchlyticsUser } = useAuth()
 
-  const currentUser = firebaseUser?.email || couchlyticsUser?.email || ''
-  const currentUserName = firebaseUser?.displayName || firebaseUser?.email?.split('@')[0] || couchlyticsUser?.email?.split('@')[0] || 'User'
+  const currentUser = getFirebaseUserEmail(firebaseUser) || couchlyticsUser?.email || ''
+  const currentUserName = firebaseUser?.displayName || getFirebaseUserEmail(firebaseUser)?.split('@')[0] || couchlyticsUser?.email?.split('@')[0] || 'User'
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
