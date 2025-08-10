@@ -30,7 +30,8 @@ export default function FirebaseAuth({
     signInToFirebase,
     signOutFromFirebase,
     refreshToken,
-    testHealth
+    testHealth,
+    clearSignOutState
   } = useFirebaseAuth()
 
   const [claims, setClaims] = useState<UserClaims | null>(null)
@@ -206,6 +207,13 @@ export default function FirebaseAuth({
               className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition-colors"
             >
               Sign Out from Firebase
+            </button>
+            <button 
+              onClick={clearSignOutState}
+              className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+              title="Clear sign-out state to allow auto-initialization again"
+            >
+              Clear Sign-Out State
             </button>
           </div>
 
