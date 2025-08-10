@@ -287,7 +287,7 @@ export default function NavBar() {
                     disabled={isLoginLoading !== null}
                     className="w-full bg-neon-green text-black font-semibold py-2 px-4 rounded-md hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neon-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                   >
-                    {isLoginLoading === 'native' ? 'Signing in...' : 'Sign In/Register'}
+                    {isLoginLoading === 'native' ? 'Signing in...' : 'Sign In'}
                   </button>
                 </form>
 
