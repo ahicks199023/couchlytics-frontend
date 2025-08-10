@@ -119,7 +119,7 @@ export default function useAuth() {
       // Call logout endpoint
       await fetch(`${API_BASE}/auth/logout`, {
         credentials: 'include',
-        method: 'GET',
+        method: 'POST',
       });
       
       // Clear any cached data
