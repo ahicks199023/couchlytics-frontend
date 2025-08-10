@@ -84,11 +84,37 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
       hasAttemptedAutoInit,
       userExplicitlySignedOut,
       isLoggingOut,
-      globalUserExplicitlySignedOut,
-      globalLastSignOutTime,
       canAutoInit: canAutoInitialize(),
       lastSignOutTime
     })
+    
+    // 🚨 CRITICAL FIX: Break the authentication loop
+    if (authenticated && !isFirebaseAuthenticated && hasAttemptedAutoInit) {
+      console.log('🚫 BREAKING AUTH LOOP: User in invalid dual-auth state')
+      console.log('🔄 Clearing all auth state and redirecting to login...')
+      
+      // Clear Firebase auth state
+      setHasAttemptedAutoInit(false)
+      setUserExplicitlySignedOut(false)
+      setLastSignOutTime(null)
+      setIsLoggingOut(false)
+      
+      // Clear Firebase auth
+      if (firebaseUser) {
+        firebaseAuthService.signOutFromFirebase().catch(console.error)
+      }
+      
+      // Set global flags to prevent further auto-initialization
+      globalUserExplicitlySignedOut = true
+      globalLastSignOutTime = Date.now()
+      
+      // Redirect to login (you can customize this)
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
+      
+      return // Exit early to prevent further execution
+    }
     
     // Don't auto-initialize if user explicitly signed out (check both local and global)
     if (userExplicitlySignedOut || globalUserExplicitlySignedOut) {
@@ -105,6 +131,13 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
     // Don't auto-initialize if it's too soon since last sign-out
     if (!canAutoInitialize()) {
       console.log('⏰ Skipping auto-initialization - too soon since last sign-out')
+      return
+    }
+    
+    // CRITICAL: Don't auto-initialize if Firebase is already authenticated
+    // This prevents the backend re-authentication loop
+    if (isFirebaseAuthenticated) {
+      console.log('🚫 Skipping auto-initialization - Firebase already authenticated')
       return
     }
     
