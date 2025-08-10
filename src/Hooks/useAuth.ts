@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { User, UserRole, Permission } from "@/types/user";
 import { API_BASE } from '@/lib/config';
+import { firebaseAuthService } from '@/lib/firebase';
 
 export default function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -103,6 +104,16 @@ export default function useAuth() {
       setUser(null);
       setAuthenticated(false);
       setLoading(false);
+      
+      // Sign out from Firebase first
+      try {
+        console.log('🚪 Signing out from Firebase...');
+        await firebaseAuthService.signOutFromFirebase();
+        console.log('✅ Firebase sign-out successful');
+      } catch (firebaseError) {
+        console.warn('⚠️ Firebase sign-out failed:', firebaseError);
+        // Continue with logout even if Firebase fails
+      }
       
       // Call logout endpoint
       await fetch(`${API_BASE}/auth/logout`, {
