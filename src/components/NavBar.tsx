@@ -6,18 +6,23 @@ import Image from 'next/image'
 import useAuth from '@/Hooks/useAuth'
 import { User } from '@/types/user'
 import { API_BASE } from '@/lib/config'
+import { useInbox } from '@/Hooks/useInbox'
+import { getFirebaseUserEmail } from '@/lib/firebase'
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
 
 export default function NavBar() {
-  const [isOpen, setIsOpen] = useState(false)
   const [showLoginDropdown, setShowLoginDropdown] = useState(false)
-  const [loginFormData, setLoginFormData] = useState({
-    email: '',
-    password: ''
-  })
+  const [isOpen, setIsOpen] = useState(false)
+  const [loginFormData, setLoginFormData] = useState({ email: '', password: '' })
+  const [isLoginLoading, setIsLoginLoading] = useState<'native' | 'google' | 'discord' | null>(null)
   const [loginError, setLoginError] = useState<string | null>(null)
-  const [isLoginLoading, setIsLoginLoading] = useState<string | null>(null)
-  const { user, loading, logout, authenticated } = useAuth()
   const loginDropdownRef = useRef<HTMLDivElement>(null)
+
+  const { user, authenticated, loading, logout } = useAuth()
+  const { firebaseUser } = useFirebaseAuth()
+  
+  const currentUser = getFirebaseUserEmail(firebaseUser) || user?.email || ''
+  const { totalUnreadCount } = useInbox(currentUser)
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -211,6 +216,18 @@ export default function NavBar() {
                     onClick={() => setIsOpen(false)}
                   >
                     Profile
+                  </Link>
+                  <Link
+                    href="/inbox"
+                    className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    💬 Direct Messages
+                    {totalUnreadCount > 0 && (
+                      <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                        {totalUnreadCount}
+                      </span>
+                    )}
                   </Link>
                   <button
                     onClick={() => {
