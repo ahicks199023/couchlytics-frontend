@@ -17,25 +17,33 @@ export default function useAuth() {
     }
 
     try {
+      console.log('🔍 Checking auth status...');
       const response = await fetch(`${API_BASE}/auth/status`, {
         credentials: "include",
       });
       
+      console.log('🔍 Auth status response:', response.status, response.statusText);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 Auth status data:', data);
+        
         if (data.authenticated) {
+          console.log('✅ User is authenticated:', data.user);
           setUser(data.user);
           setAuthenticated(true);
         } else {
+          console.log('❌ User is not authenticated');
           setUser(null);
           setAuthenticated(false);
         }
       } else {
+        console.log('❌ Auth status check failed with status:', response.status);
         setUser(null);
         setAuthenticated(false);
       }
     } catch (error) {
-      console.error('Auth status check failed:', error);
+      console.error('❌ Auth status check failed:', error);
       setUser(null);
       setAuthenticated(false);
     } finally {

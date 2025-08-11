@@ -16,7 +16,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, checkAuthStatus } = useAuth();
   const { signInToFirebase } = useFirebaseAuth();
 
   // Redirect if already authenticated
@@ -61,7 +61,8 @@ export default function Login() {
         const data = await response.json();
         console.log('🔐 Login response data:', data);
         
-        if (data.authenticated) {
+        // Check if we have user data in the response (indicating successful login)
+        if (data.user && data.message === 'Login successful') {
           console.log('✅ Couchlytics authentication successful');
           
           // Check if we have a Firebase token in the response
@@ -107,8 +108,16 @@ export default function Login() {
             }
           }
           
-          // Redirect to leagues page
-          router.push('/leagues');
+          // Update authentication state
+          console.log('🔄 Updating authentication state...');
+          await checkAuthStatus();
+          console.log('✅ Authentication state updated');
+          
+          // Add a small delay to ensure state is updated
+          setTimeout(() => {
+            console.log('🚀 Redirecting to leagues page...');
+            router.push('/leagues');
+          }, 100);
         } else {
           setError('Invalid email or password');
         }
