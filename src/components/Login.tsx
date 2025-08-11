@@ -38,6 +38,11 @@ export default function Login() {
     e.preventDefault();
     setIsLoading('native');
     setError(null);
+    
+    // TEMPORARY DEBUG: Check if this function is being called
+    console.log('🚨 DEBUG: handleNativeLogin called - this means the new code is deployed');
+    console.log('🚨 DEBUG: Current cookies:', document.cookie);
+    console.log('🚨 DEBUG: API_BASE:', API_BASE);
 
     try {
       console.log('🔐 Attempting native login...');
