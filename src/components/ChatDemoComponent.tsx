@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
-import useAuth from '@/Hooks/useAuth'
+import React, { useState, useEffect, useRef } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { API_BASE } from '@/lib/config'
 import LeagueChat from '@/components/chat/LeagueChat'
 import GlobalChat from '@/components/chat/GlobalChat'
 import DMChat from '@/components/chat/DMChat'
@@ -22,8 +22,7 @@ export default function ChatDemoComponent() {
   const [isSettingUpFirestore, setIsSettingUpFirestore] = useState(false)
   const [firestoreSetupComplete, setFirestoreSetupComplete] = useState(false)
 
-  const { firebaseUser } = useFirebaseAuth()
-  const { user: couchlyticsUser } = useAuth()
+  const { firebaseUser, user: couchlyticsUser } = useAuth()
 
   const currentUser = getFirebaseUserEmail(firebaseUser) || couchlyticsUser?.email || ''
   const currentUserName = firebaseUser?.displayName || getFirebaseUserEmail(firebaseUser)?.split('@')[0] || couchlyticsUser?.email?.split('@')[0] || 'User'

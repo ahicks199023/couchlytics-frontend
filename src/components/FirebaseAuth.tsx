@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 import type { User } from '@/lib/firebase'
 import { debugFirebaseAuth, getFirebaseUserEmail } from '@/lib/firebase'
 
@@ -32,7 +32,7 @@ export default function FirebaseAuth({
     refreshToken,
     testHealth,
     clearSignOutState
-  } = useFirebaseAuth()
+  } = useAuth()
 
   const [claims, setClaims] = useState<UserClaims | null>(null)
   const [couchlyticsUserId, setCouchlyticsUserId] = useState<string | null>(null)

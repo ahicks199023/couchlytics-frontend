@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
-import useAuth from '@/Hooks/useAuth'
+import { useAuth } from '@/contexts/AuthContext'
 import useLeagueMessages from '@/Hooks/useLeagueMessages'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
@@ -26,8 +25,7 @@ export default function LeagueChat({
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const { firebaseUser, isFirebaseAuthenticated, error: firebaseError } = useFirebaseAuth()
-  const { user: couchlyticsUser } = useAuth()
+  const { firebaseUser, isFirebaseAuthenticated, user: couchlyticsUser } = useAuth()
 
   // Use Firebase user if available, otherwise fall back to props
   const currentUser = getFirebaseUserEmail(firebaseUser) || couchlyticsUser?.email || propCurrentUser || ''
@@ -98,7 +96,7 @@ export default function LeagueChat({
   const messageGroups = groupMessagesBySender(messages)
 
   // Show Firebase authentication error
-  if (firebaseError) {
+  if (error) {
     return (
       <div className="flex flex-col h-full bg-gray-900 rounded-lg">
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
@@ -110,7 +108,7 @@ export default function LeagueChat({
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="text-red-400 text-center">
             <p className="mb-2">❌ Firebase Authentication Error</p>
-            <p className="text-sm">{firebaseError}</p>
+            <p className="text-sm">{error}</p>
           </div>
         </div>
       </div>

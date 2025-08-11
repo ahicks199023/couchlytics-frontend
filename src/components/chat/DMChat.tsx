@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
-import useAuth from '@/Hooks/useAuth'
+import { useAuth } from '@/contexts/AuthContext'
 import useDirectMessages from '@/Hooks/useDirectMessages'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
@@ -26,8 +25,7 @@ export default function DMChat({
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const { firebaseUser, isFirebaseAuthenticated, error: firebaseError } = useFirebaseAuth()
-  const { user: couchlyticsUser } = useAuth()
+  const { firebaseUser, isFirebaseAuthenticated, user: couchlyticsUser } = useAuth()
 
   // Use Firebase user if available, otherwise fall back to props
   const currentUser = getFirebaseUserEmail(firebaseUser) || couchlyticsUser?.email || propCurrentUser || ''
@@ -97,25 +95,7 @@ export default function DMChat({
 
   const messageGroups = groupMessagesBySender(messages)
 
-  // Show Firebase authentication error
-  if (firebaseError) {
-    return (
-      <div className="flex flex-col h-full bg-gray-900 rounded-lg">
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <div>
-            <h3 className="text-lg font-semibold text-white">📬 Direct Message</h3>
-            <p className="text-sm text-gray-400">Chat with {recipientName}</p>
-          </div>
-        </div>
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="text-red-400 text-center">
-            <p className="mb-2">❌ Firebase Authentication Error</p>
-            <p className="text-sm">{firebaseError}</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
+
 
   // Show loading state while Firebase is initializing
   if (!isFirebaseAuthenticated && !propCurrentUser) {

@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
-import useAuth from '@/Hooks/useAuth'
+import { useAuth } from '@/contexts/AuthContext'
 import useDirectMessages from '@/Hooks/useDirectMessages'
 import { useInbox } from '@/Hooks/useInbox'
 import { getFirebaseUserEmail } from '@/lib/firebase'
@@ -15,8 +14,7 @@ export default function InboxPage() {
   const [isSending, setIsSending] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
-  const { firebaseUser, isFirebaseAuthenticated } = useFirebaseAuth()
-  const { user: couchlyticsUser } = useAuth()
+  const { firebaseUser, isFirebaseAuthenticated, user: couchlyticsUser } = useAuth()
 
   const currentUser = getFirebaseUserEmail(firebaseUser) || couchlyticsUser?.email || ''
   

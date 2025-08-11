@@ -1,14 +1,15 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import useAuth from '@/Hooks/useAuth'
+
+import { useAuth } from '@/contexts/AuthContext'
 import { User } from '@/types/user'
 import { API_BASE } from '@/lib/config'
 import { useInbox } from '@/Hooks/useInbox'
 import { getFirebaseUserEmail } from '@/lib/firebase'
-import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
+
 
 export default function NavBar() {
   const [showLoginDropdown, setShowLoginDropdown] = useState(false)
@@ -18,8 +19,7 @@ export default function NavBar() {
   const [loginError, setLoginError] = useState<string | null>(null)
   const loginDropdownRef = useRef<HTMLDivElement>(null)
 
-  const { user, authenticated, loading, logout } = useAuth()
-  const { firebaseUser } = useFirebaseAuth()
+  const { user, authenticated, loading, logout, firebaseUser } = useAuth()
   
   const currentUser = getFirebaseUserEmail(firebaseUser) || user?.email || ''
   const { totalUnreadCount } = useInbox(currentUser)

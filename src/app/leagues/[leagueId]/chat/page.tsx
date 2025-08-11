@@ -2,8 +2,7 @@
 
 import React from 'react'
 import { useParams } from 'next/navigation'
-import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext'
-import useAuth from '@/Hooks/useAuth'
+import { useAuth } from '@/contexts/AuthContext'
 import LeagueChat from '@/components/chat/LeagueChat'
 import { getFirebaseUserEmail } from '@/lib/firebase'
 
@@ -11,8 +10,7 @@ export default function LeagueChatPage() {
   const params = useParams()
   const leagueId = params.leagueId as string
   
-  const { firebaseUser } = useFirebaseAuth()
-  const { user: couchlyticsUser } = useAuth()
+  const { firebaseUser, user: couchlyticsUser } = useAuth()
 
   const currentUser = getFirebaseUserEmail(firebaseUser) || couchlyticsUser?.email || ''
   const currentUserName = firebaseUser?.displayName || getFirebaseUserEmail(firebaseUser)?.split('@')[0] || couchlyticsUser?.email?.split('@')[0] || 'User'
