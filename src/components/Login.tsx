@@ -8,6 +8,16 @@ import { signInWithCustomToken } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 export default function Login() {
+  // FORCE IMMEDIATE VISIBILITY - This will show an alert when component loads
+  if (typeof window !== 'undefined') {
+    alert('🚨 NEW LOGIN CODE LOADED - Check console for debugging!');
+  }
+  
+  // AGGRESSIVE DEBUG: This should show immediately when component loads
+  console.log('🚨🚨🚨 LOGIN COMPONENT LOADED - NEW CODE IS DEPLOYED 🚨🚨🚨');
+  console.log('🚨🚨🚨 Current timestamp:', new Date().toISOString());
+  console.log('🚨🚨🚨 Component version: DEBUG-v2');
+  
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -228,7 +238,7 @@ export default function Login() {
     <div className="max-w-md mx-auto mt-20 p-6 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Welcome to Couchlytics
+          Welcome to Couchlytics [DEBUG-v2]
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
           Sign in to manage your Madden franchise
