@@ -127,27 +127,44 @@ export default function Login() {
           await checkAuthStatus();
           console.log('✅ Authentication state updated');
           
-          // Wait for the next tick to ensure state propagation
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // FIX: Wait longer for session cookie to propagate and retry auth check
+          console.log('⏳ Waiting for session cookie to propagate...');
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
           
-          // Double-check authentication before redirecting
-          console.log('🔐 Cookies before auth status check (first path):', document.cookie);
-          const authCheck = await fetch(`${API_BASE}/auth/status`, {
-            credentials: "include",
-          });
-          
-          if (authCheck.ok) {
-            const authData = await authCheck.json();
-            if (authData.authenticated) {
-              console.log('🚀 Authentication confirmed, redirecting to leagues page...');
-              router.push('/leagues');
+          // Retry authentication check multiple times
+          let authConfirmed = false;
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            console.log(`🔄 Auth check attempt ${attempt}/3...`);
+            console.log(`🔐 Cookies before auth status check (attempt ${attempt}):`, document.cookie);
+            
+            const authCheck = await fetch(`${API_BASE}/auth/status`, {
+              credentials: "include",
+            });
+            
+            if (authCheck.ok) {
+              const authData = await authCheck.json();
+              console.log(`🔍 Auth check attempt ${attempt} result:`, authData);
+              
+              if (authData.authenticated) {
+                console.log('🚀 Authentication confirmed, redirecting to leagues page...');
+                authConfirmed = true;
+                router.push('/leagues');
+                break;
+              } else {
+                console.log(`❌ Auth check attempt ${attempt} failed:`, authData.reason);
+                if (attempt < 3) {
+                  console.log(`⏳ Waiting before retry...`);
+                  await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between attempts
+                }
+              }
             } else {
-              console.log('❌ Authentication check failed after login');
-              setError('Authentication failed after login. Please try again.');
+              console.log(`❌ Auth status check attempt ${attempt} failed with status:`, authCheck.status);
             }
-          } else {
-            console.log('❌ Auth status check failed after login');
-            setError('Authentication verification failed. Please try again.');
+          }
+          
+          if (!authConfirmed) {
+            console.log('❌ All authentication check attempts failed');
+            setError('Authentication verification failed. Please refresh the page to complete login.');
           }
         } else if (data.authenticated && data.user) {
           // Alternative response structure - user is authenticated
@@ -159,27 +176,44 @@ export default function Login() {
           await checkAuthStatus();
           console.log('✅ Authentication state updated');
           
-          // Wait for the next tick to ensure state propagation
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // FIX: Wait longer for session cookie to propagate and retry auth check
+          console.log('⏳ Waiting for session cookie to propagate...');
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
           
-          // Double-check authentication before redirecting
-          console.log('🔐 Cookies before auth status check (second path):', document.cookie);
-          const authCheck = await fetch(`${API_BASE}/auth/status`, {
-            credentials: "include",
-          });
-          
-          if (authCheck.ok) {
-            const authData = await authCheck.json();
-            if (authData.authenticated) {
-              console.log('🚀 Authentication confirmed, redirecting to leagues page...');
-              router.push('/leagues');
+          // Retry authentication check multiple times
+          let authConfirmed = false;
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            console.log(`🔄 Auth check attempt ${attempt}/3...`);
+            console.log(`🔐 Cookies before auth status check (attempt ${attempt}):`, document.cookie);
+            
+            const authCheck = await fetch(`${API_BASE}/auth/status`, {
+              credentials: "include",
+            });
+            
+            if (authCheck.ok) {
+              const authData = await authCheck.json();
+              console.log(`🔍 Auth check attempt ${attempt} result:`, authData);
+              
+              if (authData.authenticated) {
+                console.log('🚀 Authentication confirmed, redirecting to leagues page...');
+                authConfirmed = true;
+                router.push('/leagues');
+                break;
+              } else {
+                console.log(`❌ Auth check attempt ${attempt} failed:`, authData.reason);
+                if (attempt < 3) {
+                  console.log(`⏳ Waiting before retry...`);
+                  await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between attempts
+                }
+              }
             } else {
-              console.log('❌ Authentication check failed after login');
-              setError('Authentication failed after login. Please try again.');
+              console.log(`❌ Auth status check attempt ${attempt} failed with status:`, authCheck.status);
             }
-          } else {
-            console.log('❌ Auth status check failed after login');
-            setError('Authentication verification failed. Please try again.');
+          }
+          
+          if (!authConfirmed) {
+            console.log('❌ All authentication check attempts failed');
+            setError('Authentication verification failed. Please refresh the page to complete login.');
           }
         } else {
           console.log('❌ Login response validation failed:', data);
