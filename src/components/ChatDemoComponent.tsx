@@ -1,8 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { API_BASE } from '@/lib/config'
 import LeagueChat from '@/components/chat/LeagueChat'
 import GlobalChat from '@/components/chat/GlobalChat'
 import DMChat from '@/components/chat/DMChat'
