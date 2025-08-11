@@ -58,6 +58,14 @@ export default function Login() {
       if (response.ok) {
         const data = await response.json();
         console.log('🔐 Login response data:', data);
+        console.log('🔐 Response structure check:', {
+          hasUser: !!data.user,
+          hasMessage: !!data.message,
+          message: data.message,
+          hasAuthenticated: 'authenticated' in data,
+          authenticated: data.authenticated,
+          responseKeys: Object.keys(data)
+        });
         
         // Check if we have user data in the response (indicating successful login)
         if (data.user && data.message === 'Login successful') {
@@ -122,7 +130,38 @@ export default function Login() {
             console.log('❌ Auth status check failed after login');
             setError('Authentication verification failed. Please try again.');
           }
+        } else if (data.authenticated && data.user) {
+          // Alternative response structure - user is authenticated
+          console.log('✅ Couchlytics authentication successful (alternative structure)');
+          
+          // Update authentication state and wait for it to be confirmed
+          console.log('🔄 Updating authentication state...');
+          await checkAuthStatus();
+          console.log('✅ Authentication state updated');
+          
+          // Wait for the next tick to ensure state propagation
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          // Double-check authentication before redirecting
+          const authCheck = await fetch(`${API_BASE}/auth/status`, {
+            credentials: "include",
+          });
+          
+          if (authCheck.ok) {
+            const authData = await authCheck.json();
+            if (authData.authenticated) {
+              console.log('🚀 Authentication confirmed, redirecting to leagues page...');
+              router.push('/leagues');
+            } else {
+              console.log('❌ Authentication check failed after login');
+              setError('Authentication failed after login. Please try again.');
+            }
+          } else {
+            console.log('❌ Auth status check failed after login');
+            setError('Authentication verification failed. Please try again.');
+          }
         } else {
+          console.log('❌ Login response validation failed:', data);
           setError('Invalid email or password');
         }
       } else {
