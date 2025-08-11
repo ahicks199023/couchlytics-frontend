@@ -10,7 +10,7 @@ import { auth } from "@/lib/firebase";
 export default function Login() {
   // FORCE IMMEDIATE VISIBILITY - This will show an alert when component loads
   if (typeof window !== 'undefined') {
-    alert('🚨 NEW LOGIN CODE LOADED - Check console for debugging!');
+    alert('🚨 NEW LOGIN CODE LOADED - Check console for debugging! VERSION 90c7a31');
   }
   
   // AGGRESSIVE DEBUG: This should show immediately when component loads
