@@ -54,6 +54,8 @@ export default function Login() {
       });
 
       console.log('🔐 Login response status:', response.status);
+      console.log('🔐 Response headers:', Object.fromEntries(response.headers.entries()));
+      console.log('🔐 Cookies before login:', document.cookie);
       
       if (response.ok) {
         const data = await response.json();
@@ -106,6 +108,7 @@ export default function Login() {
           
           // Update authentication state and wait for it to be confirmed
           console.log('🔄 Updating authentication state...');
+          console.log('🔐 Cookies after login (first path):', document.cookie);
           await checkAuthStatus();
           console.log('✅ Authentication state updated');
           
@@ -113,6 +116,7 @@ export default function Login() {
           await new Promise(resolve => setTimeout(resolve, 100));
           
           // Double-check authentication before redirecting
+          console.log('🔐 Cookies before auth status check (first path):', document.cookie);
           const authCheck = await fetch(`${API_BASE}/auth/status`, {
             credentials: "include",
           });
@@ -136,6 +140,7 @@ export default function Login() {
           
           // Update authentication state and wait for it to be confirmed
           console.log('🔄 Updating authentication state...');
+          console.log('🔐 Cookies after login (second path):', document.cookie);
           await checkAuthStatus();
           console.log('✅ Authentication state updated');
           
@@ -143,6 +148,7 @@ export default function Login() {
           await new Promise(resolve => setTimeout(resolve, 100));
           
           // Double-check authentication before redirecting
+          console.log('🔐 Cookies before auth status check (second path):', document.cookie);
           const authCheck = await fetch(`${API_BASE}/auth/status`, {
             credentials: "include",
           });
