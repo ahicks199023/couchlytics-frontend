@@ -1,5 +1,6 @@
 'use client'
 
+// Chat demo component for testing various chat functionalities
 import React, { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import LeagueChat from '@/components/chat/LeagueChat'
