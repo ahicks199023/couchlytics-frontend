@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { User, UserRole, Permission } from '@/types/user'
 import { API_BASE } from '@/lib/config'
 import { firebaseAuthService } from '@/lib/firebase'
+import { User as FirebaseUser } from 'firebase/auth'
 
 interface AuthContextType {
   // Couchlytics authentication state
@@ -12,7 +13,7 @@ interface AuthContextType {
   authenticated: boolean
   
   // Firebase authentication state
-  firebaseUser: any | null
+  firebaseUser: FirebaseUser | null
   isFirebaseAuthenticated: boolean
   
   // Authentication methods
@@ -37,7 +38,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [authenticated, setAuthenticated] = useState<boolean>(false)
-  const [firebaseUser, setFirebaseUser] = useState<any | null>(null)
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null)
   const [isFirebaseAuthenticated, setIsFirebaseAuthenticated] = useState<boolean>(false)
   const isLoggingOut = useRef<boolean>(false)
 
@@ -118,7 +119,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return
     }
 
-    const unsubscribe = firebaseAuthService.onAuthStateChanged((user: any) => {
+    const unsubscribe = firebaseAuthService.onAuthStateChanged((user: FirebaseUser | null) => {
       console.log('🔥 Firebase auth state changed:', user ? 'User signed in' : 'User signed out')
       
       setFirebaseUser(user)
