@@ -170,8 +170,8 @@ export default function RegisterPage() {
         }
       }
 
-      // Use the API utility which automatically converts camelCase to snake_case
-      await fetchFromApi('/register', {
+      // Use the centralized API with credentials; correct endpoint path
+      await fetchFromApi('/auth/register', {
         method: 'POST',
         body: JSON.stringify(registrationData)
       })
