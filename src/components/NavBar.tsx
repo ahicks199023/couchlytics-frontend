@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -21,6 +22,7 @@ export default function NavBar() {
   const loginDropdownRef = useRef<HTMLDivElement>(null)
 
   const { user, authenticated, loading, logout, firebaseUser, checkAuthStatus } = useAuth()
+  const router = useRouter()
   
   const currentUser = getFirebaseUserEmail(firebaseUser) || user?.email || ''
   const { totalUnreadCount } = useInbox(currentUser)
@@ -69,6 +71,36 @@ export default function NavBar() {
         setLoginFormData({ email: '', password: '' })
         // Immediately refresh auth status so the navbar updates without a page reload
         await checkAuthStatus()
+
+        // Give the session cookie time to settle, then verify and redirect
+        await new Promise((r) => setTimeout(r, 1500))
+        let redirected = false
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            const res = await fetch(`${API_BASE_URL}/auth/status`, { credentials: 'include' })
+            if (res.ok) {
+              const json = await res.json()
+              if (json?.authenticated) {
+                try {
+                  router.push('/leagues')
+                } catch {
+                  window.location.href = '/leagues'
+                }
+                redirected = true
+                break
+              }
+            }
+          } catch {}
+          await new Promise((r) => setTimeout(r, 1000))
+        }
+        if (!redirected) {
+          // Last resort hard redirect; avoids stale UI if auth became valid but context didn't refresh yet
+          try {
+            router.push('/leagues')
+          } catch {
+            window.location.href = '/leagues'
+          }
+        }
       } else {
         setLoginError('Invalid email or password')
       }
