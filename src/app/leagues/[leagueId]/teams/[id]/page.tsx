@@ -149,10 +149,32 @@ export default function TeamDetailPage() {
   const fmtPg = (v?: number, r?: number) =>
     Number.isFinite(v as number) ? `${Number(v).toFixed(1)} (${r ?? '-'})` : '-'
 
+  // Safely derive a player route id from leader objects
+  const getLeaderRouteId = (leader: unknown): string | null => {
+    if (!leader || typeof leader !== 'object') return null
+    const obj = leader as Record<string, unknown>
+    const explicitId = obj.playerId
+    if (typeof explicitId === 'number' || typeof explicitId === 'string') {
+      return String(explicitId)
+    }
+    const playerField = obj.player
+    if (typeof playerField === 'string') {
+      const digits = playerField.replace(/[^0-9]/g, '')
+      return digits || null
+    }
+    return null
+  }
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'statistics': {
         const leaders = teamData.leaders
+        const passingPid = getLeaderRouteId(leaders?.passing)
+        const rushingPid = getLeaderRouteId(leaders?.rushing)
+        const receivingPid = getLeaderRouteId(leaders?.receiving)
+        const tacklesPid = getLeaderRouteId(leaders?.tackles)
+        const sacksPid = getLeaderRouteId(leaders?.sacks)
+        const interceptionsPid = getLeaderRouteId(leaders?.interceptions)
         return (
           <div className="space-y-6">
             {/* Passing Leader */}
@@ -160,11 +182,15 @@ export default function TeamDetailPage() {
               <h3 className="text-lg font-semibold text-neon-green mb-3">Passing Leader</h3>
               {leaders?.passing ? (
                 <div className="flex items-center justify-between text-sm">
-                  <Link href={`/leagues/${leagueIdString}/players/${leaders.passing.player.replace(/[^0-9]/g,'')}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green">
-                    {leaders.passing.player} ({leaders.passing.position})
+                  <Link
+                    href={passingPid ? `/leagues/${leagueIdString}/players/${passingPid}` : '#'}
+                    onClick={(e) => { if (!passingPid) e.preventDefault() }}
+                    className="text-blue-600 dark:text-blue-400 hover:text-neon-green"
+                  >
+                    {leaders.passing?.player} {leaders.passing?.position ? `(${leaders.passing.position})` : ''}
                   </Link>
                   <div className="text-right text-gray-700 dark:text-gray-300">
-                    <div>Yards: {leaders.passing.yards.toLocaleString()}</div>
+                    <div>Yards: {Number(leaders.passing?.yards ?? 0).toLocaleString()}</div>
                   </div>
                 </div>
               ) : (
@@ -177,11 +203,15 @@ export default function TeamDetailPage() {
               <h3 className="text-lg font-semibold text-neon-green mb-3">Rushing Leader</h3>
               {leaders?.rushing ? (
                 <div className="flex items-center justify-between text-sm">
-                  <Link href={`/leagues/${leagueIdString}/players/${leaders.rushing.player.replace(/[^0-9]/g,'')}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green">
-                    {leaders.rushing.player} ({leaders.rushing.position})
+                  <Link
+                    href={rushingPid ? `/leagues/${leagueIdString}/players/${rushingPid}` : '#'}
+                    onClick={(e) => { if (!rushingPid) e.preventDefault() }}
+                    className="text-blue-600 dark:text-blue-400 hover:text-neon-green"
+                  >
+                    {leaders.rushing?.player} {leaders.rushing?.position ? `(${leaders.rushing.position})` : ''}
                   </Link>
                   <div className="text-right text-gray-700 dark:text-gray-300">
-                    <div>Yards: {leaders.rushing.yards.toLocaleString()}</div>
+                    <div>Yards: {Number(leaders.rushing?.yards ?? 0).toLocaleString()}</div>
                   </div>
                 </div>
               ) : (
@@ -194,11 +224,15 @@ export default function TeamDetailPage() {
               <h3 className="text-lg font-semibold text-neon-green mb-3">Receiving Leader</h3>
               {leaders?.receiving ? (
                 <div className="flex items-center justify-between text-sm">
-                  <Link href={`/leagues/${leagueIdString}/players/${leaders.receiving.player.replace(/[^0-9]/g,'')}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green">
-                    {leaders.receiving.player} ({leaders.receiving.position})
+                  <Link
+                    href={receivingPid ? `/leagues/${leagueIdString}/players/${receivingPid}` : '#'}
+                    onClick={(e) => { if (!receivingPid) e.preventDefault() }}
+                    className="text-blue-600 dark:text-blue-400 hover:text-neon-green"
+                  >
+                    {leaders.receiving?.player} {leaders.receiving?.position ? `(${leaders.receiving.position})` : ''}
                   </Link>
                   <div className="text-right text-gray-700 dark:text-gray-300">
-                    <div>Yards: {leaders.receiving.yards.toLocaleString()}</div>
+                    <div>Yards: {Number(leaders.receiving?.yards ?? 0).toLocaleString()}</div>
                   </div>
                 </div>
               ) : (
@@ -214,10 +248,14 @@ export default function TeamDetailPage() {
                   <div className="font-medium mb-1">Tackles</div>
                   {leaders?.tackles ? (
                     <div className="flex items-center justify-between">
-                      <Link href={`/leagues/${leagueIdString}/players/${leaders.tackles.player.replace(/[^0-9]/g,'')}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green">
-                        {leaders.tackles.player}
+                      <Link
+                        href={tacklesPid ? `/leagues/${leagueIdString}/players/${tacklesPid}` : '#'}
+                        onClick={(e) => { if (!tacklesPid) e.preventDefault() }}
+                        className="text-blue-600 dark:text-blue-400 hover:text-neon-green"
+                      >
+                        {leaders.tackles?.player}
                       </Link>
-                      <span>{leaders.tackles.tackles}</span>
+                      <span>{Number(leaders.tackles?.tackles ?? 0)}</span>
                     </div>
                   ) : (
                     <div className="text-gray-500">-</div>
@@ -227,10 +265,14 @@ export default function TeamDetailPage() {
                   <div className="font-medium mb-1">Sacks</div>
                   {leaders?.sacks ? (
                     <div className="flex items-center justify-between">
-                      <Link href={`/leagues/${leagueIdString}/players/${leaders.sacks.player.replace(/[^0-9]/g,'')}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green">
-                        {leaders.sacks.player}
+                      <Link
+                        href={sacksPid ? `/leagues/${leagueIdString}/players/${sacksPid}` : '#'}
+                        onClick={(e) => { if (!sacksPid) e.preventDefault() }}
+                        className="text-blue-600 dark:text-blue-400 hover:text-neon-green"
+                      >
+                        {leaders.sacks?.player}
                       </Link>
-                      <span>{leaders.sacks.sacks}</span>
+                      <span>{Number(leaders.sacks?.sacks ?? 0)}</span>
                     </div>
                   ) : (
                     <div className="text-gray-500">-</div>
@@ -240,10 +282,14 @@ export default function TeamDetailPage() {
                   <div className="font-medium mb-1">Interceptions</div>
                   {leaders?.interceptions ? (
                     <div className="flex items-center justify-between">
-                      <Link href={`/leagues/${leagueIdString}/players/${leaders.interceptions.player.replace(/[^0-9]/g,'')}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green">
-                        {leaders.interceptions.player}
+                      <Link
+                        href={interceptionsPid ? `/leagues/${leagueIdString}/players/${interceptionsPid}` : '#'}
+                        onClick={(e) => { if (!interceptionsPid) e.preventDefault() }}
+                        className="text-blue-600 dark:text-blue-400 hover:text-neon-green"
+                      >
+                        {leaders.interceptions?.player}
                       </Link>
-                      <span>{leaders.interceptions.interceptions}</span>
+                      <span>{Number(leaders.interceptions?.interceptions ?? 0)}</span>
                     </div>
                   ) : (
                     <div className="text-gray-500">-</div>
