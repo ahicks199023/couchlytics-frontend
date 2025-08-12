@@ -174,15 +174,6 @@ export default function NavBar() {
             <Link href="/dashboard" className="hover:text-neon-green transition-colors">
               Dashboard
             </Link>
-            <Link href="/analytics-engine" className="hover:text-neon-green transition-colors">
-              Analytics
-            </Link>
-            <Link href="/gm-toolkit" className="hover:text-neon-green transition-colors">
-              GM Toolkit
-            </Link>
-            <Link href="/upload" className="hover:text-neon-green transition-colors">
-              Upload
-            </Link>
             <Link href="/chat" className="hover:text-neon-green transition-colors">
               💬 Chat
             </Link>
@@ -426,27 +417,7 @@ export default function NavBar() {
                 >
                   Dashboard
                 </Link>
-                <Link
-                  href="/analytics-engine"
-                  className="block py-2 text-gray-300 hover:text-white"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Analytics
-                </Link>
-                <Link
-                  href="/gm-toolkit"
-                  className="block py-2 text-gray-300 hover:text-white"
-                  onClick={() => setIsOpen(false)}
-                >
-                  GM Toolkit
-                </Link>
-                <Link
-                  href="/upload"
-                  className="block py-2 text-gray-300 hover:text-white"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Upload
-                </Link>
+                
                 <Link
                   href="/chat"
                   className="block py-2 text-gray-300 hover:text-white"

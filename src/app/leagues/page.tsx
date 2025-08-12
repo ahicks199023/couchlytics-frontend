@@ -127,8 +127,6 @@ export default function LeaguesPage() {
               <Link href="/leagues" className="block px-3 py-2 rounded hover:bg-gray-800">Couchlytics Central</Link>
               <Link href="/chat" className="block px-3 py-2 rounded hover:bg-gray-800">Lounge</Link>
               <Link href="/dashboard" className="block px-3 py-2 rounded hover:bg-gray-800">Dashboard</Link>
-              <Link href="/analytics-engine" className="block px-3 py-2 rounded hover:bg-gray-800">Analytics</Link>
-              <Link href="/upload" className="block px-3 py-2 rounded hover:bg-gray-800">Upload</Link>
             </nav>
           </aside>
 
@@ -174,28 +172,7 @@ export default function LeaguesPage() {
               )}
             </section>
 
-            {/* Upload League JSON */}
-            <div className="p-4 bg-gray-900 border border-gray-800 rounded-md">
-              <h2 className="text-lg font-semibold mb-2 text-white">Upload League JSON</h2>
-              <form
-                action={`${process.env.NEXT_PUBLIC_API_BASE}/upload`}
-                method="post"
-                encType="multipart/form-data"
-              >
-                <input
-                  type="file"
-                  name="file"
-                  accept=".json"
-                  className="text-white block mb-2"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-neon-green text-black rounded hover:bg-green-400"
-                >
-                  Upload JSON
-                </button>
-              </form>
-            </div>
+            {/* Upload panel removed */}
 
             {/* Leagues list */}
             {loading ? (
