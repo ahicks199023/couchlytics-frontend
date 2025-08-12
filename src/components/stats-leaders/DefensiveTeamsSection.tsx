@@ -97,7 +97,7 @@ export function DefensiveTeamsSection({ leagueId }: DefensiveTeamsSectionProps) 
     { key: 'total_yards_allowed', label: 'Total Yards Allowed', sortable: true, align: 'right' as const },
     { key: 'passing_yards_allowed', label: 'Pass Yards Allowed', sortable: true, align: 'right' as const },
     { key: 'rushing_yards_allowed', label: 'Rush Yards Allowed', sortable: true, align: 'right' as const },
-    { key: 'yardsAllowedPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (_: unknown, row?: Record<string, unknown>) => fmt1((row as any)?.yardsAllowedPerGame ?? (row as any)?.yards_allowed_per_game) },
+    { key: 'yardsAllowedPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => fmt1(value) },
     { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
@@ -107,7 +107,7 @@ export function DefensiveTeamsSection({ leagueId }: DefensiveTeamsSectionProps) 
     { key: 'interceptions', label: 'INTs', sortable: true, align: 'right' as const },
     { key: 'forced_fumbles', label: 'Forced Fumbles', sortable: true, align: 'right' as const },
     { key: 'fumble_recoveries', label: 'Fumble Recoveries', sortable: true, align: 'right' as const },
-    { key: 'sacksPerGame', label: 'Sacks/Game', sortable: true, align: 'right' as const, formatter: (_: unknown, row?: Record<string, unknown>) => fmt1((row as any)?.sacksPerGame ?? (row as any)?.sacks_per_game) },
+    { key: 'sacksPerGame', label: 'Sacks/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => fmt1(value) },
     { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
@@ -140,13 +140,24 @@ export function DefensiveTeamsSection({ leagueId }: DefensiveTeamsSectionProps) 
     )
   }
 
+  // normalize per-game fields on data
+  const yardsAllowedRows: Array<Record<string, unknown>> = yardsAllowedLeaders.map((r) => ({
+    ...r,
+    yardsAllowedPerGame: getNumber((r as unknown as Record<string, unknown>).yardsAllowedPerGame ?? (r as unknown as Record<string, unknown>).yards_allowed_per_game),
+  }))
+
+  const sacksRows: Array<Record<string, unknown>> = sacksLeaders.map((r) => ({
+    ...r,
+    sacksPerGame: getNumber((r as unknown as Record<string, unknown>).sacksPerGame ?? (r as unknown as Record<string, unknown>).sacks_per_game),
+  }))
+
   return (
     <div className="space-y-8">
       {/* Yards Allowed Leaders */}
       <StatsTable
         title="Yards Allowed Leaders"
         columns={yardsAllowedColumns}
-        data={yardsAllowedLeaders}
+        data={yardsAllowedRows}
         leagueId={leagueId}
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
@@ -156,7 +167,7 @@ export function DefensiveTeamsSection({ leagueId }: DefensiveTeamsSectionProps) 
       <StatsTable
         title="Sacks Leaders"
         columns={sacksColumns}
-        data={sacksLeaders}
+        data={sacksRows}
         leagueId={leagueId}
         highlightUserTeam={true}
         currentTeamId={currentTeamId}

@@ -92,16 +92,16 @@ export function OffensiveTeamsSection({ leagueId }: OffensiveTeamsSectionProps) 
   const getNumber = (v: unknown) => (typeof v === 'number' ? v : Number(v || 0))
   const fmt1 = (v: unknown) => getNumber(v).toFixed(1)
 
+  // Normalize per-game fields on data before rendering so formatter only needs value
+  const normalizeYardsPerGame = (row: Record<string, unknown>): number =>
+    getNumber((row as Record<string, unknown>).yardsPerGame ?? (row as Record<string, unknown>).yards_per_game)
+
   const totalYardsColumns = [
     { key: 'team_name', label: 'Team', sortable: true },
     { key: 'total_yards', label: 'Total Yards', sortable: true, align: 'right' as const },
     { key: 'passing_yards', label: 'Passing Yards', sortable: true, align: 'right' as const },
     { key: 'rushing_yards', label: 'Rushing Yards', sortable: true, align: 'right' as const },
-    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (_: unknown, row?: Record<string, unknown>) => {
-        const v = (row as any)?.yardsPerGame ?? (row as any)?.yards_per_game
-        return fmt1(v)
-      }
-    },
+    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => fmt1(value) },
     { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
@@ -111,7 +111,7 @@ export function OffensiveTeamsSection({ leagueId }: OffensiveTeamsSectionProps) 
     { key: 'passing_touchdowns', label: 'Passing TDs', sortable: true, align: 'right' as const },
     { key: 'interceptions_lost', label: 'INTs Lost', sortable: true, align: 'right' as const },
     { key: 'sacks_allowed', label: 'Sacks Allowed', sortable: true, align: 'right' as const },
-    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (_: unknown, row?: Record<string, unknown>) => fmt1((row as any)?.yardsPerGame ?? (row as any)?.yards_per_game) },
+    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => fmt1(value) },
     { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
@@ -120,7 +120,7 @@ export function OffensiveTeamsSection({ leagueId }: OffensiveTeamsSectionProps) 
     { key: 'rushing_yards', label: 'Rushing Yards', sortable: true, align: 'right' as const },
     { key: 'rushing_touchdowns', label: 'Rushing TDs', sortable: true, align: 'right' as const },
     { key: 'fumbles_lost', label: 'Fumbles Lost', sortable: true, align: 'right' as const },
-    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (_: unknown, row?: Record<string, unknown>) => fmt1((row as any)?.yardsPerGame ?? (row as any)?.yards_per_game) },
+    { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => fmt1(value) },
     { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
@@ -143,13 +143,29 @@ export function OffensiveTeamsSection({ leagueId }: OffensiveTeamsSectionProps) 
     )
   }
 
+  // Build normalized data rows for tables
+  const totalYardsRows: Array<Record<string, unknown>> = totalYardsLeaders.map((r) => ({
+    ...r,
+    yardsPerGame: normalizeYardsPerGame(r as unknown as Record<string, unknown>),
+  }))
+
+  const passingRows: Array<Record<string, unknown>> = passingLeaders.map((r) => ({
+    ...r,
+    yardsPerGame: normalizeYardsPerGame(r as unknown as Record<string, unknown>),
+  }))
+
+  const rushingRows: Array<Record<string, unknown>> = rushingLeaders.map((r) => ({
+    ...r,
+    yardsPerGame: normalizeYardsPerGame(r as unknown as Record<string, unknown>),
+  }))
+
   return (
     <div className="space-y-8">
       {/* Total Yards Leaders */}
       <StatsTable
         title="Total Yards Leaders"
         columns={totalYardsColumns}
-        data={totalYardsLeaders}
+        data={totalYardsRows}
         leagueId={leagueId}
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
@@ -159,7 +175,7 @@ export function OffensiveTeamsSection({ leagueId }: OffensiveTeamsSectionProps) 
       <StatsTable
         title="Passing Leaders"
         columns={passingColumns}
-        data={passingLeaders}
+        data={passingRows}
         leagueId={leagueId}
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
@@ -169,7 +185,7 @@ export function OffensiveTeamsSection({ leagueId }: OffensiveTeamsSectionProps) 
       <StatsTable
         title="Rushing Leaders"
         columns={rushingColumns}
-        data={rushingLeaders}
+        data={rushingRows}
         leagueId={leagueId}
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
