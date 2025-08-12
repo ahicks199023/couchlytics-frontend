@@ -146,6 +146,88 @@ export default function TeamDetailPage() {
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'home':
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Most Expensive under Home tab */}
+            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg border-4" style={{ borderColor: teamColor }}>
+              <h3 className="text-lg font-semibold text-green-600 dark:text-neon-green mb-3">Most Expensive</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="text-left py-1 px-1 text-gray-400">Player</th>
+                      <th className="text-left py-1 px-1 text-gray-400">POS</th>
+                      <th className="text-left py-1 px-1 text-gray-400">DEV</th>
+                      <th className="text-left py-1 px-1 text-gray-400">OVR</th>
+                      <th className="text-left py-1 px-1 text-gray-400">CAP HIT</th>
+                      <th className="text-left py-1 px-1 text-gray-400">SALARY</th>
+                      <th className="text-left py-1 px-1 text-gray-400">BON</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {teamData.mostExpensive && teamData.mostExpensive.length > 0 ? (
+                      teamData.mostExpensive.slice(0, 10).map((player, index) => (
+                        <tr key={index} className="border-b border-gray-700/50">
+                          <td className="py-1 px-1 text-white text-xs">{player.player}</td>
+                          <td className="py-1 px-1 text-white text-xs">{player.position}</td>
+                          <td className="py-1 px-1 text-white text-xs">{player.devTrait}</td>
+                          <td className="py-1 px-1 text-white text-xs">{player.overall}</td>
+                          <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.capHit)}</td>
+                          <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.salary)}</td>
+                          <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.bonus)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} className="py-2 text-center text-gray-400 text-xs">No data available</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Upcoming FA under Home tab */}
+            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg border-4" style={{ borderColor: teamColor }}>
+              <h3 className="text-lg font-semibold text-green-600 dark:text-neon-green mb-3">Upcoming FA</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="text-left py-1 px-1 text-gray-400">Player</th>
+                      <th className="text-left py-1 px-1 text-gray-400">POS</th>
+                      <th className="text-left py-1 px-1 text-gray-400">DEV</th>
+                      <th className="text-left py-1 px-1 text-gray-400">OVR</th>
+                      <th className="text-left py-1 px-1 text-gray-400">CAP HIT</th>
+                      <th className="text-left py-1 px-1 text-gray-400">SALARY</th>
+                      <th className="text-left py-1 px-1 text-gray-400">BON</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {teamData.upcomingFreeAgents && teamData.upcomingFreeAgents.length > 0 ? (
+                      teamData.upcomingFreeAgents.slice(0, 10).map((player, index) => (
+                        <tr key={index} className="border-b border-gray-700/50">
+                          <td className="py-1 px-1 text-white text-xs">{player.player}</td>
+                          <td className="py-1 px-1 text-white text-xs">{player.position}</td>
+                          <td className="py-1 px-1 text-white text-xs">{player.devTrait}</td>
+                          <td className="py-1 px-1 text-white text-xs">{player.overall}</td>
+                          <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.capHit)}</td>
+                          <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.salary)}</td>
+                          <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.bonus)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} className="py-2 text-center text-gray-400 text-xs">No data available</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )
              case 'roster':
                  return (
            <div className="bg-gray-900 p-4 rounded border-4" style={{ borderColor: teamColor }}>
@@ -356,24 +438,24 @@ export default function TeamDetailPage() {
               <p className="text-gray-400">None</p>
             </div>
 
-            {/* Stats Grid */}
+             {/* Stats Grid (ranks removed until backend ranks are verified) */}
             <div className="grid grid-cols-2 gap-6 mb-4">
               <div>
                 <h4 className="text-lg font-semibold text-neon-green mb-2">Offense</h4>
                 <div className="space-y-1 text-sm">
-                  <div>PTS: {teamData.offensiveStats.points} (Rank: {teamData.offensiveStats.pointsRank})</div>
-                  <div>YDS: {teamData.offensiveStats.yards} (Rank: {teamData.offensiveStats.yardsRank})</div>
-                  <div>P.YDS: {teamData.offensiveStats.passingYards} (Rank: {teamData.offensiveStats.passingYardsRank})</div>
-                  <div>R.YDS: {teamData.offensiveStats.rushingYards} (Rank: {teamData.offensiveStats.rushingYardsRank})</div>
+                  <div>PTS: {teamData.offensiveStats.points}</div>
+                  <div>YDS: {teamData.offensiveStats.yards}</div>
+                  <div>P.YDS: {teamData.offensiveStats.passingYards}</div>
+                  <div>R.YDS: {teamData.offensiveStats.rushingYards}</div>
                 </div>
               </div>
               <div>
                 <h4 className="text-lg font-semibold text-neon-green mb-2">Defense</h4>
                 <div className="space-y-1 text-sm">
-                  <div>PTS: {teamData.defensiveStats.points} (Rank: {teamData.defensiveStats.pointsRank})</div>
-                  <div>YDS: {teamData.defensiveStats.yards} (Rank: {teamData.defensiveStats.yardsRank})</div>
-                  <div>P.YDS: {teamData.defensiveStats.passingYards} (Rank: {teamData.defensiveStats.passingYardsRank})</div>
-                  <div>R.YDS: {teamData.defensiveStats.rushingYards} (Rank: {teamData.defensiveStats.rushingYardsRank})</div>
+                  <div>PTS: {teamData.defensiveStats.points}</div>
+                  <div>YDS: {teamData.defensiveStats.yards}</div>
+                  <div>P.YDS: {teamData.defensiveStats.passingYards}</div>
+                  <div>R.YDS: {teamData.defensiveStats.rushingYards}</div>
                 </div>
               </div>
             </div>
@@ -436,14 +518,14 @@ export default function TeamDetailPage() {
           </div>
         </div>
 
-                 {/* Right Sidebar */}
+          {/* Right Sidebar */}
          <div className="w-80 space-y-4">
            {/* Record Display */}
            <div className="text-right text-sm text-gray-600 dark:text-gray-400">
             {teamData.team.record}
           </div>
 
-                     {/* On The Block */}
+           {/* On The Block */}
            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg border-4" style={{ borderColor: teamColor }}>
                             <h3 className="text-lg font-semibold text-green-600 dark:text-neon-green mb-3">On The Block</h3>
              <div className="overflow-x-auto">
@@ -478,88 +560,6 @@ export default function TeamDetailPage() {
                     <tr>
                       <td colSpan={8} className="py-2 text-center text-gray-400 text-xs">
                         No matching records found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-                     {/* Most Expensive */}
-           <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg border-4" style={{ borderColor: teamColor }}>
-                            <h3 className="text-lg font-semibold text-green-600 dark:text-neon-green mb-3">Most Expensive</h3>
-             <div className="overflow-x-auto">
-               <table className="w-full text-xs">
-                 <thead>
-                   <tr className="border-b border-gray-700">
-                    <th className="text-left py-1 px-1 text-gray-400">Player</th>
-                    <th className="text-left py-1 px-1 text-gray-400">POS</th>
-                    <th className="text-left py-1 px-1 text-gray-400">DEV</th>
-                    <th className="text-left py-1 px-1 text-gray-400">OVR</th>
-                    <th className="text-left py-1 px-1 text-gray-400">CAP HIT</th>
-                    <th className="text-left py-1 px-1 text-gray-400">SALARY</th>
-                    <th className="text-left py-1 px-1 text-gray-400">BON</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teamData.mostExpensive && teamData.mostExpensive.length > 0 ? (
-                    teamData.mostExpensive.map((player, index) => (
-                      <tr key={index} className="border-b border-gray-700/50">
-                        <td className="py-1 px-1 text-white text-xs">{player.player}</td>
-                        <td className="py-1 px-1 text-white text-xs">{player.position}</td>
-                        <td className="py-1 px-1 text-white text-xs">{player.devTrait}</td>
-                        <td className="py-1 px-1 text-white text-xs">{player.overall}</td>
-                        <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.capHit)}</td>
-                        <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.salary)}</td>
-                        <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.bonus)}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={7} className="py-2 text-center text-gray-400 text-xs">
-                        No data available
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-                     {/* Upcoming FA */}
-           <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg border-4" style={{ borderColor: teamColor }}>
-                            <h3 className="text-lg font-semibold text-green-600 dark:text-neon-green mb-3">Upcoming FA</h3>
-             <div className="overflow-x-auto">
-               <table className="w-full text-xs">
-                 <thead>
-                   <tr className="border-b border-gray-700">
-                    <th className="text-left py-1 px-1 text-gray-400">Player</th>
-                    <th className="text-left py-1 px-1 text-gray-400">POS</th>
-                    <th className="text-left py-1 px-1 text-gray-400">DEV</th>
-                    <th className="text-left py-1 px-1 text-gray-400">OVR</th>
-                    <th className="text-left py-1 px-1 text-gray-400">CAP HIT</th>
-                    <th className="text-left py-1 px-1 text-gray-400">SALARY</th>
-                    <th className="text-left py-1 px-1 text-gray-400">BON</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teamData.upcomingFreeAgents && teamData.upcomingFreeAgents.length > 0 ? (
-                    teamData.upcomingFreeAgents.map((player, index) => (
-                      <tr key={index} className="border-b border-gray-700/50">
-                        <td className="py-1 px-1 text-white text-xs">{player.player}</td>
-                        <td className="py-1 px-1 text-white text-xs">{player.position}</td>
-                        <td className="py-1 px-1 text-white text-xs">{player.devTrait}</td>
-                        <td className="py-1 px-1 text-white text-xs">{player.overall}</td>
-                        <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.capHit)}</td>
-                        <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.salary)}</td>
-                        <td className="py-1 px-1 text-white text-xs">{formatCurrencyValue(player.bonus)}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={7} className="py-2 text-center text-gray-400 text-xs">
-                        No data available
                       </td>
                     </tr>
                   )}
