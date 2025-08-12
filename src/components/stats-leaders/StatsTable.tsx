@@ -237,8 +237,9 @@ export function StatsTable({
                             </button>
                           ) : column.key === 'team_name' || column.key === 'teamName' ? (
                             <div className="flex justify-center">
-                              <TeamBadge 
+                              <TeamBadge
                                 teamName={displayValue as string}
+                                teamId={(row.team_id as number) || (row.teamId as number) || undefined}
                                 size="lg"
                                 variant="logo"
                                 showAbbr={false}
