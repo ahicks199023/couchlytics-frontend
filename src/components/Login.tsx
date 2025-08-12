@@ -278,6 +278,11 @@ export default function Login() {
         <p className="text-gray-600 dark:text-gray-300">
           Sign in to manage your Madden franchise
         </p>
+        {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('invite') && (
+          <p className="mt-2 text-sm text-neon-green">
+            Invite detected — after sign in you&apos;ll be added to the league automatically.
+          </p>
+        )}
       </div>
 
       {(error || (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('message'))) && (

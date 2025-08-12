@@ -527,10 +527,11 @@ export default function RegisterPage() {
               <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
             <h2 className="text-3xl font-bold">Ready to Create Account!</h2>
-            <p className="text-gray-600 max-w-md mx-auto">
-              Review your information below and click &quot;Create Account&quot; to complete your registration.
+            <p className="text-gray-400 max-w-md mx-auto">
+              Review your information below and click <span className="font-semibold text-neon-green">Create Account</span>.
+              After your account is created, you&apos;ll be redirected to sign in. If you followed a league invite, we&apos;ll finish adding you to the league right after you sign in.
             </p>
-            <div className="bg-gray-50 rounded-lg p-4 text-left max-w-md mx-auto">
+            <div className="bg-gray-800 rounded-lg p-4 text-left max-w-md mx-auto border border-gray-700">
               <h3 className="font-semibold mb-2">Summary:</h3>
               <p><strong>Name:</strong> {formData.firstName} {formData.lastName}</p>
               <p><strong>Email:</strong> {formData.email}</p>

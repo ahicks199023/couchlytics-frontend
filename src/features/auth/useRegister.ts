@@ -13,11 +13,22 @@ export function useRegister() {
     setLoading(true)
     setError(null)
     try {
-      await registerUser(payload)
+      const res = await registerUser(payload)
       const status = await getAuthStatus()
-      const message = encodeURIComponent('You are registered, please try logging in.')
+      const inviteCode = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('invite') : null
+      const message = encodeURIComponent('Your account has been created. Please sign in to continue.')
+      const joinedViaInvite = (res as any)?.joinedViaInvite
+      const joinedLeagueId = (res as any)?.leagueId || (res as any)?.league_id
       if (status?.authenticated) {
-        router.replace('/leagues')
+        if (joinedLeagueId) {
+          router.replace(`/leagues/${joinedLeagueId}`)
+        } else {
+          router.replace('/leagues')
+        }
+      } else if (inviteCode) {
+        router.replace(`/login?invite=${encodeURIComponent(inviteCode)}&message=${message}`)
+      } else if (joinedViaInvite && joinedLeagueId) {
+        router.replace(`/login?message=${message}`)
       } else {
         router.replace(`/login?message=${message}`)
       }
