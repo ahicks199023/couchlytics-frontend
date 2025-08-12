@@ -151,6 +151,59 @@ export default function TeamDetailPage() {
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'schedule': {
+        type ScheduleItem = {
+          week: number
+          home: string
+          away: string
+          opponent: string
+          isHome: boolean
+          score?: string | null
+          result?: 'W' | 'L' | 'T' | null
+          gameId: number
+        }
+        const schedule: ScheduleItem[] = (teamData as unknown as { schedule?: ScheduleItem[] }).schedule ?? []
+        return (
+          <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg border-4 overflow-x-auto" style={{ borderColor: teamColor }}>
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-300 dark:border-gray-700 text-left">
+                  <th className="py-2 px-2">Week</th>
+                  <th className="py-2 px-2">Opponent</th>
+                  <th className="py-2 px-2">H/A</th>
+                  <th className="py-2 px-2">Result</th>
+                  <th className="py-2 px-2">Score</th>
+                  <th className="py-2 px-2">Box Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {schedule.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-4 px-2 text-center text-gray-600 dark:text-gray-400">
+                      No games available
+                    </td>
+                  </tr>
+                ) : (
+                  schedule.map((g) => (
+                    <tr key={g.gameId} className="border-b border-gray-200 dark:border-gray-800">
+                      <td className="py-2 px-2">{g.week}</td>
+                      <td className="py-2 px-2">{g.opponent}</td>
+                      <td className="py-2 px-2">{g.isHome ? 'Home' : 'Away'}</td>
+                      <td className="py-2 px-2">{g.result ?? '-'}</td>
+                      <td className="py-2 px-2">{g.score ?? '-'}</td>
+                      <td className="py-2 px-2">
+                        <Link className="text-blue-600 dark:text-blue-400 hover:text-neon-green" href={`/leagues/${leagueIdString}/games/${g.gameId}`}>
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )
+      }
       case 'home':
         return (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
