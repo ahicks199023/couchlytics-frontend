@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { acceptInvite, getInvite, getVacantTeamsForInvite } from '@/lib/api'
 
 type VacantTeam = { id: number; name: string }
+type InviteInfo = { league_id: number; league_name: string }
+type VacantTeamsResponse = { teams: VacantTeam[] }
 
 export default function JoinLeaguePage() {
   const { invite_code } = useParams()
@@ -23,10 +25,10 @@ export default function JoinLeaguePage() {
   useEffect(() => {
     const run = async () => {
       try {
-        const info = await getInvite(inviteCode)
+        const info = (await getInvite(inviteCode)) as InviteInfo
         setLeague({ id: info.league_id, name: info.league_name })
 
-        const t = await getVacantTeamsForInvite(inviteCode)
+        const t = (await getVacantTeamsForInvite(inviteCode)) as Partial<VacantTeamsResponse>
         setTeams(Array.isArray(t?.teams) ? t.teams : [])
 
         // If not authenticated, route to login/register and bounce back
@@ -34,8 +36,9 @@ export default function JoinLeaguePage() {
           router.replace(`/login?invite=${encodeURIComponent(inviteCode)}`)
           return
         }
-      } catch (e: any) {
-        setError(e?.message ?? 'Invalid or expired invite')
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Invalid or expired invite'
+        setError(message)
       } finally {
         setLoading(false)
       }
@@ -47,10 +50,12 @@ export default function JoinLeaguePage() {
     if (!league) return
     try {
       setLoading(true)
-      await acceptInvite(inviteCode, { user_id: user?.id as any, team_id: selectedTeamId })
+      const userId = typeof user?.id === 'number' ? user.id : undefined
+      await acceptInvite(inviteCode, { user_id: userId, team_id: selectedTeamId })
       router.replace(`/leagues/${league.id}`)
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed to accept invite')
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Failed to accept invite'
+      setError(message)
     } finally {
       setLoading(false)
     }
