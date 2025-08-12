@@ -398,45 +398,69 @@ export default function TeamDetailPage() {
           </div>
         )
 
-             case 'depth-chart':
-         return (
-           <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded border-4" style={{ borderColor: teamColor }}>
+      case 'depth-chart':
+        return (
+          <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded border-4" style={{ borderColor: teamColor }}>
             {teamData.depthChart && Object.keys(teamData.depthChart).length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(teamData.depthChart).map(([position, players]) => (
-                  <div key={position} className="bg-gray-200 dark:bg-gray-800 p-3 rounded">
-                    <h4 className="text-lg font-semibold text-green-600 dark:text-neon-green mb-2">{position}</h4>
-                    <div className="space-y-2">
-                      {players.map((player, index) => (
-                        <div key={player.id} className="flex items-center justify-between p-2 bg-gray-300 dark:bg-gray-700 rounded">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-600 dark:text-gray-400">#{index + 1}</span>
-                                                              <Link 
-                                  href={`/leagues/${leagueIdString}/players/${player.madden_id}`}
-                                  className="text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-neon-green transition-colors font-medium"
-                                >
-                                {player.name}
-                              </Link>
+                {(() => {
+                  // Desired left-to-right order per row
+                  const order = [
+                    'QB', 'HB', 'FB',
+                    'WR', 'TE', 'LT',
+                    'LG', 'C', 'RG',
+                    'RT', 'LE', 'DT',
+                    'RE', 'LOLB', 'MLB',
+                    'ROLB', 'CB', 'SS',
+                    'FS', 'P', 'K',
+                  ]
+                  // Map common aliases
+                  const alias: Record<string, string[]> = { RB: ['HB'], RDE: ['RE'], LDE: ['LE'] }
+                  const exists = (pos: string) =>
+                    teamData.depthChart[pos] || (alias[pos]?.find(a => teamData.depthChart[a]))
+                  const getPlayers = (pos: string) =>
+                    teamData.depthChart[pos] || (alias[pos]?.find(a => teamData.depthChart[a]) && teamData.depthChart[alias[pos]!.find(a => teamData.depthChart[a]) as string])
+
+                  const orderedKeys = order.filter((p) => Boolean(exists(p)))
+                  const extraKeys = Object.keys(teamData.depthChart).filter((k) => !orderedKeys.includes(k))
+                  const finalKeys = [...orderedKeys, ...extraKeys]
+
+                  return finalKeys.map((position) => {
+                    const players = getPlayers(position) || teamData.depthChart[position]
+                    return (
+                      <div key={position} className="bg-gray-200 dark:bg-gray-800 p-3 rounded">
+                        <h4 className="text-lg font-semibold text-green-600 dark:text-neon-green mb-2">{position}</h4>
+                        <div className="space-y-2">
+                          {players.map((player: { id: number; madden_id: string; name: string; position: string; overall: number; dev_trait: string; age: number; speed: number }, index: number) => (
+                            <div key={player.id} className="flex items-center justify-between p-2 bg-gray-300 dark:bg-gray-700 rounded">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-gray-600 dark:text-gray-400">#{index + 1}</span>
+                                  <Link
+                                    href={`/leagues/${leagueIdString}/players/${player.madden_id}`}
+                                    className="text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-neon-green transition-colors font-medium"
+                                  >
+                                    {player.name}
+                                  </Link>
+                                </div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400">
+                                  {player.position} • OVR: {player.overall} • {player.dev_trait}
+                                </div>
+                              </div>
+                              <div className="text-right text-xs text-gray-600 dark:text-gray-400">
+                                <div>Age: {player.age}</div>
+                                <div>SPD: {player.speed}</div>
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400">
-                              {player.position} • OVR: {player.overall} • {player.dev_trait}
-                            </div>
-                          </div>
-                          <div className="text-right text-xs text-gray-600 dark:text-gray-400">
-                            <div>Age: {player.age}</div>
-                            <div>SPD: {player.speed}</div>
-                          </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                      </div>
+                    )
+                  })
+                })()}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-600 dark:text-gray-400">
-                No depth chart data available
-              </div>
+              <div className="text-center py-8 text-gray-600 dark:text-gray-400">No depth chart data available</div>
             )}
           </div>
         )
