@@ -237,15 +237,22 @@ export function StatsTable({
                             </button>
                           ) : column.key === 'team_name' || column.key === 'teamName' ? (
                             <div className="flex justify-center">
-                              <TeamBadge
-                                teamName={displayValue as string}
-                                teamId={(row.team_id as number) || (row.teamId as number) || undefined}
-                                size="lg"
-                                variant="logo"
-                                showAbbr={false}
-                                leagueId={leagueId}
-                                linkToTeam={true}
-                              />
+                              {(() => {
+                                const slotNum = (row.team_id as number) || (row.teamId as number)
+                                const nameForLookup = typeof slotNum === 'number' && Number.isFinite(slotNum)
+                                  ? `team ${slotNum}`
+                                  : (displayValue as string)
+                                return (
+                                  <TeamBadge
+                                    teamName={nameForLookup}
+                                    size="lg"
+                                    variant="logo"
+                                    showAbbr={false}
+                                    leagueId={leagueId}
+                                    linkToTeam={true}
+                                  />
+                                )
+                              })()}
                             </div>
                           ) : (
                             displayValue
