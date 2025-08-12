@@ -6,13 +6,7 @@ import ProtectedRoute from '../../components/ProtectedRoute'
 import { fetchFromApi } from '@/lib/api'
 import { http } from '@/lib/http'
 
-type Team = {
-  id: number
-  name: string
-  city: string
-  wins: number
-  losses: number
-}
+// Team type removed from this page after sidebar redesign
 
 type League = {
   leagueId: string
@@ -25,14 +19,10 @@ type LeaguesResponse = {
   leagues: League[]
 }
 
-type TeamsResponse = {
-  teams: Team[]
-}
+// TeamsResponse type no longer used here
 
 export default function LeaguesPage() {
   const [leagues, setLeagues] = useState<League[]>([])
-  const [expandedLeagueId, setExpandedLeagueId] = useState<string | null>(null)
-  const [teamsByLeague, setTeamsByLeague] = useState<Record<string, Team[]>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [leaderboard, setLeaderboard] = useState<Array<{
@@ -45,6 +35,7 @@ export default function LeaguesPage() {
     winPct: number
   }>>([])
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null)
+  const [myLeaguesOpen, setMyLeaguesOpen] = useState<boolean>(true)
 
   useEffect(() => {
     fetchFromApi('/leagues')
@@ -98,24 +89,6 @@ export default function LeaguesPage() {
   // Debug log to check leagueId presence
   console.log('leagues:', leagues);
 
-  const toggleTeams = async (leagueId: string) => {
-    if (expandedLeagueId === leagueId) {
-      setExpandedLeagueId(null)
-      return
-    }
-
-    if (!teamsByLeague[leagueId]) {
-      try {
-        const res = await fetchFromApi(`/leagues/${leagueId}/teams`)
-        setTeamsByLeague(prev => ({ ...prev, [leagueId]: (res as TeamsResponse).teams || [] }))
-      } catch (err) {
-        console.error(`Failed to fetch teams for league ${leagueId}`, err)
-      }
-    }
-
-    setExpandedLeagueId(leagueId)
-  }
-
   return (
     <ProtectedRoute>
       <main className="min-h-screen bg-black text-white px-4 py-8 sm:px-6 lg:px-8">
@@ -127,6 +100,32 @@ export default function LeaguesPage() {
               <Link href="/leagues" className="block px-3 py-2 rounded hover:bg-gray-800">Couchlytics Central</Link>
               <Link href="/chat" className="block px-3 py-2 rounded hover:bg-gray-800">Lounge</Link>
               <Link href="/dashboard" className="block px-3 py-2 rounded hover:bg-gray-800">Dashboard</Link>
+              <div className="mt-4">
+                <button
+                  className="w-full text-left px-3 py-2 rounded hover:bg-gray-800 flex items-center justify-between"
+                  onClick={() => setMyLeaguesOpen(prev => !prev)}
+                >
+                  <span>My Leagues</span>
+                  <span className="text-xs text-gray-400">{myLeaguesOpen ? '▾' : '▸'}</span>
+                </button>
+                {myLeaguesOpen && (
+                  <div className="pl-3 space-y-1">
+                    {leagues.length === 0 ? (
+                      <span className="block px-3 py-2 text-sm text-gray-500">No leagues</span>
+                    ) : (
+                      leagues.map((league) => (
+                        <Link
+                          key={league.leagueId}
+                          href={`/leagues/${league.leagueId || 'unknown'}`}
+                          className="block px-3 py-2 rounded hover:bg-gray-800 text-sm"
+                        >
+                          {league.name || 'Untitled League'}
+                        </Link>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
             </nav>
           </aside>
 
@@ -174,61 +173,13 @@ export default function LeaguesPage() {
 
             {/* Upload panel removed */}
 
-            {/* Leagues list */}
+            {/* Leagues list moved under My Leagues → show simple note here */}
             {loading ? (
-              <p className="text-gray-400">Loading leagues...</p>
+              <p className="text-gray-400">Loading leagues…</p>
             ) : error ? (
               <p className="text-red-400">{error}</p>
-            ) : leagues.length === 0 ? (
-              <p className="text-gray-400 italic">No leagues uploaded yet.</p>
             ) : (
-              leagues.map((league) => (
-                <div
-                  key={league.leagueId}
-                  className="p-4 mb-4 rounded border border-gray-800 bg-gray-900 transition-all duration-200 hover:shadow-[0_0_8px_2px_#39FF14]"
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h2
-                        className="text-lg sm:text-xl font-semibold hover:underline cursor-pointer"
-                        onClick={() => toggleTeams(league.leagueId)}
-                      >
-                        {league.name || 'Untitled League'}
-                      </h2>
-                      <p className="text-sm text-gray-400 italic">
-                        Season {league.seasonYear ?? '?'} — Week {league.week ?? '?'}
-                      </p>
-                    </div>
-                    <Link
-                      href={`/leagues/${league.leagueId || 'unknown'}`}
-                      className="text-sm text-neon-green underline hover:text-green-400"
-                    >
-                      View Details
-                    </Link>
-                  </div>
-
-                  {expandedLeagueId === league.leagueId && (
-                    <div className="mt-3">
-                      {teamsByLeague[league.leagueId]?.length > 0 ? (
-                        <ul className="text-sm text-gray-300 list-disc pl-5 space-y-1">
-                          {teamsByLeague[league.leagueId].map(team => (
-                            <li key={team.id}>
-                              <Link 
-                                href={`/leagues/${league.leagueId}/teams/${team.id}`}
-                                className="hover:text-neon-green transition-colors"
-                              >
-                                <span className="text-neon-green font-medium">{team.city}</span> {team.name} — {team.wins}-{team.losses}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-gray-500 italic text-sm">No teams available.</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))
+              <p className="text-gray-400 text-sm">Use the “My Leagues” menu to access your leagues.</p>
             )}
 
             {/* Ozzie AI Promo */}
