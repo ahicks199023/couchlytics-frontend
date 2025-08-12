@@ -245,16 +245,16 @@ export default function Login() {
     <div className="max-w-md mx-auto mt-20 p-6 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Welcome to Couchlytics [DEBUG-v2]
+          Welcome to Couchlytics
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
           Sign in to manage your Madden franchise
         </p>
       </div>
 
-      {error && (
+      {(error || (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('message'))) && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
+          {error || new URLSearchParams(window.location.search).get('message')}
         </div>
       )}
 

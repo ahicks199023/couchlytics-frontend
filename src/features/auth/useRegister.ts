@@ -15,10 +15,11 @@ export function useRegister() {
     try {
       await registerUser(payload)
       const status = await getAuthStatus()
+      const message = encodeURIComponent('You are registered, please try logging in.')
       if (status?.authenticated) {
         router.replace('/leagues')
       } else {
-        router.replace('/login')
+        router.replace(`/login?message=${message}`)
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Registration failed.'
