@@ -69,6 +69,14 @@ export interface User {
     locale?: string
     verified?: boolean
   }
+  // Backend extensions
+  isAdmin?: boolean
+  memberships?: Array<{
+    leagueId: string
+    name?: string
+    teamId?: number
+    role?: UserRole
+  }>
 }
 
 export interface UserProfile extends User {

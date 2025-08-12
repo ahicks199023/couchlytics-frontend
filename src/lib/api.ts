@@ -44,6 +44,20 @@ export const getLeaguePlayers = async (leagueId: string, params?: Record<string,
   return fetchFromApi(`/leagues/${leagueId}/players${queryString}`)
 }
 
+// Auth/me and My Leagues
+export const getMe = async () => {
+  return fetchFromApi('/auth/me')
+}
+
+export const getMyLeagues = async () => {
+  // Prefer the dedicated endpoint; fall back to scope=my if needed
+  try {
+    return await fetchFromApi('/auth/my-leagues')
+  } catch {
+    return fetchFromApi('/leagues?scope=my')
+  }
+}
+
 export const getPlayerDetails = async (leagueId: string, playerId: string) => {
   return fetchFromApi(`/leagues/${leagueId}/players/${playerId}`)
 }

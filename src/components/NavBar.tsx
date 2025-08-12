@@ -21,7 +21,7 @@ export default function NavBar() {
   const [loginError, setLoginError] = useState<string | null>(null)
   const loginDropdownRef = useRef<HTMLDivElement>(null)
 
-  const { user, authenticated, loading, logout, firebaseUser, checkAuthStatus } = useAuth()
+  const { user, authenticated, loading, logout, firebaseUser, checkAuthStatus, isAdmin } = useAuth()
   const router = useRouter()
   
   const currentUser = getFirebaseUserEmail(firebaseUser) || user?.email || ''
@@ -171,9 +171,11 @@ export default function NavBar() {
             <Link href="/leagues" className="hover:text-neon-green transition-colors">
               Leagues
             </Link>
-            <Link href="/dashboard" className="hover:text-neon-green transition-colors">
-              Dashboard
-            </Link>
+            {isAdmin() && (
+              <Link href="/dashboard" className="hover:text-neon-green transition-colors">
+                Dashboard
+              </Link>
+            )}
             <Link href="/chat" className="hover:text-neon-green transition-colors">
               💬 Chat
             </Link>
@@ -410,13 +412,15 @@ export default function NavBar() {
                 >
                   Leagues
                 </Link>
-                <Link
-                  href="/dashboard"
-                  className="block py-2 text-gray-300 hover:text-white"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Dashboard
-                </Link>
+                {isAdmin() && (
+                  <Link
+                    href="/dashboard"
+                    className="block py-2 text-gray-300 hover:text-white"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                )}
                 
                 <Link
                   href="/chat"

@@ -89,7 +89,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      const response = await http.get('/auth/user')
+      // Use new endpoint that includes memberships and isAdmin
+      const response = await http.get('/auth/me')
       
       if (response.status === 200) {
         const userData = response.data

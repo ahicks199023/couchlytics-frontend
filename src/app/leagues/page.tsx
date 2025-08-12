@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import ProtectedRoute from '../../components/ProtectedRoute'
-import { fetchFromApi } from '@/lib/api'
+import { getMyLeagues } from '@/lib/api'
+import { useAuth } from '@/contexts/AuthContext'
 import { http } from '@/lib/http'
 
 // Team type removed from this page after sidebar redesign
@@ -36,20 +37,19 @@ export default function LeaguesPage() {
   }>>([])
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null)
   const [myLeaguesOpen, setMyLeaguesOpen] = useState<boolean>(true)
+  const { isAdmin } = useAuth()
 
   useEffect(() => {
-    fetchFromApi('/leagues')
+    getMyLeagues()
       .then((data) => {
-        const leaguesData = (data as LeaguesResponse).leagues || []
-        console.log('Fetched leagues data:', leaguesData)
-        console.log('League IDs:', leaguesData.map(l => l.leagueId))
-        console.log('Full league objects:', JSON.stringify(leaguesData, null, 2))
-        setLeagues(leaguesData)
+        const leaguesData = (data as LeaguesResponse).leagues || (Array.isArray(data as unknown as unknown[]) ? (data as unknown as League[]) : [])
+        console.log('Fetched my leagues:', leaguesData)
+        setLeagues(leaguesData as League[])
         setLoading(false)
       })
       .catch(err => {
         console.error(err)
-        setError('Failed to load leagues.')
+        setError('Failed to load your leagues.')
         setLoading(false)
       })
   }, [])
@@ -99,7 +99,9 @@ export default function LeaguesPage() {
             <nav className="space-y-1">
               <Link href="/leagues" className="block px-3 py-2 rounded hover:bg-gray-800">Couchlytics Central</Link>
               <Link href="/chat" className="block px-3 py-2 rounded hover:bg-gray-800">Lounge</Link>
-              <Link href="/dashboard" className="block px-3 py-2 rounded hover:bg-gray-800">Dashboard</Link>
+              {isAdmin() && (
+                <Link href="/dashboard" className="block px-3 py-2 rounded hover:bg-gray-800">Dashboard</Link>
+              )}
               <div className="mt-4">
                 <button
                   className="w-full text-left px-3 py-2 rounded hover:bg-gray-800 flex items-center justify-between"
