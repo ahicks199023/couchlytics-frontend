@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { fetchFromApi } from '@/lib/api'
+import { http } from '@/lib/http'
 import { CheckCircle, ArrowRight, ArrowLeft, User, Shield, Users, Settings } from 'lucide-react'
 
 const steps = [
@@ -170,11 +170,8 @@ export default function RegisterPage() {
         }
       }
 
-      // Use the centralized API with credentials; correct endpoint path
-      await fetchFromApi('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(registrationData)
-      })
+      // Use centralized axios client (withCredentials enabled)
+      await http.post('/auth/register', registrationData)
 
       router.push('/login?message=Registration successful! Please log in to access your account.')
     } catch (error) {
