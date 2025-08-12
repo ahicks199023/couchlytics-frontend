@@ -31,13 +31,7 @@ export default function JoinLeaguePage() {
         const t = (await getVacantTeamsForInvite(inviteCode)) as Partial<VacantTeamsResponse>
         setTeams(Array.isArray(t?.teams) ? t.teams : [])
 
-        // If not authenticated, go through backend handoff to set cookies then redirect to configured FE target
-        if (!authenticated) {
-          if (typeof window !== 'undefined') {
-            window.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/invites/${inviteCode}/go`
-          }
-          return
-        }
+        // If not authenticated, do not auto-redirect. We will render a CTA to continue.
       } catch (e: unknown) {
         const message = e instanceof Error ? e.message : 'Invalid or expired invite'
         setError(message)
@@ -82,8 +76,17 @@ export default function JoinLeaguePage() {
       <p className="text-gray-600 mb-6">Invite code: <code>{inviteCode}</code></p>
 
       {!authenticated ? (
-        <div className="p-4 bg-yellow-100 rounded border border-yellow-300">
-          Please <Link href={`/login?invite=${inviteCode}`} className="underline">sign in</Link> to continue.
+        <div className="p-4 bg-yellow-100 rounded border border-yellow-300 space-y-3">
+          <div>To join this league, continue to sign in.</div>
+          <div className="flex gap-3">
+            <a
+              href={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/invites/${inviteCode}/go`}
+              className="bg-neon-green text-black px-4 py-2 rounded"
+            >
+              Continue
+            </a>
+            <Link href={`/login?invite=${inviteCode}`} className="px-4 py-2 rounded border">Sign in</Link>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
