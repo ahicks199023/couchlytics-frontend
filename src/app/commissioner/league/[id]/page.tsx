@@ -680,10 +680,10 @@ export default function LeagueManagement() {
                     <h3 className="text-lg font-semibold mb-2">Current Invite Code</h3>
                     <div className="flex items-center space-x-2">
                       <code className="bg-gray-600 px-2 py-1 rounded text-sm">
-                        {league.invite_code}
+                        {`https://couchlytics.com/join/${league.invite_code}`}
                       </code>
                       <button
-                        onClick={() => copyToClipboard(league.invite_code!)}
+                        onClick={() => copyToClipboard(`https://couchlytics.com/join/${league.invite_code}`)}
                         className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs"
                       >
                         Copy

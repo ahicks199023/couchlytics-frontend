@@ -88,6 +88,22 @@ export const generateInviteLink = async (leagueId: string) => {
   })
 }
 
+// Invites API (public)
+export const getInvite = async (inviteCode: string) => {
+  return fetchFromApi(`/invites/${inviteCode}`)
+}
+
+export const getVacantTeamsForInvite = async (inviteCode: string) => {
+  return fetchFromApi(`/invites/${inviteCode}/vacant-teams`)
+}
+
+export const acceptInvite = async (inviteCode: string, payload: { user_id?: number; team_id?: number }) => {
+  return fetchFromApi(`/invites/${inviteCode}/accept`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
 export const assignTeamToUser = async (leagueId: string, teamId: number, userEmail: string) => {
   return fetchFromApi(`/commissioner/league/${leagueId}/assign-team`, {
     method: 'POST',
