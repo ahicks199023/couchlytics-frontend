@@ -118,6 +118,9 @@ export const acceptInvite = async (inviteCode: string, payload: { user_id?: numb
   })
 }
 
+// Invite handoff URL (server redirects and sets cookies)
+export const getInviteHandoffUrl = (inviteCode: string) => `${API_BASE}/invites/${inviteCode}/go`
+
 export const assignTeamToUser = async (leagueId: string, teamId: number, userEmail: string) => {
   return fetchFromApi(`/commissioner/league/${leagueId}/assign-team`, {
     method: 'POST',

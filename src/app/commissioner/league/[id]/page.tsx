@@ -187,7 +187,7 @@ export default function LeagueManagement() {
     try {
       setError(null)
       const result = await generateInviteLink(leagueId)
-      const inviteUrl = `${window.location.origin}/leagues/${leagueId}/join?code=${result.invite_code}`
+      const inviteUrl = `${API_BASE}/invites/${result.invite_code}/go`
       copyToClipboard(inviteUrl)
       setSuccessMessage('Invite link generated and copied to clipboard!')
       setTimeout(() => setSuccessMessage(null), 3000)
@@ -679,15 +679,20 @@ export default function LeagueManagement() {
                   <div className="bg-gray-700 rounded-lg p-4">
                     <h3 className="text-lg font-semibold mb-2">Current Invite Code</h3>
                     <div className="flex items-center space-x-2">
-                      <code className="bg-gray-600 px-2 py-1 rounded text-sm">
-                        {`https://couchlytics.com/join/${league.invite_code}`}
-                      </code>
-                      <button
-                        onClick={() => copyToClipboard(`https://couchlytics.com/join/${league.invite_code}`)}
-                        className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs"
-                      >
-                        Copy
-                      </button>
+                      <div className="space-y-1">
+                        <div className="text-xs text-gray-300">Public invite URL (handoff):</div>
+                        <div className="flex items-center space-x-2">
+                          <code className="bg-gray-600 px-2 py-1 rounded text-sm">
+                            {`${API_BASE}/invites/${league.invite_code}/go`}
+                          </code>
+                          <button
+                            onClick={() => copyToClipboard(`${API_BASE}/invites/${league.invite_code}/go`)}
+                            className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
