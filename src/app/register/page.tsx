@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+// import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { http } from '@/lib/http'
+import { useRegister } from '@/features/auth/useRegister'
 import { CheckCircle, ArrowRight, ArrowLeft, User, Shield, Users, Settings } from 'lucide-react'
 
 const steps = [
@@ -17,7 +17,7 @@ const steps = [
 ]
 
 export default function RegisterPage() {
-  const router = useRouter()
+  // Removed direct router usage; navigation handled in useRegister
   const [currentStep, setCurrentStep] = useState('account')
   const [formData, setFormData] = useState({
     // Account fields
@@ -44,7 +44,7 @@ export default function RegisterPage() {
     leagueUpdates: true
   })
   const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const { onRegister, loading: isLoading, error: hookError } = useRegister()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
@@ -134,8 +134,6 @@ export default function RegisterPage() {
 
     if (!validateCurrentStep()) return
 
-    setIsLoading(true)
-
     try {
       // Prepare the data in the format expected by the backend
       const registrationData = {
@@ -170,18 +168,16 @@ export default function RegisterPage() {
         }
       }
 
-      // Use centralized axios client (withCredentials enabled)
-      await http.post('/auth/register', registrationData)
-
-      router.push('/login?message=Registration successful! Please log in to access your account.')
+      await onRegister(registrationData as unknown as {
+        firstName: string;
+        lastName: string;
+        email: string;
+        password: string;
+        league?: { name?: string; seasonYear?: number };
+        team?: { name?: string };
+      })
     } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message.replace('API error: ', ''))
-      } else {
-        setError('Registration failed. Please try again.')
-      }
-    } finally {
-      setIsLoading(false)
+      setError(error instanceof Error ? error.message : 'Registration failed. Please try again.')
     }
   }
 
@@ -612,9 +608,9 @@ export default function RegisterPage() {
         
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-4">
-            {error && (
+            {(error || hookError) && (
               <div className="p-3 bg-red-900/20 border border-red-500 rounded-md">
-                <p className="text-red-400 text-sm">{error}</p>
+                <p className="text-red-400 text-sm">{error || hookError}</p>
               </div>
             )}
 
