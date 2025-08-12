@@ -31,9 +31,11 @@ export default function JoinLeaguePage() {
         const t = (await getVacantTeamsForInvite(inviteCode)) as Partial<VacantTeamsResponse>
         setTeams(Array.isArray(t?.teams) ? t.teams : [])
 
-        // If not authenticated, route to login/register and bounce back
+        // If not authenticated, go through backend handoff to set cookies then redirect to configured FE target
         if (!authenticated) {
-          router.replace(`/login?invite=${encodeURIComponent(inviteCode)}`)
+          if (typeof window !== 'undefined') {
+            window.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/invites/${inviteCode}/go`
+          }
           return
         }
       } catch (e: unknown) {
