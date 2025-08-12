@@ -186,7 +186,7 @@ export default function TeamDetailPage() {
                 ) : (
                   schedule.map((g) => (
                     <tr key={g.gameId} className="border-b border-gray-200 dark:border-gray-800">
-                      <td className="py-2 px-2">{g.week}</td>
+                      <td className="py-2 px-2">{(g.week ?? 0) + 1}</td>
                       <td className="py-2 px-2">{g.opponent}</td>
                       <td className="py-2 px-2">{g.isHome ? 'Home' : 'Away'}</td>
                       <td className="py-2 px-2">{g.result ?? '-'}</td>
