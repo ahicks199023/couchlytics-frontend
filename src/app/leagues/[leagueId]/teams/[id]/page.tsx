@@ -151,6 +151,109 @@ export default function TeamDetailPage() {
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'statistics': {
+        const leaders = teamData.leaders
+        return (
+          <div className="space-y-6">
+            {/* Passing Leader */}
+            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded border-4" style={{ borderColor: teamColor }}>
+              <h3 className="text-lg font-semibold text-neon-green mb-3">Passing Leader</h3>
+              {leaders?.passing ? (
+                <div className="flex items-center justify-between text-sm">
+                  <Link href={`/leagues/${leagueIdString}/players/${leaders.passing.player.replace(/[^0-9]/g,'')}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green">
+                    {leaders.passing.player} ({leaders.passing.position})
+                  </Link>
+                  <div className="text-right text-gray-700 dark:text-gray-300">
+                    <div>Yards: {leaders.passing.yards.toLocaleString()}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-gray-500">No data</div>
+              )}
+            </div>
+
+            {/* Rushing Leader */}
+            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded border-4" style={{ borderColor: teamColor }}>
+              <h3 className="text-lg font-semibold text-neon-green mb-3">Rushing Leader</h3>
+              {leaders?.rushing ? (
+                <div className="flex items-center justify-between text-sm">
+                  <Link href={`/leagues/${leagueIdString}/players/${leaders.rushing.player.replace(/[^0-9]/g,'')}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green">
+                    {leaders.rushing.player} ({leaders.rushing.position})
+                  </Link>
+                  <div className="text-right text-gray-700 dark:text-gray-300">
+                    <div>Yards: {leaders.rushing.yards.toLocaleString()}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-gray-500">No data</div>
+              )}
+            </div>
+
+            {/* Receiving Leader */}
+            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded border-4" style={{ borderColor: teamColor }}>
+              <h3 className="text-lg font-semibold text-neon-green mb-3">Receiving Leader</h3>
+              {leaders?.receiving ? (
+                <div className="flex items-center justify-between text-sm">
+                  <Link href={`/leagues/${leagueIdString}/players/${leaders.receiving.player.replace(/[^0-9]/g,'')}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green">
+                    {leaders.receiving.player} ({leaders.receiving.position})
+                  </Link>
+                  <div className="text-right text-gray-700 dark:text-gray-300">
+                    <div>Yards: {leaders.receiving.yards.toLocaleString()}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-gray-500">No data</div>
+              )}
+            </div>
+
+            {/* Defense Leaders */}
+            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded border-4" style={{ borderColor: teamColor }}>
+              <h3 className="text-lg font-semibold text-neon-green mb-3">Defense Leaders</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                <div>
+                  <div className="font-medium mb-1">Tackles</div>
+                  {leaders?.tackles ? (
+                    <div className="flex items-center justify-between">
+                      <Link href={`/leagues/${leagueIdString}/players/${leaders.tackles.player.replace(/[^0-9]/g,'')}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green">
+                        {leaders.tackles.player}
+                      </Link>
+                      <span>{leaders.tackles.tackles}</span>
+                    </div>
+                  ) : (
+                    <div className="text-gray-500">-</div>
+                  )}
+                </div>
+                <div>
+                  <div className="font-medium mb-1">Sacks</div>
+                  {leaders?.sacks ? (
+                    <div className="flex items-center justify-between">
+                      <Link href={`/leagues/${leagueIdString}/players/${leaders.sacks.player.replace(/[^0-9]/g,'')}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green">
+                        {leaders.sacks.player}
+                      </Link>
+                      <span>{leaders.sacks.sacks}</span>
+                    </div>
+                  ) : (
+                    <div className="text-gray-500">-</div>
+                  )}
+                </div>
+                <div>
+                  <div className="font-medium mb-1">Interceptions</div>
+                  {leaders?.interceptions ? (
+                    <div className="flex items-center justify-between">
+                      <Link href={`/leagues/${leagueIdString}/players/${leaders.interceptions.player.replace(/[^0-9]/g,'')}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green">
+                        {leaders.interceptions.player}
+                      </Link>
+                      <span>{leaders.interceptions.interceptions}</span>
+                    </div>
+                  ) : (
+                    <div className="text-gray-500">-</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
       case 'schedule': {
         type ScheduleItem = {
           week: number
