@@ -144,6 +144,10 @@ export default function TeamDetailPage() {
   const teamConfig = getTeamConfig(teamData.team.name)
   const teamColor = teamConfig?.colors?.primary || '#00FF00'
 
+  // formatter for totals with ranks from backend
+  const fmt = (v?: number, r?: number) =>
+    Number.isFinite(v) && Number.isFinite(r) ? `${Number(v).toLocaleString()} (${r})` : '-'
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'home':
@@ -438,25 +442,25 @@ export default function TeamDetailPage() {
               <p className="text-gray-400">None</p>
             </div>
 
-             {/* Stats Grid (ranks removed until backend ranks are verified) */}
+             {/* Stats Grid using backend totals and ranks */}
             <div className="grid grid-cols-2 gap-6 mb-4">
               <div>
-                <h4 className="text-lg font-semibold text-neon-green mb-2">Offense</h4>
-                <div className="space-y-1 text-sm">
-                  <div>PTS: {teamData.offensiveStats.points}</div>
-                  <div>YDS: {teamData.offensiveStats.yards}</div>
-                  <div>P.YDS: {teamData.offensiveStats.passingYards}</div>
-                  <div>R.YDS: {teamData.offensiveStats.rushingYards}</div>
-                </div>
+                 <h4 className="text-lg font-semibold text-neon-green mb-2">Offense</h4>
+                 <div className="space-y-1 text-sm">
+                  <div>Points: {fmt(teamData.offensiveStats.points, teamData.offensiveStats.pointsRank)}</div>
+                  <div>Total Yards: {fmt(teamData.offensiveStats.yards, teamData.offensiveStats.yardsRank)}</div>
+                  <div>Pass Yards: {fmt(teamData.offensiveStats.passingYards, teamData.offensiveStats.passingYardsRank)}</div>
+                  <div>Rush Yards: {fmt(teamData.offensiveStats.rushingYards, teamData.offensiveStats.rushingYardsRank)}</div>
+                 </div>
               </div>
               <div>
-                <h4 className="text-lg font-semibold text-neon-green mb-2">Defense</h4>
-                <div className="space-y-1 text-sm">
-                  <div>PTS: {teamData.defensiveStats.points}</div>
-                  <div>YDS: {teamData.defensiveStats.yards}</div>
-                  <div>P.YDS: {teamData.defensiveStats.passingYards}</div>
-                  <div>R.YDS: {teamData.defensiveStats.rushingYards}</div>
-                </div>
+                 <h4 className="text-lg font-semibold text-neon-green mb-2">Defense</h4>
+                 <div className="space-y-1 text-sm">
+                  <div>Pts Allowed: {fmt(teamData.defensiveStats.points, teamData.defensiveStats.pointsRank)}</div>
+                  <div>Yds Allowed: {fmt(teamData.defensiveStats.yards, teamData.defensiveStats.yardsRank)}</div>
+                  <div>Pass Yds Allowed: {fmt(teamData.defensiveStats.passingYards, teamData.defensiveStats.passingYardsRank)}</div>
+                  <div>Rush Yds Allowed: {fmt(teamData.defensiveStats.rushingYards, teamData.defensiveStats.rushingYardsRank)}</div>
+                 </div>
               </div>
             </div>
 
