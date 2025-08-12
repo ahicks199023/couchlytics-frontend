@@ -20,9 +20,10 @@ export function useRegister() {
       } else {
         router.replace('/login')
       }
-    } catch (e: any) {
-      setError(e?.message ?? 'Registration failed.')
-      throw e
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Registration failed.'
+      setError(message)
+      throw new Error(message)
     } finally {
       setLoading(false)
     }

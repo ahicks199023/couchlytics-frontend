@@ -28,7 +28,13 @@ export async function registerUser(payload: RegisterPayload) {
   const res = await http.post('/auth/register', payload, { validateStatus: () => true })
   if (res.status === 201) return res.data
   if (res.status === 409) throw new Error('An account with this email already exists.')
-  throw new Error((res.data as any)?.error ?? 'Registration failed.')
+  const maybeObj = res.data as unknown
+  let message: string | undefined
+  if (maybeObj && typeof maybeObj === 'object' && 'error' in (maybeObj as Record<string, unknown>)) {
+    const val = (maybeObj as Record<string, unknown>).error
+    if (typeof val === 'string') message = val
+  }
+  throw new Error(message ?? 'Registration failed.')
 }
 
 
