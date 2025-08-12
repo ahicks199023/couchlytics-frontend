@@ -142,7 +142,7 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
       const params = new URLSearchParams()
       if (selectedFolder) params.append('folderId', selectedFolder.toString())
       
-      const response = await fetch(`https://api.couchlytics.com/ozzie-enhanced/conversations?${params}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/ozzie-enhanced/conversations?${params}`, {
         credentials: 'include'
       })
       
@@ -157,7 +157,7 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
 
   const loadFolders = useCallback(async () => {
     try {
-      const response = await fetch('https://api.couchlytics.com/ozzie-enhanced/folders', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/ozzie-enhanced/folders`, {
         credentials: 'include'
       })
       
@@ -209,7 +209,7 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
       
       console.log('Sending enhanced Ozzie request:', requestData)
 
-      const response = await fetch(`https://api.couchlytics.com/ozzie-enhanced/query`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/ozzie-enhanced/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -357,7 +357,7 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
 
   const loadConversation = async (conversationId: number) => {
     try {
-      const response = await fetch(`https://api.couchlytics.com/ozzie-enhanced/conversations/${conversationId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/ozzie-enhanced/conversations/${conversationId}`, {
         credentials: 'include'
       })
       
@@ -396,7 +396,7 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
     }
     
     try {
-      const response = await fetch(`https://api.couchlytics.com/ozzie-enhanced/search?q=${encodeURIComponent(query)}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/ozzie-enhanced/search?q=${encodeURIComponent(query)}`, {
         credentials: 'include'
       })
       
@@ -413,7 +413,7 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
     if (!newFolderName.trim()) return
     
     try {
-      const response = await fetch('https://api.couchlytics.com/ozzie-enhanced/folders', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/ozzie-enhanced/folders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -437,7 +437,7 @@ export default function EnhancedOzzieChat({ leagueId: propLeagueId, teamId: prop
 
   const deleteConversation = async (conversationId: number) => {
     try {
-      const response = await fetch(`https://api.couchlytics.com/ozzie-enhanced/conversations/${conversationId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/ozzie-enhanced/conversations/${conversationId}`, {
         method: 'DELETE',
         credentials: 'include'
       })

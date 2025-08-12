@@ -6,7 +6,8 @@ import Image from 'next/image'
 
 import { useAuth } from '@/contexts/AuthContext'
 import { User } from '@/types/user'
-import { API_BASE } from '@/lib/config'
+import { login as loginApi } from '@/features/auth/api'
+import { API_BASE_URL } from '@/lib/http'
 import { useInbox } from '@/Hooks/useInbox'
 import { getFirebaseUserEmail } from '@/lib/firebase'
 
@@ -62,30 +63,13 @@ export default function NavBar() {
     setLoginError(null)
 
     try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: loginFormData.email,
-          password: loginFormData.password
-        })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.authenticated) {
-          setShowLoginDropdown(false)
-          setLoginFormData({ email: '', password: '' })
-          // The useAuth hook will automatically update the user state
-        } else {
-          setLoginError('Invalid email or password')
-        }
+      const data = await loginApi(loginFormData.email, loginFormData.password)
+      if (data?.authenticated || data?.user) {
+        setShowLoginDropdown(false)
+        setLoginFormData({ email: '', password: '' })
+        // The auth context will update the user state
       } else {
-        const errorData = await response.json()
-        setLoginError(errorData.error || 'Login failed. Please try again.')
+        setLoginError('Invalid email or password')
       }
     } catch (err) {
       console.error("Native login error:", err)
@@ -100,7 +84,7 @@ export default function NavBar() {
     setLoginError(null)
     try {
       console.log('Redirecting to Google OAuth...')
-      window.location.href = `${API_BASE}/auth/login/google`
+      window.location.href = `${API_BASE_URL}/auth/login/google`
     } catch (err) {
       console.error("Google login error:", err)
       setLoginError("Google login failed. Please try again.")
@@ -113,7 +97,7 @@ export default function NavBar() {
     setLoginError(null)
     try {
       console.log('Redirecting to Discord OAuth...')
-      window.location.href = `${API_BASE}/auth/login/discord`
+      window.location.href = `${API_BASE_URL}/auth/login/discord`
     } catch (err) {
       console.error("Discord login error:", err)
       setLoginError("Discord login failed. Please try again.")

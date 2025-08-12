@@ -131,7 +131,7 @@ export default function OzzieChat({ leagueId: propLeagueId, teamId: propTeamId }
       
       console.log('Sending Ozzie request:', requestData)
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/ozzie/query`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE || 'https://api.couchlytics.com'}/ozzie/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

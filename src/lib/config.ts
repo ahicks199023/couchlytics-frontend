@@ -1,5 +1,8 @@
 // lib/config.ts
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'https://api.couchlytics.com';
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  'https://api.couchlytics.com';
 
 // Add authentication helper
 export const getAuthHeaders = () => ({

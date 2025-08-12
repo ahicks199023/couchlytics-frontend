@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from 'react'
 import { User, UserRole, Permission } from '@/types/user'
-import { API_BASE } from '@/lib/config'
+import { http, API_BASE_URL } from '@/lib/http'
 import { firebaseAuthService } from '@/lib/firebase'
 import { User as FirebaseUser } from 'firebase/auth'
 
@@ -51,14 +51,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       console.log('🔍 Checking Couchlytics auth status...')
-      const response = await fetch(`${API_BASE}/auth/status`, {
-        credentials: "include",
-      })
+      const response = await http.get('/auth/status')
       
       console.log('🔍 Auth status response:', response.status, response.statusText)
       
-      if (response.ok) {
-        const data = await response.json()
+      if (response.status === 200) {
+        const data = response.data
         console.log('🔍 Auth status data:', data)
         
         if (data.authenticated) {
@@ -91,12 +89,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/auth/user`, {
-        credentials: "include",
-      })
+      const response = await http.get('/auth/user')
       
-      if (response.ok) {
-        const userData = await response.json()
+      if (response.status === 200) {
+        const userData = response.data
         setUser(userData)
         setAuthenticated(true)
       } else {
@@ -183,10 +179,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       // Call logout endpoint
-      await fetch(`${API_BASE}/auth/logout`, {
-        credentials: 'include',
-        method: 'POST',
-      })
+      await http.post('/auth/logout')
       
       // Clear any cached data
       if (typeof window !== 'undefined') {
@@ -225,11 +218,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [])
 
   const loginWithGoogle = useCallback(() => {
-    window.location.href = `${API_BASE}/auth/login/google`
+    window.location.href = `${API_BASE_URL}/auth/login/google`
   }, [])
 
   const loginWithDiscord = useCallback(() => {
-    window.location.href = `${API_BASE}/auth/login/discord`
+    window.location.href = `${API_BASE_URL}/auth/login/discord`
   }, [])
 
   const value: AuthContextType = {

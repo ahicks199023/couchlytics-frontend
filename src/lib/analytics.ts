@@ -7,7 +7,7 @@ import {
   LoadingState 
 } from '@/types/analytics'
 
-const ANALYTICS_BASE = 'https://api.couchlytics.com'
+const ANALYTICS_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'
 
 // Helper function to handle API responses with proper error handling
 const handleApiResponse = async <T>(response: Response): Promise<T> => {

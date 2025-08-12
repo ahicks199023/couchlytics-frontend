@@ -7,7 +7,7 @@ import {
   User, 
   signOut as firebaseSignOut 
 } from 'firebase/auth'
-import { API_BASE } from './config'
+import { http } from '@/lib/http'
 
 // Export User type for use in other components
 export type { User } from 'firebase/auth'
@@ -56,32 +56,25 @@ class FirebaseAuthService {
    */
   async getFirebaseToken(): Promise<string> {
     try {
-      console.log('🔑 Requesting Firebase token from:', `${API_BASE}/api/firebase-token`)
-      
-      const response = await fetch(`${API_BASE}/api/firebase-token`, {
-        method: 'GET',
-        credentials: 'include', // Important: Include session cookies
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+      console.log('🔑 Requesting Firebase token via axios client')
+      const response = await http.get('/api/firebase-token')
 
       console.log('🔑 Token response status:', response.status)
-      console.log('🔑 Token response ok:', response.ok)
+      console.log('🔑 Token response data present:', !!response.data)
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         if (response.status === 302) {
           // Redirect to Couchlytics login
           window.location.href = '/login'
           throw new Error('User not authenticated with Couchlytics')
         }
         
-        const errorData = await response.json().catch(() => ({}))
+        const errorData = response.data || {}
         console.error('🔑 Token error data:', errorData)
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`)
+        throw new Error(errorData.message || `HTTP ${response.status}`)
       }
 
-      const data = await response.json()
+      const data = response.data
       console.log('🔑 Token response data:', data)
       console.log('🔑 Token received:', data.token ? 'Yes' : 'No')
       
@@ -110,17 +103,11 @@ class FirebaseAuthService {
       
       if (userCredential.user) {
         // Get the email from the token response, not from user.email
-        const tokenResponse = await fetch(`${API_BASE}/api/firebase-token`, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
+        const tokenResponse = await http.get('/api/firebase-token')
         
         let tokenData: { email?: string; token?: string } | null = null
-        if (tokenResponse.ok) {
-          tokenData = await tokenResponse.json()
+        if (tokenResponse.status === 200) {
+          tokenData = tokenResponse.data as { email?: string; token?: string }
           console.log('🔑 Token data with email:', tokenData)
           
           // Update the user profile with display name if email is available
@@ -252,7 +239,7 @@ class FirebaseAuthService {
    */
   async testFirebaseHealth(): Promise<boolean> {
     try {
-      const response = await fetch(`${API_BASE}/api/firebase-token/health`)
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/api/firebase-token/health`)
       const data = await response.json()
       console.log('Firebase health:', data)
       return data.status === 'healthy'
@@ -273,7 +260,7 @@ class FirebaseAuthService {
       console.log('Firebase config available:', !!this.auth)
       
       // 2. Get token from backend
-      const tokenResponse = await fetch(`${API_BASE}/api/firebase-token`, {
+        const tokenResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/api/firebase-token`, {
         method: 'GET',
         credentials: 'include',
         headers: {

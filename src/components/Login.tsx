@@ -2,9 +2,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { API_BASE } from "@/lib/config";
+import { login as loginApi } from "@/features/auth/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { signInWithCustomToken } from "firebase/auth";
+import { API_BASE_URL } from "@/lib/http";
 import { auth } from "@/lib/firebase";
 
 export default function Login() {
@@ -52,28 +53,12 @@ export default function Login() {
     // TEMPORARY DEBUG: Check if this function is being called
     console.log('🚨 DEBUG: handleNativeLogin called - this means the new code is deployed');
     console.log('🚨 DEBUG: Current cookies:', document.cookie);
-    console.log('🚨 DEBUG: API_BASE:', API_BASE);
+    console.log('🚨 DEBUG: Using centralized axios client');
 
     try {
       console.log('🔐 Attempting native login...');
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        })
-      });
-
-      console.log('🔐 Login response status:', response.status);
-      console.log('🔐 Response headers:', Object.fromEntries(response.headers.entries()));
-      console.log('🔐 Cookies before login:', document.cookie);
-      
-      if (response.ok) {
-        const data = await response.json();
+      const data = await loginApi(formData.email, formData.password);
+      console.log('🔐 Login response data (axios):', data);
         console.log('🔐 Login response data:', data);
         console.log('🔐 Response structure check:', {
           hasUser: !!data.user,
@@ -137,7 +122,7 @@ export default function Login() {
             console.log(`🔄 Auth check attempt ${attempt}/3...`);
             console.log(`🔐 Cookies before auth status check (attempt ${attempt}):`, document.cookie);
             
-            const authCheck = await fetch(`${API_BASE}/auth/status`, {
+            const authCheck = await fetch(`${API_BASE_URL}/auth/status`, {
               credentials: "include",
             });
             
@@ -186,7 +171,7 @@ export default function Login() {
             console.log(`🔄 Auth check attempt ${attempt}/3...`);
             console.log(`🔐 Cookies before auth status check (attempt ${attempt}):`, document.cookie);
             
-            const authCheck = await fetch(`${API_BASE}/auth/status`, {
+            const authCheck = await fetch(`${API_BASE_URL}/auth/status`, {
               credentials: "include",
             });
             
@@ -219,10 +204,6 @@ export default function Login() {
           console.log('❌ Login response validation failed:', data);
           setError('Invalid email or password');
         }
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Login failed. Please try again.');
-      }
     } catch (err) {
       console.error("Native login error:", err);
       setError("Login failed. Please try again.");
@@ -236,7 +217,7 @@ export default function Login() {
     setError(null);
     try {
       console.log('Redirecting to Google OAuth...');
-      window.location.href = `${API_BASE}/auth/login/google`;
+      window.location.href = `${API_BASE_URL}/auth/login/google`;
     } catch (err) {
       console.error("Google login error:", err);
       setError("Google login failed. Please try again.");
@@ -249,7 +230,7 @@ export default function Login() {
     setError(null);
     try {
       console.log('Redirecting to Discord OAuth...');
-      window.location.href = `${API_BASE}/auth/login/discord`;
+      window.location.href = `${API_BASE_URL}/auth/login/discord`;
     } catch (err) {
       console.error("Discord login error:", err);
       setError("Discord login failed. Please try again.");

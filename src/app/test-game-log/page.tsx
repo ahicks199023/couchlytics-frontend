@@ -14,7 +14,7 @@ export default function TestGameLogPage() {
         
         <div className="bg-gray-900 rounded-lg p-6">
           <GameLogTab 
-            playerId="551029279" 
+            playerId="551029279"
             leagueId="12335716" 
           />
         </div>
