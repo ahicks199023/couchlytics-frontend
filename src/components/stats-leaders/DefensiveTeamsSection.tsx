@@ -89,19 +89,15 @@ export function DefensiveTeamsSection({ leagueId }: DefensiveTeamsSectionProps) 
     fetchDefensiveTeamStats()
   }, [leagueId])
 
+  const getNumber = (v: unknown) => (typeof v === 'number' ? v : Number(v || 0))
+  const fmt1 = (v: unknown) => getNumber(v).toFixed(1)
+
   const yardsAllowedColumns = [
     { key: 'team_name', label: 'Team', sortable: true },
     { key: 'total_yards_allowed', label: 'Total Yards Allowed', sortable: true, align: 'right' as const },
     { key: 'passing_yards_allowed', label: 'Pass Yards Allowed', sortable: true, align: 'right' as const },
     { key: 'rushing_yards_allowed', label: 'Rush Yards Allowed', sortable: true, align: 'right' as const },
-    { key: 'yards_allowed_per_game', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => {
-      if (typeof value === 'number') {
-        return value.toFixed(1)
-      } else if (typeof value === 'string' && value === '0E-20') {
-        return '0.0'
-      }
-      return '-'
-    }},
+    { key: 'yardsAllowedPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (_: unknown, row?: Record<string, unknown>) => fmt1((row as any)?.yardsAllowedPerGame ?? (row as any)?.yards_allowed_per_game) },
     { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
@@ -111,7 +107,7 @@ export function DefensiveTeamsSection({ leagueId }: DefensiveTeamsSectionProps) 
     { key: 'interceptions', label: 'INTs', sortable: true, align: 'right' as const },
     { key: 'forced_fumbles', label: 'Forced Fumbles', sortable: true, align: 'right' as const },
     { key: 'fumble_recoveries', label: 'Fumble Recoveries', sortable: true, align: 'right' as const },
-    { key: 'sacks_per_game', label: 'Sacks/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
+    { key: 'sacksPerGame', label: 'Sacks/Game', sortable: true, align: 'right' as const, formatter: (_: unknown, row?: Record<string, unknown>) => fmt1((row as any)?.sacksPerGame ?? (row as any)?.sacks_per_game) },
     { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
 
