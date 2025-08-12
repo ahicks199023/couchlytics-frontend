@@ -48,6 +48,15 @@ export default function JoinLeaguePage() {
     if (inviteCode) run()
   }, [inviteCode, authenticated, router])
 
+  // If we arrive here authenticated and with invite cookies already consumed, send directly to league
+  useEffect(() => {
+    if (authenticated && league?.id) {
+      // Optional: auto-route to league if there are no teams to select
+      // Comment this out if you want to always present the team selection
+      // router.replace(`/leagues/${league.id}`)
+    }
+  }, [authenticated, league])
+
   const onJoin = async () => {
     if (!league) return
     try {

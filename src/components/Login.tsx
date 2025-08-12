@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { login as loginApi } from "@/features/auth/api";
+import { getInvite } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { signInWithCustomToken } from "firebase/auth";
 import { API_BASE_URL } from "@/lib/http";
@@ -123,8 +124,22 @@ export default function Login() {
               console.log(`🔍 Auth check attempt ${attempt} result:`, authData);
               
               if (authData.authenticated) {
-                console.log('🚀 Authentication confirmed, redirecting to leagues page...');
+                console.log('🚀 Authentication confirmed');
                 authConfirmed = true;
+                // If this login was initiated with an invite param, send user directly to the league
+                const inviteCode = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('invite') : null;
+                if (inviteCode) {
+                  try {
+                    const info = await getInvite(inviteCode);
+                    const leagueId = info?.league_id;
+                    if (leagueId) {
+                      router.push(`/leagues/${leagueId}`);
+                      break;
+                    }
+                  } catch (e) {
+                    console.warn('Invite lookup failed after login, falling back to /leagues', e);
+                  }
+                }
                 router.push('/leagues');
                 break;
               } else {
@@ -172,8 +187,21 @@ export default function Login() {
               console.log(`🔍 Auth check attempt ${attempt} result:`, authData);
               
               if (authData.authenticated) {
-                console.log('🚀 Authentication confirmed, redirecting to leagues page...');
+                console.log('🚀 Authentication confirmed');
                 authConfirmed = true;
+                const inviteCode = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('invite') : null;
+                if (inviteCode) {
+                  try {
+                    const info = await getInvite(inviteCode);
+                    const leagueId = info?.league_id;
+                    if (leagueId) {
+                      router.push(`/leagues/${leagueId}`);
+                      break;
+                    }
+                  } catch (e) {
+                    console.warn('Invite lookup failed after login, falling back to /leagues', e);
+                  }
+                }
                 router.push('/leagues');
                 break;
               } else {
