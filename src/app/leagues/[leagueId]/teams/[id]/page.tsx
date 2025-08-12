@@ -145,8 +145,9 @@ export default function TeamDetailPage() {
   const teamColor = teamConfig?.colors?.primary || '#00FF00'
 
   // formatter for totals with ranks from backend
-  const fmt = (v?: number, r?: number) =>
-    Number.isFinite(v) && Number.isFinite(r) ? `${Number(v).toLocaleString()} (${r})` : '-'
+  // per-game formatter with rank
+  const fmtPg = (v?: number, r?: number) =>
+    Number.isFinite(v as number) ? `${Number(v).toFixed(1)} (${r ?? '-'})` : '-'
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -447,19 +448,19 @@ export default function TeamDetailPage() {
               <div>
                  <h4 className="text-lg font-semibold text-neon-green mb-2">Offense</h4>
                  <div className="space-y-1 text-sm">
-                  <div>Points: {fmt(teamData.offensiveStats.points, teamData.offensiveStats.pointsRank)}</div>
-                  <div>Total Yards: {fmt(teamData.offensiveStats.yards, teamData.offensiveStats.yardsRank)}</div>
-                  <div>Pass Yards: {fmt(teamData.offensiveStats.passingYards, teamData.offensiveStats.passingYardsRank)}</div>
-                  <div>Rush Yards: {fmt(teamData.offensiveStats.rushingYards, teamData.offensiveStats.rushingYardsRank)}</div>
+                  <div>Points: {fmtPg(teamData.offensiveStats.points, teamData.offensiveStats.pointsRank)}</div>
+                  <div>Total Yards: {fmtPg(teamData.offensiveStats.yards, teamData.offensiveStats.yardsRank)}</div>
+                  <div>Pass Yards: {fmtPg(teamData.offensiveStats.passingYards, teamData.offensiveStats.passingYardsRank)}</div>
+                  <div>Rush Yards: {fmtPg(teamData.offensiveStats.rushingYards, teamData.offensiveStats.rushingYardsRank)}</div>
                  </div>
               </div>
               <div>
                  <h4 className="text-lg font-semibold text-neon-green mb-2">Defense</h4>
                  <div className="space-y-1 text-sm">
-                  <div>Pts Allowed: {fmt(teamData.defensiveStats.points, teamData.defensiveStats.pointsRank)}</div>
-                  <div>Yds Allowed: {fmt(teamData.defensiveStats.yards, teamData.defensiveStats.yardsRank)}</div>
-                  <div>Pass Yds Allowed: {fmt(teamData.defensiveStats.passingYards, teamData.defensiveStats.passingYardsRank)}</div>
-                  <div>Rush Yds Allowed: {fmt(teamData.defensiveStats.rushingYards, teamData.defensiveStats.rushingYardsRank)}</div>
+                  <div>Pts Allowed: {fmtPg(teamData.defensiveStats.points, teamData.defensiveStats.pointsRank)}</div>
+                  <div>Yds Allowed: {fmtPg(teamData.defensiveStats.yards, teamData.defensiveStats.yardsRank)}</div>
+                  <div>Pass Yds Allowed: {fmtPg(teamData.defensiveStats.passingYards, teamData.defensiveStats.passingYardsRank)}</div>
+                  <div>Rush Yds Allowed: {fmtPg(teamData.defensiveStats.rushingYards, teamData.defensiveStats.rushingYardsRank)}</div>
                  </div>
               </div>
             </div>
