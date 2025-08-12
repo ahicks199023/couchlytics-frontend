@@ -20,7 +20,7 @@ export default function NavBar() {
   const [loginError, setLoginError] = useState<string | null>(null)
   const loginDropdownRef = useRef<HTMLDivElement>(null)
 
-  const { user, authenticated, loading, logout, firebaseUser } = useAuth()
+  const { user, authenticated, loading, logout, firebaseUser, checkAuthStatus } = useAuth()
   
   const currentUser = getFirebaseUserEmail(firebaseUser) || user?.email || ''
   const { totalUnreadCount } = useInbox(currentUser)
@@ -67,7 +67,8 @@ export default function NavBar() {
       if (data?.authenticated || data?.user) {
         setShowLoginDropdown(false)
         setLoginFormData({ email: '', password: '' })
-        // The auth context will update the user state
+        // Immediately refresh auth status so the navbar updates without a page reload
+        await checkAuthStatus()
       } else {
         setLoginError('Invalid email or password')
       }
