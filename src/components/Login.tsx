@@ -9,15 +9,7 @@ import { API_BASE_URL } from "@/lib/http";
 import { auth } from "@/lib/firebase";
 
 export default function Login() {
-  // FORCE IMMEDIATE VISIBILITY - This will show an alert when component loads
-  if (typeof window !== 'undefined') {
-    alert('🚨 NEW LOGIN CODE LOADED - Check console for debugging! VERSION 90c7a31');
-  }
-  
-  // AGGRESSIVE DEBUG: This should show immediately when component loads
-  console.log('🚨🚨🚨 LOGIN COMPONENT LOADED - NEW CODE IS DEPLOYED 🚨🚨🚨');
-  console.log('🚨🚨🚨 Current timestamp:', new Date().toISOString());
-  console.log('🚨🚨🚨 Component version: DEBUG-v2');
+  // Removed noisy debug alerts; keeping minimal logs if needed
   
   const [formData, setFormData] = useState({
     email: '',
