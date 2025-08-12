@@ -74,7 +74,7 @@ export default function JoinLeaguePage() {
     <main className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 text-white">
       <div className="max-w-3xl mx-auto p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-extrabold">You're invited to join</h1>
+          <h1 className="text-3xl font-extrabold">You&apos;re invited to join</h1>
           <h2 className="text-2xl text-neon-green font-bold mt-1">{league.name}</h2>
           <p className="text-gray-400 mt-2">Invite code: <code className="bg-gray-800 px-2 py-1 rounded">{inviteCode}</code></p>
         </div>
@@ -82,7 +82,7 @@ export default function JoinLeaguePage() {
         {!authenticated ? (
           <div className="p-5 bg-gray-800/60 rounded-lg border border-gray-700 space-y-4">
             <p className="text-gray-300">
-              This is a league invite. Click <span className="font-semibold">Continue</span> to proceed — we'll preserve the invite and send you to sign in or register. After you authenticate, you'll be added to <span className="text-neon-green font-semibold">{league.name}</span> automatically.
+              This is a league invite. Click <span className="font-semibold">Continue</span> to proceed — we&apos;ll preserve the invite and send you to sign in or register. After you authenticate, you&apos;ll be added to <span className="text-neon-green font-semibold">{league.name}</span> automatically.
             </p>
             <div className="flex flex-wrap gap-3">
               <a
