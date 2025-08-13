@@ -10,7 +10,9 @@ import {
   assignTeamToUser, 
   removeUserFromLeague, 
   getCompanionAppInfo,
-  updateLeagueSettings
+  updateLeagueSettings,
+  assignTeamToUserFlexible,
+  unassignTeam
 } from '@/lib/api'
 
 interface League {
@@ -639,28 +641,35 @@ export default function LeagueManagement() {
                             className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm"
                             value={user.team_id ?? ''}
                             onChange={async (e) => {
-                              const teamId = e.target.value ? Number(e.target.value) : undefined
+                              const raw = e.target.value
                               try {
                                 setError(null)
-                                if (teamId) {
-                                  await assignTeamToUser(leagueId, teamId, user.email)
+                                if (raw) {
+                                  // Prefer external string team_id; fallback to numeric id
+                                  const team = teams.find(t => String(t.id) === raw || String((t as any).team_id ?? '') === raw)
+                                  const teamIdentifier = (team && (team as any).team_id) ? String((team as any).team_id) : Number(raw)
+                                  await assignTeamToUserFlexible(leagueId, { userId: user.id, teamIdentifier })
+                                  setSuccessMessage('Team assigned successfully!')
                                 } else {
-                                  await removeUserFromLeague(leagueId, user.email)
+                                  await unassignTeam(leagueId, user.id)
+                                  setSuccessMessage('Team unassigned')
                                 }
                                 const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
                                 setTeams(leagueData.teams || [])
                                 setUsers(leagueData.members || [])
-                                setSuccessMessage(teamId ? 'Team assigned successfully!' : 'User removed from league')
                                 setTimeout(() => setSuccessMessage(null), 3000)
-                              } catch (err) {
+                              } catch (err: unknown) {
                                 console.error('Failed to update team assignment:', err)
-                                setError('Failed to update team assignment')
+                                const message = err instanceof Error ? err.message : 'Failed to update team assignment'
+                                setError(message)
                               }
                             }}
                           >
                             <option value="">Unassigned</option>
                             {teams.map((t) => (
-                              <option key={t.id} value={t.id}>{t.city} {t.name}</option>
+                              <option key={t.id} value={String((t as any).team_id ?? t.id)}>
+                                {t.city} {t.name}
+                              </option>
                             ))}
                           </select>
                         </td>

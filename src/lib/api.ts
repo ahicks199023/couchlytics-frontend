@@ -135,6 +135,27 @@ export const removeUserFromLeague = async (leagueId: string, userEmail: string) 
   })
 }
 
+// New flexible assignment API per updated spec
+export const assignTeamToUserFlexible = async (
+  leagueId: string,
+  params: { userId: number; teamIdentifier: string | number }
+) => {
+  const payload =
+    typeof params.teamIdentifier === 'number'
+      ? { userId: params.userId, teamId: params.teamIdentifier }
+      : { userId: params.userId, teamId: params.teamIdentifier }
+  return fetchFromApi(`/commissioner/league/${leagueId}/assign-team`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export const unassignTeam = async (leagueId: string, userId: number) => {
+  return fetchFromApi(`/commissioner/league/${leagueId}/unassign-team?userId=${userId}`, {
+    method: 'DELETE',
+  })
+}
+
 export const getCompanionAppInfo = async (leagueId: string) => {
   return fetchFromApi(`/commissioner/league/${leagueId}/companion-app`)
 }
