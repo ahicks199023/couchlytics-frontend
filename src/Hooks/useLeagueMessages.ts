@@ -19,7 +19,7 @@ import { LeagueChatMessage, SendMessageParams, UseChatReturn } from '@/types/cha
 
 const MESSAGES_PER_PAGE = 50
 
-export default function useLeagueMessages(leagueId: string): UseChatReturn {
+export default function useLeagueMessages(leagueId: string, enabled: boolean = true): UseChatReturn {
   const [messages, setMessages] = useState<LeagueChatMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -28,7 +28,10 @@ export default function useLeagueMessages(leagueId: string): UseChatReturn {
 
   // Load initial messages
   useEffect(() => {
-    if (!leagueId) return
+    if (!leagueId || !enabled) {
+      setLoading(false)
+      return
+    }
 
     setLoading(true)
     setError(null)
@@ -76,16 +79,21 @@ export default function useLeagueMessages(leagueId: string): UseChatReturn {
       },
       (err) => {
         console.error('Error loading league chat messages:', err)
-        setError('Failed to load messages')
+        const code = (err as { code?: string }).code || ''
+        if (code === 'permission-denied') {
+          setError('Missing or insufficient permissions.')
+        } else {
+          setError('Failed to load messages')
+        }
         setLoading(false)
       }
     )
 
     return () => unsubscribe()
-  }, [leagueId])
+  }, [leagueId, enabled])
 
   const sendMessage = useCallback(async ({ text, sender, senderEmail }: SendMessageParams) => {
-    if (!leagueId || !text.trim()) return
+    if (!leagueId || !text.trim() || !enabled) return
 
     try {
       const messagesRef = collection(db, 'leagueChats', leagueId, 'messages')
@@ -101,10 +109,10 @@ export default function useLeagueMessages(leagueId: string): UseChatReturn {
       console.error('Error sending message:', err)
       setError('Failed to send message')
     }
-  }, [leagueId])
+  }, [leagueId, enabled])
 
   const deleteMessage = useCallback(async (messageId: string) => {
-    if (!leagueId) return
+    if (!leagueId || !enabled) return
 
     try {
       const messageRef = doc(db, 'leagueChats', leagueId, 'messages', messageId)
@@ -116,10 +124,10 @@ export default function useLeagueMessages(leagueId: string): UseChatReturn {
       console.error('Error deleting message:', err)
       setError('Failed to delete message')
     }
-  }, [leagueId])
+  }, [leagueId, enabled])
 
   const editMessage = useCallback(async (messageId: string, newText: string) => {
-    if (!leagueId || !newText.trim()) return
+    if (!leagueId || !newText.trim() || !enabled) return
 
     try {
       const messageRef = doc(db, 'leagueChats', leagueId, 'messages', messageId)
@@ -132,10 +140,10 @@ export default function useLeagueMessages(leagueId: string): UseChatReturn {
       console.error('Error editing message:', err)
       setError('Failed to edit message')
     }
-  }, [leagueId])
+  }, [leagueId, enabled])
 
   const reactToMessage = useCallback(async (messageId: string, emoji: string, userEmail: string) => {
-    if (!leagueId) return
+    if (!leagueId || !enabled) return
 
     try {
       const messageRef = doc(db, 'leagueChats', leagueId, 'messages', messageId)
@@ -194,10 +202,10 @@ export default function useLeagueMessages(leagueId: string): UseChatReturn {
       console.error('Error reacting to message:', err)
       setError('Failed to react to message')
     }
-  }, [leagueId])
+  }, [leagueId, enabled])
 
   const loadMoreMessages = useCallback(async () => {
-    if (!leagueId || !hasMore || !lastMessage) return
+    if (!leagueId || !hasMore || !lastMessage || !enabled) return
 
     try {
       const messagesRef = collection(db, 'leagueChats', leagueId, 'messages')
@@ -242,7 +250,7 @@ export default function useLeagueMessages(leagueId: string): UseChatReturn {
       console.error('Error loading more messages:', err)
       setError('Failed to load more messages')
     }
-  }, [leagueId, hasMore, lastMessage])
+  }, [leagueId, hasMore, lastMessage, enabled])
 
   return {
     messages,

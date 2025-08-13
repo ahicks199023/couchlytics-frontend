@@ -40,7 +40,7 @@ export default function LeagueChat({
     deleteMessage,
     editMessage,
     loadMoreMessages
-  } = useLeagueMessages(leagueId)
+  } = useLeagueMessages(leagueId, isFirebaseAuthenticated)
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
