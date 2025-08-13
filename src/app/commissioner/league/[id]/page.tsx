@@ -216,25 +216,7 @@ export default function LeagueManagement() {
     }
   }
 
-  const removeUser = async (userEmail: string) => {
-    if (!confirm(`Are you sure you want to remove ${userEmail} from the league?`)) {
-      return
-    }
-    
-    try {
-      setError(null)
-      await removeUserFromLeague(leagueId, userEmail)
-      // Refresh league data to get updated teams and users
-      const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
-      setTeams(leagueData.teams || [])
-      setUsers(leagueData.members || [])
-      setSuccessMessage('User removed successfully!')
-      setTimeout(() => setSuccessMessage(null), 3000)
-    } catch (error) {
-      console.error('Failed to remove user:', error)
-      setError('Failed to remove user')
-    }
-  }
+  // removeUser function no longer used (Actions column removed)
 
   // New functions for editing
   const startEditing = () => {
@@ -637,7 +619,7 @@ export default function LeagueManagement() {
                                 setError(null)
                                 const role = e.target.value as 'commissioner' | 'member'
                                 const userId = (user as unknown as { user_id?: number; id?: number }).user_id ?? user.id
-                                const res = await updateMemberRole(leagueId, Number(userId), role)
+                                await updateMemberRole(leagueId, Number(userId), role)
                                 const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
                                 setUsers(leagueData.members || [])
                                 setSuccessMessage('Role updated')
