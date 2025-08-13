@@ -634,45 +634,56 @@ export default function LeagueManagement() {
                           </select>
                         </td>
                         <td className="py-2 px-1 text-white">
-                          <select
-                            className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm"
-                            value={user.team_id ?? ''}
-                            onChange={async (e) => {
-                              const raw = e.target.value
-                              try {
-                                setError(null)
-                                if (raw) {
-                                  // Prefer external string team_id; fallback to numeric id
-                              const team = teams.find((t) => String(t.id) === raw || String(t.team_id ?? '') === raw)
-                              const teamIdentifier: string | number = team && team.team_id != null
-                                ? (typeof team.team_id === 'string' ? team.team_id : Number(team.team_id))
-                                : Number(raw)
-                                  const userId = (user as unknown as { user_id?: number; id?: number }).user_id ?? user.id
-                                  await assignTeamToUserFlexible(leagueId, { userId: Number(userId), teamIdentifier })
-                                  setSuccessMessage('Team assigned successfully!')
-                                } else {
-                                  const userId = (user as unknown as { user_id?: number; id?: number }).user_id ?? user.id
-                                  await unassignTeam(leagueId, Number(userId))
-                                  setSuccessMessage('Team unassigned')
+                          {/* Show current team name if assigned; otherwise allow selection */}
+                          {user.team_id ? (
+                            <span>
+                              {(() => {
+                                const t = teams.find(tt => String(tt.team_id ?? tt.id) === String(user.team_id))
+                                return t ? `${t.city} ${t.name}` : 'Assigned'
+                              })()}
+                            </span>
+                          ) : (
+                            <select
+                              className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm"
+                              value={user.team_id ?? ''}
+                              onChange={async (e) => {
+                                const raw = e.target.value
+                                try {
+                                  setError(null)
+                                  if (raw) {
+                                    const team = teams.find((t) => String(t.id) === raw || String(t.team_id ?? '') === raw)
+                                    const teamIdentifier: string | number = team && team.team_id != null
+                                      ? (typeof team.team_id === 'string' ? team.team_id : Number(team.team_id))
+                                      : Number(raw)
+                                    const userId = (user as unknown as { user_id?: number; id?: number }).user_id ?? user.id
+                                    await assignTeamToUserFlexible(leagueId, { userId: Number(userId), teamIdentifier })
+                                    setSuccessMessage('Team assigned successfully!')
+                                  } else {
+                                    const userId = (user as unknown as { user_id?: number; id?: number }).user_id ?? user.id
+                                    await unassignTeam(leagueId, Number(userId))
+                                    setSuccessMessage('Team unassigned')
+                                  }
+                                  const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
+                                  setTeams(leagueData.teams || [])
+                                  setUsers(leagueData.members || [])
+                                  setTimeout(() => setSuccessMessage(null), 3000)
+                                } catch (err: unknown) {
+                                  console.error('Failed to update team assignment:', err)
+                                  const message = err instanceof Error ? err.message : 'Failed to update team assignment'
+                                  setError(message)
                                 }
-                                const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
-                                setTeams(leagueData.teams || [])
-                                setUsers(leagueData.members || [])
-                                setTimeout(() => setSuccessMessage(null), 3000)
-                              } catch (err: unknown) {
-                                console.error('Failed to update team assignment:', err)
-                                const message = err instanceof Error ? err.message : 'Failed to update team assignment'
-                                setError(message)
-                              }
-                            }}
-                          >
-                            <option value="">Unassigned</option>
-                            {teams.map((t) => (
-                              <option key={t.id} value={String(t.team_id ?? t.id)}>
-                                {t.city} {t.name}
-                              </option>
-                            ))}
-                          </select>
+                              }}
+                            >
+                              <option value="">Unassigned</option>
+                              {teams
+                                .filter((t) => !t.is_assigned)
+                                .map((t) => (
+                                  <option key={t.id} value={String(t.team_id ?? t.id)}>
+                                    {t.city} {t.name}
+                                  </option>
+                                ))}
+                            </select>
+                          )}
                         </td>
                         <td className="py-2 px-1 text-white">
                           {user.joined_at ? new Date(user.joined_at).toLocaleDateString() : 'N/A'}
