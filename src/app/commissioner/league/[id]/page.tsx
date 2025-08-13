@@ -558,7 +558,7 @@ export default function LeagueManagement() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-700">
-                      <th className="text-left py-2 px-1">Team</th>
+                       <th className="text-left py-2 px-1">Team</th>
                       <th className="text-left py-2 px-1">Abbreviation</th>
                       <th className="text-left py-2 px-1">Status</th>
                       <th className="text-left py-2 px-1">Assigned User</th>
@@ -635,7 +635,34 @@ export default function LeagueManagement() {
                           </span>
                         </td>
                         <td className="py-2 px-1 text-white">
-                          {user.team_name || user.team_abbreviation || 'Unassigned'}
+                          <select
+                            className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm"
+                            value={user.team_id ?? ''}
+                            onChange={async (e) => {
+                              const teamId = e.target.value ? Number(e.target.value) : undefined
+                              try {
+                                setError(null)
+                                if (teamId) {
+                                  await assignTeamToUser(leagueId, teamId, user.email)
+                                } else {
+                                  await removeUserFromLeague(leagueId, user.email)
+                                }
+                                const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
+                                setTeams(leagueData.teams || [])
+                                setUsers(leagueData.members || [])
+                                setSuccessMessage(teamId ? 'Team assigned successfully!' : 'User removed from league')
+                                setTimeout(() => setSuccessMessage(null), 3000)
+                              } catch (err) {
+                                console.error('Failed to update team assignment:', err)
+                                setError('Failed to update team assignment')
+                              }
+                            }}
+                          >
+                            <option value="">Unassigned</option>
+                            {teams.map((t) => (
+                              <option key={t.id} value={t.id}>{t.city} {t.name}</option>
+                            ))}
+                          </select>
                         </td>
                         <td className="py-2 px-1 text-white">
                           {user.joined_at ? new Date(user.joined_at).toLocaleDateString() : 'N/A'}
