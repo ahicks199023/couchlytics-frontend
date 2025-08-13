@@ -8,7 +8,6 @@ import {
   getLeagueSettings, 
   generateInviteLink, 
   assignTeamToUser, 
-  removeUserFromLeague, 
   getCompanionAppInfo,
   updateLeagueSettings,
   assignTeamToUserFlexible,
