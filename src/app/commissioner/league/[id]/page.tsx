@@ -35,7 +35,7 @@ interface Team {
   city: string
   user_id?: number
   user?: string
-  team_id?: number
+  team_id?: number | string
   assigned_user?: string
   is_assigned?: boolean
 }
@@ -588,7 +588,7 @@ export default function LeagueManagement() {
                               onClick={() => {
                                 const email = prompt('Enter user email to assign:')
                                 if (email) {
-                                  assignTeam(team.team_id || team.id, email)
+                                  assignTeam(Number(team.team_id ?? team.id), email)
                                 }
                               }}
                               className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs"
@@ -646,8 +646,10 @@ export default function LeagueManagement() {
                                 setError(null)
                                 if (raw) {
                                   // Prefer external string team_id; fallback to numeric id
-                                  const team = teams.find(t => String(t.id) === raw || String((t as any).team_id ?? '') === raw)
-                                  const teamIdentifier = (team && (team as any).team_id) ? String((team as any).team_id) : Number(raw)
+                              const team = teams.find((t) => String(t.id) === raw || String(t.team_id ?? '') === raw)
+                              const teamIdentifier: string | number = team && team.team_id != null
+                                ? (typeof team.team_id === 'string' ? team.team_id : Number(team.team_id))
+                                : Number(raw)
                                   await assignTeamToUserFlexible(leagueId, { userId: user.id, teamIdentifier })
                                   setSuccessMessage('Team assigned successfully!')
                                 } else {
@@ -667,7 +669,7 @@ export default function LeagueManagement() {
                           >
                             <option value="">Unassigned</option>
                             {teams.map((t) => (
-                              <option key={t.id} value={String((t as any).team_id ?? t.id)}>
+                              <option key={t.id} value={String(t.team_id ?? t.id)}>
                                 {t.city} {t.name}
                               </option>
                             ))}
