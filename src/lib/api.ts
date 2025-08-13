@@ -156,6 +156,18 @@ export const unassignTeam = async (leagueId: string, userId: number) => {
   })
 }
 
+// Update member role (commissioner | member)
+export const updateMemberRole = async (
+  leagueId: string,
+  userId: number,
+  role: 'commissioner' | 'member'
+) => {
+  return fetchFromApi(`/commissioner/league/${leagueId}/update-role`, {
+    method: 'POST',
+    body: JSON.stringify({ userId, role })
+  })
+}
+
 export const getCompanionAppInfo = async (leagueId: string) => {
   return fetchFromApi(`/commissioner/league/${leagueId}/companion-app`)
 }

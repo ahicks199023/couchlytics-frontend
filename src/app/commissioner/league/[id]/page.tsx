@@ -12,7 +12,8 @@ import {
   getCompanionAppInfo,
   updateLeagueSettings,
   assignTeamToUserFlexible,
-  unassignTeam
+  unassignTeam,
+  updateMemberRole
 } from '@/lib/api'
 
 interface League {
@@ -564,7 +565,7 @@ export default function LeagueManagement() {
                       <th className="text-left py-2 px-1">Abbreviation</th>
                       <th className="text-left py-2 px-1">Status</th>
                       <th className="text-left py-2 px-1">Assigned User</th>
-                      <th className="text-left py-2 px-1">Actions</th>
+                      {/* Actions column removed */}
                     </tr>
                   </thead>
                   <tbody>
@@ -617,7 +618,7 @@ export default function LeagueManagement() {
                       <th className="text-left py-2 px-1">Role</th>
                       <th className="text-left py-2 px-1">Team</th>
                       <th className="text-left py-2 px-1">Joined</th>
-                      <th className="text-left py-2 px-1">Actions</th>
+                      {/* Actions column removed */}
                     </tr>
                   </thead>
                   <tbody>
@@ -628,13 +629,28 @@ export default function LeagueManagement() {
                         </td>
                         <td className="py-2 px-1 text-white">{user.email}</td>
                         <td className="py-2 px-1">
-                          <span className={`px-2 py-1 rounded text-xs ${
-                            user.role === 'commissioner' ? 'bg-red-600' :
-                            user.role === 'co-commissioner' ? 'bg-orange-600' :
-                            'bg-gray-600'
-                          }`}>
-                            {user.role}
-                          </span>
+                          <select
+                            className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm"
+                            value={user.role}
+                            onChange={async (e) => {
+                              try {
+                                setError(null)
+                                const role = e.target.value as 'commissioner' | 'member'
+                                const userId = (user as unknown as { user_id?: number; id?: number }).user_id ?? user.id
+                                const res = await updateMemberRole(leagueId, Number(userId), role)
+                                const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
+                                setUsers(leagueData.members || [])
+                                setSuccessMessage('Role updated')
+                                setTimeout(() => setSuccessMessage(null), 2000)
+                              } catch (err: unknown) {
+                                console.error('Failed to update role:', err)
+                                setError(err instanceof Error ? err.message : 'Failed to update role')
+                              }
+                            }}
+                          >
+                            <option value="member">member</option>
+                            <option value="commissioner">commissioner</option>
+                          </select>
                         </td>
                         <td className="py-2 px-1 text-white">
                           <select
@@ -679,16 +695,6 @@ export default function LeagueManagement() {
                         </td>
                         <td className="py-2 px-1 text-white">
                           {user.joined_at ? new Date(user.joined_at).toLocaleDateString() : 'N/A'}
-                        </td>
-                        <td className="py-2 px-1">
-                          {user.role !== 'commissioner' && (
-                            <button
-                              onClick={() => removeUser(user.email)}
-                              className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
-                            >
-                              Remove
-                            </button>
-                          )}
                         </td>
                       </tr>
                     ))}
