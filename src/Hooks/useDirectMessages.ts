@@ -20,7 +20,7 @@ import { generateConversationId } from '@/lib/chatUtils'
 
 const MESSAGES_PER_PAGE = 50
 
-function useDirectMessages(currentUserEmail: string, recipientEmail: string): UseChatReturn {
+function useDirectMessages(currentUserEmail: string, recipientEmail: string, enabled: boolean = true): UseChatReturn {
   const [messages, setMessages] = useState<DirectMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +31,10 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string): Us
 
   // Load initial messages
   useEffect(() => {
-    if (!currentUserEmail || !recipientEmail) return
+    if (!currentUserEmail || !recipientEmail || !enabled) {
+      setLoading(false)
+      return
+    }
 
     setLoading(true)
     setError(null)
@@ -77,16 +80,21 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string): Us
       },
       (err) => {
         console.error('Error loading DM messages:', err)
-        setError('Failed to load messages')
+        const code = (err as { code?: string }).code || ''
+        if (code === 'permission-denied') {
+          setError('Missing or insufficient permissions.')
+        } else {
+          setError('Failed to load messages')
+        }
         setLoading(false)
       }
     )
 
     return () => unsubscribe()
-  }, [currentUserEmail, recipientEmail, conversationId])
+  }, [currentUserEmail, recipientEmail, conversationId, enabled])
 
   const sendMessage = useCallback(async ({ text, sender, senderEmail }: SendMessageParams) => {
-    if (!text.trim() || !currentUserEmail || !recipientEmail) return
+    if (!text.trim() || !currentUserEmail || !recipientEmail || !enabled) return
 
     try {
       const messagesRef = collection(db, 'privateMessages', conversationId, 'messages')
@@ -102,10 +110,10 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string): Us
       console.error('Error sending DM:', err)
       setError('Failed to send message')
     }
-  }, [currentUserEmail, recipientEmail, conversationId])
+  }, [currentUserEmail, recipientEmail, conversationId, enabled])
 
   const deleteMessage = useCallback(async (messageId: string) => {
-    if (!currentUserEmail || !recipientEmail) return
+    if (!currentUserEmail || !recipientEmail || !enabled) return
 
     try {
       const messageRef = doc(db, 'privateMessages', conversationId, 'messages', messageId)
@@ -117,10 +125,10 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string): Us
       console.error('Error deleting DM:', err)
       setError('Failed to delete message')
     }
-  }, [currentUserEmail, recipientEmail, conversationId])
+  }, [currentUserEmail, recipientEmail, conversationId, enabled])
 
   const editMessage = useCallback(async (messageId: string, newText: string) => {
-    if (!newText.trim() || !currentUserEmail || !recipientEmail) return
+    if (!newText.trim() || !currentUserEmail || !recipientEmail || !enabled) return
 
     try {
       const messageRef = doc(db, 'privateMessages', conversationId, 'messages', messageId)
@@ -133,10 +141,10 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string): Us
       console.error('Error editing DM:', err)
       setError('Failed to edit message')
     }
-  }, [currentUserEmail, recipientEmail, conversationId])
+  }, [currentUserEmail, recipientEmail, conversationId, enabled])
 
   const reactToMessage = useCallback(async (messageId: string, emoji: string, userEmail: string) => {
-    if (!currentUserEmail || !recipientEmail) return
+    if (!currentUserEmail || !recipientEmail || !enabled) return
 
     try {
       const messageRef = doc(db, 'privateMessages', conversationId, 'messages', messageId)
@@ -195,10 +203,10 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string): Us
       console.error('Error reacting to DM:', err)
       setError('Failed to react to message')
     }
-  }, [currentUserEmail, recipientEmail, conversationId])
+  }, [currentUserEmail, recipientEmail, conversationId, enabled])
 
   const loadMoreMessages = useCallback(async () => {
-    if (!hasMore || !lastMessage || !currentUserEmail || !recipientEmail) return
+    if (!hasMore || !lastMessage || !currentUserEmail || !recipientEmail || !enabled) return
 
     try {
       const messagesRef = collection(db, 'privateMessages', conversationId, 'messages')
@@ -241,7 +249,7 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string): Us
       console.error('Error loading more messages:', err)
       setError('Failed to load more messages')
     }
-  }, [hasMore, lastMessage, currentUserEmail, recipientEmail, conversationId])
+  }, [hasMore, lastMessage, currentUserEmail, recipientEmail, conversationId, enabled])
 
   return {
     messages,

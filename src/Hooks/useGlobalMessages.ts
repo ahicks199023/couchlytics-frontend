@@ -19,7 +19,7 @@ import { ChatMessage, SendMessageParams, UseChatReturn } from '@/types/chat'
 
 const MESSAGES_PER_PAGE = 50
 
-export default function useGlobalMessages(): UseChatReturn {
+export default function useGlobalMessages(enabled: boolean = true): UseChatReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -28,6 +28,10 @@ export default function useGlobalMessages(): UseChatReturn {
 
   // Load initial messages
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError(null)
 
@@ -73,16 +77,21 @@ export default function useGlobalMessages(): UseChatReturn {
       },
       (err) => {
         console.error('Error loading global chat messages:', err)
-        setError('Failed to load messages')
+        const code = (err as { code?: string }).code || ''
+        if (code === 'permission-denied') {
+          setError('Missing or insufficient permissions.')
+        } else {
+          setError('Failed to load messages')
+        }
         setLoading(false)
       }
     )
 
     return () => unsubscribe()
-  }, [])
+  }, [enabled])
 
   const sendMessage = useCallback(async ({ text, sender, senderEmail }: SendMessageParams) => {
-    if (!text.trim()) return
+    if (!text.trim() || !enabled) return
 
     try {
       const messagesRef = collection(db, 'globalChatMessages')
@@ -97,7 +106,7 @@ export default function useGlobalMessages(): UseChatReturn {
       console.error('Error sending message:', err)
       setError('Failed to send message')
     }
-  }, [])
+  }, [enabled])
 
   const deleteMessage = useCallback(async (messageId: string) => {
     try {
@@ -113,7 +122,7 @@ export default function useGlobalMessages(): UseChatReturn {
   }, [])
 
   const editMessage = useCallback(async (messageId: string, newText: string) => {
-    if (!newText.trim()) return
+    if (!newText.trim() || !enabled) return
 
     try {
       const messageRef = doc(db, 'globalChatMessages', messageId)
@@ -126,7 +135,7 @@ export default function useGlobalMessages(): UseChatReturn {
       console.error('Error editing message:', err)
       setError('Failed to edit message')
     }
-  }, [])
+  }, [enabled])
 
   const reactToMessage = useCallback(async (messageId: string, emoji: string, userEmail: string) => {
     try {
@@ -189,7 +198,7 @@ export default function useGlobalMessages(): UseChatReturn {
   }, [])
 
   const loadMoreMessages = useCallback(async () => {
-    if (!hasMore || !lastMessage) return
+    if (!hasMore || !lastMessage || !enabled) return
 
     try {
       const messagesRef = collection(db, 'globalChatMessages')
@@ -233,7 +242,7 @@ export default function useGlobalMessages(): UseChatReturn {
       console.error('Error loading more messages:', err)
       setError('Failed to load more messages')
     }
-  }, [hasMore, lastMessage])
+  }, [hasMore, lastMessage, enabled])
 
   return {
     messages,

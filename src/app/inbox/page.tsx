@@ -27,7 +27,7 @@ export default function InboxPage() {
     deleteMessage,
     editMessage,
     loading: messagesLoading
-  } = useDirectMessages(currentUser || '', selectedRecipient || '')
+  } = useDirectMessages(currentUser || '', selectedRecipient || '', isFirebaseAuthenticated)
 
   // Mark conversation as read when selected
   useEffect(() => {
