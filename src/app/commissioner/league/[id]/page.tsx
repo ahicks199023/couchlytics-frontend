@@ -650,10 +650,12 @@ export default function LeagueManagement() {
                               const teamIdentifier: string | number = team && team.team_id != null
                                 ? (typeof team.team_id === 'string' ? team.team_id : Number(team.team_id))
                                 : Number(raw)
-                                  await assignTeamToUserFlexible(leagueId, { userId: user.id, teamIdentifier })
+                                  const userId = (user as unknown as { user_id?: number; id?: number }).user_id ?? user.id
+                                  await assignTeamToUserFlexible(leagueId, { userId: Number(userId), teamIdentifier })
                                   setSuccessMessage('Team assigned successfully!')
                                 } else {
-                                  await unassignTeam(leagueId, user.id)
+                                  const userId = (user as unknown as { user_id?: number; id?: number }).user_id ?? user.id
+                                  await unassignTeam(leagueId, Number(userId))
                                   setSuccessMessage('Team unassigned')
                                 }
                                 const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
