@@ -2,7 +2,7 @@
 
 // GameLogTab Component - Fixed TypeScript errors
 import React, { useState, useEffect, useCallback } from 'react'
-import { fetchFromApi } from '@/lib/api'
+import { fetchFromApi, getPlayerGameLog, PlayerGameLogRow } from '@/lib/api'
 
 interface GameLog {
   week: string
@@ -94,6 +94,9 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
   const [error, setError] = useState<string | null>(null)
   const [seasonOnly, setSeasonOnly] = useState(false)
   const [limit, setLimit] = useState(20)
+  const [season, setSeason] = useState<number>(new Date().getFullYear())
+  const [seasons, setSeasons] = useState<number[]>([])
+  const [rows, setRows] = useState<PlayerGameLogRow[] | null>(null)
 
   const fetchGameLogs = useCallback(async () => {
     try {
@@ -145,6 +148,22 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
   useEffect(() => {
     fetchGameLogs()
   }, [fetchGameLogs])
+
+  // New: season list bootstrap (static for now; backend may return available_seasons)
+  useEffect(() => {
+    setSeasons([new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1])
+  }, [])
+
+  // Season-based game log fetch
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true); setError(null)
+    getPlayerGameLog(leagueId, playerId, season)
+      .then(d => { if (!cancelled) { setRows(d.games || []); }} )
+      .catch(e => { if (!cancelled) setError(e.message) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [leagueId, playerId, season])
 
   const getTableHeaders = () => {
     const position = player?.position?.toUpperCase() || ''
@@ -375,6 +394,15 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
             <option value={20}>20 Games</option>
             <option value={50}>50 Games</option>
             <option value={100}>100 Games</option>
+          </select>
+          <select
+            value={season}
+            onChange={(e) => setSeason(Number(e.target.value))}
+            className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm text-white"
+          >
+            {seasons.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
           </select>
         </div>
         

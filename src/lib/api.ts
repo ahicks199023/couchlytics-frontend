@@ -66,6 +66,39 @@ export const getPlayerGameLogs = async (leagueId: string, playerId: string) => {
   return fetchFromApi(`/leagues/${leagueId}/players/${playerId}/game-logs`)
 }
 
+// Player Game Log (season-based)
+export type PlayerGameLogRow = {
+  week: number
+  date?: string
+  opponent: string
+  homeAway: 'HOME' | 'AWAY'
+  result?: 'W' | 'L' | 'T'
+  teamScore?: number
+  oppScore?: number
+  // Passing
+  pass_comp?: number; pass_att?: number; pass_cmp_pct?: number
+  pass_yds?: number; pass_avg?: number; pass_tds?: number; pass_ints?: number
+  pass_long?: number; pass_sacks?: number; passer_rating?: number
+  // Rushing
+  rush_att?: number; rush_yds?: number; rush_avg?: number; rush_tds?: number; rush_long?: number; rush_fum?: number
+  // Receiving
+  rec_tgt?: number; rec_rec?: number; rec_yds?: number; rec_avg?: number; rec_tds?: number; rec_long?: number; rec_drops?: number
+  // Defense
+  def_tackles?: number; def_sacks?: number; def_ints?: number; def_tds?: number; def_forced_fum?: number; def_fum_rec?: number
+  // Kicking/Punting
+  fg_made?: number; fg_att?: number; fg_pct?: number; xp_made?: number; xp_att?: number; kick_pts?: number
+  punt_att?: number; punt_yds?: number; punt_avg?: number; punts_in20?: number; punt_long?: number
+}
+
+export async function getPlayerGameLog(leagueId: string, playerId: string | number, season: number) {
+  const res = await fetch(`${API_BASE}/leagues/${leagueId}/players/${playerId}/game-log?season=${season}`, {
+    credentials: 'include',
+    headers: { 'Accept': 'application/json' }
+  })
+  if (!res.ok) throw new Error(`Game log fetch failed: ${res.status}`)
+  return res.json() as Promise<{ league_id: string; season: number; player_id: number; position: string; games: PlayerGameLogRow[]; available_seasons?: number[] }>
+}
+
 export const getTeamDetails = async (leagueId: string, teamId: string) => {
   return fetchFromApi(`/leagues/${leagueId}/teams/${teamId}/detail`)
 }
