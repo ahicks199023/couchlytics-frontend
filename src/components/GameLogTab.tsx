@@ -67,14 +67,15 @@ interface GameLog {
   safeties?: number
 }
 
-interface Player {
-  id: number
-  playerId: string
-  name: string
-  position: string
-  team: string
-  teamAbbr: string
-}
+// Remove unused Player interface - position now comes from API response
+// interface Player {
+//   id: number
+//   playerId: string
+//   name: string
+//   position: string
+//   team: string
+//   teamAbbr: string
+// }
 
 // Remove unused interface - keeping for reference if needed later
 // interface GameLogResponse {
