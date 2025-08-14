@@ -334,7 +334,7 @@ export default function PlayerDetailPage() {
               
               <h1 className="text-2xl font-bold mb-2">{player.name}</h1>
               
-              <div className="text-4xl font-bold text-yellow-400">
+              <div className={`text-4xl font-bold ${getAttributeColor(player.ovr)}`}>
                 Overall: {player.ovr || '--'}
               </div>
             </div>
