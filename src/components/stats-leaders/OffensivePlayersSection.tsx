@@ -109,6 +109,7 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
     { key: 'yards', label: 'Yards', sortable: true, align: 'right' as const },
     { key: 'touchdowns', label: 'TDs', sortable: true, align: 'right' as const },
     { key: 'attempts', label: 'Attempts', sortable: true, align: 'right' as const },
+    { key: 'fumbles', label: 'Fumbles', sortable: true, align: 'right' as const },
     { key: 'average_per_attempt', label: 'Avg/Att', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
     { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
   ]
@@ -187,6 +188,33 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
     }
   })
 
+  // Normalize rushing rows to ensure we always have a fumbles column
+  type RushingLike = {
+    name?: string
+    team_name?: string
+    teamName?: string
+    position?: string
+    yards?: number
+    touchdowns?: number
+    attempts?: number
+    average_per_attempt?: number
+    games_played?: number
+    fumbles?: number
+    rush_fum?: number
+    fumbles_lost?: number
+  }
+
+  const rushingRows = rushingLeaders.map((p) => {
+    const row = p as unknown as RushingLike
+    const fumbles = row.fumbles ?? row.rush_fum ?? row.fumbles_lost ?? 0
+    const team_name = row.team_name ?? row.teamName
+    return {
+      ...p,
+      team_name,
+      fumbles,
+    }
+  })
+
   return (
     <div className="space-y-8">
       {/* Passing Leaders */}
@@ -251,7 +279,7 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
       <StatsTable
         title="Rushing Leaders"
         columns={rushingColumns}
-        data={rushingLeaders}
+        data={rushingRows}
         leagueId={leagueId}
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
