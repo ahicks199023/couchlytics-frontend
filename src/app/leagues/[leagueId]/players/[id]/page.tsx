@@ -250,11 +250,9 @@ export default function PlayerDetailPage() {
   }
 
   const getAttributeColor = (value?: number) => {
-    if (!value) return 'text-gray-400'
-    if (value >= 90) return 'text-yellow-400'
+    if (value === undefined || value === null) return 'text-gray-400'
     if (value >= 80) return 'text-green-400'
-    if (value >= 70) return 'text-blue-400'
-    if (value >= 60) return 'text-orange-400'
+    if (value >= 60) return 'text-yellow-400'
     return 'text-red-400'
   }
 
