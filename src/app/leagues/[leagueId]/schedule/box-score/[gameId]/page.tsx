@@ -294,6 +294,28 @@ export default function BoxScorePage() {
   }
   const homeTeamId = boxScoreData.game_info.home_team_id
   const awayTeamId = boxScoreData.game_info.away_team_id
+  const buildKeyPlayerLine = (p: PlayerStats): string => {
+    const segments: string[] = []
+    const passSegs: string[] = []
+    if ((p.pass_yds ?? 0) > 0) passSegs.push(`Pass: ${p.pass_yds} yds`)
+    if ((p.pass_tds ?? 0) > 0) passSegs.push(`${p.pass_tds} TD`)
+    if ((p.pass_ints ?? 0) > 0) passSegs.push(`${p.pass_ints} INT`)
+    if (passSegs.length) segments.push(passSegs.join(', '))
+    const rushSegs: string[] = []
+    if ((p.rush_yds ?? 0) > 0) rushSegs.push(`Rush: ${p.rush_yds} yds`)
+    if ((p.rush_tds ?? 0) > 0) rushSegs.push(`${p.rush_tds} TD`)
+    if (rushSegs.length) segments.push(rushSegs.join(', '))
+    const recSegs: string[] = []
+    if ((p.rec_yds ?? 0) > 0) recSegs.push(`Rec: ${p.rec_yds} yds`)
+    if ((p.rec_tds ?? 0) > 0) recSegs.push(`${p.rec_tds} TD`)
+    if (recSegs.length) segments.push(recSegs.join(', '))
+    const defSegs: string[] = []
+    if ((p.tackles ?? 0) > 0) defSegs.push(`Tackles: ${p.tackles}`)
+    if ((p.sacks ?? 0) > 0) defSegs.push(`Sacks: ${p.sacks}`)
+    if ((p.interceptions ?? 0) > 0) defSegs.push(`INT: ${p.interceptions}`)
+    if (defSegs.length) segments.push(defSegs.join(', '))
+    return segments.join(' • ')
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
@@ -483,10 +505,7 @@ export default function BoxScorePage() {
                           )}
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {player.pass_yds && `Pass: ${player.pass_yds} yds, ${player.pass_tds} TD, ${player.pass_ints} INT`}
-                          {player.rush_yds && `Rush: ${player.rush_yds} yds, ${player.rush_tds} TD`}
-                          {player.rec_yds && `Rec: ${player.rec_yds} yds, ${player.rec_tds} TD`}
-                          {player.tackles && `Tackles: ${player.tackles}, Sacks: ${player.sacks}, INT: ${player.interceptions}`}
+                          {buildKeyPlayerLine(player)}
                         </div>
                       </div>
                     ))}
@@ -588,10 +607,7 @@ export default function BoxScorePage() {
                           )}
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {player.pass_yds && `Pass: ${player.pass_yds} yds, ${player.pass_tds} TD, ${player.pass_ints} INT`}
-                          {player.rush_yds && `Rush: ${player.rush_yds} yds, ${player.rush_tds} TD`}
-                          {player.rec_yds && `Rec: ${player.rec_yds} yds, ${player.rec_tds} TD`}
-                          {player.tackles && `Tackles: ${player.tackles}, Sacks: ${player.sacks}, INT: ${player.interceptions}`}
+                          {buildKeyPlayerLine(player)}
                         </div>
                       </div>
                     ))}
