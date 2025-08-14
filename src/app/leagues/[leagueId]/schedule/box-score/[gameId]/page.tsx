@@ -157,29 +157,62 @@ export default function BoxScorePage() {
     return 0
   }
 
-  const normalizeTeamStats = (stats: any, projected: boolean) => {
-    const off = stats?.offensive ?? stats?.offense ?? {}
-    const def = stats?.defensive ?? stats?.defense ?? {}
+  type NormalizedTeamStats = {
+    offensive: {
+      total_yards: number
+      passing_yards: number
+      rushing_yards: number
+      points?: number
+      points_per_game?: number
+      passing_tds: number
+      rushing_tds: number
+    }
+    defensive: {
+      total_yards_allowed: number
+      passing_yards_allowed: number
+      rushing_yards_allowed: number
+      points_allowed?: number
+      points_allowed_per_game?: number
+      sacks: number
+      interceptions: number
+    }
+    players: PlayerStats[]
+  }
+
+  const normalizeTeamStats = (
+    stats: TeamStats | ProjectedTeamStats,
+    projected: boolean
+  ): NormalizedTeamStats => {
+    const statsObj = stats as Record<string, unknown>
+    const off = (statsObj['offensive'] as Record<string, unknown> | undefined) ||
+                (statsObj['offense'] as Record<string, unknown> | undefined) ||
+                ({} as Record<string, unknown>)
+    const def = (statsObj['defensive'] as Record<string, unknown> | undefined) ||
+                (statsObj['defense'] as Record<string, unknown> | undefined) ||
+                ({} as Record<string, unknown>)
+
+    const players = Array.isArray(statsObj['players']) ? (statsObj['players'] as PlayerStats[]) : []
+
     return {
       offensive: {
-        total_yards: valueOr0(off.total_yards, off.totalYards, off.total, off.yards_total),
-        passing_yards: valueOr0(off.passing_yards, off.passingYards, off.pass_yds, off.passYds),
-        rushing_yards: valueOr0(off.rushing_yards, off.rushingYards, off.rush_yds, off.rushYds),
-        points: projected ? undefined : valueOr0(off.points, off.pts),
-        points_per_game: projected ? valueOr0(off.points_per_game, off.pointsPerGame, off.pts_per_game) : undefined,
-        passing_tds: valueOr0(off.passing_tds, off.pass_tds, off.passingTds),
-        rushing_tds: valueOr0(off.rushing_tds, off.rush_tds, off.rushingTds)
+        total_yards: valueOr0(off['total_yards'], off['totalYards'], off['total'], off['yards_total']),
+        passing_yards: valueOr0(off['passing_yards'], off['passingYards'], off['pass_yds'], off['passYds']),
+        rushing_yards: valueOr0(off['rushing_yards'], off['rushingYards'], off['rush_yds'], off['rushYds']),
+        points: projected ? undefined : valueOr0(off['points'], off['pts']),
+        points_per_game: projected ? valueOr0(off['points_per_game'], off['pointsPerGame'], off['pts_per_game']) : undefined,
+        passing_tds: valueOr0(off['passing_tds'], off['pass_tds'], off['passingTds']),
+        rushing_tds: valueOr0(off['rushing_tds'], off['rush_tds'], off['rushingTds'])
       },
       defensive: {
-        total_yards_allowed: valueOr0(def.total_yards_allowed, def.yards_allowed_total, def.totalYardsAllowed),
-        passing_yards_allowed: valueOr0(def.passing_yards_allowed, def.pass_yards_allowed, def.passingYardsAllowed),
-        rushing_yards_allowed: valueOr0(def.rushing_yards_allowed, def.rush_yards_allowed, def.rushingYardsAllowed),
-        points_allowed: projected ? undefined : valueOr0(def.points_allowed, def.pts_allowed),
-        points_allowed_per_game: projected ? valueOr0(def.points_allowed_per_game, def.pointsAllowedPerGame, def.pts_allowed_per_game) : undefined,
-        sacks: valueOr0(def.sacks),
-        interceptions: valueOr0(def.interceptions, def.ints)
+        total_yards_allowed: valueOr0(def['total_yards_allowed'], def['yards_allowed_total'], def['totalYardsAllowed']),
+        passing_yards_allowed: valueOr0(def['passing_yards_allowed'], def['pass_yards_allowed'], def['passingYardsAllowed']),
+        rushing_yards_allowed: valueOr0(def['rushing_yards_allowed'], def['rush_yards_allowed'], def['rushingYardsAllowed']),
+        points_allowed: projected ? undefined : valueOr0(def['points_allowed'], def['pts_allowed']),
+        points_allowed_per_game: projected ? valueOr0(def['points_allowed_per_game'], def['pointsAllowedPerGame'], def['pts_allowed_per_game']) : undefined,
+        sacks: valueOr0(def['sacks']),
+        interceptions: valueOr0(def['interceptions'], def['ints'])
       },
-      players: Array.isArray(stats?.players) ? stats.players : []
+      players
     }
   }
 
@@ -227,8 +260,6 @@ export default function BoxScorePage() {
   }
 
   const isProjected = boxScoreData.box_score.type === 'projected'
-  const homeTeamColor = getTeamColors(boxScoreData.game_info.home_team)
-  const awayTeamColor = getTeamColors(boxScoreData.game_info.away_team)
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
