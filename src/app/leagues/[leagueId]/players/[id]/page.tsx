@@ -411,18 +411,131 @@ export default function PlayerDetailPage() {
         {/* Key Attributes */}
         <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
           <h3 className="text-blue-400 font-semibold mb-4">Key Attributes</h3>
-          <div className="grid grid-cols-2 gap-4">
-            {renderAttribute('Speed', player.speedRating)}
-            {renderAttribute('Acceleration', player.accelerationRating)}
-            {renderAttribute('Agility', player.agilityRating)}
-            {renderAttribute('Strength', player.strengthRating)}
-            {renderAttribute('Awareness', player.awareRating)}
-            {renderAttribute('Play Recognition', player.playRecognitionRating)}
-            {renderAttribute('Tackle', player.tackleRating)}
-            {renderAttribute('Block Shed', player.blockShedRating)}
-            {renderAttribute('Power Moves', player.powerMovesRating)}
-            {renderAttribute('Finesse Moves', player.finesseMovesRating)}
-          </div>
+          {(() => {
+            const pos = String(player.position || '').toUpperCase()
+
+            const add = (arr: { label: string; value?: number }[], label: string, value?: number) => {
+              if (value !== undefined && value !== null) arr.push({ label, value })
+            }
+
+            const attrs: { label: string; value?: number }[] = []
+
+            if (pos === 'QB') {
+              add(attrs, 'Awareness', player.awareRating)
+              add(attrs, 'Throw Power', player.throwPowerRating)
+              add(attrs, 'Short Accuracy', player.shortAccuracyRating)
+              add(attrs, 'Mid Accuracy', player.midAccuracyRating)
+              add(attrs, 'Deep Accuracy', player.deepAccuracyRating)
+              add(attrs, 'Under Pressure', player.underPressureRating)
+              add(attrs, 'Throw On The Run', player.throwOnRunRating)
+              add(attrs, 'Play Action', player.playActionRating)
+              add(attrs, 'Speed', player.speedRating)
+              add(attrs, 'Acceleration', player.accelerationRating)
+            } else if (['HB', 'RB'].includes(pos)) {
+              add(attrs, 'Speed', player.speedRating)
+              add(attrs, 'Acceleration', player.accelerationRating)
+              add(attrs, 'Agility', player.agilityRating)
+              add(attrs, 'Carry', player.carryRating)
+              add(attrs, 'Trucking', player.truckingRating)
+              add(attrs, 'Change of Direction', player.changeOfDirectionRating)
+              add(attrs, 'Juke Move', player.jukeMoveRating)
+              add(attrs, 'Spin Move', player.spinMoveRating)
+              add(attrs, 'Break Tackle', player.breakTackleRating)
+              add(attrs, 'Ball Carry Vision', player.ballCarryVisionRating)
+            } else if (pos === 'WR') {
+              add(attrs, 'Speed', player.speedRating)
+              add(attrs, 'Acceleration', player.accelerationRating)
+              add(attrs, 'Agility', player.agilityRating)
+              add(attrs, 'Catch', player.catchRating)
+              add(attrs, 'Spectacular Catch', player.specCatchRating)
+              add(attrs, 'Release', player.releaseRating)
+              add(attrs, 'Catch In Traffic', player.catchInTrafficRating)
+              add(attrs, 'Short Route Running', player.routeRunShortRating)
+              add(attrs, 'Med Route Running', player.medRouteRunRating)
+              add(attrs, 'Deep Route Running', player.deepRouteRunRating)
+            } else if (pos === 'TE') {
+              add(attrs, 'Catch', player.catchRating)
+              add(attrs, 'Catch In Traffic', player.catchInTrafficRating)
+              add(attrs, 'Release', player.releaseRating)
+              add(attrs, 'Short Route Running', player.routeRunShortRating)
+              add(attrs, 'Med Route Running', player.medRouteRunRating)
+              add(attrs, 'Run Block', player.runBlockRating)
+              add(attrs, 'Pass Block', player.passBlockRating)
+              add(attrs, 'Strength', player.strengthRating)
+            } else if (['LT','LG','C','RG','RT','OL'].includes(pos)) {
+              add(attrs, 'Pass Block', player.passBlockRating)
+              add(attrs, 'Pass Block Power', player.passBlockPowerRating)
+              add(attrs, 'Pass Block Finesse', player.passBlockFinesseRating)
+              add(attrs, 'Run Block', player.runBlockRating)
+              add(attrs, 'Run Block Power', player.runBlockPowerRating)
+              add(attrs, 'Run Block Finesse', player.runBlockFinesseRating)
+              add(attrs, 'Impact Block', player.impactBlockRating)
+              add(attrs, 'Lead Block', player.leadBlockRating)
+              add(attrs, 'Strength', player.strengthRating)
+            } else if (['LE','RE','DT','DL'].includes(pos)) {
+              add(attrs, 'Strength', player.strengthRating)
+              add(attrs, 'Tackle', player.tackleRating)
+              add(attrs, 'Block Shed', player.blockShedRating)
+              add(attrs, 'Power Moves', player.powerMovesRating)
+              add(attrs, 'Finesse Moves', player.finesseMovesRating)
+              add(attrs, 'Pursuit', player.pursuitRating)
+              add(attrs, 'Hit Power', player.hitPowerRating)
+              add(attrs, 'Play Recognition', player.playRecognitionRating)
+            } else if (['MLB','LOLB','ROLB','LB'].includes(pos)) {
+              add(attrs, 'Speed', player.speedRating)
+              add(attrs, 'Acceleration', player.accelerationRating)
+              add(attrs, 'Tackle', player.tackleRating)
+              add(attrs, 'Block Shed', player.blockShedRating)
+              add(attrs, 'Hit Power', player.hitPowerRating)
+              add(attrs, 'Pursuit', player.pursuitRating)
+              add(attrs, 'Play Recognition', player.playRecognitionRating)
+              add(attrs, 'Zone Coverage', player.zoneCoverRating)
+              add(attrs, 'Man Coverage', player.manCoverRating)
+            } else if (pos === 'CB') {
+              add(attrs, 'Speed', player.speedRating)
+              add(attrs, 'Acceleration', player.accelerationRating)
+              add(attrs, 'Man Coverage', player.manCoverRating)
+              add(attrs, 'Zone Coverage', player.zoneCoverRating)
+              add(attrs, 'Press', player.pressRating)
+              add(attrs, 'Play Recognition', player.playRecognitionRating)
+              add(attrs, 'Tackle', player.tackleRating)
+            } else if (['FS','SS','S'].includes(pos)) {
+              add(attrs, 'Speed', player.speedRating)
+              add(attrs, 'Acceleration', player.accelerationRating)
+              add(attrs, 'Zone Coverage', player.zoneCoverRating)
+              add(attrs, 'Man Coverage', player.manCoverRating)
+              add(attrs, 'Pursuit', player.pursuitRating)
+              add(attrs, 'Hit Power', player.hitPowerRating)
+              add(attrs, 'Play Recognition', player.playRecognitionRating)
+              add(attrs, 'Tackle', player.tackleRating)
+            } else if (pos === 'K' || pos === 'P') {
+              add(attrs, 'Kick Power', player.kickPowerRating)
+              add(attrs, 'Kick Accuracy', player.kickAccuracyRating)
+            } else {
+              // Fallback generic set
+              add(attrs, 'Speed', player.speedRating)
+              add(attrs, 'Acceleration', player.accelerationRating)
+              add(attrs, 'Agility', player.agilityRating)
+              add(attrs, 'Strength', player.strengthRating)
+              add(attrs, 'Awareness', player.awareRating)
+              add(attrs, 'Play Recognition', player.playRecognitionRating)
+              add(attrs, 'Tackle', player.tackleRating)
+              add(attrs, 'Block Shed', player.blockShedRating)
+              add(attrs, 'Power Moves', player.powerMovesRating)
+              add(attrs, 'Finesse Moves', player.finesseMovesRating)
+            }
+
+            return (
+              <div className="grid grid-cols-2 gap-4">
+                {attrs.map((a, i) => (
+                  <div key={i} className="flex justify-between items-center py-1">
+                    <span className="text-gray-300 text-sm">{a.label}:</span>
+                    <span className={`font-bold ${getAttributeColor(a.value)}`}>{a.value ?? '-'}</span>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
         </div>
 
         {/* Contract */}
