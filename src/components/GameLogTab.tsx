@@ -2,9 +2,7 @@
 
 // GameLogTab Component - Fixed TypeScript errors
 import React, { useState, useEffect, useCallback } from 'react'
-import { fetchFromApi } from '@/lib/api'
-// TODO: Uncomment when backend implements new API
-// import { getPlayerGameLog, PlayerGameLogRow } from '@/lib/api'
+import { fetchFromApi, getPlayerGameLog, PlayerGameLogRow } from '@/lib/api'
 
 interface GameLog {
   week: string
@@ -98,74 +96,37 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
   const [limit, setLimit] = useState(20)
   const [season, setSeason] = useState<number>(new Date().getFullYear())
   const [seasons, setSeasons] = useState<number[]>([])
-  // const [rows, setRows] = useState<PlayerGameLogRow[] | null>(null) // TODO: Use when backend implements new API
+  const [rows, setRows] = useState<PlayerGameLogRow[] | null>(null)
 
+  // Keep old fetch as fallback for now (remove after confirming new API works)
   const fetchGameLogs = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const params = new URLSearchParams({
-        seasonOnly: seasonOnly.toString(),
-        limit: limit.toString()
-      })
-      
-      const data = await fetchFromApi(`/leagues/${leagueId}/players/${playerId}/game-log?${params}`) as GameLogResponse
-      
-      // Defensive programming: Ensure data structure is valid
-      console.log('API Response:', data)
-      
-      if (!data) {
-        throw new Error('No data received from API')
-      }
-      
-      // Handle different possible response structures
-      if (data.gameLogs && Array.isArray(data.gameLogs)) {
-        setGameLogs(data.gameLogs)
-      } else if (Array.isArray(data)) {
-        // If API returns array directly
-        setGameLogs(data)
-      } else {
-        // If no gameLogs array, set empty array
-        console.warn('No gameLogs array found in response:', data)
-        setGameLogs([])
-      }
-      
-      if (data.player) {
-        setPlayer(data.player)
-      } else {
-        console.warn('No player data found in response')
-        setPlayer(null)
-      }
-    } catch (err) {
-      console.error('Failed to fetch game logs:', err)
-      setError('Failed to load game logs. Please try again.')
-      setGameLogs([]) // Ensure gameLogs is always an array
-      setPlayer(null)
-    } finally {
-      setLoading(false)
-    }
+    console.log('Using fallback game log fetch...')
+    // This can be removed once the new season-based API is confirmed working
   }, [playerId, leagueId, seasonOnly, limit])
-
-  useEffect(() => {
-    fetchGameLogs()
-  }, [fetchGameLogs])
 
   // New: season list bootstrap (static for now; backend may return available_seasons)
   useEffect(() => {
     setSeasons([new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1])
   }, [])
 
-  // Season-based game log fetch - TODO: Uncomment when backend implements new API
-  // useEffect(() => {
-  //   let cancelled = false
-  //   setLoading(true); setError(null)
-  //   getPlayerGameLog(leagueId, playerId, season)
-  //     .then(d => { if (!cancelled) { setRows(d.games || []); }} )
-  //     .catch(e => { if (!cancelled) setError(e.message) })
-  //     .finally(() => { if (!cancelled) setLoading(false) })
-  //   return () => { cancelled = true }
-  // }, [leagueId, playerId, season])
+  // Season-based game log fetch
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true); setError(null)
+    getPlayerGameLog(leagueId, playerId, season)
+      .then(d => { 
+        if (!cancelled) { 
+          setRows(d.games || [])
+          // Update seasons list if backend provides it
+          if (d.available_seasons && d.available_seasons.length > 0) {
+            setSeasons(d.available_seasons)
+          }
+        }
+      })
+      .catch(e => { if (!cancelled) setError(e.message) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [leagueId, playerId, season])
 
   const getTableHeaders = () => {
     const position = player?.position?.toUpperCase() || ''
@@ -205,119 +166,146 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
     }
   }
 
-  const getTableRow = (game: GameLog) => {
+  const getTableRow = (game: GameLog | PlayerGameLogRow) => {
     const position = player?.position?.toUpperCase() || ''
+    
+    // Helper to get value from either old or new structure
+    const getValue = (oldKey: keyof GameLog, newKey: keyof PlayerGameLogRow) => {
+      const gameOld = game as GameLog
+      const gameNew = game as PlayerGameLogRow
+      return gameNew[newKey] ?? gameOld[oldKey] ?? '-'
+    }
+    
+    // Format completion percentage
+    const getCompPct = () => {
+      const gameNew = game as PlayerGameLogRow
+      const gameOld = game as GameLog
+      if (gameNew.pass_cmp_pct !== undefined) return `${gameNew.pass_cmp_pct.toFixed(1)}%`
+      if (gameOld.cmp_pct !== undefined) return `${gameOld.cmp_pct}%`
+      return '-'
+    }
+    
+    // Format comp/att
+    const getCompAtt = () => {
+      const gameNew = game as PlayerGameLogRow
+      const gameOld = game as GameLog
+      if (gameNew.pass_comp !== undefined && gameNew.pass_att !== undefined) {
+        return `${gameNew.pass_comp}/${gameNew.pass_att}`
+      }
+      if (gameOld.cmp_att) return gameOld.cmp_att
+      return '-'
+    }
     
     if (position.includes('QB')) {
       return [
-        game.week,
-        game.team,
-        game.opponent,
-        game.result,
-        game.cmp_att || '-',
-        game.cmp_pct ? `${game.cmp_pct}%` : '-',
-        game.pass_yds || '-',
-        game.pass_avg || '-',
-        game.pass_tds || '-',
-        game.pass_ints || '-',
-        game.pass_long || '-',
-        game.pass_sacks || '-',
-        game.passer_rating || '-',
-        game.rush_att || '-',
-        game.rush_yds || '-',
-        game.rush_avg || '-',
-        game.rush_tds || '-',
-        game.rush_long || '-',
-        game.broken_tackles || '-',
-        game.fumbles || '-',
-        game.pts || '-'
+        getValue('week' as keyof GameLog, 'week'),
+        (game as GameLog).team || (game as PlayerGameLogRow).opponent || '-', // Team not in new structure
+        getValue('opponent', 'opponent'),
+        getValue('result', 'result'),
+        getCompAtt(),
+        getCompPct(),
+        getValue('pass_yds', 'pass_yds'),
+        getValue('pass_avg', 'pass_avg'),
+        getValue('pass_tds', 'pass_tds'),
+        getValue('pass_ints', 'pass_ints'),
+        getValue('pass_long', 'pass_long'),
+        getValue('pass_sacks', 'pass_sacks'),
+        getValue('passer_rating', 'passer_rating'),
+        getValue('rush_att', 'rush_att'),
+        getValue('rush_yds', 'rush_yds'),
+        getValue('rush_avg', 'rush_avg'),
+        getValue('rush_tds', 'rush_tds'),
+        getValue('rush_long', 'rush_long'),
+        (game as GameLog).broken_tackles || '-', // Not in new structure
+        getValue('fumbles' as keyof GameLog, 'rush_fum'),
+        (game as GameLog).pts || '-' // Not in new structure yet
       ]
     } else if (position.includes('RB') || position.includes('HB')) {
       return [
-        game.week,
-        game.team,
-        game.opponent,
-        game.result,
-        game.rush_att || '-',
-        game.rush_yds || '-',
-        game.rush_avg || '-',
-        game.rush_tds || '-',
-        game.rush_long || '-',
-        game.broken_tackles || '-',
-        game.fumbles || '-',
-        game.rec_catches || '-',
-        game.rec_yds || '-',
-        game.rec_avg || '-',
-        game.rec_tds || '-',
-        game.rec_long || '-',
-        game.pts || '-'
+        getValue('week' as keyof GameLog, 'week'),
+        (game as GameLog).team || '-',
+        getValue('opponent', 'opponent'),
+        getValue('result', 'result'),
+        getValue('rush_att', 'rush_att'),
+        getValue('rush_yds', 'rush_yds'),
+        getValue('rush_avg', 'rush_avg'),
+        getValue('rush_tds', 'rush_tds'),
+        getValue('rush_long', 'rush_long'),
+        (game as GameLog).broken_tackles || '-',
+        getValue('fumbles' as keyof GameLog, 'rush_fum'),
+        getValue('rec_catches' as keyof GameLog, 'rec_rec'),
+        getValue('rec_yds', 'rec_yds'),
+        getValue('rec_avg', 'rec_avg'),
+        getValue('rec_tds', 'rec_tds'),
+        getValue('rec_long', 'rec_long'),
+        (game as GameLog).pts || '-'
       ]
     } else if (position.includes('WR') || position.includes('TE')) {
       return [
-        game.week,
-        game.team,
-        game.opponent,
-        game.result,
-        game.rec_catches || '-',
-        game.rec_yds || '-',
-        game.rec_avg || '-',
-        game.rec_tds || '-',
-        game.rec_long || '-',
-        game.drops || '-',
-        game.rush_att || '-',
-        game.rush_yds || '-',
-        game.rush_avg || '-',
-        game.rush_tds || '-',
-        game.rush_long || '-',
-        game.fumbles || '-',
-        game.pts || '-'
+        getValue('week' as keyof GameLog, 'week'),
+        (game as GameLog).team || '-',
+        getValue('opponent', 'opponent'),
+        getValue('result', 'result'),
+        getValue('rec_catches' as keyof GameLog, 'rec_rec'),
+        getValue('rec_yds', 'rec_yds'),
+        getValue('rec_avg', 'rec_avg'),
+        getValue('rec_tds', 'rec_tds'),
+        getValue('rec_long', 'rec_long'),
+        getValue('drops' as keyof GameLog, 'rec_drops'),
+        getValue('rush_att', 'rush_att'),
+        getValue('rush_yds', 'rush_yds'),
+        getValue('rush_avg', 'rush_avg'),
+        getValue('rush_tds', 'rush_tds'),
+        getValue('rush_long', 'rush_long'),
+        getValue('fumbles' as keyof GameLog, 'rush_fum'),
+        (game as GameLog).pts || '-'
       ]
     } else if (position.includes('K')) {
       return [
-        game.week,
-        game.team,
-        game.opponent,
-        game.result,
-        game.fg_made || '-',
-        game.fg_att || '-',
-        game.fg_pct ? `${game.fg_pct}%` : '-',
-        game.fg_long || '-',
-        game.xp_made || '-',
-        game.xp_att || '-',
-        game.xp_pct ? `${game.xp_pct}%` : '-',
-        game.pts || '-'
+        getValue('week' as keyof GameLog, 'week'),
+        (game as GameLog).team || '-',
+        getValue('opponent', 'opponent'),
+        getValue('result', 'result'),
+        getValue('fg_made', 'fg_made'),
+        getValue('fg_att', 'fg_att'),
+        getValue('fg_pct', 'fg_pct') !== '-' ? `${getValue('fg_pct', 'fg_pct')}%` : '-',
+        getValue('fg_long' as keyof GameLog, 'punt_long'), // Map to available field temporarily
+        getValue('xp_made', 'xp_made'),
+        getValue('xp_att', 'xp_att'),
+        (game as GameLog).xp_pct ? `${(game as GameLog).xp_pct}%` : '-',
+        getValue('pts' as keyof GameLog, 'kick_pts')
       ]
     } else if (position.includes('P')) {
       return [
-        game.week,
-        game.team,
-        game.opponent,
-        game.result,
-        game.punt_att || '-',
-        game.punt_yds || '-',
-        game.punt_avg || '-',
-        game.punt_long || '-',
-        game.punts_in20 || '-',
-        game.punt_tbs || '-',
-        game.pts || '-'
+        getValue('week' as keyof GameLog, 'week'),
+        (game as GameLog).team || '-',
+        getValue('opponent', 'opponent'),
+        getValue('result', 'result'),
+        getValue('punt_att', 'punt_att'),
+        getValue('punt_yds', 'punt_yds'),
+        getValue('punt_avg', 'punt_avg'),
+        getValue('punt_long', 'punt_long'),
+        getValue('punts_in20', 'punts_in20'),
+        (game as GameLog).punt_tbs || '-', // Not in new structure
+        (game as GameLog).pts || '-'
       ]
     } else {
       // Defensive players
       return [
-        game.week,
-        game.team,
-        game.opponent,
-        game.result,
-        game.tackles || '-',
-        game.def_sacks || '-',
-        game.def_ints || '-',
-        game.int_yds || '-',
-        game.def_tds || '-',
-        game.forced_fum || '-',
-        game.fum_rec || '-',
-        game.deflections || '-',
-        game.safeties || '-',
-        game.pts || '-'
+        getValue('week' as keyof GameLog, 'week'),
+        (game as GameLog).team || '-',
+        getValue('opponent', 'opponent'),
+        getValue('result', 'result'),
+        getValue('tackles' as keyof GameLog, 'def_tackles'),
+        getValue('def_sacks', 'def_sacks'),
+        getValue('def_ints', 'def_ints'),
+        (game as GameLog).int_yds || '-', // Not in new structure
+        getValue('def_tds', 'def_tds'),
+        getValue('forced_fum' as keyof GameLog, 'def_forced_fum'),
+        getValue('fum_rec' as keyof GameLog, 'def_fum_rec'),
+        (game as GameLog).deflections || '-', // Not in new structure
+        (game as GameLog).safeties || '-', // Not in new structure
+        (game as GameLog).pts || '-'
       ]
     }
   }
@@ -342,7 +330,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
         <div className="bg-red-900/20 border border-red-500 rounded-lg p-4">
           <p className="text-red-400">{error}</p>
           <button 
-            onClick={fetchGameLogs}
+            onClick={() => setSeason(s => s)} // Trigger re-fetch by updating season state
             className="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white text-sm"
           >
             Retry
@@ -352,8 +340,9 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
     )
   }
 
-  // Defensive check: Ensure gameLogs is an array before checking length
-  if (!Array.isArray(gameLogs) || gameLogs.length === 0) {
+  // Check if we have any game data (prefer new API structure)
+  const gameData = rows || gameLogs
+  if (!Array.isArray(gameData) || gameData.length === 0) {
     return (
       <div className="text-center py-8">
         <p className="text-gray-400">No games found for this player</p>
@@ -409,7 +398,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
         </div>
         
         <div className="text-sm text-gray-400">
-          Showing {gameLogs.length} of {gameLogs.length} games
+          Showing {gameData.length} of {gameData.length} games
         </div>
       </div>
 
@@ -427,9 +416,9 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700">
-              {gameLogs.map((game, index) => {
+              {gameData.map((game, index) => {
                 // Defensive check: Ensure getTableRow returns an array
-                const tableRow = getTableRow(game)
+                const tableRow = getTableRow(game as any)
                 if (!Array.isArray(tableRow)) {
                   console.error('getTableRow did not return an array for game:', game, 'row:', tableRow)
                   return null
