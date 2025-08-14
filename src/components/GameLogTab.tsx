@@ -1,8 +1,8 @@
 'use client'
 
 // GameLogTab Component - Fixed TypeScript errors
-import React, { useState, useEffect, useCallback } from 'react'
-import { fetchFromApi, getPlayerGameLog, PlayerGameLogRow } from '@/lib/api'
+import React, { useState, useEffect } from 'react'
+import { getPlayerGameLog, PlayerGameLogRow } from '@/lib/api'
 
 interface GameLog {
   week: string
@@ -76,11 +76,12 @@ interface Player {
   teamAbbr: string
 }
 
-interface GameLogResponse {
-  player: Player
-  gameLogs: GameLog[]
-  totalGames: number
-}
+// Remove unused interface - keeping for reference if needed later
+// interface GameLogResponse {
+//   player: Player
+//   gameLogs: GameLog[]
+//   totalGames: number
+// }
 
 interface GameLogTabProps {
   playerId: string
@@ -88,21 +89,18 @@ interface GameLogTabProps {
 }
 
 export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
-  const [gameLogs, setGameLogs] = useState<GameLog[]>([])
-  const [player, setPlayer] = useState<Player | null>(null)
+  // Remove unused old state variables
+  // const [gameLogs, setGameLogs] = useState<GameLog[]>([])
+  // const [player, setPlayer] = useState<Player | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [seasonOnly, setSeasonOnly] = useState(false)
-  const [limit, setLimit] = useState(20)
+  // Remove unused old filters
+  // const [seasonOnly, setSeasonOnly] = useState(false)
+  // const [limit, setLimit] = useState(20)
   const [season, setSeason] = useState<number>(new Date().getFullYear())
   const [seasons, setSeasons] = useState<number[]>([])
   const [rows, setRows] = useState<PlayerGameLogRow[] | null>(null)
-
-  // Keep old fetch as fallback for now (remove after confirming new API works)
-  const fetchGameLogs = useCallback(async () => {
-    console.log('Using fallback game log fetch...')
-    // This can be removed once the new season-based API is confirmed working
-  }, [playerId, leagueId, seasonOnly, limit])
+  const [playerPosition, setPlayerPosition] = useState<string>('')
 
   // New: season list bootstrap (static for now; backend may return available_seasons)
   useEffect(() => {
@@ -117,6 +115,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
       .then(d => { 
         if (!cancelled) { 
           setRows(d.games || [])
+          setPlayerPosition(d.position || '')
           // Update seasons list if backend provides it
           if (d.available_seasons && d.available_seasons.length > 0) {
             setSeasons(d.available_seasons)
@@ -129,7 +128,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
   }, [leagueId, playerId, season])
 
   const getTableHeaders = () => {
-    const position = player?.position?.toUpperCase() || ''
+    const position = playerPosition?.toUpperCase() || ''
     
     if (position.includes('QB')) {
       return [
@@ -167,7 +166,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
   }
 
   const getTableRow = (game: GameLog | PlayerGameLogRow) => {
-    const position = player?.position?.toUpperCase() || ''
+    const position = playerPosition?.toUpperCase() || ''
     
     // Helper to get value from either old or new structure
     const getValue = (oldKey: keyof GameLog, newKey: keyof PlayerGameLogRow) => {
@@ -340,9 +339,8 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
     )
   }
 
-  // Check if we have any game data (prefer new API structure)
-  const gameData = rows || gameLogs
-  if (!Array.isArray(gameData) || gameData.length === 0) {
+  // Check if we have any game data
+  if (!Array.isArray(rows) || rows.length === 0) {
     return (
       <div className="text-center py-8">
         <p className="text-gray-400">No games found for this player</p>
@@ -366,26 +364,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
       {/* Controls */}
       <div className="flex flex-wrap gap-4 items-center justify-between">
         <div className="flex items-center space-x-4">
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={seasonOnly}
-              onChange={(e) => setSeasonOnly(e.target.checked)}
-              className="rounded border-gray-600 bg-gray-700"
-            />
-            <span className="text-sm text-gray-300">Current Season Only</span>
-          </label>
-          
-          <select
-            value={limit}
-            onChange={(e) => setLimit(Number(e.target.value))}
-            className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm text-white"
-          >
-            <option value={10}>10 Games</option>
-            <option value={20}>20 Games</option>
-            <option value={50}>50 Games</option>
-            <option value={100}>100 Games</option>
-          </select>
+          <label className="text-sm text-gray-300">Season:</label>
           <select
             value={season}
             onChange={(e) => setSeason(Number(e.target.value))}
@@ -398,7 +377,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
         </div>
         
         <div className="text-sm text-gray-400">
-          Showing {gameData.length} of {gameData.length} games
+          Showing {rows.length} of {rows.length} games
         </div>
       </div>
 
@@ -416,9 +395,9 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700">
-              {gameData.map((game, index) => {
+              {rows.map((game, index) => {
                 // Defensive check: Ensure getTableRow returns an array
-                const tableRow = getTableRow(game as any)
+                const tableRow = getTableRow(game)
                 if (!Array.isArray(tableRow)) {
                   console.error('getTableRow did not return an array for game:', game, 'row:', tableRow)
                   return null
