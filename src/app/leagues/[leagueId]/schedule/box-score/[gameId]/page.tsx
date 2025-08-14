@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { API_BASE } from '@/lib/config'
-import { getTeamByAbbreviation } from '@/lib/team-config'
+import TeamLogo from '@/components/TeamLogo'
+import { getTeamByAbbreviation, getTeamByName, getTeamByPartialName } from '@/lib/team-config'
 
 type PlayerStats = {
   name: string
@@ -136,49 +137,50 @@ export default function BoxScorePage() {
   }
 
   const getTeamColors = (teamName: string) => {
-    // Handle null or undefined team names
     if (!teamName) return '#666666'
-    
-    // Extract abbreviation from team name (e.g., "Kansas City Chiefs" -> "KC")
-    const words = teamName.split(' ')
-    const lastWord = words[words.length - 1]
-    let abbreviation = ''
-    
-    if (lastWord === 'Chiefs') abbreviation = 'KC'
-    else if (lastWord === 'Ravens') abbreviation = 'BAL'
-    else if (lastWord === 'Bills') abbreviation = 'BUF'
-    else if (lastWord === 'Dolphins') abbreviation = 'MIA'
-    else if (lastWord === 'Jets') abbreviation = 'NYJ'
-    else if (lastWord === 'Patriots') abbreviation = 'NE'
-    else if (lastWord === 'Bengals') abbreviation = 'CIN'
-    else if (lastWord === 'Browns') abbreviation = 'CLE'
-    else if (lastWord === 'Steelers') abbreviation = 'PIT'
-    else if (lastWord === 'Texans') abbreviation = 'HOU'
-    else if (lastWord === 'Colts') abbreviation = 'IND'
-    else if (lastWord === 'Jaguars') abbreviation = 'JAX'
-    else if (lastWord === 'Titans') abbreviation = 'TEN'
-    else if (lastWord === 'Broncos') abbreviation = 'DEN'
-    else if (lastWord === 'Chargers') abbreviation = 'LAC'
-    else if (lastWord === 'Raiders') abbreviation = 'LV'
-    else if (lastWord === 'Cowboys') abbreviation = 'DAL'
-    else if (lastWord === 'Eagles') abbreviation = 'PHI'
-    else if (lastWord === 'Giants') abbreviation = 'NYG'
-    else if (lastWord === 'Commanders') abbreviation = 'WAS'
-    else if (lastWord === 'Bears') abbreviation = 'CHI'
-    else if (lastWord === 'Lions') abbreviation = 'DET'
-    else if (lastWord === 'Packers') abbreviation = 'GB'
-    else if (lastWord === 'Vikings') abbreviation = 'MIN'
-    else if (lastWord === 'Falcons') abbreviation = 'ATL'
-    else if (lastWord === 'Panthers') abbreviation = 'CAR'
-    else if (lastWord === 'Saints') abbreviation = 'NO'
-    else if (lastWord === 'Buccaneers') abbreviation = 'TB'
-    else if (lastWord === 'Cardinals') abbreviation = 'ARI'
-    else if (lastWord === 'Rams') abbreviation = 'LAR'
-    else if (lastWord === '49ers') abbreviation = 'SF'
-    else if (lastWord === 'Seahawks') abbreviation = 'SEA'
-    
-    const teamConfig = getTeamByAbbreviation(abbreviation)
+    const possibleAbbr = teamName.split(' ').pop() || ''
+    const teamConfig =
+      getTeamByAbbreviation(possibleAbbr) ||
+      getTeamByName(teamName) ||
+      getTeamByPartialName(teamName)
     return teamConfig?.colors?.primary || '#666666'
+  }
+
+  // Normalize potentially different API shapes into a single structure
+  const valueOr0 = (...vals: unknown[]): number => {
+    for (const v of vals) {
+      if (v !== undefined && v !== null) {
+        const n = typeof v === 'string' ? parseFloat(v) : (v as number)
+        return Number.isFinite(n as number) ? (n as number) : 0
+      }
+    }
+    return 0
+  }
+
+  const normalizeTeamStats = (stats: any, projected: boolean) => {
+    const off = stats?.offensive ?? stats?.offense ?? {}
+    const def = stats?.defensive ?? stats?.defense ?? {}
+    return {
+      offensive: {
+        total_yards: valueOr0(off.total_yards, off.totalYards, off.total, off.yards_total),
+        passing_yards: valueOr0(off.passing_yards, off.passingYards, off.pass_yds, off.passYds),
+        rushing_yards: valueOr0(off.rushing_yards, off.rushingYards, off.rush_yds, off.rushYds),
+        points: projected ? undefined : valueOr0(off.points, off.pts),
+        points_per_game: projected ? valueOr0(off.points_per_game, off.pointsPerGame, off.pts_per_game) : undefined,
+        passing_tds: valueOr0(off.passing_tds, off.pass_tds, off.passingTds),
+        rushing_tds: valueOr0(off.rushing_tds, off.rush_tds, off.rushingTds)
+      },
+      defensive: {
+        total_yards_allowed: valueOr0(def.total_yards_allowed, def.yards_allowed_total, def.totalYardsAllowed),
+        passing_yards_allowed: valueOr0(def.passing_yards_allowed, def.pass_yards_allowed, def.passingYardsAllowed),
+        rushing_yards_allowed: valueOr0(def.rushing_yards_allowed, def.rush_yards_allowed, def.rushingYardsAllowed),
+        points_allowed: projected ? undefined : valueOr0(def.points_allowed, def.pts_allowed),
+        points_allowed_per_game: projected ? valueOr0(def.points_allowed_per_game, def.pointsAllowedPerGame, def.pts_allowed_per_game) : undefined,
+        sacks: valueOr0(def.sacks),
+        interceptions: valueOr0(def.interceptions, def.ints)
+      },
+      players: Array.isArray(stats?.players) ? stats.players : []
+    }
   }
 
   if (loading) {
@@ -253,11 +255,13 @@ export default function BoxScorePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
               {/* Away Team */}
               <div className="text-center">
-                <div 
-                  className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-2"
-                  style={{ backgroundColor: awayTeamColor }}
-                >
-                  {boxScoreData.game_info.away_team.split(' ').map(word => word[0]).join('')}
+                <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow mx-auto mb-2">
+                  <TeamLogo 
+                    teamName={boxScoreData.game_info.away_team}
+                    size="xl"
+                    variant="helmet"
+                    showName={false}
+                  />
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {boxScoreData.game_info.away_team}
@@ -287,11 +291,13 @@ export default function BoxScorePage() {
 
               {/* Home Team */}
               <div className="text-center">
-                <div 
-                  className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-2"
-                  style={{ backgroundColor: homeTeamColor }}
-                >
-                  {boxScoreData.game_info.home_team.split(' ').map(word => word[0]).join('')}
+                <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow mx-auto mb-2">
+                  <TeamLogo 
+                    teamName={boxScoreData.game_info.home_team}
+                    size="xl"
+                    variant="helmet"
+                    showName={false}
+                  />
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {boxScoreData.game_info.home_team}
@@ -318,28 +324,19 @@ export default function BoxScorePage() {
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
                     <div className="text-sm text-gray-600 dark:text-gray-400">Total Yards</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.away_team_stats as ProjectedTeamStats).offensive.total_yards
-                        : (boxScoreData.box_score.away_team_stats as TeamStats).offensive.total_yards
-                      }
+                      {normalizeTeamStats(boxScoreData.box_score.away_team_stats as any, isProjected).offensive.total_yards}
                     </div>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
                     <div className="text-sm text-gray-600 dark:text-gray-400">Passing Yards</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.away_team_stats as ProjectedTeamStats).offensive.passing_yards
-                        : (boxScoreData.box_score.away_team_stats as TeamStats).offensive.passing_yards
-                      }
+                      {normalizeTeamStats(boxScoreData.box_score.away_team_stats as any, isProjected).offensive.passing_yards}
                     </div>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
                     <div className="text-sm text-gray-600 dark:text-gray-400">Rushing Yards</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.away_team_stats as ProjectedTeamStats).offensive.rushing_yards
-                        : (boxScoreData.box_score.away_team_stats as TeamStats).offensive.rushing_yards
-                      }
+                      {normalizeTeamStats(boxScoreData.box_score.away_team_stats as any, isProjected).offensive.rushing_yards}
                     </div>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
@@ -347,10 +344,10 @@ export default function BoxScorePage() {
                       {isProjected ? 'Points/Game' : 'Points'}
                     </div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.away_team_stats as ProjectedTeamStats).offensive.points_per_game.toFixed(1)
-                        : (boxScoreData.box_score.away_team_stats as TeamStats).offensive.points
-                      }
+                      {(() => {
+                        const s = normalizeTeamStats(boxScoreData.box_score.away_team_stats as any, isProjected)
+                        return isProjected ? s.offensive.points_per_game?.toFixed(1) : s.offensive.points
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -363,10 +360,7 @@ export default function BoxScorePage() {
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
                     <div className="text-sm text-gray-600 dark:text-gray-400">Yards Allowed</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.away_team_stats as ProjectedTeamStats).defensive.total_yards_allowed
-                        : (boxScoreData.box_score.away_team_stats as TeamStats).defensive.total_yards_allowed
-                      }
+                      {normalizeTeamStats(boxScoreData.box_score.away_team_stats as any, isProjected).defensive.total_yards_allowed}
                     </div>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
@@ -374,28 +368,22 @@ export default function BoxScorePage() {
                       {isProjected ? 'Points/Game Allowed' : 'Points Allowed'}
                     </div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.away_team_stats as ProjectedTeamStats).defensive.points_allowed_per_game.toFixed(1)
-                        : (boxScoreData.box_score.away_team_stats as TeamStats).defensive.points_allowed
-                      }
+                      {(() => {
+                        const s = normalizeTeamStats(boxScoreData.box_score.away_team_stats as any, isProjected)
+                        return isProjected ? s.defensive.points_allowed_per_game?.toFixed(1) : s.defensive.points_allowed
+                      })()}
                     </div>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
                     <div className="text-sm text-gray-600 dark:text-gray-400">Sacks</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.away_team_stats as ProjectedTeamStats).defensive.sacks
-                        : (boxScoreData.box_score.away_team_stats as TeamStats).defensive.sacks
-                      }
+                      {normalizeTeamStats(boxScoreData.box_score.away_team_stats as any, isProjected).defensive.sacks}
                     </div>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
                     <div className="text-sm text-gray-600 dark:text-gray-400">Interceptions</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.away_team_stats as ProjectedTeamStats).defensive.interceptions
-                        : (boxScoreData.box_score.away_team_stats as TeamStats).defensive.interceptions
-                      }
+                      {normalizeTeamStats(boxScoreData.box_score.away_team_stats as any, isProjected).defensive.interceptions}
                     </div>
                   </div>
                 </div>
@@ -435,28 +423,19 @@ export default function BoxScorePage() {
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
                     <div className="text-sm text-gray-600 dark:text-gray-400">Total Yards</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.home_team_stats as ProjectedTeamStats).offensive.total_yards
-                        : (boxScoreData.box_score.home_team_stats as TeamStats).offensive.total_yards
-                      }
+                      {normalizeTeamStats(boxScoreData.box_score.home_team_stats as any, isProjected).offensive.total_yards}
                     </div>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
                     <div className="text-sm text-gray-600 dark:text-gray-400">Passing Yards</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.home_team_stats as ProjectedTeamStats).offensive.passing_yards
-                        : (boxScoreData.box_score.home_team_stats as TeamStats).offensive.passing_yards
-                      }
+                      {normalizeTeamStats(boxScoreData.box_score.home_team_stats as any, isProjected).offensive.passing_yards}
                     </div>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
                     <div className="text-sm text-gray-600 dark:text-gray-400">Rushing Yards</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.home_team_stats as ProjectedTeamStats).offensive.rushing_yards
-                        : (boxScoreData.box_score.home_team_stats as TeamStats).offensive.rushing_yards
-                      }
+                      {normalizeTeamStats(boxScoreData.box_score.home_team_stats as any, isProjected).offensive.rushing_yards}
                     </div>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
@@ -464,10 +443,10 @@ export default function BoxScorePage() {
                       {isProjected ? 'Points/Game' : 'Points'}
                     </div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.home_team_stats as ProjectedTeamStats).offensive.points_per_game.toFixed(1)
-                        : (boxScoreData.box_score.home_team_stats as TeamStats).offensive.points
-                      }
+                      {(() => {
+                        const s = normalizeTeamStats(boxScoreData.box_score.home_team_stats as any, isProjected)
+                        return isProjected ? s.offensive.points_per_game?.toFixed(1) : s.offensive.points
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -480,10 +459,7 @@ export default function BoxScorePage() {
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
                     <div className="text-sm text-gray-600 dark:text-gray-400">Yards Allowed</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.home_team_stats as ProjectedTeamStats).defensive.total_yards_allowed
-                        : (boxScoreData.box_score.home_team_stats as TeamStats).defensive.total_yards_allowed
-                      }
+                      {normalizeTeamStats(boxScoreData.box_score.home_team_stats as any, isProjected).defensive.total_yards_allowed}
                     </div>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
@@ -491,28 +467,22 @@ export default function BoxScorePage() {
                       {isProjected ? 'Points/Game Allowed' : 'Points Allowed'}
                     </div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.home_team_stats as ProjectedTeamStats).defensive.points_allowed_per_game.toFixed(1)
-                        : (boxScoreData.box_score.home_team_stats as TeamStats).defensive.points_allowed
-                      }
+                      {(() => {
+                        const s = normalizeTeamStats(boxScoreData.box_score.home_team_stats as any, isProjected)
+                        return isProjected ? s.defensive.points_allowed_per_game?.toFixed(1) : s.defensive.points_allowed
+                      })()}
                     </div>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
                     <div className="text-sm text-gray-600 dark:text-gray-400">Sacks</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.home_team_stats as ProjectedTeamStats).defensive.sacks
-                        : (boxScoreData.box_score.home_team_stats as TeamStats).defensive.sacks
-                      }
+                      {normalizeTeamStats(boxScoreData.box_score.home_team_stats as any, isProjected).defensive.sacks}
                     </div>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-3 rounded">
                     <div className="text-sm text-gray-600 dark:text-gray-400">Interceptions</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {isProjected 
-                        ? (boxScoreData.box_score.home_team_stats as ProjectedTeamStats).defensive.interceptions
-                        : (boxScoreData.box_score.home_team_stats as TeamStats).defensive.interceptions
-                      }
+                      {normalizeTeamStats(boxScoreData.box_score.home_team_stats as any, isProjected).defensive.interceptions}
                     </div>
                   </div>
                 </div>
