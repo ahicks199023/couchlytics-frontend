@@ -67,6 +67,8 @@ type BoxScoreData = {
     week: number
     home_team: string
     away_team: string
+    home_team_id?: number | string
+    away_team_id?: number | string
     home_score: number | null
     away_score: number | null
     is_complete: boolean
@@ -252,6 +254,14 @@ export default function BoxScorePage() {
   }
 
   const isProjected = boxScoreData.box_score.type === 'projected'
+  const awayStats = normalizeTeamStats(boxScoreData.box_score.away_team_stats as TeamStats | ProjectedTeamStats, isProjected)
+  const homeStats = normalizeTeamStats(boxScoreData.box_score.home_team_stats as TeamStats | ProjectedTeamStats, isProjected)
+  const highlightClass = (awayValue: number, homeValue: number, isAway: boolean) => {
+    if (isAway) return awayValue > homeValue ? 'ring-2 ring-green-500 dark:ring-green-400 bg-green-900/20' : ''
+    return homeValue > awayValue ? 'ring-2 ring-green-500 dark:ring-green-400 bg-green-900/20' : ''
+  }
+  const homeTeamId = boxScoreData.game_info.home_team_id
+  const awayTeamId = boxScoreData.game_info.away_team_id
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
@@ -262,7 +272,7 @@ export default function BoxScorePage() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Box Score</h1>
               <p className="text-gray-600 dark:text-gray-400 mt-2">
-                Week {boxScoreData.game_info.week} • {formatDate(boxScoreData.game_info.game_date)}
+                Week {boxScoreData.game_info.week + 1} • {formatDate(boxScoreData.game_info.game_date)}
               </p>
             </div>
             <Link 
@@ -279,16 +289,23 @@ export default function BoxScorePage() {
               {/* Away Team */}
               <div className="text-center">
                 <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow mx-auto mb-2">
-                  <TeamLogo 
-                    teamName={boxScoreData.game_info.away_team}
-                    size="xl"
-                    variant="helmet"
-                    showName={false}
-                  />
+                  {awayTeamId ? (
+                    <Link href={`/leagues/${leagueId}/teams/${awayTeamId}`}>
+                      <TeamLogo teamName={boxScoreData.game_info.away_team} size="xl" variant="helmet" showName={false} />
+                    </Link>
+                  ) : (
+                    <TeamLogo teamName={boxScoreData.game_info.away_team} size="xl" variant="helmet" showName={false} />
+                  )}
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {boxScoreData.game_info.away_team}
-                </h2>
+                {awayTeamId ? (
+                  <Link href={`/leagues/${leagueId}/teams/${awayTeamId}`} className="inline-block">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white hover:underline">
+                      {boxScoreData.game_info.away_team}
+                    </h2>
+                  </Link>
+                ) : (
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{boxScoreData.game_info.away_team}</h2>
+                )}
                 <div className="text-3xl font-bold text-gray-900 dark:text-white">
                   {boxScoreData.game_info.away_score !== null ? boxScoreData.game_info.away_score : 'TBD'}
                 </div>
@@ -315,16 +332,23 @@ export default function BoxScorePage() {
               {/* Home Team */}
               <div className="text-center">
                 <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow mx-auto mb-2">
-                  <TeamLogo 
-                    teamName={boxScoreData.game_info.home_team}
-                    size="xl"
-                    variant="helmet"
-                    showName={false}
-                  />
+                  {homeTeamId ? (
+                    <Link href={`/leagues/${leagueId}/teams/${homeTeamId}`}>
+                      <TeamLogo teamName={boxScoreData.game_info.home_team} size="xl" variant="helmet" showName={false} />
+                    </Link>
+                  ) : (
+                    <TeamLogo teamName={boxScoreData.game_info.home_team} size="xl" variant="helmet" showName={false} />
+                  )}
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {boxScoreData.game_info.home_team}
-                </h2>
+                {homeTeamId ? (
+                  <Link href={`/leagues/${leagueId}/teams/${homeTeamId}`} className="inline-block">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white hover:underline">
+                      {boxScoreData.game_info.home_team}
+                    </h2>
+                  </Link>
+                ) : (
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{boxScoreData.game_info.home_team}</h2>
+                )}
                 <div className="text-3xl font-bold text-gray-900 dark:text-white">
                   {boxScoreData.game_info.home_score !== null ? boxScoreData.game_info.home_score : 'TBD'}
                 </div>
@@ -344,36 +368,34 @@ export default function BoxScorePage() {
               <div className="mb-6">
                 <h4 className="text-lg font-medium mb-3 text-gray-900 dark:text-white">Offensive</h4>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(awayStats.offensive.total_yards, homeStats.offensive.total_yards, true)}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Total Yards</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {normalizeTeamStats(boxScoreData.box_score.away_team_stats as TeamStats | ProjectedTeamStats, isProjected).offensive.total_yards}
+                      {awayStats.offensive.total_yards}
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(awayStats.offensive.passing_yards, homeStats.offensive.passing_yards, true)}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Passing Yards</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {normalizeTeamStats(boxScoreData.box_score.away_team_stats as TeamStats | ProjectedTeamStats, isProjected).offensive.passing_yards}
+                      {awayStats.offensive.passing_yards}
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(awayStats.offensive.rushing_yards, homeStats.offensive.rushing_yards, true)}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Rushing Yards</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {normalizeTeamStats(boxScoreData.box_score.away_team_stats as TeamStats | ProjectedTeamStats, isProjected).offensive.rushing_yards}
+                      {awayStats.offensive.rushing_yards}
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(
+                    isProjected ? (awayStats.offensive.points_per_game || 0) : (awayStats.offensive.points || 0),
+                    isProjected ? (homeStats.offensive.points_per_game || 0) : (homeStats.offensive.points || 0),
+                    true
+                  )}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       {isProjected ? 'Points/Game' : 'Points'}
                     </div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {(() => {
-                        const s = normalizeTeamStats(
-                          boxScoreData.box_score.away_team_stats as TeamStats | ProjectedTeamStats,
-                          isProjected
-                        )
-                        return isProjected ? s.offensive.points_per_game?.toFixed(1) : s.offensive.points
-                      })()}
+                      {isProjected ? awayStats.offensive.points_per_game?.toFixed(1) : awayStats.offensive.points}
                     </div>
                   </div>
                 </div>
@@ -383,33 +405,34 @@ export default function BoxScorePage() {
               <div className="mb-6">
                 <h4 className="text-lg font-medium mb-3 text-gray-900 dark:text-white">Defensive</h4>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(awayStats.defensive.total_yards_allowed, homeStats.defensive.total_yards_allowed, true)}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Yards Allowed</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {normalizeTeamStats(boxScoreData.box_score.away_team_stats as TeamStats | ProjectedTeamStats, isProjected).defensive.total_yards_allowed}
+                      {awayStats.defensive.total_yards_allowed}
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(
+                    isProjected ? (awayStats.defensive.points_allowed_per_game || 0) : (awayStats.defensive.points_allowed || 0),
+                    isProjected ? (homeStats.defensive.points_allowed_per_game || 0) : (homeStats.defensive.points_allowed || 0),
+                    true
+                  )}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       {isProjected ? 'Points/Game Allowed' : 'Points Allowed'}
                     </div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {(() => {
-                        const s = normalizeTeamStats(boxScoreData.box_score.away_team_stats as TeamStats | ProjectedTeamStats, isProjected)
-                        return isProjected ? s.defensive.points_allowed_per_game?.toFixed(1) : s.defensive.points_allowed
-                      })()}
+                      {isProjected ? awayStats.defensive.points_allowed_per_game?.toFixed(1) : awayStats.defensive.points_allowed}
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(awayStats.defensive.sacks, homeStats.defensive.sacks, true)}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Sacks</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {normalizeTeamStats(boxScoreData.box_score.away_team_stats as TeamStats | ProjectedTeamStats, isProjected).defensive.sacks}
+                      {awayStats.defensive.sacks}
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(awayStats.defensive.interceptions, homeStats.defensive.interceptions, true)}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Interceptions</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {normalizeTeamStats(boxScoreData.box_score.away_team_stats as TeamStats | ProjectedTeamStats, isProjected).defensive.interceptions}
+                      {awayStats.defensive.interceptions}
                     </div>
                   </div>
                 </div>
@@ -420,9 +443,21 @@ export default function BoxScorePage() {
                 <div>
                   <h4 className="text-lg font-medium mb-3 text-gray-900 dark:text-white">Key Players</h4>
                   <div className="space-y-2">
-                    {(boxScoreData.box_score.away_team_stats as TeamStats).players?.slice(0, 3).map((player, index) => (
+                    {((boxScoreData.box_score.away_team_stats as TeamStats).players || [])
+                      .filter(p => {
+                        const vals = [p.pass_yds, p.pass_tds, p.pass_ints, p.rush_yds, p.rush_tds, p.rec_yds, p.rec_tds, p.tackles, p.sacks, p.interceptions].filter(v => typeof v === 'number') as number[]
+                        return vals.some(v => v > 0)
+                      })
+                      .slice(0, 3)
+                      .map((player, index) => (
                       <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded">
-                        <div className="font-medium text-gray-900 dark:text-white">{player.name} ({player.position})</div>
+                        <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                          <span className="text-gray-500 dark:text-gray-400">{player.position}</span>
+                          <span>{player.name}</span>
+                          {('jersey_number' in player || (player as any).jersey_number !== undefined) && (
+                            <span className="ml-auto text-gray-500 dark:text-gray-400">#{(player as any).jersey_number}</span>
+                          )}
+                        </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">
                           {player.pass_yds && `Pass: ${player.pass_yds} yds, ${player.pass_tds} TD, ${player.pass_ints} INT`}
                           {player.rush_yds && `Rush: ${player.rush_yds} yds, ${player.rush_tds} TD`}
@@ -446,33 +481,34 @@ export default function BoxScorePage() {
               <div className="mb-6">
                 <h4 className="text-lg font-medium mb-3 text-gray-900 dark:text-white">Offensive</h4>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(homeStats.offensive.total_yards, awayStats.offensive.total_yards, false)}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Total Yards</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {normalizeTeamStats(boxScoreData.box_score.home_team_stats as TeamStats | ProjectedTeamStats, isProjected).offensive.total_yards}
+                      {homeStats.offensive.total_yards}
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(homeStats.offensive.passing_yards, awayStats.offensive.passing_yards, false)}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Passing Yards</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {normalizeTeamStats(boxScoreData.box_score.home_team_stats as TeamStats | ProjectedTeamStats, isProjected).offensive.passing_yards}
+                      {homeStats.offensive.passing_yards}
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(homeStats.offensive.rushing_yards, awayStats.offensive.rushing_yards, false)}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Rushing Yards</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {normalizeTeamStats(boxScoreData.box_score.home_team_stats as TeamStats | ProjectedTeamStats, isProjected).offensive.rushing_yards}
+                      {homeStats.offensive.rushing_yards}
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(
+                    isProjected ? (homeStats.offensive.points_per_game || 0) : (homeStats.offensive.points || 0),
+                    isProjected ? (awayStats.offensive.points_per_game || 0) : (awayStats.offensive.points || 0),
+                    false
+                  )}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       {isProjected ? 'Points/Game' : 'Points'}
                     </div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {(() => {
-                        const s = normalizeTeamStats(boxScoreData.box_score.home_team_stats as TeamStats | ProjectedTeamStats, isProjected)
-                        return isProjected ? s.offensive.points_per_game?.toFixed(1) : s.offensive.points
-                      })()}
+                      {isProjected ? homeStats.offensive.points_per_game?.toFixed(1) : homeStats.offensive.points}
                     </div>
                   </div>
                 </div>
@@ -482,33 +518,34 @@ export default function BoxScorePage() {
               <div className="mb-6">
                 <h4 className="text-lg font-medium mb-3 text-gray-900 dark:text-white">Defensive</h4>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(homeStats.defensive.total_yards_allowed, awayStats.defensive.total_yards_allowed, false)}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Yards Allowed</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {normalizeTeamStats(boxScoreData.box_score.home_team_stats as TeamStats | ProjectedTeamStats, isProjected).defensive.total_yards_allowed}
+                      {homeStats.defensive.total_yards_allowed}
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(
+                    isProjected ? (homeStats.defensive.points_allowed_per_game || 0) : (homeStats.defensive.points_allowed || 0),
+                    isProjected ? (awayStats.defensive.points_allowed_per_game || 0) : (awayStats.defensive.points_allowed || 0),
+                    false
+                  )}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       {isProjected ? 'Points/Game Allowed' : 'Points Allowed'}
                     </div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {(() => {
-                        const s = normalizeTeamStats(boxScoreData.box_score.home_team_stats as TeamStats | ProjectedTeamStats, isProjected)
-                        return isProjected ? s.defensive.points_allowed_per_game?.toFixed(1) : s.defensive.points_allowed
-                      })()}
+                      {isProjected ? homeStats.defensive.points_allowed_per_game?.toFixed(1) : homeStats.defensive.points_allowed}
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(homeStats.defensive.sacks, awayStats.defensive.sacks, false)}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Sacks</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {normalizeTeamStats(boxScoreData.box_score.home_team_stats as TeamStats | ProjectedTeamStats, isProjected).defensive.sacks}
+                      {homeStats.defensive.sacks}
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded">
+                  <div className={`bg-white dark:bg-gray-800 p-3 rounded ${highlightClass(homeStats.defensive.interceptions, awayStats.defensive.interceptions, false)}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Interceptions</div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
-                      {normalizeTeamStats(boxScoreData.box_score.home_team_stats as TeamStats | ProjectedTeamStats, isProjected).defensive.interceptions}
+                      {homeStats.defensive.interceptions}
                     </div>
                   </div>
                 </div>
@@ -519,9 +556,21 @@ export default function BoxScorePage() {
                 <div>
                   <h4 className="text-lg font-medium mb-3 text-gray-900 dark:text-white">Key Players</h4>
                   <div className="space-y-2">
-                    {(boxScoreData.box_score.home_team_stats as TeamStats).players?.slice(0, 3).map((player, index) => (
+                    {((boxScoreData.box_score.home_team_stats as TeamStats).players || [])
+                      .filter(p => {
+                        const vals = [p.pass_yds, p.pass_tds, p.pass_ints, p.rush_yds, p.rush_tds, p.rec_yds, p.rec_tds, p.tackles, p.sacks, p.interceptions].filter(v => typeof v === 'number') as number[]
+                        return vals.some(v => v > 0)
+                      })
+                      .slice(0, 3)
+                      .map((player, index) => (
                       <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded">
-                        <div className="font-medium text-gray-900 dark:text-white">{player.name} ({player.position})</div>
+                        <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                          <span className="text-gray-500 dark:text-gray-400">{player.position}</span>
+                          <span>{player.name}</span>
+                          {('jersey_number' in player || (player as any).jersey_number !== undefined) && (
+                            <span className="ml-auto text-gray-500 dark:text-gray-400">#{(player as any).jersey_number}</span>
+                          )}
+                        </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">
                           {player.pass_yds && `Pass: ${player.pass_yds} yds, ${player.pass_tds} TD, ${player.pass_ints} INT`}
                           {player.rush_yds && `Rush: ${player.rush_yds} yds, ${player.rush_tds} TD`}
@@ -534,6 +583,16 @@ export default function BoxScorePage() {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Player Stats Tabs */}
+          <div className="mt-8">
+            <PlayerStatsTabs 
+              awayTeam={boxScoreData.game_info.away_team}
+              homeTeam={boxScoreData.game_info.home_team}
+              awayPlayers={(boxScoreData.box_score.away_team_stats as TeamStats).players || []}
+              homePlayers={(boxScoreData.box_score.home_team_stats as TeamStats).players || []}
+            />
           </div>
 
           {/* Projected Stats Note */}
@@ -550,3 +609,111 @@ export default function BoxScorePage() {
     </div>
   )
 } 
+
+// Lightweight tabs component for per-player breakdowns
+function PlayerStatsTabs({
+  awayTeam,
+  homeTeam,
+  awayPlayers,
+  homePlayers
+}: {
+  awayTeam: string
+  homeTeam: string
+  awayPlayers: PlayerStats[]
+  homePlayers: PlayerStats[]
+}) {
+  const [tab, setTab] = useState<'PASS' | 'RUSH' | 'REC' | 'DEF' | 'KICK'>('PASS')
+  const tabBtn = (key: 'PASS'|'RUSH'|'REC'|'DEF'|'KICK', label: string) => (
+    <button
+      onClick={() => setTab(key)}
+      className={`px-3 py-1 rounded-full text-sm font-medium ${tab===key? 'bg-green-600 text-white':'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'}`}
+    >
+      {label}
+    </button>
+  )
+
+  const filterPlayers = (players: PlayerStats[]) => {
+    return players.filter(p => {
+      switch(tab){
+        case 'PASS': return (p.pass_yds||0)>0 || (p.pass_tds||0)>0 || (p.pass_ints||0)>0
+        case 'RUSH': return (p.rush_yds||0)>0 || (p.rush_tds||0)>0
+        case 'REC': return (p.rec_yds||0)>0 || (p.rec_tds||0)>0
+        case 'DEF': return (p.tackles||0)>0 || (p.sacks||0)>0 || (p.interceptions||0)>0
+        case 'KICK': return false
+      }
+    })
+  }
+
+  const renderRow = (p: PlayerStats) => {
+    if (tab==='PASS') return (
+      <div className="flex justify-between text-sm">
+        <span className="text-gray-200">{p.position}</span>
+        <span className="flex-1 mx-2 text-white">{p.name}</span>
+        <span className="text-gray-300">{p.pass_yds ?? 0} yds</span>
+        <span className="ml-4 text-gray-300">TD {p.pass_tds ?? 0}</span>
+        <span className="ml-4 text-gray-300">INT {p.pass_ints ?? 0}</span>
+      </div>
+    )
+    if (tab==='RUSH') return (
+      <div className="flex justify-between text-sm">
+        <span className="text-gray-200">{p.position}</span>
+        <span className="flex-1 mx-2 text-white">{p.name}</span>
+        <span className="text-gray-300">{p.rush_yds ?? 0} yds</span>
+        <span className="ml-4 text-gray-300">TD {p.rush_tds ?? 0}</span>
+      </div>
+    )
+    if (tab==='REC') return (
+      <div className="flex justify-between text-sm">
+        <span className="text-gray-200">{p.position}</span>
+        <span className="flex-1 mx-2 text-white">{p.name}</span>
+        <span className="text-gray-300">{p.rec_yds ?? 0} yds</span>
+        <span className="ml-4 text-gray-300">TD {p.rec_tds ?? 0}</span>
+      </div>
+    )
+    if (tab==='DEF') return (
+      <div className="flex justify-between text-sm">
+        <span className="text-gray-200">{p.position}</span>
+        <span className="flex-1 mx-2 text-white">{p.name}</span>
+        <span className="text-gray-300">Tkl {p.tackles ?? 0}</span>
+        <span className="ml-4 text-gray-300">Sck {p.sacks ?? 0}</span>
+        <span className="ml-4 text-gray-300">INT {p.interceptions ?? 0}</span>
+      </div>
+    )
+    return (
+      <div className="text-sm text-gray-400">No kicking data</div>
+    )
+  }
+
+  const left = filterPlayers(awayPlayers)
+  const right = filterPlayers(homePlayers)
+
+  return (
+    <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-6">
+      <div className="flex items-center gap-2 mb-4">
+        {tabBtn('PASS','Passing')}
+        {tabBtn('RUSH','Rushing')}
+        {tabBtn('REC','Receiving')}
+        {tabBtn('DEF','Defense')}
+        {tabBtn('KICK','Kicking')}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <h4 className="text-lg font-semibold mb-3 text-white">{awayTeam}</h4>
+          <div className="space-y-2">
+            {left.length ? left.map((p, i) => (
+              <div key={i} className="bg-white/5 border border-white/10 rounded p-2">{renderRow(p)}</div>
+            )) : <div className="text-sm text-gray-400">No data</div>}
+          </div>
+        </div>
+        <div>
+          <h4 className="text-lg font-semibold mb-3 text-white">{homeTeam}</h4>
+          <div className="space-y-2">
+            {right.length ? right.map((p, i) => (
+              <div key={i} className="bg-white/5 border border-white/10 rounded p-2">{renderRow(p)}</div>
+            )) : <div className="text-sm text-gray-400">No data</div>}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

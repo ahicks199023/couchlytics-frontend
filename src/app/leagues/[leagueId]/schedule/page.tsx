@@ -403,8 +403,8 @@ function GameCard({
       <div className="bg-gray-800 dark:bg-gray-900 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <span className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full">
-              Week {game.week}
+              <span className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full">
+              Week {game.week + 1}
             </span>
             <span className={`px-3 py-1 text-sm font-medium rounded-full ${
               game.is_complete 
