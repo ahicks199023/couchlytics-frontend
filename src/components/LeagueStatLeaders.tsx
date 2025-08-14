@@ -8,7 +8,6 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Bar } from 'react-chartjs-2'
 import {
@@ -23,7 +22,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { API_BASE } from '@/lib/config'
-import { statOptions, positionOptions } from '@/constants/statTypes'
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 

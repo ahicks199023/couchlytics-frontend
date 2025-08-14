@@ -142,13 +142,29 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
   }
 
   // Build normalized data rows for tables with derived fields for sorting/formatting
+  type PassingLike = {
+    completions?: number
+    pass_comp?: number
+    attempts?: number
+    pass_att?: number
+    yards?: number
+    pass_yds?: number
+    games_played?: number
+    gamesPlayed?: number
+    sacks?: number
+    pass_sacks?: number
+    team_name?: string
+    teamName?: string
+  }
+
   const passingRows = passingLeaders.map((p) => {
-    const completions = (p as any).completions ?? (p as any).pass_comp ?? 0
-    const attempts = (p as any).attempts ?? (p as any).pass_att ?? 0
-    const yards = (p as any).yards ?? (p as any).pass_yds ?? 0
-    const games = (p as any).games_played ?? (p as any).gamesPlayed ?? 0
-    const sacks = (p as any).sacks ?? (p as any).pass_sacks ?? 0
-    const team_name = (p as any).team_name ?? (p as any).teamName
+    const row = p as unknown as PassingLike
+    const completions = row.completions ?? row.pass_comp ?? 0
+    const attempts = row.attempts ?? row.pass_att ?? 0
+    const yards = row.yards ?? row.pass_yds ?? 0
+    const games = row.games_played ?? row.gamesPlayed ?? 0
+    const sacks = row.sacks ?? row.pass_sacks ?? 0
+    const team_name = row.team_name ?? row.teamName
     return {
       ...p,
       team_name,
