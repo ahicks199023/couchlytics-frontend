@@ -107,12 +107,11 @@ export function OffensiveTeamsSection({ leagueId }: OffensiveTeamsSectionProps) 
 
   const passingColumns = [
     { key: 'team_name', label: 'Team', sortable: true },
+    { key: 'comp_att', label: 'Comp/ATT', sortable: false, align: 'center' as const },
+    { key: 'completion_pct', label: 'Completion %', sortable: true, align: 'right' as const, formatter: (v: unknown) => fmt1(v) },
     { key: 'passing_yards', label: 'Passing Yards', sortable: true, align: 'right' as const },
-    { key: 'passing_touchdowns', label: 'Passing TDs', sortable: true, align: 'right' as const },
-    { key: 'interceptions_lost', label: 'INTs Lost', sortable: true, align: 'right' as const },
-    { key: 'sacks_allowed', label: 'Sacks Allowed', sortable: true, align: 'right' as const },
     { key: 'yardsPerGame', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (value: unknown) => fmt1(value) },
-    { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
+    { key: 'sacks_allowed', label: 'Sacks Allowed', sortable: true, align: 'right' as const },
   ]
 
   const rushingColumns = [
@@ -149,10 +148,18 @@ export function OffensiveTeamsSection({ leagueId }: OffensiveTeamsSectionProps) 
     yardsPerGame: normalizeYardsPerGame(r as unknown as Record<string, unknown>),
   }))
 
-  const passingRows: Array<Record<string, unknown>> = passingLeaders.map((r) => ({
-    ...r,
-    yardsPerGame: normalizeYardsPerGame(r as unknown as Record<string, unknown>),
-  }))
+  const passingRows: Array<Record<string, unknown>> = passingLeaders.map((r) => {
+    const row = r as unknown as Record<string, unknown>
+    const comp = (row.completions as number) ?? (row.pass_completions as number) ?? (row.comp as number) ?? 0
+    const att = (row.attempts as number) ?? (row.pass_attempts as number) ?? (row.att as number) ?? 0
+    const pct = att > 0 ? (comp / att) * 100 : 0
+    return {
+      ...r,
+      comp_att: `${comp}/${att}`,
+      completion_pct: pct,
+      yardsPerGame: normalizeYardsPerGame(row),
+    }
+  })
 
   const rushingRows: Array<Record<string, unknown>> = rushingLeaders.map((r) => ({
     ...r,

@@ -97,9 +97,7 @@ interface Props {
 
 export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
   const router = useRouter()
-  const [statType, setStatType] = useState('pass_yds') // Use a working stat type as default
-  const [week, setWeek] = useState('')
-  const [position, setPosition] = useState('ALL')
+  const [statType, setStatType] = useState('passing')
   const [leaders, setLeaders] = useState<StatLeader[]>([])
   const [view, setView] = useState<'table' | 'chart'>('table')
   const [currentTeamId, setCurrentTeamId] = useState<number | null>(null)
@@ -232,9 +230,10 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
           let leaderboardStatType = 'all'
           if (statType.includes('pass')) leaderboardStatType = 'passing'
           else if (statType.includes('rush')) leaderboardStatType = 'rushing'
-          else if (statType.includes('rec')) leaderboardStatType = 'receiving'
+          else if (statType.includes('rece')) leaderboardStatType = 'receiving'
           else if (statType.includes('def')) leaderboardStatType = 'defensive'
           else if (statType.includes('kick')) leaderboardStatType = 'kicking'
+          else if (statType.includes('punt')) leaderboardStatType = 'punting'
           
           query.append('statType', leaderboardStatType)
           query.append('limit', '50') // Get more results for better filtering
@@ -244,7 +243,6 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
         } else {
           // Fallback to old API
           const query = new URLSearchParams({ statType })
-          if (week) query.append('week', week)
           
           url = `${API_BASE}/leagues/${leagueId}/stats/leaders?${query.toString()}`
           console.log('Using OLD API (fallback):', url)
@@ -686,12 +684,9 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
       }
     }
     fetchLeaders()
-  }, [leagueId, statType, week, teamNames, checkLeaderboardStatus])
+  }, [leagueId, statType, teamNames, checkLeaderboardStatus])
 
-  const filteredLeaders =
-    position === 'ALL'
-      ? leaders
-      : leaders.filter((l) => l.position?.toUpperCase() === position)
+  const filteredLeaders = leaders.slice(0, 10)
 
   const chartData = {
     labels: filteredLeaders.map((l) => `${l.name} (${l.teamName})`),
@@ -712,40 +707,18 @@ export const LeagueStatLeaders: React.FC<Props> = ({ leagueId }) => {
       <CardContent>
         <div className="flex flex-wrap gap-4 items-center mb-6">
           <Select value={statType} onValueChange={setStatType}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Stat Type" />
+            <SelectTrigger className="w-[220px] bg-gray-800 text-white border-gray-700">
+              <SelectValue placeholder="Category" />
             </SelectTrigger>
-            <SelectContent>
-              {statOptions.map((s) => (
-                <SelectItem key={s.value} value={s.value}>
-                  {s.label}
-                </SelectItem>
-              ))}
+            <SelectContent className="bg-gray-900 text-white border border-gray-700">
+              <SelectItem value="passing">Passing</SelectItem>
+              <SelectItem value="rushing">Rushing</SelectItem>
+              <SelectItem value="receiving">Receiving</SelectItem>
+              <SelectItem value="defensive">Defense</SelectItem>
+              <SelectItem value="kicking">Kicking</SelectItem>
+              <SelectItem value="punting">Punting</SelectItem>
             </SelectContent>
           </Select>
-
-          <Select value={position} onValueChange={setPosition}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Position" />
-            </SelectTrigger>
-            <SelectContent>
-              {positionOptions.map((pos) => (
-                <SelectItem key={pos} value={pos}>
-                  {pos}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Input
-            placeholder="Week # (optional)"
-            value={week}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setWeek(e.target.value)
-            }
-            className="w-[140px]"
-            type="number"
-          />
 
           <button
             className="ml-auto text-sm underline"
