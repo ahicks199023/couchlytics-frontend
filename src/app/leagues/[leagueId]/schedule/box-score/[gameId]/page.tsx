@@ -9,6 +9,7 @@ import TeamLogo from '@/components/TeamLogo'
 type PlayerStats = {
   name: string
   position: string
+  jersey_number?: number
   pass_yds?: number
   pass_tds?: number
   pass_ints?: number
@@ -454,8 +455,8 @@ export default function BoxScorePage() {
                         <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
                           <span className="text-gray-500 dark:text-gray-400">{player.position}</span>
                           <span>{player.name}</span>
-                          {('jersey_number' in player || (player as any).jersey_number !== undefined) && (
-                            <span className="ml-auto text-gray-500 dark:text-gray-400">#{(player as any).jersey_number}</span>
+                          {typeof player.jersey_number === 'number' && (
+                            <span className="ml-auto text-gray-500 dark:text-gray-400">#{player.jersey_number}</span>
                           )}
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -567,8 +568,8 @@ export default function BoxScorePage() {
                         <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
                           <span className="text-gray-500 dark:text-gray-400">{player.position}</span>
                           <span>{player.name}</span>
-                          {('jersey_number' in player || (player as any).jersey_number !== undefined) && (
-                            <span className="ml-auto text-gray-500 dark:text-gray-400">#{(player as any).jersey_number}</span>
+                          {typeof player.jersey_number === 'number' && (
+                            <span className="ml-auto text-gray-500 dark:text-gray-400">#{player.jersey_number}</span>
                           )}
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">
