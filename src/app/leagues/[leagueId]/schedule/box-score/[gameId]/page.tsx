@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { API_BASE } from '@/lib/config'
 import TeamLogo from '@/components/TeamLogo'
-import { getTeamByAbbreviation, getTeamByName, getTeamByPartialName } from '@/lib/team-config'
 
 type PlayerStats = {
   name: string
@@ -369,7 +368,10 @@ export default function BoxScorePage() {
                     </div>
                     <div className="text-xl font-bold text-gray-900 dark:text-white">
                       {(() => {
-                        const s = normalizeTeamStats(boxScoreData.box_score.away_team_stats as any, isProjected)
+                        const s = normalizeTeamStats(
+                          boxScoreData.box_score.away_team_stats as TeamStats | ProjectedTeamStats,
+                          isProjected
+                        )
                         return isProjected ? s.offensive.points_per_game?.toFixed(1) : s.offensive.points
                       })()}
                     </div>
