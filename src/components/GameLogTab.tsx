@@ -2,7 +2,9 @@
 
 // GameLogTab Component - Fixed TypeScript errors
 import React, { useState, useEffect, useCallback } from 'react'
-import { fetchFromApi, getPlayerGameLog, PlayerGameLogRow } from '@/lib/api'
+import { fetchFromApi } from '@/lib/api'
+// TODO: Uncomment when backend implements new API
+// import { getPlayerGameLog, PlayerGameLogRow } from '@/lib/api'
 
 interface GameLog {
   week: string
