@@ -455,17 +455,19 @@ function GameCard({
             {/* Away Team */}
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-lg">
-                <TeamLogo 
-                  teamName={game.away_team.name}
-                  size="xl"
-                  variant="helmet"
-                  showName={false}
-                />
+                <Link href={`/leagues/${leagueId}/teams/${game.away_team.id}`}>
+                  <TeamLogo 
+                    teamName={game.away_team.name}
+                    size="xl"
+                    variant="helmet"
+                    showName={false}
+                  />
+                </Link>
               </div>
               <div className="flex-1 text-white">
-                <div className="font-bold text-lg">
+                <Link href={`/leagues/${leagueId}/teams/${game.away_team.id}`} className="font-bold text-lg hover:underline">
                   {game.away_team.name}
-                </div>
+                </Link>
                 <div className="text-sm text-gray-200">
                   {game.away_team.user}
                 </div>
@@ -508,9 +510,9 @@ function GameCard({
                 )}
               </div>
               <div className="flex-1 text-white text-right">
-                <div className="font-bold text-lg">
+                <Link href={`/leagues/${leagueId}/teams/${game.home_team.id}`} className="font-bold text-lg hover:underline">
                   {game.home_team.name}
-                </div>
+                </Link>
                 <div className="text-sm text-gray-200">
                   {game.home_team.user}
                 </div>
@@ -519,12 +521,14 @@ function GameCard({
                 </div>
               </div>
               <div className="w-16 h-16 flex items-center justify-center bg-white rounded-full shadow-lg">
-                <TeamLogo 
-                  teamName={game.home_team.name}
-                  size="xl"
-                  variant="helmet"
-                  showName={false}
-                />
+                <Link href={`/leagues/${leagueId}/teams/${game.home_team.id}`}>
+                  <TeamLogo 
+                    teamName={game.home_team.name}
+                    size="xl"
+                    variant="helmet"
+                    showName={false}
+                  />
+                </Link>
               </div>
             </div>
           </div>
