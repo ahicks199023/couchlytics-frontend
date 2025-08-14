@@ -95,6 +95,8 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
     { key: 'comp_att', label: 'Comp/ATT', sortable: false, align: 'center' as const },
     { key: 'completion_pct', label: 'Completion %', sortable: true, align: 'right' as const, formatter: (v: unknown) => typeof v === 'number' ? v.toFixed(2) + '%' : '-' },
     { key: 'yards', label: 'Passing Yards', sortable: true, align: 'right' as const },
+    { key: 'touchdowns', label: 'TDs', sortable: true, align: 'right' as const },
+    { key: 'interceptions', label: 'INTs', sortable: true, align: 'right' as const },
     { key: 'average', label: 'Average', sortable: true, align: 'right' as const, formatter: (v: unknown) => typeof v === 'number' ? v.toFixed(2) : '-' },
     { key: 'yards_per_game', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (v: unknown) => typeof v === 'number' ? v.toFixed(2) : '-' },
     { key: 'sacks', label: 'Sack', sortable: true, align: 'right' as const },
@@ -149,6 +151,10 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
     pass_att?: number
     yards?: number
     pass_yds?: number
+    touchdowns?: number
+    pass_tds?: number
+    interceptions?: number
+    pass_ints?: number
     games_played?: number
     gamesPlayed?: number
     sacks?: number
@@ -162,6 +168,8 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
     const completions = row.completions ?? row.pass_comp ?? 0
     const attempts = row.attempts ?? row.pass_att ?? 0
     const yards = row.yards ?? row.pass_yds ?? 0
+    const touchdowns = row.touchdowns ?? row.pass_tds ?? 0
+    const interceptions = row.interceptions ?? row.pass_ints ?? 0
     const games = row.games_played ?? row.gamesPlayed ?? 0
     const sacks = row.sacks ?? row.pass_sacks ?? 0
     const team_name = row.team_name ?? row.teamName
@@ -171,6 +179,8 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
       comp_att: `${completions}/${attempts}`,
       completion_pct: attempts > 0 ? (completions / attempts) * 100 : 0,
       yards,
+      touchdowns,
+      interceptions,
       average: attempts > 0 ? yards / attempts : 0,
       yards_per_game: games > 0 ? yards / games : 0,
       sacks,

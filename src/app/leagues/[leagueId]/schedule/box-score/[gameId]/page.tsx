@@ -354,8 +354,8 @@ export default function BoxScorePage() {
                 {awayTeamId ? (
                   <Link href={`/leagues/${leagueId}/teams/${awayTeamId}`} className="inline-block">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white hover:underline">
-                      {boxScoreData.game_info.away_team}
-                    </h2>
+                  {boxScoreData.game_info.away_team}
+                </h2>
                   </Link>
                 ) : (
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{boxScoreData.game_info.away_team}</h2>
@@ -397,8 +397,8 @@ export default function BoxScorePage() {
                 {homeTeamId ? (
                   <Link href={`/leagues/${leagueId}/teams/${homeTeamId}`} className="inline-block">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white hover:underline">
-                      {boxScoreData.game_info.home_team}
-                    </h2>
+                  {boxScoreData.game_info.home_team}
+                </h2>
                   </Link>
                 ) : (
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{boxScoreData.game_info.home_team}</h2>
@@ -748,4 +748,4 @@ function PlayerStatsTabs({
       </div>
     </div>
   )
-}
+} 
