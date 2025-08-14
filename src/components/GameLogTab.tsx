@@ -96,7 +96,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
   const [limit, setLimit] = useState(20)
   const [season, setSeason] = useState<number>(new Date().getFullYear())
   const [seasons, setSeasons] = useState<number[]>([])
-  const [rows, setRows] = useState<PlayerGameLogRow[] | null>(null)
+  // const [rows, setRows] = useState<PlayerGameLogRow[] | null>(null) // TODO: Use when backend implements new API
 
   const fetchGameLogs = useCallback(async () => {
     try {
@@ -154,16 +154,16 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
     setSeasons([new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1])
   }, [])
 
-  // Season-based game log fetch
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true); setError(null)
-    getPlayerGameLog(leagueId, playerId, season)
-      .then(d => { if (!cancelled) { setRows(d.games || []); }} )
-      .catch(e => { if (!cancelled) setError(e.message) })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
-  }, [leagueId, playerId, season])
+  // Season-based game log fetch - TODO: Uncomment when backend implements new API
+  // useEffect(() => {
+  //   let cancelled = false
+  //   setLoading(true); setError(null)
+  //   getPlayerGameLog(leagueId, playerId, season)
+  //     .then(d => { if (!cancelled) { setRows(d.games || []); }} )
+  //     .catch(e => { if (!cancelled) setError(e.message) })
+  //     .finally(() => { if (!cancelled) setLoading(false) })
+  //   return () => { cancelled = true }
+  // }, [leagueId, playerId, season])
 
   const getTableHeaders = () => {
     const position = player?.position?.toUpperCase() || ''
