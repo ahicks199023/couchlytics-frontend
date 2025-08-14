@@ -92,12 +92,12 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
   const passingColumns = [
     { key: 'name', label: 'Player', sortable: true },
     { key: 'team_name', label: 'Team', sortable: true },
-    { key: 'position', label: 'Pos', sortable: true },
-    { key: 'yards', label: 'Yards', sortable: true, align: 'right' as const },
-    { key: 'touchdowns', label: 'TDs', sortable: true, align: 'right' as const },
-    { key: 'interceptions', label: 'INTs', sortable: true, align: 'right' as const },
-    { key: 'rating', label: 'Rating', sortable: true, align: 'right' as const, formatter: (value: unknown) => typeof value === 'number' ? value.toFixed(1) : '-' },
-    { key: 'games_played', label: 'Games', sortable: true, align: 'right' as const },
+    { key: 'comp_att', label: 'Comp/ATT', sortable: false, align: 'center' as const },
+    { key: 'completion_pct', label: 'Completion %', sortable: true, align: 'right' as const, formatter: (v: unknown) => typeof v === 'number' ? v.toFixed(2) + '%' : '-' },
+    { key: 'yards', label: 'Passing Yards', sortable: true, align: 'right' as const },
+    { key: 'average', label: 'Average', sortable: true, align: 'right' as const, formatter: (v: unknown) => typeof v === 'number' ? v.toFixed(2) : '-' },
+    { key: 'yards_per_game', label: 'Yards/Game', sortable: true, align: 'right' as const, formatter: (v: unknown) => typeof v === 'number' ? v.toFixed(2) : '-' },
+    { key: 'sacks', label: 'Sack', sortable: true, align: 'right' as const },
   ]
 
   const rushingColumns = [
@@ -141,13 +141,33 @@ export function OffensivePlayersSection({ leagueId }: OffensivePlayersSectionPro
     )
   }
 
+  // Build normalized data rows for tables with derived fields for sorting/formatting
+  const passingRows = passingLeaders.map((p) => {
+    const completions = (p as any).completions ?? (p as any).pass_comp ?? 0
+    const attempts = (p as any).attempts ?? (p as any).pass_att ?? 0
+    const yards = (p as any).yards ?? (p as any).pass_yds ?? 0
+    const games = (p as any).games_played ?? (p as any).gamesPlayed ?? 0
+    const sacks = (p as any).sacks ?? (p as any).pass_sacks ?? 0
+    const team_name = (p as any).team_name ?? (p as any).teamName
+    return {
+      ...p,
+      team_name,
+      comp_att: `${completions}/${attempts}`,
+      completion_pct: attempts > 0 ? (completions / attempts) * 100 : 0,
+      yards,
+      average: attempts > 0 ? yards / attempts : 0,
+      yards_per_game: games > 0 ? yards / games : 0,
+      sacks,
+    }
+  })
+
   return (
     <div className="space-y-8">
       {/* Passing Leaders */}
       <StatsTable
         title="Passing Leaders"
         columns={passingColumns}
-        data={passingLeaders}
+        data={passingRows}
         leagueId={leagueId}
         highlightUserTeam={true}
         currentTeamId={currentTeamId}
