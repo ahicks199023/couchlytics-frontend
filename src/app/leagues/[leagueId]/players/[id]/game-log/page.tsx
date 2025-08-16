@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { getPlayerGameLog, PlayerGameLogRow } from '@/lib/api'
+import { PlayerGameLogRow } from '@/lib/api'
 import { Player } from '@/types/player'
 import { fetchFromApi } from '@/lib/api'
 import TeamLogo from '@/components/TeamLogo'
