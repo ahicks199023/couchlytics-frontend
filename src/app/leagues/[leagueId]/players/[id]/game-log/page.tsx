@@ -107,10 +107,15 @@ export default function PlayerGameLogPage() {
   const getTableRow = (game: PlayerGameLogRow, position: string) => {
     const pos = position?.toUpperCase() || ''
     // Flexible getValue that tries multiple property names
-    const getValue = (...keys: string[]) => {
+    const getValue = (...keys: string[]): string | number => {
       for (const key of keys) {
         const value = (game as Record<string, unknown>)[key]
-        if (value !== undefined && value !== null) return value
+        if (value !== undefined && value !== null) {
+          // Convert to string or number, avoid objects
+          if (typeof value === 'string' || typeof value === 'number') {
+            return value
+          }
+        }
       }
       return '-'
     }
@@ -297,7 +302,7 @@ export default function PlayerGameLogPage() {
                     <tr key={index} className="border-b border-gray-800 hover:bg-gray-800/50">
                       {getTableRow(game, playerPosition).map((cell, cellIndex) => (
                         <td key={cellIndex} className="py-3 px-4 text-white">
-                          {cell}
+                          {String(cell)}
                         </td>
                       ))}
                     </tr>
