@@ -13,8 +13,9 @@ export default function PlayerGameLogPage() {
   const [player, setPlayer] = useState<Player | null>(null)
   const [rows, setRows] = useState<PlayerGameLogRow[]>([])
   const [playerPosition, setPlayerPosition] = useState<string>('')
-  const [season, setSeason] = useState<number>(4) // Default to current season
-  const [seasons] = useState<number[]>([1, 2, 3, 4])
+  // Remove season filtering since API returns all games
+  // const [season, setSeason] = useState<number>(4) // Default to current season
+  // const [seasons] = useState<number[]>([1, 2, 3, 4])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -52,32 +53,39 @@ export default function PlayerGameLogPage() {
 
   // Fetch game log when season changes
   useEffect(() => {
-    if (!leagueId || !playerId || !season) return
+    if (!leagueId || !playerId) return
 
     setLoading(true)
-    getPlayerGameLog(leagueId as string, playerId as string, season)
+    // Use the same API call as the player detail page
+    fetchFromApi(`/leagues/${leagueId}/players/${playerId}`)
       .then((data) => {
-        console.log('Game log data:', data)
+        console.log('Game log page - Full player data:', data)
         
-        // Extract games and position from response
-        const games = Array.isArray(data.games) ? data.games : []
-        const position = data.position || ''
+        const responseData = data as Record<string, unknown>
+        const playerData = responseData.player as Record<string, unknown>
+        const gameLogData = responseData.gameLog as unknown[]
+        
+        console.log('Game log page - GameLog array:', gameLogData)
+        
+        // Extract position and game log from response
+        const position = (playerData.position as string) || ''
+        const games = Array.isArray(gameLogData) ? gameLogData : []
         
         // Debug: log first game to see actual structure
         if (games.length > 0) {
-          console.log('First game structure:', games[0])
-          console.log('Available properties:', Object.keys(games[0]))
+          console.log('Game log page - First game structure:', games[0])
+          console.log('Game log page - Available properties:', Object.keys(games[0] as Record<string, unknown>))
         }
         
-        setRows(games)
+        setRows(games as PlayerGameLogRow[])
         setPlayerPosition(position)
       })
       .catch((err) => {
-        console.error('Failed to load game log:', err)
+        console.error('Game log page - Failed to load game log:', err)
         setError('Failed to load game log data')
       })
       .finally(() => setLoading(false))
-  }, [leagueId, playerId, season])
+  }, [leagueId, playerId])
 
   const getTableHeaders = (position: string) => {
     const pos = position?.toUpperCase() || ''
@@ -128,9 +136,9 @@ export default function PlayerGameLogPage() {
     
     if (pos === 'QB') {
       const compAtt = getValue('cmp_att')
-      const completions = getValue('pass_comp', 'completions')
-      const attempts = getValue('pass_att', 'attempts')
-      const compPct = getValue('pass_cmp_pct', 'cmp_pct', 'completion_percentage')
+      const completions = getValue('cmp', 'completions')
+      const attempts = getValue('att', 'attempts')
+      const compPct = getValue('cmp_pct', 'completion_percentage')
       
       return [
         ...baseData,
@@ -147,45 +155,45 @@ export default function PlayerGameLogPage() {
     } else if (['RB', 'HB'].includes(pos)) {
       return [
         ...baseData,
-        getValue('rush_att', 'rushing_attempts'),
-        getValue('rush_yds', 'rushing_yards'),
-        getValue('rush_tds', 'rushing_touchdowns'),
-        getValue('rec_rec', 'rec_catches', 'receptions'),
-        getValue('rec_yds', 'receiving_yards'),
-        getValue('rec_tds', 'receiving_touchdowns'),
-        getValue('rush_fum', 'fumbles')
+        getValue('rush_att'),
+        getValue('rush_yds'),
+        getValue('rush_tds'),
+        getValue('rec_catches', 'receptions'),
+        getValue('rec_yds'),
+        getValue('rec_tds'),
+        getValue('fumbles')
       ]
     } else if (['WR', 'TE'].includes(pos)) {
       return [
         ...baseData,
-        getValue('rec_rec', 'rec_catches', 'receptions'),
-        getValue('rec_yds', 'receiving_yards'),
-        getValue('rec_tds', 'receiving_touchdowns'),
-        getValue('rush_att', 'rushing_attempts'),
-        getValue('rush_yds', 'rushing_yards'),
-        getValue('rush_tds', 'rushing_touchdowns')
+        getValue('rec_catches', 'receptions'),
+        getValue('rec_yds'),
+        getValue('rec_tds'),
+        getValue('rush_att'),
+        getValue('rush_yds'),
+        getValue('rush_tds')
       ]
     } else if (['CB', 'S', 'FS', 'SS', 'LB', 'MLB', 'OLB', 'LOLB', 'ROLB', 'DE', 'DT', 'NT'].includes(pos)) {
       return [
         ...baseData,
-        getValue('def_tackles', 'tackles'),
-        getValue('assists'), // try assists
-        getValue('def_sacks', 'sacks'),
-        getValue('def_ints', 'interceptions'),
-        getValue('deflections', 'pass_deflections'),
-        getValue('def_forced_fum', 'forced_fum'),
-        getValue('def_fum_rec', 'fum_rec')
+        getValue('tackles'),
+        '-', // assists not available
+        getValue('def_sacks'),
+        getValue('def_ints'),
+        getValue('deflections'),
+        getValue('forced_fum'),
+        getValue('fum_rec')
       ]
     } else if (['K', 'P'].includes(pos)) {
-      const fgPct = getValue('fg_pct', 'field_goal_percentage')
+      const fgPct = getValue('fg_pct')
       return [
         ...baseData,
-        getValue('fg_made', 'field_goals_made'),
-        getValue('fg_att', 'field_goal_attempts'),
+        getValue('fg_made'),
+        getValue('fg_att'),
         fgPct ? `${Number(fgPct).toFixed(1)}%` : '-',
-        getValue('fg_long', 'longest_field_goal'),
-        getValue('xp_made', 'extra_points_made'),
-        getValue('xp_att', 'extra_point_attempts')
+        getValue('fg_long'),
+        getValue('xp_made'),
+        getValue('xp_att')
       ]
     } else {
       return [...baseData, 'No stats available']
@@ -252,34 +260,18 @@ export default function PlayerGameLogPage() {
         </div>
       )}
 
-      {/* Season Selector */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Season:
-        </label>
-        <select
-          value={season}
-          onChange={(e) => setSeason(Number(e.target.value))}
-          className="bg-gray-800 border border-gray-600 text-white px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {seasons.map((s) => (
-            <option key={s} value={s}>
-              Season {s}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* Removed season selector - showing all games */}
 
       {/* Game Log Table */}
       <div className="bg-gray-900 rounded-lg border border-gray-700">
         <div className="p-6">
-          <h2 className="text-xl font-bold mb-4">Game Log - Season {season}</h2>
+          <h2 className="text-xl font-bold mb-4">Game Log - All Games</h2>
           
           {rows.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-400">No game log data available for this season</p>
+              <p className="text-gray-400">No game log data available</p>
               <button
-                onClick={() => setSeason(season)} // Trigger re-fetch
+                onClick={() => window.location.reload()} // Trigger re-fetch
                 className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
               >
                 Retry
