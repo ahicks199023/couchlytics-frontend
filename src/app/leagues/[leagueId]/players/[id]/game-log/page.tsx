@@ -104,64 +104,64 @@ export default function PlayerGameLogPage() {
     
     const baseData = [
       getValue('week'),
-      getValue('opponent_name') || getValue('opponent'),
-      getValue('result') || `${getValue('team_score')}-${getValue('opponent_score')}`
+      getValue('opponent'),
+      getValue('result') || `${getValue('teamScore')}-${getValue('oppScore')}`
     ]
     
     if (pos === 'QB') {
       return [
         ...baseData,
-        getValue('completions'),
-        getValue('attempts'),
-        getValue('completion_percentage') ? `${Number(getValue('completion_percentage')).toFixed(1)}%` : '-',
-        getValue('passing_yards'),
-        getValue('passing_touchdowns'),
-        getValue('interceptions'),
-        getValue('sacks_taken'),
-        getValue('rushing_yards'),
-        getValue('rushing_touchdowns')
+        getValue('pass_comp'),
+        getValue('pass_att'),
+        getValue('pass_cmp_pct') ? `${Number(getValue('pass_cmp_pct')).toFixed(1)}%` : '-',
+        getValue('pass_yds'),
+        getValue('pass_tds'),
+        getValue('pass_ints'),
+        getValue('pass_sacks'),
+        getValue('rush_yds'),
+        getValue('rush_tds')
       ]
     } else if (['RB', 'HB'].includes(pos)) {
       return [
         ...baseData,
-        getValue('rushing_attempts'),
-        getValue('rushing_yards'),
-        getValue('rushing_touchdowns'),
-        getValue('receptions'),
-        getValue('receiving_yards'),
-        getValue('receiving_touchdowns'),
-        getValue('fumbles')
+        getValue('rush_att'),
+        getValue('rush_yds'),
+        getValue('rush_tds'),
+        getValue('rec_rec'),
+        getValue('rec_yds'),
+        getValue('rec_tds'),
+        getValue('rush_fum')
       ]
     } else if (['WR', 'TE'].includes(pos)) {
       return [
         ...baseData,
-        getValue('receptions'),
-        getValue('receiving_yards'),
-        getValue('receiving_touchdowns'),
-        getValue('rushing_attempts'),
-        getValue('rushing_yards'),
-        getValue('rushing_touchdowns')
+        getValue('rec_rec'),
+        getValue('rec_yds'),
+        getValue('rec_tds'),
+        getValue('rush_att'),
+        getValue('rush_yds'),
+        getValue('rush_tds')
       ]
     } else if (['CB', 'S', 'FS', 'SS', 'LB', 'MLB', 'OLB', 'LOLB', 'ROLB', 'DE', 'DT', 'NT'].includes(pos)) {
       return [
         ...baseData,
-        getValue('tackles'),
-        getValue('assists'),
-        getValue('sacks'),
-        getValue('interceptions'),
-        getValue('pass_deflections'),
-        getValue('forced_fumbles'),
-        getValue('fumble_recoveries')
+        getValue('def_tackles'),
+        '-', // assists not in type
+        getValue('def_sacks'),
+        getValue('def_ints'),
+        '-', // pass_deflections not in type
+        getValue('def_forced_fum'),
+        getValue('def_fum_rec')
       ]
     } else if (['K', 'P'].includes(pos)) {
       return [
         ...baseData,
-        getValue('field_goals_made'),
-        getValue('field_goal_attempts'),
-        getValue('field_goal_percentage') ? `${Number(getValue('field_goal_percentage')).toFixed(1)}%` : '-',
-        getValue('longest_field_goal'),
-        getValue('extra_points_made'),
-        getValue('extra_point_attempts')
+        getValue('fg_made'),
+        getValue('fg_att'),
+        getValue('fg_pct') ? `${Number(getValue('fg_pct')).toFixed(1)}%` : '-',
+        getValue('punt_long'), // using punt_long as longest kick
+        getValue('xp_made'),
+        getValue('xp_att')
       ]
     } else {
       return [...baseData, 'No stats available']
