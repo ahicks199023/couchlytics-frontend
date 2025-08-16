@@ -63,6 +63,12 @@ export default function PlayerGameLogPage() {
         const games = Array.isArray(data.games) ? data.games : []
         const position = data.position || ''
         
+        // Debug: log first game to see actual structure
+        if (games.length > 0) {
+          console.log('First game structure:', games[0])
+          console.log('Available properties:', Object.keys(games[0]))
+        }
+        
         setRows(games)
         setPlayerPosition(position)
       })
@@ -100,68 +106,81 @@ export default function PlayerGameLogPage() {
 
   const getTableRow = (game: PlayerGameLogRow, position: string) => {
     const pos = position?.toUpperCase() || ''
-    const getValue = (key: keyof PlayerGameLogRow) => game[key] ?? '-'
+    // Flexible getValue that tries multiple property names
+    const getValue = (...keys: string[]) => {
+      for (const key of keys) {
+        const value = (game as any)[key]
+        if (value !== undefined && value !== null) return value
+      }
+      return '-'
+    }
     
     const baseData = [
       getValue('week'),
-      getValue('opponent'),
-      getValue('result') || `${getValue('teamScore')}-${getValue('oppScore')}`
+      getValue('opponent', 'opp'),
+      getValue('result') || `${getValue('teamScore', 'pts')}-${getValue('oppScore')}`
     ]
     
     if (pos === 'QB') {
+      const compAtt = getValue('cmp_att')
+      const completions = getValue('pass_comp', 'completions')
+      const attempts = getValue('pass_att', 'attempts')
+      const compPct = getValue('pass_cmp_pct', 'cmp_pct', 'completion_percentage')
+      
       return [
         ...baseData,
-        getValue('pass_comp'),
-        getValue('pass_att'),
-        getValue('pass_cmp_pct') ? `${Number(getValue('pass_cmp_pct')).toFixed(1)}%` : '-',
-        getValue('pass_yds'),
-        getValue('pass_tds'),
-        getValue('pass_ints'),
-        getValue('pass_sacks'),
-        getValue('rush_yds'),
-        getValue('rush_tds')
+        compAtt || (completions !== '-' && attempts !== '-' ? `${completions}/${attempts}` : '-'),
+        attempts,
+        compPct ? `${Number(compPct).toFixed(1)}%` : '-',
+        getValue('pass_yds', 'passing_yards'),
+        getValue('pass_tds', 'passing_touchdowns'),
+        getValue('pass_ints', 'interceptions'),
+        getValue('pass_sacks', 'sacks_taken'),
+        getValue('rush_yds', 'rushing_yards'),
+        getValue('rush_tds', 'rushing_touchdowns')
       ]
     } else if (['RB', 'HB'].includes(pos)) {
       return [
         ...baseData,
-        getValue('rush_att'),
-        getValue('rush_yds'),
-        getValue('rush_tds'),
-        getValue('rec_rec'),
-        getValue('rec_yds'),
-        getValue('rec_tds'),
-        getValue('rush_fum')
+        getValue('rush_att', 'rushing_attempts'),
+        getValue('rush_yds', 'rushing_yards'),
+        getValue('rush_tds', 'rushing_touchdowns'),
+        getValue('rec_rec', 'rec_catches', 'receptions'),
+        getValue('rec_yds', 'receiving_yards'),
+        getValue('rec_tds', 'receiving_touchdowns'),
+        getValue('rush_fum', 'fumbles')
       ]
     } else if (['WR', 'TE'].includes(pos)) {
       return [
         ...baseData,
-        getValue('rec_rec'),
-        getValue('rec_yds'),
-        getValue('rec_tds'),
-        getValue('rush_att'),
-        getValue('rush_yds'),
-        getValue('rush_tds')
+        getValue('rec_rec', 'rec_catches', 'receptions'),
+        getValue('rec_yds', 'receiving_yards'),
+        getValue('rec_tds', 'receiving_touchdowns'),
+        getValue('rush_att', 'rushing_attempts'),
+        getValue('rush_yds', 'rushing_yards'),
+        getValue('rush_tds', 'rushing_touchdowns')
       ]
     } else if (['CB', 'S', 'FS', 'SS', 'LB', 'MLB', 'OLB', 'LOLB', 'ROLB', 'DE', 'DT', 'NT'].includes(pos)) {
       return [
         ...baseData,
-        getValue('def_tackles'),
-        '-', // assists not in type
-        getValue('def_sacks'),
-        getValue('def_ints'),
-        '-', // pass_deflections not in type
-        getValue('def_forced_fum'),
-        getValue('def_fum_rec')
+        getValue('def_tackles', 'tackles'),
+        getValue('assists'), // try assists
+        getValue('def_sacks', 'sacks'),
+        getValue('def_ints', 'interceptions'),
+        getValue('deflections', 'pass_deflections'),
+        getValue('def_forced_fum', 'forced_fum'),
+        getValue('def_fum_rec', 'fum_rec')
       ]
     } else if (['K', 'P'].includes(pos)) {
+      const fgPct = getValue('fg_pct', 'field_goal_percentage')
       return [
         ...baseData,
-        getValue('fg_made'),
-        getValue('fg_att'),
-        getValue('fg_pct') ? `${Number(getValue('fg_pct')).toFixed(1)}%` : '-',
-        getValue('punt_long'), // using punt_long as longest kick
-        getValue('xp_made'),
-        getValue('xp_att')
+        getValue('fg_made', 'field_goals_made'),
+        getValue('fg_att', 'field_goal_attempts'),
+        fgPct ? `${Number(fgPct).toFixed(1)}%` : '-',
+        getValue('fg_long', 'longest_field_goal'),
+        getValue('xp_made', 'extra_points_made'),
+        getValue('xp_att', 'extra_point_attempts')
       ]
     } else {
       return [...baseData, 'No stats available']
