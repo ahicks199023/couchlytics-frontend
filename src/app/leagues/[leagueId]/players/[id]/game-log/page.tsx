@@ -61,7 +61,7 @@ export default function PlayerGameLogPage() {
         
         // Extract games and position from response
         const games = Array.isArray(data.games) ? data.games : []
-        const position = data.playerPosition || data.position || ''
+        const position = data.position || ''
         
         setRows(games)
         setPlayerPosition(position)
