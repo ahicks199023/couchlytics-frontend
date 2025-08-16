@@ -14,7 +14,7 @@ export default function PlayerGameLogPage() {
   const [rows, setRows] = useState<PlayerGameLogRow[]>([])
   const [playerPosition, setPlayerPosition] = useState<string>('')
   const [season, setSeason] = useState<number>(4) // Default to current season
-  const [seasons, setSeasons] = useState<number[]>([1, 2, 3, 4])
+  const [seasons] = useState<number[]>([1, 2, 3, 4])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
