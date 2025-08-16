@@ -109,7 +109,7 @@ export default function PlayerGameLogPage() {
     // Flexible getValue that tries multiple property names
     const getValue = (...keys: string[]) => {
       for (const key of keys) {
-        const value = (game as any)[key]
+        const value = (game as Record<string, unknown>)[key]
         if (value !== undefined && value !== null) return value
       }
       return '-'
