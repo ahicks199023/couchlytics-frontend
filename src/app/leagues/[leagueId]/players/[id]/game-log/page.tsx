@@ -9,7 +9,7 @@ import { fetchFromApi } from '@/lib/api'
 import TeamLogo from '@/components/TeamLogo'
 
 export default function PlayerGameLogPage() {
-  const { leagueId, playerId } = useParams()
+  const { leagueId, id: playerId } = useParams()
   const [player, setPlayer] = useState<Player | null>(null)
   const [rows, setRows] = useState<PlayerGameLogRow[]>([])
   const [playerPosition, setPlayerPosition] = useState<string>('')
