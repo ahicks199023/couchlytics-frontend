@@ -2,7 +2,7 @@
 
 // GameLogTab Component - Fixed TypeScript errors
 import React, { useState, useEffect } from 'react'
-import { getPlayerGameLog, PlayerGameLogRow } from '@/lib/api'
+import { getPlayerGameLog, PlayerGameLogRow, fetchFromApi } from '@/lib/api'
 
 interface GameLog {
   week: string
@@ -108,33 +108,47 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
     setSeasons([new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1])
   }, [])
 
-  // Season-based game log fetch
+  // Fetch game log from existing player data (same as standalone page)
   useEffect(() => {
     let cancelled = false
     setLoading(true); setError(null)
-    getPlayerGameLog(leagueId, playerId, season)
-      .then(d => { 
-        if (!cancelled) { 
-          setRows(d.games || [])
-          setPlayerPosition(d.position || '')
-          // Update seasons list if backend provides it
-          if (d.available_seasons && d.available_seasons.length > 0) {
-            setSeasons(d.available_seasons)
+    
+    // Use the same API call as the player detail page
+    fetchFromApi(`/leagues/${leagueId}/players/${playerId}`)
+      .then((data) => {
+        if (!cancelled) {
+          console.log('Game log tab - Full player data:', data)
+          
+          const responseData = data as Record<string, unknown>
+          const playerData = responseData.player as Record<string, unknown>
+          const gameLogData = responseData.gameLog as unknown[]
+          
+          // Extract position and game log from response
+          const position = (playerData.position as string) || ''
+          const games = Array.isArray(gameLogData) ? gameLogData : []
+          
+          console.log('Game log tab - GameLog array:', gameLogData)
+          if (games.length > 0) {
+            console.log('Game log tab - First game structure:', games[0])
+            console.log('Game log tab - Available properties:', Object.keys(games[0] as Record<string, unknown>))
           }
+          
+          setRows(games as PlayerGameLogRow[])
+          setPlayerPosition(position)
         }
       })
       .catch(e => { if (!cancelled) setError(e.message) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [leagueId, playerId, season])
+  }, [leagueId, playerId])
 
   const getTableHeaders = () => {
     const position = playerPosition?.toUpperCase() || ''
     
     if (position.includes('QB')) {
       return [
-        'Week', 'Team', 'Opp', 'Result', 'CMP/ATT', 'CMP%', 'YDS', 'AVG', 
-        'TDS', 'INT', 'LNG', 'SACK', 'RTG', 'ATT', 'YDS', 'AVG', 'TDS', 
+        'Week', 'Team', 'Opp', 'Result', 'CMP/ATT', 'CMP%', 'Pass YDS', 'Pass AVG', 
+        'Pass TDS', 'INT', 'LNG', 'SACK', 'QBR', 'Rush YDS', 'Rush TDS', 
         'LNG', 'BTK', 'FUM', 'PTS'
       ]
     } else if (position.includes('RB') || position.includes('HB')) {
@@ -169,143 +183,124 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
   const getTableRow = (game: GameLog | PlayerGameLogRow) => {
     const position = playerPosition?.toUpperCase() || ''
     
-    // Helper to get value from either old or new structure
-    const getValue = (oldKey: keyof GameLog, newKey: keyof PlayerGameLogRow) => {
-      const gameOld = game as GameLog
-      const gameNew = game as PlayerGameLogRow
-      return gameNew[newKey] ?? gameOld[oldKey] ?? '-'
-    }
-    
-    // Format completion percentage
-    const getCompPct = () => {
-      const gameNew = game as PlayerGameLogRow
-      const gameOld = game as GameLog
-      if (gameNew.pass_cmp_pct !== undefined) return `${gameNew.pass_cmp_pct.toFixed(1)}%`
-      if (gameOld.cmp_pct !== undefined) return `${gameOld.cmp_pct}%`
-      return '-'
-    }
-    
-    // Format comp/att
-    const getCompAtt = () => {
-      const gameNew = game as PlayerGameLogRow
-      const gameOld = game as GameLog
-      if (gameNew.pass_comp !== undefined && gameNew.pass_att !== undefined) {
-        return `${gameNew.pass_comp}/${gameNew.pass_att}`
+    // Flexible getValue that tries multiple property names (same as standalone page)
+    const getValue = (...keys: string[]): string | number => {
+      for (const key of keys) {
+        const value = (game as Record<string, unknown>)[key]
+        if (value !== undefined && value !== null) {
+          // Convert to string or number, avoid objects
+          if (typeof value === 'string' || typeof value === 'number') {
+            return value
+          }
+        }
       }
-      if (gameOld.cmp_att) return gameOld.cmp_att
       return '-'
     }
+    
+    const baseData = [
+      getValue('week'),
+      getValue('team', 'teamName'), // Team name from either structure
+      getValue('opponent', 'opp'),
+      getValue('result') || `${getValue('teamScore', 'pts')}-${getValue('oppScore')}`
+    ]
     
     if (position.includes('QB')) {
+      const compAtt = getValue('cmp_att')
+      const completions = getValue('cmp', 'completions')
+      const attempts = getValue('att', 'attempts')
+      const compPct = getValue('cmp_pct', 'completion_percentage')
+      
       return [
-        getValue('week' as keyof GameLog, 'week'),
-        (game as GameLog).team || (game as PlayerGameLogRow).opponent || '-', // Team not in new structure
-        getValue('opponent', 'opponent'),
-        getValue('result', 'result'),
-        getCompAtt(),
-        getCompPct(),
-        getValue('pass_yds', 'pass_yds'),
-        getValue('pass_avg', 'pass_avg'),
-        getValue('pass_tds', 'pass_tds'),
-        getValue('pass_ints', 'pass_ints'),
-        getValue('pass_long', 'pass_long'),
-        getValue('pass_sacks', 'pass_sacks'),
-        getValue('passer_rating', 'passer_rating'),
-        getValue('rush_att', 'rush_att'),
-        getValue('rush_yds', 'rush_yds'),
-        getValue('rush_avg', 'rush_avg'),
-        getValue('rush_tds', 'rush_tds'),
-        getValue('rush_long', 'rush_long'),
-        (game as GameLog).broken_tackles || '-', // Not in new structure
-        getValue('fumbles' as keyof GameLog, 'rush_fum'),
-        (game as GameLog).pts || '-' // Not in new structure yet
+        ...baseData,
+        compAtt || (completions !== '-' && attempts !== '-' ? `${completions}/${attempts}` : '-'),
+        compPct ? `${Number(compPct).toFixed(1)}%` : '-',
+        getValue('pass_yds', 'passing_yards'),
+        getValue('pass_avg', 'passing_average'),
+        getValue('pass_tds', 'passing_touchdowns'),
+        getValue('pass_ints', 'interceptions'),
+        getValue('pass_long', 'longest_pass'),
+        getValue('pass_sacks', 'sacks_taken'),
+        getValue('passer_rating', 'qbr', 'quarterback_rating'), // QBR added
+        getValue('rush_yds', 'rushing_yards'), // Fixed rushing stats
+        getValue('rush_tds', 'rushing_touchdowns'),
+        getValue('rush_long', 'longest_rush'),
+        getValue('broken_tackles', 'broken_tackle'),
+        getValue('fumbles', 'rush_fum'),
+        getValue('pts', 'points')
       ]
     } else if (position.includes('RB') || position.includes('HB')) {
       return [
-        getValue('week' as keyof GameLog, 'week'),
-        (game as GameLog).team || '-',
-        getValue('opponent', 'opponent'),
-        getValue('result', 'result'),
-        getValue('rush_att', 'rush_att'),
-        getValue('rush_yds', 'rush_yds'),
-        getValue('rush_avg', 'rush_avg'),
-        getValue('rush_tds', 'rush_tds'),
-        getValue('rush_long', 'rush_long'),
-        (game as GameLog).broken_tackles || '-',
-        getValue('fumbles' as keyof GameLog, 'rush_fum'),
-        getValue('rec_catches' as keyof GameLog, 'rec_rec'),
-        getValue('rec_yds', 'rec_yds'),
-        getValue('rec_avg', 'rec_avg'),
-        getValue('rec_tds', 'rec_tds'),
-        getValue('rec_long', 'rec_long'),
-        (game as GameLog).pts || '-'
+        ...baseData,
+        getValue('rush_att'),
+        getValue('rush_yds'),
+        getValue('rush_avg'),
+        getValue('rush_tds'),
+        getValue('rush_long'),
+        getValue('broken_tackles'),
+        getValue('fumbles'),
+        getValue('rec_catches', 'receptions'),
+        getValue('rec_yds'),
+        getValue('rec_avg'),
+        getValue('rec_tds'),
+        getValue('rec_long'),
+        getValue('pts', 'points')
       ]
     } else if (position.includes('WR') || position.includes('TE')) {
       return [
-        getValue('week' as keyof GameLog, 'week'),
-        (game as GameLog).team || '-',
-        getValue('opponent', 'opponent'),
-        getValue('result', 'result'),
-        getValue('rec_catches' as keyof GameLog, 'rec_rec'),
-        getValue('rec_yds', 'rec_yds'),
-        getValue('rec_avg', 'rec_avg'),
-        getValue('rec_tds', 'rec_tds'),
-        getValue('rec_long', 'rec_long'),
-        getValue('drops' as keyof GameLog, 'rec_drops'),
-        getValue('rush_att', 'rush_att'),
-        getValue('rush_yds', 'rush_yds'),
-        getValue('rush_avg', 'rush_avg'),
-        getValue('rush_tds', 'rush_tds'),
-        getValue('rush_long', 'rush_long'),
-        getValue('fumbles' as keyof GameLog, 'rush_fum'),
-        (game as GameLog).pts || '-'
+        ...baseData,
+        getValue('rec_catches', 'receptions'),
+        getValue('rec_yds'),
+        getValue('rec_avg'),
+        getValue('rec_tds'),
+        getValue('rec_long'),
+        getValue('drops'),
+        getValue('rush_att'),
+        getValue('rush_yds'),
+        getValue('rush_avg'),
+        getValue('rush_tds'),
+        getValue('rush_long'),
+        getValue('fumbles'),
+        getValue('pts', 'points')
       ]
     } else if (position.includes('K')) {
+      const fgPct = getValue('fg_pct')
+      const xpPct = getValue('xp_pct')
       return [
-        getValue('week' as keyof GameLog, 'week'),
-        (game as GameLog).team || '-',
-        getValue('opponent', 'opponent'),
-        getValue('result', 'result'),
-        getValue('fg_made', 'fg_made'),
-        getValue('fg_att', 'fg_att'),
-        getValue('fg_pct', 'fg_pct') !== '-' ? `${getValue('fg_pct', 'fg_pct')}%` : '-',
-        getValue('fg_long' as keyof GameLog, 'punt_long'), // Map to available field temporarily
-        getValue('xp_made', 'xp_made'),
-        getValue('xp_att', 'xp_att'),
-        (game as GameLog).xp_pct ? `${(game as GameLog).xp_pct}%` : '-',
-        getValue('pts' as keyof GameLog, 'kick_pts')
+        ...baseData,
+        getValue('fg_made'),
+        getValue('fg_att'),
+        fgPct !== '-' ? `${Number(fgPct).toFixed(1)}%` : '-',
+        getValue('fg_long'),
+        getValue('xp_made'),
+        getValue('xp_att'),
+        xpPct !== '-' ? `${Number(xpPct).toFixed(1)}%` : '-',
+        getValue('pts', 'points')
       ]
     } else if (position.includes('P')) {
       return [
-        getValue('week' as keyof GameLog, 'week'),
-        (game as GameLog).team || '-',
-        getValue('opponent', 'opponent'),
-        getValue('result', 'result'),
-        getValue('punt_att', 'punt_att'),
-        getValue('punt_yds', 'punt_yds'),
-        getValue('punt_avg', 'punt_avg'),
-        getValue('punt_long', 'punt_long'),
-        getValue('punts_in20', 'punts_in20'),
-        (game as GameLog).punt_tbs || '-', // Not in new structure
-        (game as GameLog).pts || '-'
+        ...baseData,
+        getValue('punt_att'),
+        getValue('punt_yds'),
+        getValue('punt_avg'),
+        getValue('punt_long'),
+        getValue('punts_in20'),
+        getValue('punt_tbs'),
+        getValue('pts', 'points')
       ]
     } else {
       // Defensive players
       return [
-        getValue('week' as keyof GameLog, 'week'),
-        (game as GameLog).team || '-',
-        getValue('opponent', 'opponent'),
-        getValue('result', 'result'),
-        getValue('tackles' as keyof GameLog, 'def_tackles'),
-        getValue('def_sacks', 'def_sacks'),
-        getValue('def_ints', 'def_ints'),
-        (game as GameLog).int_yds || '-', // Not in new structure
-        getValue('def_tds', 'def_tds'),
-        getValue('forced_fum' as keyof GameLog, 'def_forced_fum'),
-        getValue('fum_rec' as keyof GameLog, 'def_fum_rec'),
-        (game as GameLog).deflections || '-', // Not in new structure
-        (game as GameLog).safeties || '-', // Not in new structure
-        (game as GameLog).pts || '-'
+        ...baseData,
+        getValue('tackles'),
+        getValue('def_sacks'),
+        getValue('def_ints'),
+        getValue('int_yds'),
+        getValue('def_tds'),
+        getValue('forced_fum'),
+        getValue('fum_rec'),
+        getValue('deflections'),
+        getValue('safeties'),
+        getValue('pts', 'points')
       ]
     }
   }
@@ -407,8 +402,8 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
                 return (
                   <tr key={index} className="hover:bg-gray-700/50 transition-colors">
                     {tableRow.map((value, cellIndex) => (
-                      <td key={cellIndex} className={`px-3 py-2 text-sm ${cellIndex === 3 ? getResultClass(value as string) : 'text-white'}`}>
-                        {value}
+                      <td key={cellIndex} className={`px-3 py-2 text-sm ${cellIndex === 3 ? getResultClass(String(value)) : 'text-white'}`}>
+                        {String(value)}
                       </td>
                     ))}
                   </tr>
