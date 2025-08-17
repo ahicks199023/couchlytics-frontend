@@ -135,7 +135,7 @@ export default function PlayerGameLogPage() {
     const baseHeaders = ['Week', 'Opponent', 'Result']
     
     if (pos === 'QB') {
-      return [...baseHeaders, 'QBR', 'Comp', 'Att', 'Comp%', 'Pass Yds', 'Pass TD', 'INT', 'Sacks', 'Rush Yds', 'Rush TD']
+      return [...baseHeaders, 'QBR', 'Comp', 'Att', 'Comp%', 'Pass Yds', 'Pass TD', 'INT', 'Sacks']
     } else if (['RB', 'HB'].includes(pos)) {
       return [...baseHeaders, 'Rush Att', 'Rush Yds', 'Rush TD', 'Rec', 'Rec Yds', 'Rec TD', 'Fumbles']
     } else if (['WR', 'TE'].includes(pos)) {
@@ -191,9 +191,7 @@ export default function PlayerGameLogPage() {
         getValue('pass_yds', 'passing_yards'),
         getValue('pass_tds', 'passing_touchdowns'),
         getValue('pass_ints', 'interceptions'),
-        getValue('pass_sacks', 'sacks_taken'),
-        getValue('rush_yds', 'rushing_yards'),
-        getValue('rush_tds', 'rushing_touchdowns')
+        getValue('pass_sacks', 'sacks_taken')
       ]
     } else if (['RB', 'HB'].includes(pos)) {
       return [
@@ -341,6 +339,8 @@ export default function PlayerGameLogPage() {
                           const gameObj = game as Record<string, unknown>
                           const gameId = gameObj.game_id || gameObj.gameId
                           const result = String(cell)
+                          
+                          console.log(`Standalone GameLog - Cell ${cellIndex}, value: ${result}, gameId: ${gameId}`)
                           
                           // Color code the result
                           const resultClass = result.includes('W') ? 'text-green-400' : 

@@ -209,8 +209,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
     if (position.includes('QB')) {
       return [
         'Week', 'Team', 'Opp', 'Result', 'QBR', 'CMP/ATT', 'CMP%', 'Pass YDS', 'Pass AVG', 
-        'Pass TDS', 'INT', 'LNG', 'SACK', 'Rush YDS', 'Rush TDS', 
-        'LNG', 'BTK', 'FUM', 'PTS'
+        'Pass TDS', 'INT', 'LNG', 'SACK'
       ]
     } else if (position.includes('RB') || position.includes('HB')) {
       return [
@@ -294,13 +293,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
         getValue('pass_tds', 'passing_touchdowns', 'passTds', 'passTD', 'pass_td'),
         getValue('pass_ints', 'interceptions', 'passInts', 'passINT', 'pass_int'),
         getValue('pass_long', 'longest_pass', 'passLong', 'pass_lng', 'passLng'),
-        getValue('pass_sacks', 'sacks_taken', 'sacksTaken', 'sacks', 'pass_sack'),
-        getValue('rush_yds', 'rushing_yards', 'rushYds', 'rushYards', 'rushingYards'), // Rushing stats
-        getValue('rush_tds', 'rushing_touchdowns', 'rushTds', 'rushTD', 'rushingTD', 'rushing_td'),
-        getValue('rush_long', 'longest_rush', 'rushLong', 'rush_lng', 'rushLng', 'rushing_long'),
-        getValue('broken_tackles', 'broken_tackle', 'brokenTackles', 'btk', 'bt'),
-        getValue('fumbles', 'rush_fum', 'fumble', 'fum', 'rushing_fumbles'),
-        getValue('pts', 'points', 'fantasyPoints', 'fantasy_points')
+        getValue('pass_sacks', 'sacks_taken', 'sacksTaken', 'sacks', 'pass_sack')
       ]
     } else if (position.includes('RB') || position.includes('HB')) {
       return [
@@ -480,6 +473,8 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
                       if (cellIndex === 3) {
                         const gameObj = game as Record<string, unknown>
                         const gameId = gameObj.game_id || gameObj.gameId
+                        
+                        console.log(`GameLogTab - Cell ${cellIndex}, value: ${value}, gameId: ${gameId}`)
                         
                         if (gameId) {
                           return (
