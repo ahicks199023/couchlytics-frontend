@@ -171,7 +171,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
             }
             
             return {
-              ...game,
+              ...(gameObj as Record<string, unknown>),
               week: correctedWeek
             }
           })

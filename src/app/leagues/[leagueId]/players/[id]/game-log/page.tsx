@@ -96,7 +96,7 @@ export default function PlayerGameLogPage() {
           }
           
           return {
-            ...game,
+            ...(gameObj as Record<string, unknown>),
             week: correctedWeek
           }
         })
