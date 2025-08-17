@@ -165,8 +165,8 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
     
     if (position.includes('QB')) {
       return [
-        'Week', 'Team', 'Opp', 'Result', 'CMP/ATT', 'CMP%', 'Pass YDS', 'Pass AVG', 
-        'Pass TDS', 'INT', 'LNG', 'SACK', 'QBR', 'Rush YDS', 'Rush TDS', 
+        'Week', 'Team', 'Opp', 'Result', 'QBR', 'CMP/ATT', 'CMP%', 'Pass YDS', 'Pass AVG', 
+        'Pass TDS', 'INT', 'LNG', 'SACK', 'Rush YDS', 'Rush TDS', 
         'LNG', 'BTK', 'FUM', 'PTS'
       ]
     } else if (position.includes('RB') || position.includes('HB')) {
@@ -243,6 +243,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
       
       return [
         ...baseData,
+        getValue('passer_rating', 'qbr', 'quarterback_rating', 'qb_rating', 'rating'), // QBR moved after Result
         compAtt || (completions !== 0 && attempts !== 0 ? `${completions}/${attempts}` : '0/0'),
         compPct ? `${Number(compPct).toFixed(1)}%` : '0.0%',
         getValue('pass_yds', 'passing_yards', 'passYds', 'passYards'),
@@ -251,7 +252,6 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
         getValue('pass_ints', 'interceptions', 'passInts', 'passINT', 'pass_int'),
         getValue('pass_long', 'longest_pass', 'passLong', 'pass_lng', 'passLng'),
         getValue('pass_sacks', 'sacks_taken', 'sacksTaken', 'sacks', 'pass_sack'),
-        getValue('passer_rating', 'qbr', 'quarterback_rating', 'qb_rating', 'rating'), // QBR
         getValue('rush_yds', 'rushing_yards', 'rushYds', 'rushYards', 'rushingYards'), // Rushing stats
         getValue('rush_tds', 'rushing_touchdowns', 'rushTds', 'rushTD', 'rushingTD', 'rushing_td'),
         getValue('rush_long', 'longest_rush', 'rushLong', 'rush_lng', 'rushLng', 'rushing_long'),

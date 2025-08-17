@@ -93,7 +93,7 @@ export default function PlayerGameLogPage() {
     const baseHeaders = ['Week', 'Opponent', 'Result']
     
     if (pos === 'QB') {
-      return [...baseHeaders, 'Comp', 'Att', 'Comp%', 'Pass Yds', 'Pass TD', 'INT', 'Sacks', 'Rush Yds', 'Rush TD']
+      return [...baseHeaders, 'QBR', 'Comp', 'Att', 'Comp%', 'Pass Yds', 'Pass TD', 'INT', 'Sacks', 'Rush Yds', 'Rush TD']
     } else if (['RB', 'HB'].includes(pos)) {
       return [...baseHeaders, 'Rush Att', 'Rush Yds', 'Rush TD', 'Rec', 'Rec Yds', 'Rec TD', 'Fumbles']
     } else if (['WR', 'TE'].includes(pos)) {
@@ -142,6 +142,7 @@ export default function PlayerGameLogPage() {
       
       return [
         ...baseData,
+        getValue('passer_rating', 'qbr', 'quarterback_rating'), // QBR moved after Result
         compAtt || (completions !== '-' && attempts !== '-' ? `${completions}/${attempts}` : '-'),
         attempts,
         compPct ? `${Number(compPct).toFixed(1)}%` : '-',
