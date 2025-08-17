@@ -40,7 +40,7 @@ export default function PlayerGameLogPage() {
           position: playerData.position,
           teamName: playerData.teamName,
           ovr: playerData.overall,
-          jerseyNumber: playerData.jerseyNumber,
+          jerseyNumber: playerData.jersey_number || playerData.jerseyNumber || playerData.jersey || playerData.number,
         } as Player
         
         setPlayer(mappedPlayer)

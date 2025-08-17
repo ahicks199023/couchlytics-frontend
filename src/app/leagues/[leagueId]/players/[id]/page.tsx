@@ -160,7 +160,7 @@ export default function PlayerDetailPage() {
           totalReleasePenalty: playerData.capReleasePenalty,
           
           // Additional player details - using actual API field names
-          jerseyNumber: playerData.jerseyNumber,
+          jerseyNumber: playerData.jersey_number || playerData.jerseyNumber || playerData.jersey || playerData.number,
           yearsPro: playerData.yearsPro,
           rookieYear: playerData.rookieYear,
           draftRound: playerData.draftRound,
@@ -200,6 +200,15 @@ export default function PlayerDetailPage() {
         // Log what we actually have vs what we need
         console.log('=== API DATA ANALYSIS ===')
         console.log('Fields provided by API:', Object.keys(playerData))
+        
+        // Debug jersey number specifically
+        console.log('=== JERSEY NUMBER DEBUG ===')
+        console.log('jerseyNumber:', playerData.jerseyNumber)
+        console.log('jersey_number:', playerData.jersey_number)
+        console.log('jersey:', playerData.jersey)
+        console.log('number:', playerData.number)
+        console.log('maddenId:', playerData.maddenId)
+        
         console.log('Fields we need for full player profile:')
         console.log('- Core: speed, acceleration, agility, strength, awareness, jumping, stamina, toughness, injury')
         console.log('- Passing: throwPower, shortAccuracy, midAccuracy, deepAccuracy, throwOnRun, playAction, breakSack, underPressure')

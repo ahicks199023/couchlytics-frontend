@@ -127,6 +127,12 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
           const position = (playerData.position as string) || ''
           const games = Array.isArray(gameLogData) ? gameLogData : []
           
+          // Debug: Check player data properties including jersey number
+          console.log('Game log tab - Player data keys:', Object.keys(playerData))
+          console.log('Game log tab - Jersey number:', playerData.jerseyNumber)
+          console.log('Game log tab - Player name:', playerData.name)
+          console.log('Game log tab - Player position:', playerData.position)
+          
           console.log('Game log tab - GameLog array:', gameLogData)
           if (games.length > 0) {
             console.log('Game log tab - First game structure:', games[0])
