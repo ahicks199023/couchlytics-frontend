@@ -131,6 +131,18 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
           if (games.length > 0) {
             console.log('Game log tab - First game structure:', games[0])
             console.log('Game log tab - Available properties:', Object.keys(games[0] as Record<string, unknown>))
+            
+            // Debug: Check for specific rushing stat properties
+            const firstGame = games[0] as Record<string, unknown>
+            console.log('Game log tab - Rushing properties check:')
+            console.log('  rush_yds:', firstGame['rush_yds'])
+            console.log('  rushing_yards:', firstGame['rushing_yards'])
+            console.log('  rushYds:', firstGame['rushYds'])
+            console.log('  rush_tds:', firstGame['rush_tds'])
+            console.log('  rushing_touchdowns:', firstGame['rushing_touchdowns'])
+            console.log('  fumbles:', firstGame['fumbles'])
+            console.log('  pts:', firstGame['pts'])
+            console.log('  points:', firstGame['points'])
           }
           
           setRows(games as PlayerGameLogRow[])
@@ -194,39 +206,52 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
           }
         }
       }
+      return 0  // Return 0 instead of '-' for missing stats
+    }
+    
+    // Special getValue for non-stat fields that can return '-'
+    const getValueOrDash = (...keys: string[]): string | number => {
+      for (const key of keys) {
+        const value = (game as Record<string, unknown>)[key]
+        if (value !== undefined && value !== null) {
+          if (typeof value === 'string' || typeof value === 'number') {
+            return value
+          }
+        }
+      }
       return '-'
     }
     
     const baseData = [
       getValue('week'),
-      getValue('team', 'teamName'), // Team name from either structure
-      getValue('opponent', 'opp'),
-      getValue('result') || `${getValue('teamScore', 'pts')}-${getValue('oppScore')}`
+      getValueOrDash('team', 'teamName'), // Team name from either structure
+      getValueOrDash('opponent', 'opp'),
+      getValueOrDash('result') || `${getValue('teamScore', 'pts')}-${getValue('oppScore')}`
     ]
     
     if (position.includes('QB')) {
       const compAtt = getValue('cmp_att')
-      const completions = getValue('cmp', 'completions')
-      const attempts = getValue('att', 'attempts')
-      const compPct = getValue('cmp_pct', 'completion_percentage')
+      const completions = getValue('cmp', 'completions', 'pass_comp')
+      const attempts = getValue('att', 'attempts', 'pass_att')
+      const compPct = getValue('cmp_pct', 'completion_percentage', 'pass_cmp_pct')
       
       return [
         ...baseData,
-        compAtt || (completions !== '-' && attempts !== '-' ? `${completions}/${attempts}` : '-'),
-        compPct ? `${Number(compPct).toFixed(1)}%` : '-',
-        getValue('pass_yds', 'passing_yards'),
-        getValue('pass_avg', 'passing_average'),
-        getValue('pass_tds', 'passing_touchdowns'),
-        getValue('pass_ints', 'interceptions'),
-        getValue('pass_long', 'longest_pass'),
-        getValue('pass_sacks', 'sacks_taken'),
-        getValue('passer_rating', 'qbr', 'quarterback_rating'), // QBR added
-        getValue('rush_yds', 'rushing_yards'), // Fixed rushing stats
-        getValue('rush_tds', 'rushing_touchdowns'),
-        getValue('rush_long', 'longest_rush'),
-        getValue('broken_tackles', 'broken_tackle'),
-        getValue('fumbles', 'rush_fum'),
-        getValue('pts', 'points')
+        compAtt || (completions !== 0 && attempts !== 0 ? `${completions}/${attempts}` : '0/0'),
+        compPct ? `${Number(compPct).toFixed(1)}%` : '0.0%',
+        getValue('pass_yds', 'passing_yards', 'passYds', 'passYards'),
+        getValue('pass_avg', 'passing_average', 'passAvg', 'pass_average'),
+        getValue('pass_tds', 'passing_touchdowns', 'passTds', 'passTD', 'pass_td'),
+        getValue('pass_ints', 'interceptions', 'passInts', 'passINT', 'pass_int'),
+        getValue('pass_long', 'longest_pass', 'passLong', 'pass_lng', 'passLng'),
+        getValue('pass_sacks', 'sacks_taken', 'sacksTaken', 'sacks', 'pass_sack'),
+        getValue('passer_rating', 'qbr', 'quarterback_rating', 'qb_rating', 'rating'), // QBR
+        getValue('rush_yds', 'rushing_yards', 'rushYds', 'rushYards', 'rushingYards'), // Rushing stats
+        getValue('rush_tds', 'rushing_touchdowns', 'rushTds', 'rushTD', 'rushingTD', 'rushing_td'),
+        getValue('rush_long', 'longest_rush', 'rushLong', 'rush_lng', 'rushLng', 'rushing_long'),
+        getValue('broken_tackles', 'broken_tackle', 'brokenTackles', 'btk', 'bt'),
+        getValue('fumbles', 'rush_fum', 'fumble', 'fum', 'rushing_fumbles'),
+        getValue('pts', 'points', 'fantasyPoints', 'fantasy_points')
       ]
     } else if (position.includes('RB') || position.includes('HB')) {
       return [
