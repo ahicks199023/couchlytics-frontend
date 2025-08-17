@@ -271,7 +271,17 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
       getValue('week'),
       getValueOrDash('team', 'teamName'), // Team name from either structure
       getValueOrDash('opponent', 'opp'),
-      getValueOrDash('result') || `${getValue('teamScore', 'pts')}-${getValue('oppScore')}`
+      // Format result with score: "W 24-20" or "L 20-24"
+      (() => {
+        const result = getValueOrDash('result')
+        const teamScore = getValue('teamScore', 'pts')
+        const oppScore = getValue('oppScore')
+        
+        if (result !== '-' && teamScore !== 0 && oppScore !== 0) {
+          return `${result} ${teamScore}-${oppScore}`
+        }
+        return result
+      })()
     ]
     
     if (position.includes('QB')) {

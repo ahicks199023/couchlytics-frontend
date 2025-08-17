@@ -170,7 +170,17 @@ export default function PlayerGameLogPage() {
     const baseData = [
       getValue('week'),
       getValue('opponent', 'opp'),
-      getValue('result') || `${getValue('teamScore', 'pts')}-${getValue('oppScore')}`
+      // Format result with score: "W 24-20" or "L 20-24"
+      (() => {
+        const result = getValue('result')
+        const teamScore = getValue('teamScore', 'pts')
+        const oppScore = getValue('oppScore')
+        
+        if (result !== '-' && teamScore !== 0 && oppScore !== 0) {
+          return `${result} ${teamScore}-${oppScore}`
+        }
+        return result || `${teamScore}-${oppScore}`
+      })()
     ]
     
     if (pos === 'QB') {
