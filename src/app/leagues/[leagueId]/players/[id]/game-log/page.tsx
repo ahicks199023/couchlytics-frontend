@@ -75,9 +75,51 @@ export default function PlayerGameLogPage() {
         if (games.length > 0) {
           console.log('Game log page - First game structure:', games[0])
           console.log('Game log page - Available properties:', Object.keys(games[0] as Record<string, unknown>))
+          
+          console.log('Game log page - Week numbering and game ID debug:')
+          games.forEach((game, index) => {
+            const gameObj = game as Record<string, unknown>
+            console.log(`  Game ${index + 1}: week=${gameObj.week}, opponent=${gameObj.opponent}, game_id=${gameObj.game_id}, date=${gameObj.date}`)
+          })
         }
         
-        setRows(games as PlayerGameLogRow[])
+        // Process games to fix week numbering and remove duplicates
+        const processedGames = games.map((game, index) => {
+          const gameObj = game as Record<string, unknown>
+          
+          // If week is 0 or duplicate, assign proper week number
+          let correctedWeek = gameObj.week as number
+          
+          // For games with week 0 or undefined, assign week based on index + 1
+          if (!correctedWeek || correctedWeek === 0) {
+            correctedWeek = index + 1
+          }
+          
+          return {
+            ...game,
+            week: correctedWeek
+          }
+        })
+        
+        // Remove duplicate weeks - keep only the first occurrence of each week
+        const uniqueWeeks = new Set<number>()
+        const uniqueGames = processedGames.filter(game => {
+          const gameObj = game as Record<string, unknown>
+          const week = gameObj.week as number
+          
+          if (uniqueWeeks.has(week)) {
+            console.log(`Game log page - Removing duplicate week ${week} game`)
+            return false
+          }
+          
+          uniqueWeeks.add(week)
+          return true
+        })
+        
+        console.log('Game log page - Processed games:', uniqueGames.length)
+        console.log('Game log page - Week numbers:', uniqueGames.map(g => (g as Record<string, unknown>).week))
+        
+        setRows(uniqueGames as PlayerGameLogRow[])
         setPlayerPosition(position)
       })
       .catch((err) => {
@@ -293,11 +335,43 @@ export default function PlayerGameLogPage() {
                 <tbody>
                   {rows.map((game, index) => (
                     <tr key={index} className="border-b border-gray-800 hover:bg-gray-800/50">
-                      {getTableRow(game, playerPosition).map((cell, cellIndex) => (
-                        <td key={cellIndex} className="py-3 px-4 text-white">
-                          {String(cell)}
-                        </td>
-                      ))}
+                      {getTableRow(game, playerPosition).map((cell, cellIndex) => {
+                        // Make Result column (cellIndex === 2) clickable and link to box score
+                        if (cellIndex === 2) {
+                          const gameObj = game as Record<string, unknown>
+                          const gameId = gameObj.game_id || gameObj.gameId
+                          const result = String(cell)
+                          
+                          // Color code the result
+                          const resultClass = result.includes('W') ? 'text-green-400' : 
+                                            result.includes('L') ? 'text-red-400' : 'text-gray-400'
+                          
+                          if (gameId) {
+                            return (
+                              <td key={cellIndex} className={`py-3 px-4 ${resultClass}`}>
+                                <Link 
+                                  href={`/leagues/${leagueId}/schedule/box-score/${gameId}`}
+                                  className="hover:underline cursor-pointer"
+                                >
+                                  {result}
+                                </Link>
+                              </td>
+                            )
+                          }
+                          
+                          return (
+                            <td key={cellIndex} className={`py-3 px-4 ${resultClass}`}>
+                              {result}
+                            </td>
+                          )
+                        }
+                        
+                        return (
+                          <td key={cellIndex} className="py-3 px-4 text-white">
+                            {String(cell)}
+                          </td>
+                        )
+                      })}
                     </tr>
                   ))}
                 </tbody>

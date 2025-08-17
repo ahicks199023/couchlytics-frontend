@@ -2,6 +2,7 @@
 
 // GameLogTab Component - Fixed TypeScript errors
 import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { PlayerGameLogRow, fetchFromApi } from '@/lib/api'
 
 interface GameLog {
@@ -149,9 +150,51 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
             console.log('  fumbles:', firstGame['fumbles'])
             console.log('  pts:', firstGame['pts'])
             console.log('  points:', firstGame['points'])
+            
+            console.log('Game log tab - Week numbering and game ID debug:')
+            games.forEach((game, index) => {
+              const gameObj = game as Record<string, unknown>
+              console.log(`  Game ${index + 1}: week=${gameObj.week}, opponent=${gameObj.opponent}, game_id=${gameObj.game_id}, date=${gameObj.date}`)
+            })
           }
           
-          setRows(games as PlayerGameLogRow[])
+          // Process games to fix week numbering and remove duplicates
+          const processedGames = games.map((game, index) => {
+            const gameObj = game as Record<string, unknown>
+            
+            // If week is 0 or duplicate, assign proper week number
+            let correctedWeek = gameObj.week as number
+            
+            // For games with week 0 or undefined, assign week based on index + 1
+            if (!correctedWeek || correctedWeek === 0) {
+              correctedWeek = index + 1
+            }
+            
+            return {
+              ...game,
+              week: correctedWeek
+            }
+          })
+          
+          // Remove duplicate weeks - keep only the first occurrence of each week
+          const uniqueWeeks = new Set<number>()
+          const uniqueGames = processedGames.filter(game => {
+            const gameObj = game as Record<string, unknown>
+            const week = gameObj.week as number
+            
+            if (uniqueWeeks.has(week)) {
+              console.log(`Removing duplicate week ${week} game`)
+              return false
+            }
+            
+            uniqueWeeks.add(week)
+            return true
+          })
+          
+          console.log('Game log tab - Processed games:', uniqueGames.length)
+          console.log('Game log tab - Week numbers:', uniqueGames.map(g => (g as Record<string, unknown>).week))
+          
+          setRows(uniqueGames as PlayerGameLogRow[])
           setPlayerPosition(position)
         }
       })
@@ -432,11 +475,32 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
                 
                 return (
                   <tr key={index} className="hover:bg-gray-700/50 transition-colors">
-                    {tableRow.map((value, cellIndex) => (
-                      <td key={cellIndex} className={`px-3 py-2 text-sm ${cellIndex === 3 ? getResultClass(String(value)) : 'text-white'}`}>
-                        {String(value)}
-                      </td>
-                    ))}
+                    {tableRow.map((value, cellIndex) => {
+                      // Make Result column (cellIndex === 3) clickable and link to box score
+                      if (cellIndex === 3) {
+                        const gameObj = game as Record<string, unknown>
+                        const gameId = gameObj.game_id || gameObj.gameId
+                        
+                        if (gameId) {
+                          return (
+                            <td key={cellIndex} className={`px-3 py-2 text-sm ${getResultClass(String(value))}`}>
+                              <Link 
+                                href={`/leagues/${leagueId}/schedule/box-score/${gameId}`}
+                                className="hover:underline cursor-pointer"
+                              >
+                                {String(value)}
+                              </Link>
+                            </td>
+                          )
+                        }
+                      }
+                      
+                      return (
+                        <td key={cellIndex} className={`px-3 py-2 text-sm ${cellIndex === 3 ? getResultClass(String(value)) : 'text-white'}`}>
+                          {String(value)}
+                        </td>
+                      )
+                    })}
                   </tr>
                 )
               })}
