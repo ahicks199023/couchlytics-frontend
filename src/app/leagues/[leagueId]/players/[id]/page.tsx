@@ -238,9 +238,13 @@ export default function PlayerDetailPage() {
         // Set contract data if available
         if (contractResponse && contractResponse.contract) {
           console.log('Contract data received:', contractResponse.contract)
+          console.log('Penalty years from contract API:', {
+            year1: contractResponse.contract.penaltyYears?.year1,
+            year2: contractResponse.contract.penaltyYears?.year2
+          })
           setContractData(contractResponse.contract)
         } else {
-          console.log('No contract data available')
+          console.log('No contract data available, contract response:', contractResponse)
         }
       })
       .catch((err) => {
@@ -609,10 +613,14 @@ export default function PlayerDetailPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">
-                {contractData?.penaltyYears.year1.year || '2026'} Year Penalty:
+                {(() => {
+                  const year = contractData?.penaltyYears?.year1?.year || '2026'
+                  console.log('Displaying year1 penalty year:', year, 'from contractData:', contractData?.penaltyYears?.year1)
+                  return year
+                })()} Year Penalty:
               </span>
               <span className="text-white">
-                {contractData?.penaltyYears.year1.penalty 
+                {contractData?.penaltyYears?.year1?.penalty 
                   ? formatCurrency(contractData.penaltyYears.year1.penalty)
                   : formatCurrency(player.releasePenalty2026)
                 }
@@ -620,10 +628,14 @@ export default function PlayerDetailPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">
-                {contractData?.penaltyYears.year2.year || '2027'} Year Penalty:
+                {(() => {
+                  const year = contractData?.penaltyYears?.year2?.year || '2027'
+                  console.log('Displaying year2 penalty year:', year, 'from contractData:', contractData?.penaltyYears?.year2)
+                  return year
+                })()} Year Penalty:
               </span>
               <span className="text-white">
-                {contractData?.penaltyYears.year2.penalty 
+                {contractData?.penaltyYears?.year2?.penalty 
                   ? formatCurrency(contractData.penaltyYears.year2.penalty)
                   : formatCurrency(player.releasePenalty2027)
                 }
