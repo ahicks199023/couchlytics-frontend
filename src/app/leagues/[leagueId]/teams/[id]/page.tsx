@@ -717,8 +717,6 @@ export default function TeamDetailPage() {
                   <div className="text-green-400">Cap Room: {formatCurrencyValue(teamData.capInformation?.capRoom)}</div>
                   <div>Spent: {formatCurrencyValue(teamData.capInformation?.spent)}</div>
                   <div className="text-green-400">Available: {formatCurrencyValue(teamData.capInformation?.available)}</div>
-                  <div>Total Salary: {formatCurrencyValue(teamData.capInformation?.totalSalary)}</div>
-                  <div>Total Bonus: {formatCurrencyValue(teamData.capInformation?.totalBonus)}</div>
                 </div>
               </div>
             </div>
