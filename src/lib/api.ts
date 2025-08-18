@@ -340,3 +340,80 @@ export const getLeagueReport = async (leagueId: string) => {
 export const getAICommissionerHealth = async (leagueId: string) => {
   return fetchFromApi(`/ai-commissioner/league/${leagueId}/health`)
 }
+
+// Career Stats Types
+export type CareerStatsSeason = {
+  season: number
+  // QB Stats
+  cmp_att?: string
+  cmp_pct?: number
+  pass_yds?: number
+  pass_avg?: number
+  yds_per_game?: number
+  pass_long?: number
+  pass_tds?: number
+  pass_ints?: number
+  pass_sacks?: number
+  passer_rating?: number
+  rush_att?: number
+  rush_yds?: number
+  rush_avg?: number
+  rush_tds?: number
+  rush_long?: number
+  // RB/WR Stats
+  rec?: number
+  rec_yds?: number
+  rec_avg?: number
+  rec_tds?: number
+  rec_long?: number
+  fumbles?: number
+  drops?: number
+  total_yds?: number
+  total_tds?: number
+  // Kicker Stats
+  fg_made?: number
+  fg_att?: number
+  fg_pct?: number
+  xp_made?: number
+  xp_att?: number
+  kicking_pts?: number
+  // Punter Stats
+  punt_att?: number
+  punt_yds?: number
+  punt_avg?: number
+  punts_in20?: number
+  punt_long?: number
+  // Defense Stats
+  tackles?: number
+  sacks?: number
+  interceptions?: number
+  int_yds?: number
+  def_tds?: number
+  forced_fumbles?: number
+  fumble_recoveries?: number
+  pass_deflections?: number
+  safeties?: number
+  def_pts?: number
+  games_played?: number
+}
+
+export type CareerStatsResponse = {
+  league_id: string
+  player: {
+    id: number
+    maddenId: string
+    name: string
+    position: string
+    teamId: string
+    jersey_number: number
+  }
+  career_stats: CareerStatsSeason[]
+  total_seasons: number
+}
+
+export const getPlayerCareerStats = async (
+  leagueId: string,
+  playerId: string
+): Promise<CareerStatsResponse> => {
+  return fetchFromApi(`/leagues/${leagueId}/players/${playerId}/career-stats`)
+}

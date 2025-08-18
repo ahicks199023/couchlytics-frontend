@@ -9,6 +9,7 @@ import { fetchFromApi } from '@/lib/api'
 import { Player } from '@/types/player'
 import TeamLogo from '@/components/TeamLogo'
 import GameLogTab from '@/components/GameLogTab'
+import PlayerCareerStats from '@/components/PlayerCareerStats'
 
 type TabType = 'ATTRIBUTES' | 'TRAITS' | 'ABILITIES' | 'GAME LOG' | 'CAREER STATS' | 'AWARDS' | 'HISTORY'
 
@@ -721,9 +722,7 @@ export default function PlayerDetailPage() {
            )}
 
           {activeTab === 'CAREER STATS' && (
-            <div className="text-center py-8">
-              <p className="text-gray-400">Career stats data not available</p>
-            </div>
+            <PlayerCareerStats playerId={playerId as string} leagueId={leagueId as string} />
           )}
 
           {activeTab === 'AWARDS' && (
