@@ -418,3 +418,43 @@ export const getPlayerCareerStats = async (
 ): Promise<CareerStatsResponse> => {
   return fetchFromApi(`/leagues/${leagueId}/players/${playerId}/career-stats`)
 }
+
+// Contract Types
+export type ContractPenaltyYear = {
+  year: number
+  penalty: number
+}
+
+export type ContractData = {
+  capHit: number
+  salary: number
+  bonus: number
+  yearsLeft: number
+  length: number
+  releaseNetSavings: number
+  totalReleasePenalty: number
+  penaltyYears: {
+    year1: ContractPenaltyYear
+    year2: ContractPenaltyYear
+  }
+}
+
+export type ContractResponse = {
+  league_id: string
+  player: {
+    id: number
+    maddenId: string
+    name: string
+    position: string
+    teamId: string
+    jersey_number: number
+  }
+  contract: ContractData
+}
+
+export const getPlayerContract = async (
+  leagueId: string,
+  playerId: string
+): Promise<ContractResponse> => {
+  return fetchFromApi(`/leagues/${leagueId}/players/${playerId}/contract`)
+}

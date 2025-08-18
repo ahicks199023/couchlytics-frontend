@@ -10,8 +10,9 @@ import { Player } from '@/types/player'
 import TeamLogo from '@/components/TeamLogo'
 import GameLogTab from '@/components/GameLogTab'
 import PlayerCareerStats from '@/components/PlayerCareerStats'
+import PlayerContract from '@/components/PlayerContract'
 
-type TabType = 'ATTRIBUTES' | 'TRAITS' | 'ABILITIES' | 'GAME LOG' | 'CAREER STATS' | 'AWARDS' | 'HISTORY'
+type TabType = 'ATTRIBUTES' | 'TRAITS' | 'ABILITIES' | 'GAME LOG' | 'CAREER STATS' | 'CONTRACT' | 'AWARDS' | 'HISTORY'
 
 export default function PlayerDetailPage() {
   const { leagueId, id: playerId } = useParams()
@@ -592,7 +593,7 @@ export default function PlayerDetailPage() {
       <div className="bg-gray-900 rounded-lg border border-gray-700">
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-700">
-          {(['ATTRIBUTES', 'TRAITS', 'ABILITIES', 'GAME LOG', 'CAREER STATS', 'AWARDS', 'HISTORY'] as TabType[]).map((tab) => (
+          {(['ATTRIBUTES', 'TRAITS', 'ABILITIES', 'GAME LOG', 'CAREER STATS', 'CONTRACT', 'AWARDS', 'HISTORY'] as TabType[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -723,6 +724,10 @@ export default function PlayerDetailPage() {
 
           {activeTab === 'CAREER STATS' && (
             <PlayerCareerStats playerId={playerId as string} leagueId={leagueId as string} />
+          )}
+
+          {activeTab === 'CONTRACT' && (
+            <PlayerContract playerId={playerId as string} leagueId={leagueId as string} />
           )}
 
           {activeTab === 'AWARDS' && (
