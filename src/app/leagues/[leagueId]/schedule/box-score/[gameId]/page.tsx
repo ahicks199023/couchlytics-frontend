@@ -9,6 +9,7 @@ import TeamLogo from '@/components/TeamLogo'
 type PlayerStats = {
   name: string
   position: string
+  player_id?: string | number
   jersey_number?: number
   pass_yds?: number
   pass_tds?: number
@@ -499,7 +500,9 @@ export default function BoxScorePage() {
                       <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded">
                         <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
                           <span className="text-gray-500 dark:text-gray-400">{player.position}</span>
-                          <span>{player.name}</span>
+                          <Link href={`/leagues/${leagueId}/players/${player.player_id || encodeURIComponent(player.name)}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green transition-colors">
+                            {player.name}
+                          </Link>
                           {typeof player.jersey_number === 'number' && (
                             <span className="ml-auto text-gray-500 dark:text-gray-400">#{player.jersey_number}</span>
                           )}
@@ -601,7 +604,9 @@ export default function BoxScorePage() {
                       <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded">
                         <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
                           <span className="text-gray-500 dark:text-gray-400">{player.position}</span>
-                          <span>{player.name}</span>
+                          <Link href={`/leagues/${leagueId}/players/${player.player_id || encodeURIComponent(player.name)}`} className="text-blue-600 dark:text-blue-400 hover:text-neon-green transition-colors">
+                            {player.name}
+                          </Link>
                           {typeof player.jersey_number === 'number' && (
                             <span className="ml-auto text-gray-500 dark:text-gray-400">#{player.jersey_number}</span>
                           )}
