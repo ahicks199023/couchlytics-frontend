@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { fetchFromApi } from '@/lib/api'
+import { fetchFromApi, getPlayerContract, ContractData } from '@/lib/api'
 import { Player } from '@/types/player'
 import TeamLogo from '@/components/TeamLogo'
 import GameLogTab from '@/components/GameLogTab'
@@ -17,6 +17,7 @@ type TabType = 'ATTRIBUTES' | 'TRAITS' | 'ABILITIES' | 'GAME LOG' | 'CAREER STAT
 export default function PlayerDetailPage() {
   const { leagueId, id: playerId } = useParams()
   const [player, setPlayer] = useState<Player | null>(null)
+  const [contractData, setContractData] = useState<ContractData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<TabType>('ATTRIBUTES')
@@ -30,8 +31,17 @@ export default function PlayerDetailPage() {
     console.log('Fetching player details for:', { leagueId, playerId })
     
     console.log(`[PlayerDetail] Fetching player ${playerId} from league ${leagueId}`)
-    fetchFromApi(`/leagues/${leagueId}/players/${playerId}`)
-      .then((data) => {
+    
+    // Fetch both player details and contract data in parallel
+    Promise.all([
+      fetchFromApi(`/leagues/${leagueId}/players/${playerId}`),
+      getPlayerContract(leagueId as string, playerId as string).catch(err => {
+        console.warn('Contract fetch failed:', err)
+        return null
+      })
+    ])
+      .then(([playerResponse, contractResponse]) => {
+        const data = playerResponse
         console.log('Player data received:', data)
         const responseData = data as Record<string, unknown>
         console.log('Response data keys:', Object.keys(responseData))
@@ -224,6 +234,14 @@ export default function PlayerDetailPage() {
         console.log('✅ SUCCESS: All rating fields are now properly mapped from the API response!')
         
         setPlayer(mappedPlayer)
+        
+        // Set contract data if available
+        if (contractResponse && contractResponse.contract) {
+          console.log('Contract data received:', contractResponse.contract)
+          setContractData(contractResponse.contract)
+        } else {
+          console.log('No contract data available')
+        }
       })
       .catch((err) => {
         console.error('[PlayerDetail] Failed to load player:', err)
@@ -555,35 +573,61 @@ export default function PlayerDetailPage() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-400">Cap Hit:</span>
-              <span className="text-white">{formatCurrency(player.capHit)}</span>
+              <span className="text-white">
+                {formatCurrency(contractData?.capHit || player.capHit)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Salary:</span>
-              <span className="text-white">{formatCurrency(player.salary)}</span>
+              <span className="text-white">
+                {formatCurrency(contractData?.salary || player.salary)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Bonus:</span>
-              <span className="text-white">{formatCurrency(player.bonus)}</span>
+              <span className="text-white">
+                {formatCurrency(contractData?.bonus || player.bonus)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Years Left/Length:</span>
-              <span className="text-white">{player.yearsLeft || '--'}/{player.contractLength || '--'}</span>
+              <span className="text-white">
+                {contractData?.yearsLeft || player.yearsLeft || '--'}/{contractData?.length || player.contractLength || '--'}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Release Net Savings:</span>
-              <span className="text-white">{formatCurrency(player.releaseNetSavings)}</span>
+              <span className="text-white">
+                {formatCurrency(contractData?.releaseNetSavings || player.releaseNetSavings)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Total Release Penalty:</span>
-              <span className="text-white">{formatCurrency(player.totalReleasePenalty)}</span>
+              <span className="text-white">
+                {formatCurrency(contractData?.totalReleasePenalty || player.totalReleasePenalty)}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">2026 Year Penalty:</span>
-              <span className="text-white">{formatCurrency(player.releasePenalty2026)}</span>
+              <span className="text-gray-400">
+                {contractData?.penaltyYears.year1.year || '2026'} Year Penalty:
+              </span>
+              <span className="text-white">
+                {contractData?.penaltyYears.year1.penalty 
+                  ? formatCurrency(contractData.penaltyYears.year1.penalty)
+                  : formatCurrency(player.releasePenalty2026)
+                }
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">2027 Year Penalty:</span>
-              <span className="text-white">{formatCurrency(player.releasePenalty2027)}</span>
+              <span className="text-gray-400">
+                {contractData?.penaltyYears.year2.year || '2027'} Year Penalty:
+              </span>
+              <span className="text-white">
+                {contractData?.penaltyYears.year2.penalty 
+                  ? formatCurrency(contractData.penaltyYears.year2.penalty)
+                  : formatCurrency(player.releasePenalty2027)
+                }
+              </span>
             </div>
           </div>
         </div>
