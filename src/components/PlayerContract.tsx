@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { getPlayerContract, ContractResponse, ContractData } from '@/lib/api'
+import { getPlayerContract, ContractData } from '@/lib/api'
 
 interface PlayerContractProps {
   leagueId: string
