@@ -341,7 +341,7 @@ export default function TeamDetailPage() {
                       <td className="py-2 px-2">{g.result ?? '-'}</td>
                       <td className="py-2 px-2">{g.score ?? '-'}</td>
                       <td className="py-2 px-2">
-                        <Link className="text-blue-600 dark:text-blue-400 hover:text-neon-green" href={`/leagues/${leagueIdString}/games/${g.gameId}`}>
+                        <Link className="text-blue-600 dark:text-blue-400 hover:text-neon-green" href={`/leagues/${leagueIdString}/schedule/box-score/${g.gameId}`}>
                           View
                         </Link>
                       </td>
