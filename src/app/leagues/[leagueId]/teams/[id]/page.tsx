@@ -378,7 +378,7 @@ export default function TeamDetailPage() {
                         <tr key={index} className="border-b border-gray-700/50">
                           <td className="py-1 px-1 text-white text-xs">
                             <Link 
-                              href={`/leagues/${leagueIdString}/players/${player.playerId || encodeURIComponent(player.player)}`}
+                              href={`/leagues/${leagueIdString}/players/${encodeURIComponent(player.player)}`}
                               className="text-blue-400 hover:text-neon-green transition-colors cursor-pointer"
                             >
                               {player.player}
@@ -424,7 +424,7 @@ export default function TeamDetailPage() {
                         <tr key={index} className="border-b border-gray-700/50">
                           <td className="py-1 px-1 text-white text-xs">
                             <Link 
-                              href={`/leagues/${leagueIdString}/players/${player.playerId || encodeURIComponent(player.player)}`}
+                              href={`/leagues/${leagueIdString}/players/${encodeURIComponent(player.player)}`}
                               className="text-blue-400 hover:text-neon-green transition-colors cursor-pointer"
                             >
                               {player.player}
