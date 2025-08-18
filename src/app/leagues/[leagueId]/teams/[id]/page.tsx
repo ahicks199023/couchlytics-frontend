@@ -376,7 +376,7 @@ export default function TeamDetailPage() {
                     {teamData.mostExpensive && teamData.mostExpensive.length > 0 ? (
                       teamData.mostExpensive.slice(0, 10).map((player, index) => (
                         <tr key={index} className="border-b border-gray-700/50">
-                          <td className="py-1 px-1 text-white text-xs">{player.player}</td>
+                          <td className="py-1 px-1 text-white text-xs">{player.player.replace(/ #\d+$/, '')}</td>
                           <td className="py-1 px-1 text-white text-xs">{player.position}</td>
                           <td className="py-1 px-1 text-white text-xs">{player.devTrait}</td>
                           <td className="py-1 px-1 text-white text-xs">{player.overall}</td>
@@ -415,7 +415,7 @@ export default function TeamDetailPage() {
                     {teamData.upcomingFreeAgents && teamData.upcomingFreeAgents.length > 0 ? (
                       teamData.upcomingFreeAgents.slice(0, 10).map((player, index) => (
                         <tr key={index} className="border-b border-gray-700/50">
-                          <td className="py-1 px-1 text-white text-xs">{player.player}</td>
+                          <td className="py-1 px-1 text-white text-xs">{player.player.replace(/ #\d+$/, '')}</td>
                           <td className="py-1 px-1 text-white text-xs">{player.position}</td>
                           <td className="py-1 px-1 text-white text-xs">{player.devTrait}</td>
                           <td className="py-1 px-1 text-white text-xs">{player.overall}</td>
