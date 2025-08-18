@@ -492,7 +492,31 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
                 return (
                   <tr key={index} className="hover:bg-gray-700/50 transition-colors">
                     {tableRow.map((value, cellIndex) => {
-
+                      // Make Team column (cellIndex === 1) clickable and link to team detail
+                      if (cellIndex === 1) {
+                        const gameObj = game as Record<string, unknown>
+                        const teamName = String(value)
+                        const teamId = gameObj.teamId || gameObj.team_id || gameObj.homeTeamId || gameObj.awayTeamId
+                        
+                        if (teamId) {
+                          return (
+                            <td key={cellIndex} className="px-3 py-2 text-sm text-white">
+                              <Link 
+                                href={`/leagues/${leagueId}/teams/${teamId}`}
+                                className="text-blue-400 hover:text-neon-green transition-colors cursor-pointer"
+                              >
+                                {teamName}
+                              </Link>
+                            </td>
+                          )
+                        } else {
+                          return (
+                            <td key={cellIndex} className="px-3 py-2 text-sm text-white">
+                              {teamName}
+                            </td>
+                          )
+                        }
+                      }
                       
                       // Make Result column (cellIndex === 3) clickable and link to box score
                       if (cellIndex === 3) {
