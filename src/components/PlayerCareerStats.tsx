@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { getPlayerCareerStats, CareerStatsResponse, CareerStatsSeason } from '@/lib/api'
 
 interface PlayerCareerStatsProps {
@@ -13,11 +13,7 @@ export default function PlayerCareerStats({ leagueId, playerId }: PlayerCareerSt
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchCareerStats()
-  }, [leagueId, playerId])
-
-  const fetchCareerStats = async () => {
+  const fetchCareerStats = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -28,7 +24,11 @@ export default function PlayerCareerStats({ leagueId, playerId }: PlayerCareerSt
     } finally {
       setLoading(false)
     }
-  }
+  }, [leagueId, playerId])
+
+  useEffect(() => {
+    fetchCareerStats()
+  }, [fetchCareerStats])
 
   const getTableHeaders = (position: string) => {
     const pos = position?.toUpperCase()

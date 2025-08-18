@@ -376,6 +376,7 @@ export type CareerStatsSeason = {
   fg_pct?: number
   xp_made?: number
   xp_att?: number
+  xp_pct?: number
   kicking_pts?: number
   // Punter Stats
   punt_att?: number
