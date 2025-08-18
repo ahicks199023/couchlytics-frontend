@@ -133,6 +133,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
           console.log('Game log tab - Jersey number:', playerData.jerseyNumber)
           console.log('Game log tab - Player name:', playerData.name)
           console.log('Game log tab - Player position:', playerData.position)
+          console.log('Game log tab - Position for RB check:', position, 'includes RB:', position.includes('RB'), 'includes HB:', position.includes('HB'))
           
           console.log('Game log tab - GameLog array:', gameLogData)
           if (games.length > 0) {
@@ -191,6 +192,11 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
           console.log('Game log tab - Processed games:', sortedGames.length)
           console.log('Game log tab - Week numbers:', sortedGames.map(g => (g as Record<string, unknown>).week))
           
+          console.log('Game log tab - Setting rows and position:', {
+            position: position,
+            rowsCount: sortedGames.length,
+            firstRowSample: sortedGames[0]
+          })
           setRows(sortedGames as PlayerGameLogRow[])
           setPlayerPosition(position)
         }
@@ -202,6 +208,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
 
   const getTableHeaders = () => {
     const position = playerPosition?.toUpperCase() || ''
+    console.log('getTableHeaders - Position check:', position, 'RB check:', position.includes('RB'), 'HB check:', position.includes('HB'))
     
     if (position.includes('QB')) {
       return [
@@ -239,6 +246,7 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
 
   const getTableRow = (game: GameLog | PlayerGameLogRow) => {
     const position = playerPosition?.toUpperCase() || ''
+    console.log('getTableRow - Position check:', position, 'RB check:', position.includes('RB'), 'HB check:', position.includes('HB'))
     
     // Flexible getValue that tries multiple property names (same as standalone page)
     const getValue = (...keys: string[]): string | number => {
@@ -303,6 +311,14 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
         getValue('pass_sacks', 'sacks_taken', 'sacksTaken', 'sacks', 'pass_sack')
       ]
     } else if (position.includes('RB') || position.includes('HB')) {
+      console.log('getTableRow - Processing RB/HB data for game:', game)
+      console.log('getTableRow - RB stats:', {
+        rush_att: getValue('rush_att'),
+        rush_yds: getValue('rush_yds'),
+        rush_tds: getValue('rush_tds'),
+        rec_catches: getValue('rec_catches', 'receptions'),
+        fumbles: getValue('fumbles')
+      })
       return [
         ...baseData,
         getValue('rush_att'),
