@@ -494,7 +494,6 @@ export default function GameLogTab({ playerId, leagueId }: GameLogTabProps) {
                     {tableRow.map((value, cellIndex) => {
                       // Make Team column (cellIndex === 1) clickable and link to team detail
                       if (cellIndex === 1) {
-                        const gameObj = game as Record<string, unknown>
                         const teamName = String(value)
                         
                         return (
