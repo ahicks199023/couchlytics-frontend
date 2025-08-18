@@ -129,7 +129,7 @@ export default function PlayerGameLogPage() {
   const getTableHeaders = (position: string) => {
     const pos = position?.toUpperCase() || ''
     
-    const baseHeaders = ['Week', 'Team', 'Opponent', 'Result']
+    const baseHeaders = ['Week', 'Opponent', 'Result']
     
     if (pos === 'QB') {
       return [...baseHeaders, 'QBR', 'Comp', 'Att', 'Comp%', 'Pass Yds', 'Pass TD', 'INT', 'Sacks']
@@ -169,7 +169,6 @@ export default function PlayerGameLogPage() {
     
     const baseData = [
       getValue('week'),
-      getValue('team', 'teamName'),
       getValue('opponent', 'opp'),
       // Format result with score: "W 24-20" or "L 20-24"
       (() => {
@@ -348,24 +347,8 @@ export default function PlayerGameLogPage() {
                   {rows.map((game, index) => (
                     <tr key={index} className="border-b border-gray-800 hover:bg-gray-800/50">
                       {getTableRow(game, playerPosition).map((cell, cellIndex) => {
-                        // Make Team column (cellIndex === 1) clickable and link to team detail
-                        if (cellIndex === 1) {
-                          const teamName = String(cell)
-                          
-                          return (
-                            <td key={cellIndex} className="py-3 px-4 text-white">
-                              <Link 
-                                href={`/leagues/${leagueId}/teams/${encodeURIComponent(teamName)}`}
-                                className="text-blue-400 hover:text-neon-green transition-colors cursor-pointer"
-                              >
-                                {teamName}
-                              </Link>
-                            </td>
-                          )
-                        }
-                        
-                        // Make Result column (cellIndex === 3) clickable and link to box score
-                        if (cellIndex === 3) {
+                        // Make Result column (cellIndex === 2) clickable and link to box score
+                        if (cellIndex === 2) {
                           const gameObj = game as Record<string, unknown>
                           const gameId = gameObj.game_id || gameObj.gameId
                           const result = String(cell)
@@ -397,7 +380,7 @@ export default function PlayerGameLogPage() {
                         }
                         
                         return (
-                          <td key={cellIndex} className={`py-3 px-4 ${cellIndex === 3 ? getResultClass(String(cell)) : 'text-white'}`}>
+                          <td key={cellIndex} className={`py-3 px-4 ${cellIndex === 2 ? getResultClass(String(cell)) : 'text-white'}`}>
                             {String(cell)}
                           </td>
                         )
