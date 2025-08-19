@@ -213,14 +213,17 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         setLoading(true)
         setError(null)
         
-        // Load user info
-        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { 
+        // Load user team info using new endpoint
+        const userTeamRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/user-team`, { 
           credentials: 'include' 
         })
-        if (userRes.ok) {
-          const userData = await userRes.json()
-          setUser(userData)
-          console.log('User object:', userData)
+        if (userTeamRes.ok) {
+          const userTeamData = await userTeamRes.json()
+          if (userTeamData.success && userTeamData.team) {
+            setUserTeamId(userTeamData.team.id)
+            setUser({ ...userTeamData.team, leagueId: league_id })
+            console.log('User team object:', userTeamData.team)
+          }
         }
         
         // Load teams

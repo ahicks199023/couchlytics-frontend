@@ -86,11 +86,14 @@ export const useTradeCalculator = (leagueId: string) => {
         setLoading(true)
         setError(null)
         
-        // Load user info
-        const userRes = await fetch(`${API_BASE}/me`, { credentials: 'include' })
-        if (userRes.ok) {
-          const userData = await userRes.json()
-          setUser(userData)
+        // Load user team info using new endpoint
+        const userTeamRes = await fetch(`${API_BASE}/leagues/${leagueId}/user-team`, { credentials: 'include' })
+        if (userTeamRes.ok) {
+          const userTeamData = await userTeamRes.json()
+          if (userTeamData.success && userTeamData.team) {
+            setUserTeamId(userTeamData.team.id)
+            setUser({ ...userTeamData.team, leagueId })
+          }
         }
         
         // Load league players
