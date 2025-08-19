@@ -91,7 +91,6 @@ export const useTradeCalculator = (leagueId: string) => {
         if (userTeamRes.ok) {
           const userTeamData = await userTeamRes.json()
           if (userTeamData.success && userTeamData.team) {
-            setUserTeamId(userTeamData.team.id)
             setUser({ ...userTeamData.team, leagueId })
           }
         }
