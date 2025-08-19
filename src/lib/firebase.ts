@@ -57,7 +57,7 @@ class FirebaseAuthService {
   async getFirebaseToken(): Promise<string> {
     try {
       console.log('🔑 Requesting Firebase token via axios client')
-      const response = await http.get('/api/firebase-token')
+      const response = await http.get('/firebase-token')
 
       console.log('🔑 Token response status:', response.status)
       console.log('🔑 Token response data present:', !!response.data)
@@ -103,7 +103,7 @@ class FirebaseAuthService {
       
       if (userCredential.user) {
         // Get the email from the token response, not from user.email
-        const tokenResponse = await http.get('/api/firebase-token')
+        const tokenResponse = await http.get('/firebase-token')
         
         let tokenData: { email?: string; token?: string } | null = null
         if (tokenResponse.status === 200) {
@@ -239,7 +239,7 @@ class FirebaseAuthService {
    */
   async testFirebaseHealth(): Promise<boolean> {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/api/firebase-token/health`)
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/firebase-token/health`)
       const data = await response.json()
       console.log('Firebase health:', data)
       return data.status === 'healthy'
@@ -260,7 +260,7 @@ class FirebaseAuthService {
       console.log('Firebase config available:', !!this.auth)
       
       // 2. Get token from backend
-        const tokenResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/api/firebase-token`, {
+        const tokenResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'}/firebase-token`, {
         method: 'GET',
         credentials: 'include',
         headers: {

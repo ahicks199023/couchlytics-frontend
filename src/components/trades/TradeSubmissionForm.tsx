@@ -214,7 +214,7 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
         items: selectedItems
       }
 
-      const result = await submitTrade(tradeData)
+      const result = await submitTrade(leagueId, tradeData)
       alert('Trade submitted successfully!')
       
       // Reset form

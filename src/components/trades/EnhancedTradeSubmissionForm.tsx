@@ -241,7 +241,7 @@ const EnhancedTradeSubmissionForm: React.FC<EnhancedTradeSubmissionFormProps> = 
         items: selectedItems
       }
 
-      const response = await fetch(`${API_BASE}/api/enhanced-trade/propose-trade`, {
+             const response = await fetch(`${API_BASE}/leagues/${leagueId}/trades/propose`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

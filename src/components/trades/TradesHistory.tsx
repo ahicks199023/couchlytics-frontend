@@ -38,7 +38,7 @@ const TradesHistory: React.FC<TradesHistoryProps> = ({ leagueId }) => {
     }
 
     try {
-      await cancelTrade(tradeId)
+      await cancelTrade(leagueId, tradeId)
       loadTrades() // Refresh list
     } catch (err) {
       console.error('Failed to cancel trade:', err)

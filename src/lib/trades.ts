@@ -42,7 +42,7 @@ export const submitTradeProposal = async (tradeData: {
   }>
   notes?: string
 }) => {
-  const response = await fetch(`${API_BASE}/api/enhanced-trade/propose-trade`, {
+  const response = await fetch(`${API_BASE}/leagues/${tradeData.leagueId}/trades/propose`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -61,8 +61,8 @@ export const submitTradeProposal = async (tradeData: {
 }
 
 // Respond to trade proposal (accept/decline)
-export const respondToTrade = async (tradeId: string, action: 'accept' | 'decline') => {
-  const response = await fetch(`${API_BASE}/api/enhanced-trade/respond-trade/${tradeId}`, {
+export const respondToTrade = async (leagueId: string, tradeId: string, action: 'accept' | 'decline') => {
+  const response = await fetch(`${API_BASE}/leagues/${leagueId}/trades/${tradeId}/respond`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -81,8 +81,8 @@ export const respondToTrade = async (tradeId: string, action: 'accept' | 'declin
 }
 
 // Get detailed trade calculations
-export const getTradeCalculations = async (tradeId: string) => {
-  const response = await fetch(`${API_BASE}/api/enhanced-trade/trade-calculations/${tradeId}`, {
+export const getTradeCalculations = async (leagueId: string, tradeId: string) => {
+  const response = await fetch(`${API_BASE}/leagues/${leagueId}/trades/${tradeId}/calculations`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ export const submitTrade = async (tradeData: {
     toTeamId: number
   }>
 }) => {
-  const response = await fetch(`${API_BASE}/submit-trade`, {
+  const response = await fetch(`${API_BASE}/leagues/${tradeData.leagueId}/trades/submit`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -133,8 +133,8 @@ export const submitTrade = async (tradeData: {
 }
 
 // Trade cancellation
-export const cancelTrade = async (tradeId: string) => {
-  const response = await fetch(`${API_BASE}/trades/${tradeId}/cancel`, {
+export const cancelTrade = async (leagueId: string, tradeId: string) => {
+  const response = await fetch(`${API_BASE}/leagues/${leagueId}/trades/${tradeId}/cancel`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${getAuthToken()}`
@@ -185,7 +185,7 @@ export const getUserNotifications = async (type?: string) => {
     params.append('type', type)
   }
   
-  const response = await fetch(`${API_BASE}/api/notifications?${params}`, {
+  const response = await fetch(`${API_BASE}/notifications?${params}`, {
     headers: {
       'Authorization': `Bearer ${getAuthToken()}`
     },

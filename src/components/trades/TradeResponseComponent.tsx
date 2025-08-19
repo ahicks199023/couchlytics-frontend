@@ -80,12 +80,14 @@ interface TradeResponseComponentProps {
   trade: Trade
   onTradeResponded: (tradeId: string, action: 'accept' | 'decline') => void
   userTeamId: number
+  leagueId: string
 }
 
 const TradeResponseComponent: React.FC<TradeResponseComponentProps> = ({ 
   trade, 
   onTradeResponded, 
-  userTeamId 
+  userTeamId,
+  leagueId
 }) => {
   const [responding, setResponding] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -103,7 +105,7 @@ const TradeResponseComponent: React.FC<TradeResponseComponentProps> = ({
     setError(null)
 
     try {
-      const response = await fetch(`${API_BASE}/api/enhanced-trade/respond-trade/${trade.id}`, {
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/trades/${trade.id}/respond`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
