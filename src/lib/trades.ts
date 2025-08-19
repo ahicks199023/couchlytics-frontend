@@ -11,7 +11,7 @@ const getAuthToken = (): string => {
 
 // Get user's assigned team for a league
 export const getUserTeam = async (leagueId: string) => {
-  const response = await fetch(`${API_BASE}/api/enhanced-trade/user-team/${leagueId}`, {
+  const response = await fetch(`${API_BASE}/leagues/${leagueId}/user-team`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

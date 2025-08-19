@@ -31,7 +31,7 @@ export default function TradesPage() {
       }
 
       try {
-        const response = await fetch(`${API_BASE}/api/enhanced-trade/user-team/${leagueId}`, {
+        const response = await fetch(`${API_BASE}/leagues/${leagueId}/user-team`, {
           credentials: 'include'
         })
         

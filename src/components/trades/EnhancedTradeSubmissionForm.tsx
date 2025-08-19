@@ -109,7 +109,7 @@ const EnhancedTradeSubmissionForm: React.FC<EnhancedTradeSubmissionFormProps> = 
       
       try {
         // Get user's assigned team
-        const userTeamResponse = await fetch(`${API_BASE}/api/enhanced-trade/user-team/${leagueId}`, {
+        const userTeamResponse = await fetch(`${API_BASE}/leagues/${leagueId}/user-team`, {
           credentials: 'include'
         })
         
