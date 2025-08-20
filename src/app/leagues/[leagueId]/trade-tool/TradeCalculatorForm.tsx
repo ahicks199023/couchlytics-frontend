@@ -238,6 +238,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         })
         if (teamsRes.ok) {
           const teamsData = await teamsRes.json()
+          console.log('Teams response data:', teamsData)
+          console.log('Teams array:', teamsData.teams)
           setTeams(teamsData.teams || [])
         } else {
           throw new Error('Failed to load teams')
@@ -256,11 +258,15 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   const availableTeams = useMemo(() => {
     // For pagination, we'll use a fixed list of teams or get from teams API
+    console.log('Computing availableTeams with teams:', teams)
     const teamNames = teams.map(t => t.name).filter(Boolean).sort();
+    console.log('Extracted team names:', teamNames)
     if (teamNames.length === 0) {
       console.warn('No team names found in teams data. Team filter will be disabled.');
     }
-    return ['All', ...teamNames];
+    const result = ['All', ...teamNames];
+    console.log('Final availableTeams:', result)
+    return result;
   }, [teams]);
 
   const availablePositions = useMemo(() => {
