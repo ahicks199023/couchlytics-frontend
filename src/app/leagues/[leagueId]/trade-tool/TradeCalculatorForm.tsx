@@ -27,6 +27,12 @@ interface Team {
   city: string
   user: string
   user_id?: number
+  financials?: {
+    salaryCap: number
+    usedCapSpace: number
+    availableCapSpace: number
+    deadCapSpace: number
+  }
 }
 
 interface User {
@@ -202,6 +208,43 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Financial data state
+  const [giveTeamFinancials, setGiveTeamFinancials] = useState<Team['financials'] | null>(null)
+  const [receiveTeamFinancials, setReceiveTeamFinancials] = useState<Team['financials'] | null>(null)
+  
+  // Helper function to get team financial data with fallback
+  const getTeamFinancials = useCallback((teamName: string) => {
+    if (teamName === 'All') return null
+    const team = teams.find(t => t.name === teamName)
+    
+    // Return real financial data if available, otherwise fallback
+    if (team?.financials) {
+      return team.financials
+    }
+    
+    // Fallback financial data if backend doesn't provide it
+    console.warn(`No financial data available for team: ${teamName}`)
+    return {
+      salaryCap: 324.0,        // 2027 salary cap
+      usedCapSpace: 0.0,       // Unknown usage
+      availableCapSpace: 324.0, // Full cap available
+      deadCapSpace: 0.0        // No dead cap data
+    }
+  }, [teams])
+  
+  // Team selection handlers that update financial data
+  const handleGiveTeamChange = useCallback((teamName: string) => {
+    setGiveTeam(teamName)
+    setGivePage(1)
+    setGiveTeamFinancials(getTeamFinancials(teamName))
+  }, [getTeamFinancials])
+  
+  const handleReceiveTeamChange = useCallback((teamName: string) => {
+    setReceiveTeam(teamName)
+    setReceivePage(1)
+    setReceiveTeamFinancials(getTeamFinancials(teamName))
+  }, [getTeamFinancials])
   
   // Trade state
   const [givePlayers, setGivePlayers] = useState<Player[]>([])
@@ -630,7 +673,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             {/* Team dropdown as header */}
             <div className="mb-4 flex items-center gap-2">
               <h3 className="text-lg font-semibold text-white">Team A</h3>
-              <select value={giveTeam} onChange={e => { setGiveTeam(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
+              <select value={giveTeam} onChange={e => handleGiveTeamChange(e.target.value)} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
                 <option value="All">Select Team</option>
                 {teams.slice().sort((a, b) => a.name.localeCompare(b.name)).map(team => (
                   <option key={team.id} value={team.name}>{team.name}</option>
@@ -639,25 +682,32 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             </div>
             
             {/* Team Financials Section */}
-            {giveTeam !== 'All' && (
+            {giveTeam !== 'All' && giveTeamFinancials && (
               <div className="mb-4 p-3 bg-gray-700/50 rounded-lg">
-                <h4 className="text-sm font-semibold text-gray-300 mb-2">Team Financials</h4>
+                <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                  Team Financials
+                  {!teams.find(t => t.name === giveTeam)?.financials && (
+                    <span className="text-xs text-yellow-400" title="Using fallback data - real financial data unavailable">⚠️</span>
+                  )}
+                </h4>
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
                     <span className="text-gray-400">Salary Cap:</span>
-                    <span className="text-white ml-2">$200M</span>
+                    <span className="text-white ml-2">${giveTeamFinancials.salaryCap.toFixed(0)}M</span>
                   </div>
                   <div>
                     <span className="text-gray-400">Used:</span>
-                    <span className="text-white ml-2">$185M</span>
+                    <span className="text-white ml-2">${giveTeamFinancials.usedCapSpace.toFixed(1)}M</span>
                   </div>
                   <div>
                     <span className="text-gray-400">Available:</span>
-                    <span className="text-green-400 ml-2">$15M</span>
+                    <span className={`ml-2 ${giveTeamFinancials.availableCapSpace > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      ${giveTeamFinancials.availableCapSpace.toFixed(1)}M
+                    </span>
                   </div>
                   <div>
                     <span className="text-gray-400">Dead Cap:</span>
-                    <span className="text-red-400 ml-2">$5M</span>
+                    <span className="text-red-400 ml-2">${giveTeamFinancials.deadCapSpace.toFixed(1)}M</span>
                   </div>
                 </div>
               </div>
@@ -754,7 +804,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             {/* Team dropdown as header */}
             <div className="mb-4 flex items-center gap-2">
               <h3 className="text-lg font-semibold text-white">Team B</h3>
-              <select value={receiveTeam} onChange={e => { setReceiveTeam(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
+              <select value={receiveTeam} onChange={e => handleReceiveTeamChange(e.target.value)} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
                 <option value="All">Select Team</option>
                 {teams.slice().sort((a, b) => a.name.localeCompare(b.name)).map(team => (
                   <option key={team.id} value={team.name}>{team.name}</option>
@@ -763,25 +813,32 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             </div>
             
             {/* Team Financials Section */}
-            {receiveTeam !== 'All' && (
+            {receiveTeam !== 'All' && receiveTeamFinancials && (
               <div className="mb-4 p-3 bg-gray-700/50 rounded-lg">
-                <h4 className="text-sm font-semibold text-gray-300 mb-2">Team Financials</h4>
+                <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                  Team Financials
+                  {!teams.find(t => t.name === receiveTeam)?.financials && (
+                    <span className="text-xs text-yellow-400" title="Using fallback data - real financial data unavailable">⚠️</span>
+                  )}
+                </h4>
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
                     <span className="text-gray-400">Salary Cap:</span>
-                    <span className="text-white ml-2">$200M</span>
+                    <span className="text-white ml-2">${receiveTeamFinancials.salaryCap.toFixed(0)}M</span>
                   </div>
                   <div>
                     <span className="text-gray-400">Used:</span>
-                    <span className="text-white ml-2">$185M</span>
+                    <span className="text-white ml-2">${receiveTeamFinancials.usedCapSpace.toFixed(1)}M</span>
                   </div>
                   <div>
                     <span className="text-gray-400">Available:</span>
-                    <span className="text-green-400 ml-2">$15M</span>
+                    <span className={`ml-2 ${receiveTeamFinancials.availableCapSpace > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      ${receiveTeamFinancials.availableCapSpace.toFixed(1)}M
+                    </span>
                   </div>
                   <div>
                     <span className="text-gray-400">Dead Cap:</span>
-                    <span className="text-red-400 ml-2">$5M</span>
+                    <span className="text-red-400 ml-2">${receiveTeamFinancials.deadCapSpace.toFixed(1)}M</span>
                   </div>
                 </div>
               </div>
@@ -1122,53 +1179,105 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           </div>
 
           {/* Salary Cap Impact */}
-          {result.advancedMetrics?.salaryImpact && (
+          {(result.advancedMetrics?.salaryImpact || (giveTeamFinancials && receiveTeamFinancials)) && (
             <div className="salary-cap-impact bg-gray-800/50 rounded-lg p-6 border border-gray-600">
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">💰 Salary Cap Impact</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Current Cap Hit:</span>
-                      <span className="font-mono text-white">${result.advancedMetrics.salaryImpact.currentCapHit.toFixed(1)}M</span>
+                {/* Team A (Give Team) Salary Cap */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-blue-300">Team A - {giveTeam}</h4>
+                  {giveTeamFinancials && (
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Current Used:</span>
+                        <span className="font-mono text-white">${giveTeamFinancials.usedCapSpace.toFixed(1)}M</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Available:</span>
+                        <span className={`font-mono ${giveTeamFinancials.availableCapSpace > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          ${giveTeamFinancials.availableCapSpace.toFixed(1)}M
+                        </span>
+                      </div>
+                      
+                      <div className="cap-usage-bar">
+                        <div className="w-full bg-gray-700 rounded-full h-2 mb-1">
+                          <div 
+                            className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${(giveTeamFinancials.usedCapSpace / giveTeamFinancials.salaryCap) * 100}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-400">
+                          <span>$0M</span>
+                          <span>${giveTeamFinancials.salaryCap.toFixed(0)}M</span>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Trade Impact:</span>
-                      <span className={`font-mono ${result.advancedMetrics.salaryImpact.tradeImpact >= 0 ? 'text-red-400' : 'text-green-400'}`}>
+                  )}
+                </div>
+                
+                {/* Team B (Receive Team) Salary Cap */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-purple-300">Team B - {receiveTeam}</h4>
+                  {receiveTeamFinancials && (
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Current Used:</span>
+                        <span className="font-mono text-white">${receiveTeamFinancials.usedCapSpace.toFixed(1)}M</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Available:</span>
+                        <span className={`font-mono ${receiveTeamFinancials.availableCapSpace > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          ${receiveTeamFinancials.availableCapSpace.toFixed(1)}M
+                        </span>
+                      </div>
+                      
+                      <div className="cap-usage-bar">
+                        <div className="w-full bg-gray-700 rounded-full h-2 mb-1">
+                          <div 
+                            className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${(receiveTeamFinancials.usedCapSpace / receiveTeamFinancials.salaryCap) * 100}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-400">
+                          <span>$0M</span>
+                          <span>${receiveTeamFinancials.salaryCap.toFixed(0)}M</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Enhanced Trade Impact from Backend (if available) */}
+              {result.advancedMetrics?.salaryImpact && (
+                <div className="mt-6 pt-4 border-t border-gray-600">
+                  <h4 className="text-sm font-semibold text-green-300 mb-3">📊 Projected Trade Impact</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-sm text-gray-400 mb-1">Current Cap Hit</div>
+                      <div className="font-mono text-white">${result.advancedMetrics.salaryImpact.currentCapHit.toFixed(1)}M</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-gray-400 mb-1">Trade Impact</div>
+                      <div className={`font-mono ${result.advancedMetrics.salaryImpact.tradeImpact >= 0 ? 'text-red-400' : 'text-green-400'}`}>
                         {result.advancedMetrics.salaryImpact.tradeImpact >= 0 ? '+' : ''}${result.advancedMetrics.salaryImpact.tradeImpact.toFixed(1)}M
-                      </span>
+                      </div>
                     </div>
-                    
-                    <div className="flex justify-between border-t border-gray-600 pt-2">
-                      <span className="text-gray-400">New Cap Room:</span>
-                      <span className={`font-mono font-bold ${
+                    <div className="text-center">
+                      <div className="text-sm text-gray-400 mb-1">New Cap Room</div>
+                      <div className={`font-mono font-bold ${
                         result.advancedMetrics.salaryImpact.newCapRoom < 10 ? 'text-red-400' :
                         result.advancedMetrics.salaryImpact.newCapRoom < 30 ? 'text-yellow-400' : 'text-green-400'
                       }`}>
                         ${result.advancedMetrics.salaryImpact.newCapRoom.toFixed(1)}M
-                      </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-                
-                <div>
-                  <div className="cap-bar-container">
-                    <div className="text-sm text-gray-400 mb-2">Cap Usage</div>
-                    <div className="w-full bg-gray-700 rounded-full h-4">
-                      <div 
-                        className="bg-gradient-to-r from-green-500 to-red-500 h-4 rounded-full transition-all duration-500"
-                        style={{ width: `${(result.advancedMetrics.salaryImpact.currentCapHit / result.advancedMetrics.salaryImpact.salaryCap) * 100}%` }}
-                      ></div>
-                    </div>
-                    <div className="flex justify-between text-xs text-gray-400 mt-1">
-                      <span>$0M</span>
-                      <span>${result.advancedMetrics.salaryImpact.salaryCap.toFixed(0)}M</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           )}
 
