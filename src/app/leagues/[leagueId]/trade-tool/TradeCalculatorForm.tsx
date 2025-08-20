@@ -769,9 +769,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             )}
           </div>
 
-          {/* Trade Verdict */}
+          {/* Trade Calculation */}
           <div className="bg-gray-800/50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-white mb-3">Trade Analysis</h3>
+            <h3 className="text-lg font-semibold text-white mb-3">Trade Calculation</h3>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Net Value:</span>
@@ -783,7 +783,11 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                 <span className="text-gray-400">Verdict:</span>
                 <div className="flex items-center gap-1">
                   {getVerdictIcon(verdict)}
-                  <span className={`font-bold ${getVerdictColor(verdict)}`}>{verdict}</span>
+                  <span className={`font-bold ${getVerdictColor(verdict)}`}>
+                    {netValue > 15 ? `${receiveTeam !== 'All' ? receiveTeam : 'Other Team'} Wins` : 
+                     netValue < -15 ? `${giveTeam !== 'All' ? giveTeam : 'Your Team'} Wins` : 
+                     'Fair Trade'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -905,65 +909,157 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         </div>
       )}
 
-      {/* Results */}
+      {/* Enhanced Trade Analysis Results */}
       {result && result.tradeAssessment ? (
-        <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-600">
-          <div className="flex items-center gap-2 mb-4">
-            {getVerdictIcon(result.tradeAssessment.verdict)}
-            <h3 className="text-xl font-bold text-white">
-              Trade Analysis Results
-            </h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-semibold text-white mb-3">Assessment</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Verdict:</span>
-                  <span className={`font-bold ${getVerdictColor(result.tradeAssessment.verdict)}`}>
-                    {result.tradeAssessment.verdict}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Team Gives:</span>
-                  <span className="text-white">{result.tradeAssessment.teamGives}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Team Receives:</span>
-                  <span className="text-white">{result.tradeAssessment.teamReceives}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Net Gain:</span>
-                  <span className={`font-bold ${result.tradeAssessment.netGain >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {result.tradeAssessment.netGain >= 0 ? '+' : ''}{result.tradeAssessment.netGain}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Confidence:</span>
-                  <span className="text-white">{result.tradeAssessment.confidence}%</span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold text-white mb-3">Details</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Auto-Approve:</span>
-                  <span className={result.canAutoApprove ? 'text-green-400' : 'text-red-400'}>
-                    {result.canAutoApprove ? 'Yes' : 'No'}
-                  </span>
-                </div>
-                {result.reasoning && (
-                  <div>
-                    <p className="text-gray-400 text-sm mb-1">Reasoning:</p>
-                    <p className="text-white text-sm">{result.reasoning}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : result ? (
+         <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-600">
+           <div className="flex items-center gap-2 mb-6">
+             {getVerdictIcon(result.tradeAssessment.verdict)}
+             <h3 className="text-xl font-bold text-white">
+               🎯 Advanced Trade Analysis
+             </h3>
+           </div>
+           
+           {/* Main Assessment */}
+           <div className="bg-gray-700/50 rounded-lg p-4 mb-6">
+             <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
+               📊 Trade Assessment
+             </h4>
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+               <div className="text-center">
+                 <p className="text-gray-400 text-sm">Verdict</p>
+                 <p className={`font-bold text-lg ${getVerdictColor(result.tradeAssessment.verdict)}`}>
+                   {result.tradeAssessment.verdict}
+                 </p>
+               </div>
+               <div className="text-center">
+                 <p className="text-gray-400 text-sm">Confidence</p>
+                 <p className="text-white font-bold text-lg">{result.tradeAssessment.confidence}%</p>
+               </div>
+               <div className="text-center">
+                 <p className="text-gray-400 text-sm">Auto-Approve</p>
+                 <p className={`${result.canAutoApprove ? 'text-green-400' : 'text-red-400'} font-bold text-lg`}>
+                   {result.canAutoApprove ? '✅ Yes' : '❌ No'}
+                 </p>
+               </div>
+               <div className="text-center">
+                 <p className="text-gray-400 text-sm">Risk Level</p>
+                 <p className={`font-bold text-lg ${
+                   Math.abs(result.tradeAssessment.netGain) < 10 ? 'text-green-400' : 
+                   Math.abs(result.tradeAssessment.netGain) < 25 ? 'text-yellow-400' : 'text-red-400'
+                 }`}>
+                   {Math.abs(result.tradeAssessment.netGain) < 10 ? 'Low' : 
+                    Math.abs(result.tradeAssessment.netGain) < 25 ? 'Medium' : 'High'}
+                 </p>
+               </div>
+             </div>
+           </div>
+
+           {/* Value Breakdown */}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+             <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                                <h4 className="font-semibold text-red-400 mb-3 flex items-center gap-2">
+                   📤 What You&apos;re Giving
+                 </h4>
+               <div className="space-y-2">
+                 <div className="flex justify-between">
+                   <span className="text-gray-400">Total Value:</span>
+                   <span className="text-red-400 font-bold text-lg">{result.tradeAssessment.teamGives}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span className="text-gray-400">Player Count:</span>
+                   <span className="text-white">{givePlayers.length}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span className="text-gray-400">Avg Value:</span>
+                   <span className="text-white">{Math.round(result.tradeAssessment.teamGives / givePlayers.length)}</span>
+                 </div>
+               </div>
+             </div>
+             
+             <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                                <h4 className="font-semibold text-green-400 mb-3 flex items-center gap-2">
+                   📥 What You&apos;re Receiving
+                 </h4>
+               <div className="space-y-2">
+                 <div className="flex justify-between">
+                   <span className="text-gray-400">Total Value:</span>
+                   <span className="text-green-400 font-bold text-lg">{result.tradeAssessment.teamReceives}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span className="text-gray-400">Player Count:</span>
+                   <span className="text-white">{receivePlayers.length}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span className="text-gray-400">Avg Value:</span>
+                   <span className="text-white">{Math.round(result.tradeAssessment.teamReceives / receivePlayers.length)}</span>
+                 </div>
+               </div>
+             </div>
+           </div>
+
+           {/* Net Impact */}
+           <div className="bg-gray-700/50 rounded-lg p-4 mb-6">
+             <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
+               ⚖️ Net Impact Analysis
+             </h4>
+             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+               <div className="text-center">
+                 <p className="text-gray-400 text-sm">Net Gain/Loss</p>
+                 <p className={`font-bold text-2xl ${result.tradeAssessment.netGain >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                   {result.tradeAssessment.netGain >= 0 ? '+' : ''}{result.tradeAssessment.netGain}
+                 </p>
+               </div>
+               <div className="text-center">
+                 <p className="text-gray-400 text-sm">Value Ratio</p>
+                 <p className="text-white font-bold text-lg">
+                   {Math.round((result.tradeAssessment.teamReceives / result.tradeAssessment.teamGives) * 100)}%
+                 </p>
+               </div>
+               <div className="text-center">
+                 <p className="text-gray-400 text-sm">Trade Balance</p>
+                 <p className={`font-bold text-lg ${
+                   Math.abs(result.tradeAssessment.netGain) < 10 ? 'text-green-400' : 
+                   Math.abs(result.tradeAssessment.netGain) < 25 ? 'text-yellow-400' : 'text-red-400'
+                 }`}>
+                   {Math.abs(result.tradeAssessment.netGain) < 10 ? 'Balanced' : 
+                    Math.abs(result.tradeAssessment.netGain) < 25 ? 'Slightly Unbalanced' : 'Unbalanced'}
+                 </p>
+               </div>
+             </div>
+           </div>
+
+           {/* Detailed Reasoning */}
+           {result.reasoning && (
+             <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+               <h4 className="font-semibold text-blue-400 mb-3 flex items-center gap-2">
+                 💡 AI Analysis & Recommendations
+               </h4>
+               <div className="space-y-3">
+                 <p className="text-white text-sm leading-relaxed">{result.reasoning}</p>
+                 
+                 {/* Actionable Recommendations */}
+                 <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">
+                   <h5 className="font-medium text-white mb-2">🎯 Recommendations:</h5>
+                   <ul className="text-sm text-gray-300 space-y-1">
+                     {result.tradeAssessment.netGain < -15 && (
+                       <li>• Consider asking for additional compensation or a better player</li>
+                     )}
+                     {result.tradeAssessment.netGain > 15 && (
+                       <li>• This trade heavily favors you - the other team may want to renegotiate</li>
+                     )}
+                     {Math.abs(result.tradeAssessment.netGain) < 10 && (
+                       <li>• This is a fair trade that benefits both teams</li>
+                     )}
+                     {result.canAutoApprove && (
+                       <li>• This trade meets auto-approval criteria</li>
+                     )}
+                   </ul>
+                 </div>
+               </div>
+             </div>
+           )}
+         </div>
+       ) : result ? (
         <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-600 text-red-400">
           Could not analyze trade. Please try again or check your selections.
           {result.reasoning && (
