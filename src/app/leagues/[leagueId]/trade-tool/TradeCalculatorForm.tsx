@@ -338,7 +338,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   )
 
   const netValue = receiveValue - giveValue
-  const verdict = Math.abs(netValue) <= 15 ? 'Fair' : netValue > 15 ? 'You Lose' : 'You Win'
+  const verdict = Math.abs(netValue) <= 15 ? 'Fair' : netValue > 15 ? 'You Win' : 'You Lose'
 
   // Event handlers
   const addPlayer = useCallback((player: Player, toGive: boolean) => {
@@ -887,8 +887,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             <div className="flex items-center gap-1">
               {getVerdictIcon(verdict)}
               <span className={`font-bold ${getVerdictColor(verdict)}`}>
-                {netValue > 15 ? 'Team B Wins' : 
-                 netValue < -15 ? 'Team A Wins' : 
+                {netValue > 15 ? 'Team A Wins' : 
+                 netValue < -15 ? 'Team B Wins' : 
                  'Fair Trade'}
               </span>
             </div>
