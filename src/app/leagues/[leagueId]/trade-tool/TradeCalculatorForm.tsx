@@ -37,6 +37,7 @@ interface User {
 }
 
 interface TradeResult {
+  success?: boolean
   tradeAssessment: {
     verdict: string
     teamGives: number
@@ -47,6 +48,50 @@ interface TradeResult {
   canAutoApprove: boolean
   suggestedTrades?: Player[]
   reasoning?: string
+  
+  // Enhanced response structure
+  tradeContext?: {
+    givingTeamId: number
+    givingTeamName: string
+    receivingTeamId: number
+    receivingTeamName: string
+    leagueId: string
+  }
+  
+  advancedMetrics?: {
+    valueRatio: number
+    riskLevel: 'Low' | 'Medium' | 'High'
+    tradeBalance: 'Balanced' | 'Slightly Unbalanced' | 'Unbalanced'
+    
+    salaryImpact?: {
+      currentCapHit: number
+      tradeImpact: number
+      newCapRoom: number
+      salaryCap: number
+    }
+    
+    rosterConstruction?: {
+      positionalDepth: Record<string, number>
+      weakPositions: string[]
+      strongPositions: string[]
+    }
+    
+    positionalImpact?: {
+      summary: string
+      depthChanges: Record<string, {
+        current: number
+        affected: boolean
+      }>
+    }
+  }
+  
+  aiRecommendations?: {
+    primary?: string
+    specificSuggestions?: string[]
+    secondary?: string[]
+    riskFactors?: string[]
+    negotiationTips?: string[]
+  }
 }
 
 interface SuggestedTrade {
@@ -965,156 +1010,327 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         </div>
       )}
 
-      {/* Enhanced Trade Analysis Results */}
+            {/* Enhanced Trade Analysis Results */}
       {result && result.tradeAssessment ? (
-         <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-600">
-           <div className="flex items-center gap-2 mb-6">
-             {getVerdictIcon(result.tradeAssessment.verdict)}
-             <h3 className="text-xl font-bold text-white">
-               🎯 Advanced Trade Analysis
-             </h3>
-           </div>
-           
-           {/* Main Assessment */}
-           <div className="bg-gray-700/50 rounded-lg p-4 mb-6">
-             <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
-               📊 Trade Assessment
-             </h4>
-             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-               <div className="text-center">
-                 <p className="text-gray-400 text-sm">Verdict</p>
-                 <p className={`font-bold text-lg ${getVerdictColor(result.tradeAssessment.verdict)}`}>
-                   {result.tradeAssessment.verdict}
-                 </p>
-               </div>
-               <div className="text-center">
-                 <p className="text-gray-400 text-sm">Confidence</p>
-                 <p className="text-white font-bold text-lg">{result.tradeAssessment.confidence}%</p>
-               </div>
-               <div className="text-center">
-                 <p className="text-gray-400 text-sm">Auto-Approve</p>
-                 <p className={`${result.canAutoApprove ? 'text-green-400' : 'text-red-400'} font-bold text-lg`}>
-                   {result.canAutoApprove ? '✅ Yes' : '❌ No'}
-                 </p>
-               </div>
-               <div className="text-center">
-                 <p className="text-gray-400 text-sm">Risk Level</p>
-                 <p className={`font-bold text-lg ${
-                   Math.abs(result.tradeAssessment.netGain) < 10 ? 'text-green-400' : 
-                   Math.abs(result.tradeAssessment.netGain) < 25 ? 'text-yellow-400' : 'text-red-400'
-                 }`}>
-                   {Math.abs(result.tradeAssessment.netGain) < 10 ? 'Low' : 
-                    Math.abs(result.tradeAssessment.netGain) < 25 ? 'Medium' : 'High'}
-                 </p>
-               </div>
-             </div>
-           </div>
+        <div className="enhanced-trade-analysis space-y-8">
+          {/* Header */}
+          <div className="analysis-header">
+            <div className="flex items-center gap-2 mb-2">
+              {getVerdictIcon(result.tradeAssessment.verdict)}
+              <h2 className="text-2xl font-bold text-white">🎯 Advanced Trade Analysis</h2>
+            </div>
+            <div className="text-gray-400">
+              {result.tradeContext?.givingTeamName || 'Your Team'} ↔️ Trade Analysis
+            </div>
+          </div>
 
-           {/* Value Breakdown */}
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                           <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-                                 <h4 className="font-semibold text-red-400 mb-3 flex items-center gap-2">
-                    📤 Team A Players
-                  </h4>
-               <div className="space-y-2">
-                 <div className="flex justify-between">
-                   <span className="text-gray-400">Total Value:</span>
-                   <span className="text-red-400 font-bold text-lg">{result.tradeAssessment.teamGives}</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span className="text-gray-400">Player Count:</span>
-                   <span className="text-white">{givePlayers.length}</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span className="text-gray-400">Avg Value:</span>
-                   <span className="text-white">{Math.round(result.tradeAssessment.teamGives / givePlayers.length)}</span>
-                 </div>
-               </div>
-             </div>
-             
-                           <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
-                                 <h4 className="font-semibold text-green-400 mb-3 flex items-center gap-2">
-                    📥 Team B Players
-                  </h4>
-               <div className="space-y-2">
-                 <div className="flex justify-between">
-                   <span className="text-gray-400">Total Value:</span>
-                   <span className="text-green-400 font-bold text-lg">{result.tradeAssessment.teamReceives}</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span className="text-gray-400">Player Count:</span>
-                   <span className="text-white">{receivePlayers.length}</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span className="text-gray-400">Avg Value:</span>
-                   <span className="text-white">{Math.round(result.tradeAssessment.teamReceives / receivePlayers.length)}</span>
-                 </div>
-               </div>
-             </div>
-           </div>
+          {/* Enhanced Trade Assessment */}
+          <div className="trade-assessment-enhanced bg-gray-800/50 rounded-lg p-6 border border-gray-600">
+            {/* Main Assessment Header */}
+            <div className="assessment-header grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="assessment-item text-center p-4 bg-gray-700/50 rounded">
+                <label className="text-sm text-gray-400 block mb-2">Verdict</label>
+                <div className={`text-lg font-bold ${getVerdictColor(result.tradeAssessment.verdict)}`}>
+                  {result.tradeAssessment.verdict}
+                </div>
+              </div>
+              
+              <div className="assessment-item text-center p-4 bg-gray-700/50 rounded">
+                <label className="text-sm text-gray-400 block mb-2">Confidence</label>
+                <div className="text-lg font-bold text-white">{result.tradeAssessment.confidence}%</div>
+              </div>
+              
+              <div className="assessment-item text-center p-4 bg-gray-700/50 rounded">
+                <label className="text-sm text-gray-400 block mb-2">Auto-Approve</label>
+                <div className={`text-lg font-bold ${result.canAutoApprove ? 'text-green-500' : 'text-red-500'}`}>
+                  {result.canAutoApprove ? '✓ Yes' : '✗ No'}
+                </div>
+              </div>
+              
+              <div className="assessment-item text-center p-4 bg-gray-700/50 rounded">
+                <label className="text-sm text-gray-400 block mb-2">Risk Level</label>
+                <div className={`text-lg font-bold ${
+                  result.advancedMetrics?.riskLevel === 'Low' ? 'text-green-500' :
+                  result.advancedMetrics?.riskLevel === 'Medium' ? 'text-yellow-500' : 
+                  result.advancedMetrics?.riskLevel === 'High' ? 'text-red-500' :
+                  Math.abs(result.tradeAssessment.netGain) < 10 ? 'text-green-500' : 
+                  Math.abs(result.tradeAssessment.netGain) < 25 ? 'text-yellow-500' : 'text-red-500'
+                }`}>
+                  {result.advancedMetrics?.riskLevel || 
+                   (Math.abs(result.tradeAssessment.netGain) < 10 ? 'Low' : 
+                    Math.abs(result.tradeAssessment.netGain) < 25 ? 'Medium' : 'High')}
+                </div>
+              </div>
+            </div>
 
-           {/* Net Impact */}
-           <div className="bg-gray-700/50 rounded-lg p-4 mb-6">
-             <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
-               ⚖️ Net Impact Analysis
-             </h4>
-             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-               <div className="text-center">
-                 <p className="text-gray-400 text-sm">Net Gain/Loss</p>
-                 <p className={`font-bold text-2xl ${result.tradeAssessment.netGain >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                   {result.tradeAssessment.netGain >= 0 ? '+' : ''}{result.tradeAssessment.netGain}
-                 </p>
-               </div>
-               <div className="text-center">
-                 <p className="text-gray-400 text-sm">Value Ratio</p>
-                 <p className="text-white font-bold text-lg">
-                   {Math.round((result.tradeAssessment.teamReceives / result.tradeAssessment.teamGives) * 100)}%
-                 </p>
-               </div>
-               <div className="text-center">
-                 <p className="text-gray-400 text-sm">Trade Balance</p>
-                 <p className={`font-bold text-lg ${
-                   Math.abs(result.tradeAssessment.netGain) < 10 ? 'text-green-400' : 
-                   Math.abs(result.tradeAssessment.netGain) < 25 ? 'text-yellow-400' : 'text-red-400'
-                 }`}>
-                   {Math.abs(result.tradeAssessment.netGain) < 10 ? 'Balanced' : 
-                    Math.abs(result.tradeAssessment.netGain) < 25 ? 'Slightly Unbalanced' : 'Unbalanced'}
-                 </p>
-               </div>
-             </div>
-           </div>
+            {/* Value Exchange */}
+            <div className="value-exchange grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="giving-section bg-red-900/20 border border-red-500/30 p-4 rounded-lg">
+                <h3 className="text-red-400 mb-3 flex items-center gap-2">📤 What You&apos;re Giving</h3>
+                <div className="text-2xl font-bold text-red-300 mb-2">{result.tradeAssessment.teamGives}</div>
+                <div className="text-sm text-gray-400 space-y-1">
+                  <div>Total Value</div>
+                  <div>Players: {givePlayers.length}</div>
+                  <div>Avg: {Math.round(result.tradeAssessment.teamGives / givePlayers.length)}</div>
+                </div>
+              </div>
+              
+              <div className="receiving-section bg-green-900/20 border border-green-500/30 p-4 rounded-lg">
+                <h3 className="text-green-400 mb-3 flex items-center gap-2">📥 What You&apos;re Receiving</h3>
+                <div className="text-2xl font-bold text-green-300 mb-2">{result.tradeAssessment.teamReceives}</div>
+                <div className="text-sm text-gray-400 space-y-1">
+                  <div>Total Value</div>
+                  <div>Players: {receivePlayers.length}</div>
+                  <div>Avg: {Math.round(result.tradeAssessment.teamReceives / receivePlayers.length)}</div>
+                </div>
+              </div>
+            </div>
 
-           {/* Detailed Reasoning */}
-           {result.reasoning && (
-             <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-               <h4 className="font-semibold text-blue-400 mb-3 flex items-center gap-2">
-                 💡 AI Analysis & Recommendations
-               </h4>
-               <div className="space-y-3">
-                 <p className="text-white text-sm leading-relaxed">{result.reasoning}</p>
-                 
-                 {/* Actionable Recommendations */}
-                 <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">
-                   <h5 className="font-medium text-white mb-2">🎯 Recommendations:</h5>
-                   <ul className="text-sm text-gray-300 space-y-1">
-                     {result.tradeAssessment.netGain < -15 && (
-                       <li>• Team A should consider asking for additional compensation or a better player</li>
-                     )}
-                     {result.tradeAssessment.netGain > 15 && (
-                       <li>• This trade heavily favors Team B - Team A may want to renegotiate</li>
-                     )}
-                     {Math.abs(result.tradeAssessment.netGain) < 10 && (
-                       <li>• This is a fair trade that benefits both teams</li>
-                     )}
-                     {result.canAutoApprove && (
-                       <li>• This trade meets auto-approval criteria</li>
-                     )}
-                   </ul>
-                 </div>
-               </div>
-             </div>
-           )}
-         </div>
+            {/* Net Impact */}
+            <div className="net-impact bg-gray-700/50 p-4 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div>
+                  <label className="text-sm text-gray-400 block mb-1">Net Gain/Loss</label>
+                  <div className={`text-xl font-bold ${result.tradeAssessment.netGain >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {result.tradeAssessment.netGain >= 0 ? '+' : ''}{result.tradeAssessment.netGain}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-sm text-gray-400 block mb-1">Value Ratio</label>
+                  <div className="text-xl font-bold text-white">
+                    {result.advancedMetrics?.valueRatio || Math.round((result.tradeAssessment.teamReceives / result.tradeAssessment.teamGives) * 100)}%
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-sm text-gray-400 block mb-1">Trade Balance</label>
+                  <div className={`text-xl font-bold ${
+                    result.advancedMetrics?.tradeBalance === 'Balanced' ? 'text-green-400' :
+                    result.advancedMetrics?.tradeBalance === 'Slightly Unbalanced' ? 'text-yellow-400' :
+                    result.advancedMetrics?.tradeBalance === 'Unbalanced' ? 'text-red-400' :
+                    Math.abs(result.tradeAssessment.netGain) < 10 ? 'text-green-400' : 
+                    Math.abs(result.tradeAssessment.netGain) < 25 ? 'text-yellow-400' : 'text-red-400'
+                  }`}>
+                    {result.advancedMetrics?.tradeBalance || 
+                     (Math.abs(result.tradeAssessment.netGain) < 10 ? 'Balanced' : 
+                      Math.abs(result.tradeAssessment.netGain) < 25 ? 'Slightly Unbalanced' : 'Unbalanced')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Salary Cap Impact */}
+          {result.advancedMetrics?.salaryImpact && (
+            <div className="salary-cap-impact bg-gray-800/50 rounded-lg p-6 border border-gray-600">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">💰 Salary Cap Impact</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Current Cap Hit:</span>
+                      <span className="font-mono text-white">${result.advancedMetrics.salaryImpact.currentCapHit.toFixed(1)}M</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Trade Impact:</span>
+                      <span className={`font-mono ${result.advancedMetrics.salaryImpact.tradeImpact >= 0 ? 'text-red-400' : 'text-green-400'}`}>
+                        {result.advancedMetrics.salaryImpact.tradeImpact >= 0 ? '+' : ''}${result.advancedMetrics.salaryImpact.tradeImpact.toFixed(1)}M
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between border-t border-gray-600 pt-2">
+                      <span className="text-gray-400">New Cap Room:</span>
+                      <span className={`font-mono font-bold ${
+                        result.advancedMetrics.salaryImpact.newCapRoom < 10 ? 'text-red-400' :
+                        result.advancedMetrics.salaryImpact.newCapRoom < 30 ? 'text-yellow-400' : 'text-green-400'
+                      }`}>
+                        ${result.advancedMetrics.salaryImpact.newCapRoom.toFixed(1)}M
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="cap-bar-container">
+                    <div className="text-sm text-gray-400 mb-2">Cap Usage</div>
+                    <div className="w-full bg-gray-700 rounded-full h-4">
+                      <div 
+                        className="bg-gradient-to-r from-green-500 to-red-500 h-4 rounded-full transition-all duration-500"
+                        style={{ width: `${(result.advancedMetrics.salaryImpact.currentCapHit / result.advancedMetrics.salaryImpact.salaryCap) * 100}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1">
+                      <span>$0M</span>
+                      <span>${result.advancedMetrics.salaryImpact.salaryCap.toFixed(0)}M</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Roster Construction Analysis */}
+          {result.advancedMetrics?.rosterConstruction && (
+            <div className="roster-construction bg-gray-800/50 rounded-lg p-6 border border-gray-600">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">🏗️ Roster Construction Impact</h3>
+              
+              {/* Positional Depth Grid */}
+              <div className="depth-grid grid grid-cols-3 md:grid-cols-5 gap-4 mb-6">
+                {Object.entries(result.advancedMetrics.rosterConstruction.positionalDepth).map(([position, count]) => (
+                  <div key={position} className="depth-item text-center p-3 bg-gray-700/50 rounded">
+                    <div className="text-sm text-gray-400">{position}</div>
+                    <div className={`text-xl font-bold ${
+                      ['QB', 'WR', 'HB', 'TE'].includes(position) ? 
+                        (count <= 2 ? 'text-red-400' : count <= 3 ? 'text-yellow-400' : 'text-green-400') :
+                        (count <= 3 ? 'text-yellow-400' : count >= 6 ? 'text-blue-400' : 'text-green-400')
+                    }`}>
+                      {count}
+                    </div>
+                    {result.advancedMetrics?.positionalImpact?.depthChanges?.[position]?.affected && (
+                      <div className="text-xs text-yellow-400">⚠ Affected</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Needs Analysis */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="weak-positions">
+                  <h4 className="text-red-400 font-semibold mb-2">⚠️ Needs Attention</h4>
+                  {result.advancedMetrics.rosterConstruction.weakPositions?.length > 0 ? (
+                    <div className="space-y-1">
+                      {result.advancedMetrics.rosterConstruction.weakPositions.map(pos => (
+                        <div key={pos} className="text-red-300 text-sm">
+                          {pos} (only {result.advancedMetrics?.rosterConstruction?.positionalDepth[pos]} players)
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-400 text-sm">No critical weaknesses</div>
+                  )}
+                </div>
+                
+                <div className="strong-positions">
+                  <h4 className="text-blue-400 font-semibold mb-2">💪 Trade Assets</h4>
+                  {result.advancedMetrics.rosterConstruction.strongPositions?.length > 0 ? (
+                    <div className="space-y-1">
+                      {result.advancedMetrics.rosterConstruction.strongPositions.map(pos => (
+                        <div key={pos} className="text-blue-300 text-sm">
+                          {pos} ({result.advancedMetrics?.rosterConstruction?.positionalDepth[pos]} players)
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-400 text-sm">No surplus positions</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AI Analysis */}
+          <div className="ai-analysis bg-gray-800/50 rounded-lg p-6 border border-gray-600">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">🤖 AI Analysis</h3>
+            <div className="reasoning bg-gray-700/50 p-4 rounded text-sm leading-relaxed text-white">
+              {result.reasoning}
+            </div>
+          </div>
+
+          {/* AI Recommendations */}
+          {result.aiRecommendations && (
+            <div className="ai-recommendations bg-gray-800/50 rounded-lg p-6 border border-gray-600 space-y-6">
+              <h3 className="text-lg font-bold flex items-center gap-2">🧠 AI Analysis & Recommendations</h3>
+              
+              {/* Primary Recommendation */}
+              {result.aiRecommendations?.primary && (
+                <div className="primary-rec p-4 rounded-lg border-l-4 border-red-500 bg-red-900/20">
+                  <div className="text-sm text-gray-400 mb-1">Primary Recommendation</div>
+                  <div className="font-semibold text-white">{result.aiRecommendations.primary}</div>
+                </div>
+              )}
+
+              {/* Specific Suggestions */}
+              {result.aiRecommendations && result.aiRecommendations.specificSuggestions && result.aiRecommendations.specificSuggestions.length > 0 && (
+                <div className="specific-suggestions">
+                  <h4 className="text-md font-semibold text-purple-400 mb-3">🎯 Specific Suggestions</h4>
+                  <div className="space-y-2">
+                    {result.aiRecommendations.specificSuggestions.map((suggestion, index) => (
+                      <div key={index} className="bg-purple-900/20 p-3 rounded border-l-2 border-purple-500">
+                        <div className="text-sm text-white">{suggestion}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Secondary Recommendations */}
+              {result.aiRecommendations && result.aiRecommendations.secondary && result.aiRecommendations.secondary.length > 0 && (
+                <div className="secondary-recommendations">
+                  <h4 className="text-md font-semibold text-blue-400 mb-3">💡 Alternative Options</h4>
+                  <div className="grid gap-2">
+                    {result.aiRecommendations.secondary.map((rec, index) => (
+                      <div key={index} className="bg-blue-900/20 p-3 rounded text-sm text-white">
+                        • {rec}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Risk Factors */}
+              {result.aiRecommendations && result.aiRecommendations.riskFactors && result.aiRecommendations.riskFactors.length > 0 && (
+                <div className="risk-factors">
+                  <h4 className="text-md font-semibold text-red-400 mb-3">⚠️ Risk Factors</h4>
+                  <div className="space-y-2">
+                    {result.aiRecommendations.riskFactors.map((risk, index) => (
+                      <div key={index} className="bg-red-900/20 p-3 rounded border-l-2 border-red-500 text-sm text-white">
+                        {risk}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Negotiation Tips */}
+              {result.aiRecommendations && result.aiRecommendations.negotiationTips && result.aiRecommendations.negotiationTips.length > 0 && (
+                <div className="negotiation-tips">
+                  <h4 className="text-md font-semibold text-green-400 mb-3">💰 Negotiation Tips</h4>
+                  <div className="grid gap-2">
+                    {result.aiRecommendations.negotiationTips.map((tip, index) => (
+                      <div key={index} className="bg-green-900/20 p-2 rounded text-sm text-white">
+                        💡 {tip}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Fallback to basic recommendations if enhanced ones not available */}
+              {!result.aiRecommendations?.primary && (
+                <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">
+                  <h5 className="font-medium text-white mb-2">🎯 Recommendations:</h5>
+                  <ul className="text-sm text-gray-300 space-y-1">
+                    {result.tradeAssessment.netGain < -15 && (
+                      <li>• Team A should consider asking for additional compensation or a better player</li>
+                    )}
+                    {result.tradeAssessment.netGain > 15 && (
+                      <li>• This trade heavily favors Team B - Team A may want to renegotiate</li>
+                    )}
+                    {Math.abs(result.tradeAssessment.netGain) < 10 && (
+                      <li>• This is a fair trade that benefits both teams</li>
+                    )}
+                    {result.canAutoApprove && (
+                      <li>• This trade meets auto-approval criteria</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
        ) : result ? (
         <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-600 text-red-400">
           Could not analyze trade. Please try again or check your selections.
