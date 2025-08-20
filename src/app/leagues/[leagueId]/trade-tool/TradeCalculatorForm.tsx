@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import Image from 'next/image'
 import { Loader2, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
+import { API_BASE } from '@/lib/config'
 
 // Types
 interface Player {
@@ -214,7 +215,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         setError(null)
         
         // Load user team info using new endpoint
-        const userTeamRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/user-team`, { 
+        const userTeamRes = await fetch(`${API_BASE}/leagues/${league_id}/user-team`, { 
           credentials: 'include' 
         })
         if (userTeamRes.ok) {
@@ -226,7 +227,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         }
         
         // Load teams
-        const teamsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/teams`, {
+        const teamsRes = await fetch(`${API_BASE}/leagues/${league_id}/teams`, {
           credentials: 'include'
         })
         if (teamsRes.ok) {
@@ -314,7 +315,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     setSuggestedTrades([])
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool`, {
+      const res = await fetch(`${API_BASE}/leagues/${league_id}/trade-tool`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -375,7 +376,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         includeSuggestions
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool`, {
+      const res = await fetch(`${API_BASE}/leagues/${league_id}/trade-tool`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -415,7 +416,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         if (giveTeam !== 'All') params.append('team', giveTeam)
         if (givePosition !== 'All') params.append('position', givePosition)
         if (giveSearch) params.append('search', giveSearch)
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players?${params.toString()}`, {
+        const res = await fetch(`${API_BASE}/leagues/${league_id}/players?${params.toString()}`, {
           credentials: 'include'
         })
         if (!res.ok) throw new Error('Failed to load players')
@@ -454,7 +455,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         if (receiveTeam !== 'All') params.append('team', receiveTeam)
         if (receivePosition !== 'All') params.append('position', receivePosition)
         if (receiveSearch) params.append('search', receiveSearch)
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players?${params.toString()}`, {
+        const res = await fetch(`${API_BASE}/leagues/${league_id}/players?${params.toString()}`, {
           credentials: 'include'
         })
         if (!res.ok) throw new Error('Failed to load players')
