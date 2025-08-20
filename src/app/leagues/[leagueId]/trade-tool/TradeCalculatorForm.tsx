@@ -370,15 +370,21 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     ];
   }, []);
 
-  const giveValue = useMemo(() => 
-    givePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0), 
-    [givePlayers]
-  )
+  const giveValue = useMemo(() => {
+    // Use backend values if available, otherwise fall back to frontend calculation
+    if (result?.tradeAssessment?.teamGives && givePlayers.length > 0) {
+      return result.tradeAssessment.teamGives
+    }
+    return givePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0)
+  }, [givePlayers, result?.tradeAssessment?.teamGives])
 
-  const receiveValue = useMemo(() => 
-    receivePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0), 
-    [receivePlayers]
-  )
+  const receiveValue = useMemo(() => {
+    // Use backend values if available, otherwise fall back to frontend calculation
+    if (result?.tradeAssessment?.teamReceives && receivePlayers.length > 0) {
+      return result.tradeAssessment.teamReceives
+    }
+    return receivePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0)
+  }, [receivePlayers, result?.tradeAssessment?.teamReceives])
 
   const netValue = receiveValue - giveValue
   const verdict = Math.abs(netValue) <= 15 ? 'Fair' : netValue > 15 ? 'You Win' : 'You Lose'
@@ -699,15 +705,11 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <span className="text-gray-400">Used:</span>
                     <span className="text-white ml-2">${giveTeamFinancials.usedCapSpace.toFixed(1)}M</span>
                   </div>
-                  <div>
+                  <div className="col-span-2">
                     <span className="text-gray-400">Available:</span>
                     <span className={`ml-2 ${giveTeamFinancials.availableCapSpace > 0 ? 'text-green-400' : 'text-red-400'}`}>
                       ${giveTeamFinancials.availableCapSpace.toFixed(1)}M
                     </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400">Dead Cap:</span>
-                    <span className="text-red-400 ml-2">${giveTeamFinancials.deadCapSpace.toFixed(1)}M</span>
                   </div>
                 </div>
               </div>
@@ -830,15 +832,11 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <span className="text-gray-400">Used:</span>
                     <span className="text-white ml-2">${receiveTeamFinancials.usedCapSpace.toFixed(1)}M</span>
                   </div>
-                  <div>
+                  <div className="col-span-2">
                     <span className="text-gray-400">Available:</span>
                     <span className={`ml-2 ${receiveTeamFinancials.availableCapSpace > 0 ? 'text-green-400' : 'text-red-400'}`}>
                       ${receiveTeamFinancials.availableCapSpace.toFixed(1)}M
                     </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400">Dead Cap:</span>
-                    <span className="text-red-400 ml-2">${receiveTeamFinancials.deadCapSpace.toFixed(1)}M</span>
                   </div>
                 </div>
               </div>
@@ -1449,18 +1447,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         </div>
       ) : null}
 
-      {/* Premium Upgrade Notice */}
-      {!user?.is_premium && (
-        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-yellow-400 mb-2">
-            <AlertCircle className="w-5 h-5" />
-            <span className="font-medium">Premium Feature</span>
-          </div>
-          <p className="text-gray-300 text-sm">
-            Upgrade to Premium to access AI-powered trade suggestions and advanced analytics.
-          </p>
-        </div>
-      )}
+
 
       {/* 3. Add Clear All button above trade summary */}
       <button onClick={clearTrade} className="w-full py-2 mb-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-bold">Clear All</button>
