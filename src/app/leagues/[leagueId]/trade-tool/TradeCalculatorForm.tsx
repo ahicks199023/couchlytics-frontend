@@ -170,6 +170,59 @@ const calculatePlayerValue = (player: Player): number => {
   return Math.round(baseValue * multiplier)
 }
 
+// Helper function to get detailed value breakdown for a player
+const getPlayerValueBreakdown = (player: Player) => {
+  const baseOVR = player.ovr || 75
+  
+  // Position multipliers
+  const positionMultipliers: Record<string, number> = {
+    'QB': 1.2, 'WR': 1.1, 'HB': 1.0, 'TE': 0.9,
+    'LT': 0.8, 'LG': 0.7, 'C': 0.7, 'RG': 0.7, 'RT': 0.8,
+    'LE': 0.9, 'RE': 0.9, 'DT': 0.8,
+    'LOLB': 0.9, 'MLB': 1.0, 'ROLB': 0.9,
+    'CB': 1.0, 'FS': 0.9, 'SS': 0.9,
+    'K': 0.5, 'P': 0.4
+  }
+  
+  const positionMultiplier = positionMultipliers[player.position || ''] || 1.0
+  
+  // Age factor
+  let ageFactor = 1.0
+  if (player.age) {
+    ageFactor = Math.max(0.7, 1.0 - (player.age - 22) * 0.02)
+  }
+  
+  // Development trait multiplier
+  let devTraitMultiplier = 1.0
+  if (player.devTrait) {
+    const devMultipliers: Record<string, number> = {
+      'Superstar': 1.3,
+      'Star': 1.2,
+      'Normal': 1.0,
+      'Hidden': 1.1
+    }
+    devTraitMultiplier = devMultipliers[player.devTrait] || 1.0
+  }
+  
+  // Step-by-step calculation
+  const afterAge = baseOVR * ageFactor
+  const afterDev = afterAge * devTraitMultiplier
+  const finalValue = Math.round(afterDev * positionMultiplier)
+  
+  return {
+    baseOVR,
+    positionMultiplier,
+    ageFactor,
+    devTraitMultiplier,
+    afterAge: Math.round(afterAge),
+    afterDev: Math.round(afterDev),
+    finalValue,
+    position: player.position || 'Unknown',
+    age: player.age || 'Unknown',
+    devTrait: player.devTrait || 'Normal'
+  }
+}
+
 const getVerdictColor = (verdict: string) => {
   switch (verdict.toLowerCase()) {
     case 'you win':
@@ -1448,6 +1501,162 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       ) : null}
 
 
+
+      {/* Player Value Breakdown Panel */}
+      {(givePlayers.length > 0 || receivePlayers.length > 0) && (
+        <div className="player-value-breakdown bg-gray-800/50 rounded-lg p-6 border border-gray-600 mt-6">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            🧮 Player Value Breakdown
+          </h3>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Team A (Giving) Players */}
+            {givePlayers.length > 0 && (
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-red-300 border-b border-red-500/30 pb-2">
+                  Team A Sending ({givePlayers.length} player{givePlayers.length !== 1 ? 's' : ''})
+                </h4>
+                
+                {givePlayers.map((player) => {
+                  const breakdown = getPlayerValueBreakdown(player)
+                  return (
+                    <div key={player.id} className="bg-gray-700/50 rounded-lg p-4 border-l-4 border-red-500">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h5 className="font-semibold text-white">{player.name}</h5>
+                          <p className="text-sm text-gray-400">{breakdown.position} • Age {breakdown.age}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-red-400">{breakdown.finalValue}</div>
+                          <div className="text-xs text-gray-400">Final Value</div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="text-center bg-gray-600/50 rounded p-2">
+                            <div className="font-mono text-white">{breakdown.baseOVR}</div>
+                            <div className="text-xs text-gray-400">Base OVR</div>
+                          </div>
+                          
+                          <div className="text-center bg-gray-600/50 rounded p-2">
+                            <div className="font-mono text-white">{breakdown.afterAge}</div>
+                            <div className="text-xs text-gray-400">After Age</div>
+                            <div className="text-xs text-blue-300">×{breakdown.ageFactor.toFixed(2)}</div>
+                          </div>
+                          
+                          <div className="text-center bg-gray-600/50 rounded p-2">
+                            <div className="font-mono text-white">{breakdown.afterDev}</div>
+                            <div className="text-xs text-gray-400">After Dev</div>
+                            <div className="text-xs text-purple-300">×{breakdown.devTraitMultiplier.toFixed(1)}</div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center bg-gray-600/30 rounded p-2">
+                          <span className="text-gray-300">Position Multiplier ({breakdown.position}):</span>
+                          <span className="font-mono text-yellow-300">×{breakdown.positionMultiplier.toFixed(1)}</span>
+                        </div>
+                        
+                        {breakdown.devTrait !== 'Normal' && (
+                          <div className="text-xs text-purple-300">
+                            🌟 {breakdown.devTrait} Development Trait
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+                
+                <div className="bg-red-900/30 rounded-lg p-3 border border-red-500/30">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-red-300">Team A Total Value:</span>
+                    <span className="font-bold text-red-400 text-lg">{giveValue}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Team B (Receiving) Players */}
+            {receivePlayers.length > 0 && (
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-green-300 border-b border-green-500/30 pb-2">
+                  Team B Sending ({receivePlayers.length} player{receivePlayers.length !== 1 ? 's' : ''})
+                </h4>
+                
+                {receivePlayers.map((player) => {
+                  const breakdown = getPlayerValueBreakdown(player)
+                  return (
+                    <div key={player.id} className="bg-gray-700/50 rounded-lg p-4 border-l-4 border-green-500">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h5 className="font-semibold text-white">{player.name}</h5>
+                          <p className="text-sm text-gray-400">{breakdown.position} • Age {breakdown.age}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-green-400">{breakdown.finalValue}</div>
+                          <div className="text-xs text-gray-400">Final Value</div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="text-center bg-gray-600/50 rounded p-2">
+                            <div className="font-mono text-white">{breakdown.baseOVR}</div>
+                            <div className="text-xs text-gray-400">Base OVR</div>
+                          </div>
+                          
+                          <div className="text-center bg-gray-600/50 rounded p-2">
+                            <div className="font-mono text-white">{breakdown.afterAge}</div>
+                            <div className="text-xs text-gray-400">After Age</div>
+                            <div className="text-xs text-blue-300">×{breakdown.ageFactor.toFixed(2)}</div>
+                          </div>
+                          
+                          <div className="text-center bg-gray-600/50 rounded p-2">
+                            <div className="font-mono text-white">{breakdown.afterDev}</div>
+                            <div className="text-xs text-gray-400">After Dev</div>
+                            <div className="text-xs text-purple-300">×{breakdown.devTraitMultiplier.toFixed(1)}</div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center bg-gray-600/30 rounded p-2">
+                          <span className="text-gray-300">Position Multiplier ({breakdown.position}):</span>
+                          <span className="font-mono text-yellow-300">×{breakdown.positionMultiplier.toFixed(1)}</span>
+                        </div>
+                        
+                        {breakdown.devTrait !== 'Normal' && (
+                          <div className="text-xs text-purple-300">
+                            🌟 {breakdown.devTrait} Development Trait
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+                
+                <div className="bg-green-900/30 rounded-lg p-3 border border-green-500/30">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-green-300">Team B Total Value:</span>
+                    <span className="font-bold text-green-400 text-lg">{receiveValue}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Value Calculation Formula */}
+          <div className="mt-6 bg-gray-700/30 rounded-lg p-4 border border-gray-500/30">
+            <h5 className="font-semibold text-gray-300 mb-2">💡 Value Calculation Formula</h5>
+            <div className="text-sm text-gray-400 space-y-1">
+              <div>1. <span className="text-blue-300">Age Factor</span>: Younger players more valuable (22 = 1.0, decreases by 0.02 per year, min 0.7)</div>
+              <div>2. <span className="text-purple-300">Development Trait</span>: Superstar ×1.3, Star ×1.2, Hidden ×1.1, Normal ×1.0</div>
+              <div>3. <span className="text-yellow-300">Position Multiplier</span>: QB ×1.2, WR ×1.1, HB/CB/MLB ×1.0, etc.</div>
+              <div className="font-mono text-xs bg-gray-800 p-2 rounded mt-2">
+                Final Value = ((Base OVR × Age Factor) × Dev Trait) × Position Multiplier
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 3. Add Clear All button above trade summary */}
       <button onClick={clearTrade} className="w-full py-2 mb-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-bold">Clear All</button>
