@@ -577,21 +577,47 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Two-panel player selection */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                     {/* Team A Panel */}
-           <div className="bg-gray-800/50 rounded-lg p-4 min-h-[420px] flex flex-col">
-             {/* Team dropdown as header */}
-             <div className="mb-4 flex items-center gap-2">
-               <h3 className="text-lg font-semibold text-white">Team A</h3>
-               <select value={giveTeam} onChange={e => { setGiveTeam(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
-                 <option value="All">Select Team</option>
-                 {teams.slice().sort((a, b) => a.name.localeCompare(b.name)).map(team => (
-                   <option key={team.id} value={team.name}>{team.name}</option>
-                 ))}
-               </select>
-             </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Team A Section */}
+        <div className="space-y-4">
+          {/* Team A Panel */}
+          <div className="bg-gray-800/50 rounded-lg p-4 min-h-[420px] flex flex-col">
+            {/* Team dropdown as header */}
+            <div className="mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-white">Team A</h3>
+              <select value={giveTeam} onChange={e => { setGiveTeam(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
+                <option value="All">Select Team</option>
+                {teams.slice().sort((a, b) => a.name.localeCompare(b.name)).map(team => (
+                  <option key={team.id} value={team.name}>{team.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Team Financials Section */}
+            {giveTeam !== 'All' && (
+              <div className="mb-4 p-3 bg-gray-700/50 rounded-lg">
+                <h4 className="text-sm font-semibold text-gray-300 mb-2">Team Financials</h4>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-gray-400">Salary Cap:</span>
+                    <span className="text-white ml-2">$200M</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Used:</span>
+                    <span className="text-white ml-2">$185M</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Available:</span>
+                    <span className="text-green-400 ml-2">$15M</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Dead Cap:</span>
+                    <span className="text-red-400 ml-2">$5M</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {/* Filters stacked in two rows */}
             <div className="flex flex-col gap-2 mb-2">
               <div className="flex gap-2">
@@ -639,18 +665,83 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               <button onClick={() => setGivePage(givePage + 1)} disabled={givePage === giveTotalPages} className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50">Next</button>
             </div>
           </div>
-                     {/* Team B Panel */}
-           <div className="bg-gray-800/50 rounded-lg p-4 min-h-[420px] flex flex-col">
-             {/* Team dropdown as header */}
-             <div className="mb-4 flex items-center gap-2">
-               <h3 className="text-lg font-semibold text-white">Team B</h3>
-               <select value={receiveTeam} onChange={e => { setReceiveTeam(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
-                 <option value="All">Select Team</option>
-                 {teams.slice().sort((a, b) => a.name.localeCompare(b.name)).map(team => (
-                   <option key={team.id} value={team.name}>{team.name}</option>
-                 ))}
-               </select>
-             </div>
+          
+          {/* Team A Sending Panel */}
+          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-red-400 mb-3">Team A Sending</h3>
+            {givePlayers.length === 0 ? (
+              <p className="text-gray-400 text-sm">No players selected</p>
+            ) : (
+              <div className="space-y-2">
+                {givePlayers.map((player) => (
+                  <div key={player.id} className="flex items-center gap-2 p-2 bg-red-900/30 rounded">
+                    <Image
+                      src={'/default-avatar.png'}
+                      alt={typeof player.name === 'string' ? player.name : 'Player'}
+                      width={40}
+                      height={40}
+                      className="rounded-full bg-white"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm truncate">{player.name || '—'}</p>
+                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR</p>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removePlayer(player.id, true) }}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <div className="pt-2 border-t border-red-500/30">
+                  <p className="text-red-400 font-bold">Total Value: {giveValue}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Team B Section */}
+        <div className="space-y-4">
+          {/* Team B Panel */}
+          <div className="bg-gray-800/50 rounded-lg p-4 min-h-[420px] flex flex-col">
+            {/* Team dropdown as header */}
+            <div className="mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-white">Team B</h3>
+              <select value={receiveTeam} onChange={e => { setReceiveTeam(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
+                <option value="All">Select Team</option>
+                {teams.slice().sort((a, b) => a.name.localeCompare(b.name)).map(team => (
+                  <option key={team.id} value={team.name}>{team.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Team Financials Section */}
+            {receiveTeam !== 'All' && (
+              <div className="mb-4 p-3 bg-gray-700/50 rounded-lg">
+                <h4 className="text-sm font-semibold text-gray-300 mb-2">Team Financials</h4>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-gray-400">Salary Cap:</span>
+                    <span className="text-white ml-2">$200M</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Used:</span>
+                    <span className="text-white ml-2">$185M</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Available:</span>
+                    <span className="text-green-400 ml-2">$15M</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Dead Cap:</span>
+                    <span className="text-red-400 ml-2">$5M</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {/* Filters stacked in two rows */}
             <div className="flex flex-col gap-2 mb-2">
               <div className="flex gap-2">
@@ -698,47 +789,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               <button onClick={() => setReceivePage(receivePage + 1)} disabled={receivePage === receiveTotalPages} className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50">Next</button>
             </div>
           </div>
-        </div>
-        {/* Trade Summary/Analysis Panel (right) remains unchanged */}
-        <div className="space-y-4">
-                     {/* Team A Players */}
-           <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-             <h3 className="text-lg font-semibold text-red-400 mb-3">Team A Players</h3>
-            {givePlayers.length === 0 ? (
-              <p className="text-gray-400 text-sm">No players selected</p>
-            ) : (
-              <div className="space-y-2">
-                {givePlayers.map((player) => (
-                  <div key={player.id} className="flex items-center gap-2 p-2 bg-red-900/30 rounded">
-                    <Image
-                      src={'/default-avatar.png'}
-                      alt={typeof player.name === 'string' ? player.name : 'Player'}
-                      width={40}
-                      height={40}
-                      className="rounded-full bg-white"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm truncate">{player.name || '—'}</p>
-                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR</p>
-                    </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); removePlayer(player.id, true) }}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                <div className="pt-2 border-t border-red-500/30">
-                  <p className="text-red-400 font-bold">Total Value: {giveValue}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-                     {/* Team B Players */}
-           <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
-             <h3 className="text-lg font-semibold text-green-400 mb-3">Team B Players</h3>
+          
+          {/* Team B Sending Panel */}
+          <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-green-400 mb-3">Team B Sending</h3>
             {receivePlayers.length === 0 ? (
               <p className="text-gray-400 text-sm">No players selected</p>
             ) : (
@@ -770,47 +824,47 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               </div>
             )}
           </div>
-
-          {/* Trade Calculation */}
-          <div className="bg-gray-800/50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-white mb-3">Trade Calculation</h3>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Net Value:</span>
-                <span className={`font-bold ${netValue >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {netValue >= 0 ? '+' : ''}{netValue}
-                </span>
-              </div>
-                             <div className="flex items-center gap-2">
-                 <span className="text-gray-400">Verdict:</span>
-                 <div className="flex items-center gap-1">
-                   {getVerdictIcon(verdict)}
-                   <span className={`font-bold ${getVerdictColor(verdict)}`}>
-                     {netValue > 15 ? 'Team B Wins' : 
-                      netValue < -15 ? 'Team A Wins' : 
-                      'Fair Trade'}
-                   </span>
-                 </div>
-               </div>
+        </div>
+      </div>
+      
+      {/* Trade Calculation and Analysis Panel */}
+      <div className="bg-gray-800/50 rounded-lg p-4">
+        <h3 className="text-lg font-semibold text-white mb-3">Trade Calculation</h3>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-400">Net Value:</span>
+            <span className={`font-bold ${netValue >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {netValue >= 0 ? '+' : ''}{netValue}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">Verdict:</span>
+            <div className="flex items-center gap-1">
+              {getVerdictIcon(verdict)}
+              <span className={`font-bold ${getVerdictColor(verdict)}`}>
+                {netValue > 15 ? 'Team B Wins' : 
+                 netValue < -15 ? 'Team A Wins' : 
+                 'Fair Trade'}
+              </span>
             </div>
           </div>
-
-          {/* Submit Button */}
-          <button
-            onClick={handleSubmit}
-            disabled={givePlayers.length === 0 || receivePlayers.length === 0 || submitting}
-            className="w-full py-3 bg-neon-green hover:bg-green-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-bold rounded-lg transition-colors"
-          >
-            {submitting ? (
-              <div className="flex items-center justify-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Analyzing Trade...
-              </div>
-            ) : (
-              'Analyze Trade'
-            )}
-          </button>
         </div>
+        
+        {/* Submit Button */}
+        <button
+          onClick={handleSubmit}
+          disabled={givePlayers.length === 0 || receivePlayers.length === 0 || submitting}
+          className="w-full py-3 bg-neon-green hover:bg-green-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-bold rounded-lg transition-colors mt-4"
+        >
+          {submitting ? (
+            <div className="flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Analyzing Trade...
+            </div>
+          ) : (
+            'Analyze Trade'
+          )}
+        </button>
       </div>
 
       {/* Trade Suggestions (Premium Feature) */}
@@ -1043,15 +1097,15 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                  <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">
                    <h5 className="font-medium text-white mb-2">🎯 Recommendations:</h5>
                    <ul className="text-sm text-gray-300 space-y-1">
-                                           {result.tradeAssessment.netGain < -15 && (
-                        <li>• Team A should consider asking for additional compensation or a better player</li>
-                      )}
-                      {result.tradeAssessment.netGain > 15 && (
-                        <li>• This trade heavily favors Team B - Team A may want to renegotiate</li>
-                      )}
-                      {Math.abs(result.tradeAssessment.netGain) < 10 && (
-                        <li>• This is a fair trade that benefits both teams</li>
-                      )}
+                     {result.tradeAssessment.netGain < -15 && (
+                       <li>• Team A should consider asking for additional compensation or a better player</li>
+                     )}
+                     {result.tradeAssessment.netGain > 15 && (
+                       <li>• This trade heavily favors Team B - Team A may want to renegotiate</li>
+                     )}
+                     {Math.abs(result.tradeAssessment.netGain) < 10 && (
+                       <li>• This is a fair trade that benefits both teams</li>
+                     )}
                      {result.canAutoApprove && (
                        <li>• This trade meets auto-approval criteria</li>
                      )}
