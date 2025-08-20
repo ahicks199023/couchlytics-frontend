@@ -198,9 +198,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [modalPlayer, setModalPlayer] = useState<Player | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  // Determine user's team by matching team.user_id to user.id
-  const userTeam = teams.find(team => String(team.user_id) === String(user?.id))
-  const userTeamId = userTeam?.id
+  // Get user's team ID directly from the user state (set by /user-team endpoint)
+  const userTeamId = user?.id
+  console.log('Current user state:', user)
+  console.log('Computed userTeamId:', userTeamId)
 
   // Load initial data
   useEffect(() => {
@@ -221,9 +222,14 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         if (userTeamRes.ok) {
           const userTeamData = await userTeamRes.json()
           if (userTeamData.success && userTeamData.team) {
+            console.log('Setting user state with team data:', userTeamData.team)
             setUser({ ...userTeamData.team, leagueId: league_id })
             console.log('User team object:', userTeamData.team)
+          } else {
+            console.error('User team response not successful:', userTeamData)
           }
+        } else {
+          console.error('User team request failed:', userTeamRes.status, userTeamRes.statusText)
         }
         
         // Load teams
