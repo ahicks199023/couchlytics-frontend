@@ -580,17 +580,18 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Two-panel player selection */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Give Panel */}
-          <div className="bg-gray-800/50 rounded-lg p-4 min-h-[420px] flex flex-col">
-            {/* Team dropdown as header */}
-            <div className="mb-4 flex items-center gap-2">
-              <select value={giveTeam} onChange={e => { setGiveTeam(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
-                <option value="All">Select Team</option>
-                {teams.slice().sort((a, b) => a.name.localeCompare(b.name)).map(team => (
-                  <option key={team.id} value={team.name}>{team.name}</option>
-                ))}
-              </select>
-            </div>
+                     {/* Team A Panel */}
+           <div className="bg-gray-800/50 rounded-lg p-4 min-h-[420px] flex flex-col">
+             {/* Team dropdown as header */}
+             <div className="mb-4 flex items-center gap-2">
+               <h3 className="text-lg font-semibold text-white">Team A</h3>
+               <select value={giveTeam} onChange={e => { setGiveTeam(e.target.value); setGivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
+                 <option value="All">Select Team</option>
+                 {teams.slice().sort((a, b) => a.name.localeCompare(b.name)).map(team => (
+                   <option key={team.id} value={team.name}>{team.name}</option>
+                 ))}
+               </select>
+             </div>
             {/* Filters stacked in two rows */}
             <div className="flex flex-col gap-2 mb-2">
               <div className="flex gap-2">
@@ -638,17 +639,18 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               <button onClick={() => setGivePage(givePage + 1)} disabled={givePage === giveTotalPages} className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50">Next</button>
             </div>
           </div>
-          {/* Receive Panel */}
-          <div className="bg-gray-800/50 rounded-lg p-4 min-h-[420px] flex flex-col">
-            {/* Team dropdown as header */}
-            <div className="mb-4 flex items-center gap-2">
-              <select value={receiveTeam} onChange={e => { setReceiveTeam(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
-                <option value="All">Select Team</option>
-                {teams.slice().sort((a, b) => a.name.localeCompare(b.name)).map(team => (
-                  <option key={team.id} value={team.name}>{team.name}</option>
-                ))}
-              </select>
-            </div>
+                     {/* Team B Panel */}
+           <div className="bg-gray-800/50 rounded-lg p-4 min-h-[420px] flex flex-col">
+             {/* Team dropdown as header */}
+             <div className="mb-4 flex items-center gap-2">
+               <h3 className="text-lg font-semibold text-white">Team B</h3>
+               <select value={receiveTeam} onChange={e => { setReceiveTeam(e.target.value); setReceivePage(1); }} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
+                 <option value="All">Select Team</option>
+                 {teams.slice().sort((a, b) => a.name.localeCompare(b.name)).map(team => (
+                   <option key={team.id} value={team.name}>{team.name}</option>
+                 ))}
+               </select>
+             </div>
             {/* Filters stacked in two rows */}
             <div className="flex flex-col gap-2 mb-2">
               <div className="flex gap-2">
@@ -699,9 +701,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         </div>
         {/* Trade Summary/Analysis Panel (right) remains unchanged */}
         <div className="space-y-4">
-          {/* Give Players */}
-          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-red-400 mb-3">Giving Away</h3>
+                     {/* Team A Players */}
+           <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+             <h3 className="text-lg font-semibold text-red-400 mb-3">Team A Players</h3>
             {givePlayers.length === 0 ? (
               <p className="text-gray-400 text-sm">No players selected</p>
             ) : (
@@ -734,9 +736,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             )}
           </div>
 
-          {/* Receive Players */}
-          <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-green-400 mb-3">Receiving</h3>
+                     {/* Team B Players */}
+           <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+             <h3 className="text-lg font-semibold text-green-400 mb-3">Team B Players</h3>
             {receivePlayers.length === 0 ? (
               <p className="text-gray-400 text-sm">No players selected</p>
             ) : (
@@ -779,17 +781,17 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                   {netValue >= 0 ? '+' : ''}{netValue}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400">Verdict:</span>
-                <div className="flex items-center gap-1">
-                  {getVerdictIcon(verdict)}
-                  <span className={`font-bold ${getVerdictColor(verdict)}`}>
-                    {netValue > 15 ? `${receiveTeam !== 'All' ? receiveTeam : 'Other Team'} Wins` : 
-                     netValue < -15 ? `${giveTeam !== 'All' ? giveTeam : 'Your Team'} Wins` : 
-                     'Fair Trade'}
-                  </span>
-                </div>
-              </div>
+                             <div className="flex items-center gap-2">
+                 <span className="text-gray-400">Verdict:</span>
+                 <div className="flex items-center gap-1">
+                   {getVerdictIcon(verdict)}
+                   <span className={`font-bold ${getVerdictColor(verdict)}`}>
+                     {netValue > 15 ? 'Team B Wins' : 
+                      netValue < -15 ? 'Team A Wins' : 
+                      'Fair Trade'}
+                   </span>
+                 </div>
+               </div>
             </div>
           </div>
 
@@ -956,10 +958,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
            {/* Value Breakdown */}
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-             <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-                                <h4 className="font-semibold text-red-400 mb-3 flex items-center gap-2">
-                   📤 What You&apos;re Giving
-                 </h4>
+                           <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                                 <h4 className="font-semibold text-red-400 mb-3 flex items-center gap-2">
+                    📤 Team A Players
+                  </h4>
                <div className="space-y-2">
                  <div className="flex justify-between">
                    <span className="text-gray-400">Total Value:</span>
@@ -976,10 +978,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                </div>
              </div>
              
-             <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
-                                <h4 className="font-semibold text-green-400 mb-3 flex items-center gap-2">
-                   📥 What You&apos;re Receiving
-                 </h4>
+                           <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4">
+                                 <h4 className="font-semibold text-green-400 mb-3 flex items-center gap-2">
+                    📥 Team B Players
+                  </h4>
                <div className="space-y-2">
                  <div className="flex justify-between">
                    <span className="text-gray-400">Total Value:</span>
@@ -1041,15 +1043,15 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                  <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">
                    <h5 className="font-medium text-white mb-2">🎯 Recommendations:</h5>
                    <ul className="text-sm text-gray-300 space-y-1">
-                     {result.tradeAssessment.netGain < -15 && (
-                       <li>• Consider asking for additional compensation or a better player</li>
-                     )}
-                     {result.tradeAssessment.netGain > 15 && (
-                       <li>• This trade heavily favors you - the other team may want to renegotiate</li>
-                     )}
-                     {Math.abs(result.tradeAssessment.netGain) < 10 && (
-                       <li>• This is a fair trade that benefits both teams</li>
-                     )}
+                                           {result.tradeAssessment.netGain < -15 && (
+                        <li>• Team A should consider asking for additional compensation or a better player</li>
+                      )}
+                      {result.tradeAssessment.netGain > 15 && (
+                        <li>• This trade heavily favors Team B - Team A may want to renegotiate</li>
+                      )}
+                      {Math.abs(result.tradeAssessment.netGain) < 10 && (
+                        <li>• This is a fair trade that benefits both teams</li>
+                      )}
                      {result.canAutoApprove && (
                        <li>• This trade meets auto-approval criteria</li>
                      )}
