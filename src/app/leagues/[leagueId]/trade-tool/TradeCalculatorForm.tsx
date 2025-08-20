@@ -363,16 +363,20 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('🔍 handleSubmit called with:', { league_id, userTeamId, givePlayers, receivePlayers })
+    
     if (!league_id || league_id === 'undefined') {
+      console.log('❌ League ID validation failed:', league_id)
       setError('Invalid or missing league ID.');
       return;
     }
     if (!userTeamId) {
-      console.log('User object when unable to determine team:', user)
+      console.log('❌ User team ID validation failed:', { user, userTeamId })
       setError('Unable to determine your team. Please refresh the page.')
       return
     }
     
+    console.log('✅ Validation passed, proceeding with trade analysis...')
     setSubmitting(true)
     setError(null)
     setResult(null)
@@ -387,6 +391,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         },
         includeSuggestions
       }
+      
+      console.log('🚀 Making API call to trade-tool with data:', tradeData)
+      console.log('🌐 API URL:', `${API_BASE}/leagues/${league_id}/trade-tool`)
 
       const res = await fetch(`${API_BASE}/leagues/${league_id}/trade-tool`, {
         method: 'POST',
