@@ -771,23 +771,38 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         // Set user data and auto-select their team
         if (userTeamData) {
           // Ensure we're setting the user data correctly with the team structure
-          setUser({
-            ...userTeamData.team,
-            id: userTeamData.team.id,
-            name: userTeamData.team.name,
-            city: userTeamData.team.city,
-            financials: userTeamData.financials
-          })
+          // Add defensive programming to prevent undefined access errors
+          if (userTeamData.team) {
+            setUser({
+              ...userTeamData.team,
+              id: userTeamData.team.id,
+              name: userTeamData.team.name,
+              city: userTeamData.team.city,
+              financials: userTeamData.financials
+            })
+          } else {
+            // Fallback if team structure is different
+            setUser({
+              id: userTeamData.id,
+              name: userTeamData.name,
+              city: userTeamData.city,
+              financials: userTeamData.financials
+            })
+          }
         }
         
         // Auto-select user's team AFTER both user and teams are set
         if (userTeamData && teamsData.length > 0) {
-          // Set the team immediately to trigger player loading
-          setGiveTeam(userTeamData.name)
-          // Use a longer delay to ensure React state updates are complete
-          setTimeout(() => {
-            handleGiveTeamChange(userTeamData.name)
-          }, 200)
+          // Safely access the team name with proper null checking
+          const teamName = userTeamData.team?.name || userTeamData.name
+          if (teamName) {
+            // Set the team immediately to trigger player loading
+            setGiveTeam(teamName)
+            // Use a longer delay to ensure React state updates are complete
+            setTimeout(() => {
+              handleGiveTeamChange(teamName)
+            }, 200)
+          }
         }
         
       } catch (err) {
