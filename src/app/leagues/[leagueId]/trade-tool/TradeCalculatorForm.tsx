@@ -6,28 +6,33 @@ import { Loader2, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-r
 import { API_BASE } from '@/lib/config'
 
 // Types
-interface PlayerStat {
-  label: string
-  value: number | string
-  importance: 'Critical' | 'High' | 'Medium' | 'Low'
-}
+// Note: PlayerStat interface removed as it's no longer used with enhanced backend data
 
 interface ValueBreakdown {
-  baseOVR: number
+  baseValue: number
   ageFactor: number
-  ageFactorExplanation: string
-  devTraitMultiplier: number
-  devTraitExplanation: string
-  positionMultiplier: number
-  positionExplanation: string
-  calculationSteps: string[]
+  devTrait: number
+  speed: number
+  position: number
+  teamNeed: number
   finalValue: number
+  calculationSteps: string[]
 }
 
 interface PositionAttributes {
-  keyStats: PlayerStat[]
-  physicalTraits: PlayerStat[]
+  primaryPosition: string
   specialties: string[]
+  keyAttributes: Record<string, number>
+  developmentTrait: string
+  age: number
+  speed: number
+}
+
+// Enhanced player data structure from backend
+interface EnhancedPlayerData {
+  valueBreakdown: ValueBreakdown
+  positionAttributes: PositionAttributes
+  contractInfo: ContractInfo
 }
 
 interface ContractInfo {
@@ -52,6 +57,7 @@ interface Player {
   valueBreakdown?: ValueBreakdown
   positionAttributes?: PositionAttributes
   contractInfo?: ContractInfo
+  enhancedData?: EnhancedPlayerData
 }
 
 interface Team {
@@ -245,24 +251,24 @@ const calculatePlayerValue = (player: Player): number => {
 
 // Helper function to get detailed value breakdown for a player
 const getPlayerValueBreakdown = (player: Player) => {
-  // Use backend valueBreakdown if available, otherwise calculate frontend fallback
-  if (player.valueBreakdown) {
+  // Use backend enhancedData if available, otherwise calculate frontend fallback
+  if (player.enhancedData?.valueBreakdown) {
     return {
-      baseOVR: player.valueBreakdown.baseOVR,
-      positionMultiplier: player.valueBreakdown.positionMultiplier,
-      ageFactor: player.valueBreakdown.ageFactor,
-      devTraitMultiplier: player.valueBreakdown.devTraitMultiplier,
-      afterAge: Math.round(player.valueBreakdown.baseOVR * player.valueBreakdown.ageFactor),
-      afterDev: Math.round(player.valueBreakdown.baseOVR * player.valueBreakdown.ageFactor * player.valueBreakdown.devTraitMultiplier),
-      finalValue: player.valueBreakdown.finalValue,
+      baseValue: player.enhancedData.valueBreakdown.baseValue,
+      positionMultiplier: player.enhancedData.valueBreakdown.position,
+      ageFactor: player.enhancedData.valueBreakdown.ageFactor,
+      devTraitMultiplier: player.enhancedData.valueBreakdown.devTrait,
+      afterAge: Math.round(player.enhancedData.valueBreakdown.baseValue * player.enhancedData.valueBreakdown.ageFactor),
+      afterDev: Math.round(player.enhancedData.valueBreakdown.baseValue * player.enhancedData.valueBreakdown.ageFactor * player.enhancedData.valueBreakdown.devTrait),
+      finalValue: player.enhancedData.valueBreakdown.finalValue,
       position: player.position || 'Unknown',
       age: player.age || 'Unknown',
       devTrait: player.devTrait || 'Normal',
-      calculationSteps: player.valueBreakdown.calculationSteps,
+      calculationSteps: player.enhancedData.valueBreakdown.calculationSteps,
       explanations: {
-        age: player.valueBreakdown.ageFactorExplanation,
-        devTrait: player.valueBreakdown.devTraitExplanation,
-        position: player.valueBreakdown.positionExplanation
+        age: `Age ${player.enhancedData.positionAttributes?.age || 'Unknown'}: ${player.enhancedData.valueBreakdown.ageFactor.toFixed(2)}x multiplier`,
+        devTrait: `${player.enhancedData.positionAttributes?.developmentTrait || 'Normal'} trait: ${player.enhancedData.valueBreakdown.devTrait.toFixed(2)}x multiplier`,
+        position: `${player.position} position: ${player.enhancedData.valueBreakdown.position.toFixed(2)}x multiplier`
       },
       isBackendCalculated: true
     }
@@ -1204,8 +1210,28 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium truncate">{player.name || '—'}</p>
                       <p className="text-gray-400 text-xs">{player.position || '—'} • {player.team || '—'} • Age {player.age || '?'}</p>
+                      {/* Enhanced Value Display */}
+                      {player.enhancedData?.valueBreakdown && (
+                        <div className="mt-1">
+                          <span className="text-xs text-blue-300">Value: {player.enhancedData.valueBreakdown.finalValue}</span>
+                          {player.enhancedData.positionAttributes?.specialties && player.enhancedData.positionAttributes.specialties.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {player.enhancedData.positionAttributes.specialties.slice(0, 2).map((specialty, index) => (
+                                <span key={index} className="text-xs bg-blue-900/30 border border-blue-500/30 rounded px-1 py-0.5 text-blue-200">
+                                  {specialty}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <p className="text-neon-green font-bold">{player.ovr}</p>
+                    <div className="text-right">
+                      <p className="text-neon-green font-bold">{player.ovr}</p>
+                      {player.enhancedData?.valueBreakdown && (
+                        <p className="text-xs text-blue-300">{player.enhancedData.valueBreakdown.finalValue}</p>
+                      )}
+                    </div>
                     <button className="ml-2 text-gray-400 hover:text-white" onClick={e => { e.stopPropagation(); openPlayerModal(player); }} title="View Details" type="button">i</button>
                   </div>
                 ))}
@@ -1331,8 +1357,28 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium truncate">{player.name || '—'}</p>
                       <p className="text-gray-400 text-xs">{player.position || '—'} • {player.team || '—'} • Age {player.age || '?'}</p>
+                      {/* Enhanced Value Display */}
+                      {player.enhancedData?.valueBreakdown && (
+                        <div className="mt-1">
+                          <span className="text-xs text-blue-300">Value: {player.enhancedData.valueBreakdown.finalValue}</span>
+                          {player.enhancedData.positionAttributes?.specialties && player.enhancedData.positionAttributes.specialties.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {player.enhancedData.positionAttributes.specialties.slice(0, 2).map((specialty, index) => (
+                                <span key={index} className="text-xs bg-blue-900/30 border border-blue-500/30 rounded px-1 py-0.5 text-blue-200">
+                                  {specialty}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <p className="text-neon-green font-bold">{player.ovr}</p>
+                    <div className="text-right">
+                      <p className="text-neon-green font-bold">{player.ovr}</p>
+                      {player.enhancedData?.valueBreakdown && (
+                        <p className="text-xs text-blue-300">{player.enhancedData.valueBreakdown.finalValue}</p>
+                      )}
+                    </div>
                     <button className="ml-2 text-gray-400 hover:text-white" onClick={e => { e.stopPropagation(); openPlayerModal(player); }} title="View Details" type="button">i</button>
                   </div>
                 ))}
@@ -1733,6 +1779,95 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               )}
             </div>
           )}
+
+          {/* Enhanced Player Value Breakdowns */}
+          <div className="player-value-breakdowns bg-gray-800/50 rounded-lg p-6 border border-gray-600">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">📊 Player Value Breakdowns</h3>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Your Team Players */}
+              <div className="giving-players">
+                <h4 className="text-red-400 font-semibold mb-3">📤 Players You&apos;re Giving</h4>
+                <div className="space-y-3">
+                  {givePlayers.map(player => (
+                    <div key={player.id} className="player-breakdown bg-gray-700/50 rounded-lg p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Image src={'/default-avatar.png'} alt={player.name || 'Player'} width={32} height={32} className="rounded-full bg-white" />
+                        <div>
+                          <h5 className="font-semibold text-white">{player.name}</h5>
+                          <p className="text-sm text-gray-400">{player.position} • {player.ovr} OVR • Age {player.age}</p>
+                        </div>
+                      </div>
+                      
+                      {player.enhancedData?.valueBreakdown ? (
+                        <div className="enhanced-value">
+                          <div className="final-value text-center mb-3">
+                            <span className="text-2xl font-bold text-red-300">Value: {player.enhancedData.valueBreakdown.finalValue}</span>
+                          </div>
+                          <div className="value-breakdown">
+                            <details className="text-sm">
+                              <summary className="cursor-pointer text-blue-300 hover:text-blue-200">View Value Calculation</summary>
+                              <div className="mt-2 space-y-1 text-gray-300">
+                                {player.enhancedData.valueBreakdown.calculationSteps.map((step, index) => (
+                                  <div key={index} className="breakdown-step text-xs">{step}</div>
+                                ))}
+                              </div>
+                            </details>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center text-gray-400 text-sm">
+                          <div className="text-lg font-bold text-red-300">Value: {calculatePlayerValue(player)}</div>
+                          <div>Enhanced breakdown not available</div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Team B Players */}
+              <div className="receiving-players">
+                <h4 className="text-green-400 font-semibold mb-3">📥 Players You&apos;re Receiving</h4>
+                <div className="space-y-3">
+                  {receivePlayers.map(player => (
+                    <div key={player.id} className="player-breakdown bg-gray-700/50 rounded-lg p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Image src={'/default-avatar.png'} alt={player.name || 'Player'} width={32} height={32} className="rounded-full bg-white" />
+                        <div>
+                          <h5 className="font-semibold text-white">{player.name}</h5>
+                          <p className="text-sm text-gray-400">{player.position} • {player.ovr} OVR • Age {player.age}</p>
+                        </div>
+                      </div>
+                      
+                      {player.enhancedData?.valueBreakdown ? (
+                        <div className="enhanced-value">
+                          <div className="final-value text-center mb-3">
+                            <span className="text-2xl font-bold text-green-300">Value: {player.enhancedData.valueBreakdown.finalValue}</span>
+                          </div>
+                          <div className="value-breakdown">
+                            <details className="text-sm">
+                              <summary className="cursor-pointer text-blue-300 hover:text-blue-200">View Value Calculation</summary>
+                              <div className="mt-2 space-y-1 text-gray-300">
+                                {player.enhancedData.valueBreakdown.calculationSteps.map((step, index) => (
+                                  <div key={index} className="breakdown-step text-xs">{step}</div>
+                                ))}
+                              </div>
+                            </details>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center text-gray-400 text-sm">
+                          <div className="text-lg font-bold text-green-300">Value: {calculatePlayerValue(player)}</div>
+                          <div>Enhanced breakdown not available</div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Roster Construction Analysis */}
           {result.advancedMetrics?.rosterConstruction && (
@@ -2194,9 +2329,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     </div>
                     
                     <div className="space-y-2 text-xs text-gray-400">
-                      <div>{modalPlayer.valueBreakdown.ageFactorExplanation}</div>
-                      <div>{modalPlayer.valueBreakdown.devTraitExplanation}</div>
-                      <div>{modalPlayer.valueBreakdown.positionExplanation}</div>
+                      <div>Age Factor: {modalPlayer.enhancedData?.valueBreakdown?.ageFactor || 'N/A'}</div>
+                      <div>Dev Trait: {modalPlayer.enhancedData?.valueBreakdown?.devTrait || 'N/A'}</div>
+                      <div>Position: {modalPlayer.enhancedData?.valueBreakdown?.position || 'N/A'}</div>
                     </div>
                   </div>
                 ) : (
@@ -2217,39 +2352,38 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                 </h3>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Key Stats */}
-                  {modalPlayer.positionAttributes.keyStats.length > 0 && (
+                  {/* Key Attributes */}
+                  {modalPlayer.enhancedData?.positionAttributes?.keyAttributes && Object.keys(modalPlayer.enhancedData.positionAttributes.keyAttributes).length > 0 && (
                     <div>
-                      <h4 className="text-md font-semibold text-blue-300 mb-3">Key Stats</h4>
+                      <h4 className="text-md font-semibold text-blue-300 mb-3">Key Attributes</h4>
                       <div className="space-y-2">
-                        {modalPlayer.positionAttributes.keyStats.map((stat, index) => (
+                        {Object.entries(modalPlayer.enhancedData.positionAttributes.keyAttributes).map(([key, value], index) => (
                           <div key={index} className="flex justify-between items-center">
-                            <span className={`text-sm ${
-                              stat.importance === 'Critical' ? 'text-red-300' :
-                              stat.importance === 'High' ? 'text-yellow-300' :
-                              stat.importance === 'Medium' ? 'text-blue-300' :
-                              'text-gray-300'
-                            }`}>
-                              {stat.label}
-                            </span>
-                            <span className="font-bold text-white">{stat.value}</span>
+                            <span className="text-sm text-blue-300">{key}</span>
+                            <span className="font-bold text-white">{value}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Physical Traits */}
-                  {modalPlayer.positionAttributes.physicalTraits.length > 0 && (
+                  {/* Development & Age */}
+                  {modalPlayer.enhancedData?.positionAttributes && (
                     <div>
-                      <h4 className="text-md font-semibold text-green-300 mb-3">Physical Traits</h4>
+                      <h4 className="text-md font-semibold text-green-300 mb-3">Player Info</h4>
                       <div className="space-y-2">
-                        {modalPlayer.positionAttributes.physicalTraits.map((trait, index) => (
-                          <div key={index} className="flex justify-between items-center">
-                            <span className="text-sm text-gray-300">{trait.label}</span>
-                            <span className="font-bold text-white">{trait.value}</span>
-                          </div>
-                        ))}
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-300">Development Trait</span>
+                          <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.developmentTrait}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-300">Age</span>
+                          <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.age}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-300">Speed</span>
+                          <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.speed}</span>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -2273,6 +2407,170 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           </div>
         </div>
       )}
+      
+      {/* Enhanced styling for the trade calculator */}
+      <style jsx>{`
+        .enhanced-trade-analysis {
+          animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .analysis-header {
+          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+          padding: 1.5rem;
+          border-radius: 0.75rem;
+          border: 1px solid #3b82f6;
+          margin-bottom: 2rem;
+        }
+        
+        .trade-assessment-enhanced {
+          background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+          border: 1px solid #4b5563;
+        }
+        
+        .assessment-item {
+          background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+          border: 1px solid #6b7280;
+          transition: all 0.3s ease;
+        }
+        
+        .assessment-item:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .value-exchange {
+          background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+        }
+        
+        .giving-section {
+          background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+          border: 1px solid #dc2626;
+        }
+        
+        .receiving-section {
+          background: linear-gradient(135deg, #14532d 0%, #166534 100%);
+          border: 1px solid #16a34a;
+        }
+        
+        .net-impact {
+          background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+          border: 1px solid #4b5563;
+        }
+        
+        .salary-cap-impact {
+          background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+          border: 1px solid #4b5563;
+        }
+        
+        .player-value-breakdowns {
+          background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+          border: 1px solid #4b5563;
+        }
+        
+        .player-breakdown {
+          background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+          border: 1px solid #6b7280;
+          transition: all 0.3s ease;
+        }
+        
+        .player-breakdown:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .enhanced-value {
+          margin-top: 10px;
+          padding: 8px;
+          background: #f8f9fa;
+          border-radius: 4px;
+        }
+        
+        .final-value {
+          font-weight: bold;
+          font-size: 1.1em;
+          color: #28a745;
+        }
+        
+        .value-breakdown {
+          margin-top: 8px;
+        }
+        
+        .breakdown-step {
+          font-size: 0.9em;
+          color: #6c757d;
+          margin: 2px 0;
+        }
+        
+        .roster-construction {
+          background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+          border: 1px solid #4b5563;
+        }
+        
+        .depth-grid {
+          background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+        }
+        
+        .depth-item {
+          background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+          border: 1px solid #6b7280;
+          transition: all 0.3s ease;
+        }
+        
+        .depth-item:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .ai-analysis {
+          background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+          border: 1px solid #4b5563;
+        }
+        
+        .reasoning {
+          background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+          border: 1px solid #6b7280;
+        }
+        
+        .positional-grades {
+          background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+          border: 1px solid #4b5563;
+        }
+        
+        .grade-card {
+          background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+          border: 1px solid #6b7280;
+          transition: all 0.3s ease;
+        }
+        
+        .grade-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .grade-a { border-color: #10b981; }
+        .grade-b { border-color: #3b82f6; }
+        .grade-c { border-color: #f59e0b; }
+        .grade-d { border-color: #f97316; }
+        .grade-f { border-color: #ef4444; }
+        
+        .cap-usage-bar {
+          background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+          padding: 0.75rem;
+          border-radius: 0.5rem;
+          border: 1px solid #6b7280;
+        }
+        
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   )
 } 
