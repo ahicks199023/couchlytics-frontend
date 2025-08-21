@@ -581,6 +581,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   // Request throttling to prevent rapid successive calls
   const lastRequestTime = useRef(0)
   const THROTTLE_DELAY = 1000 // 1 second between requests
+  const isInitialLoad = useRef(true) // Track if this is the initial page load
   
   // Cache expiration (5 minutes)
   const CACHE_EXPIRY = 5 * 60 * 1000
@@ -596,9 +597,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       return cached.data
     }
     
-    // Throttle requests to prevent rate limiting
+    // Throttle requests to prevent rate limiting (but allow initial page load)
     const now = Date.now()
-    if (now - lastRequestTime.current < THROTTLE_DELAY) {
+    if (!isInitialLoad.current && now - lastRequestTime.current < THROTTLE_DELAY) {
       console.log('⏱️ Request throttled to prevent rate limiting')
       return null
     }
@@ -659,9 +660,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       return cached.data
     }
     
-    // Throttle requests to prevent rate limiting
+    // Throttle requests to prevent rate limiting (but allow initial page load)
     const now = Date.now()
-    if (now - lastRequestTime.current < THROTTLE_DELAY) {
+    if (!isInitialLoad.current && now - lastRequestTime.current < THROTTLE_DELAY) {
       console.log('⏱️ Request throttled to prevent rate limiting')
       return []
     }
@@ -818,6 +819,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         if (teamsData.length > 0) {
           setTeams(teamsData)
         }
+        
+        // Mark initial load as complete to enable throttling for subsequent requests
+        isInitialLoad.current = false
         
         // Set user data and auto-select their team
         if (userTeamData) {
