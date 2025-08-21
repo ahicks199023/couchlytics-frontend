@@ -364,8 +364,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           const userTeamData = await userTeamRes.json()
           if (userTeamData.success && userTeamData.team) {
             console.log('Setting user state with team data:', userTeamData.team)
-            setUser({ ...userTeamData.team, leagueId: league_id })
+            const userTeam = { ...userTeamData.team, leagueId: league_id }
+            setUser(userTeam)
             console.log('User team object:', userTeamData.team)
+            
+            // Automatically set user's team as Team A (giving team)
+            handleGiveTeamChange(userTeam.name)
           } else {
             console.error('User team response not successful:', userTeamData)
           }
@@ -395,7 +399,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     }
     
     loadData()
-  }, [league_id])
+  }, [league_id, handleGiveTeamChange])
 
   const availableTeams = useMemo(() => {
     // For pagination, we'll use a fixed list of teams or get from teams API
@@ -729,15 +733,16 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         <div className="space-y-4">
           {/* Team A Panel */}
           <div className="bg-gray-800/50 rounded-lg p-4 min-h-[420px] flex flex-col">
-            {/* Team dropdown as header */}
+            {/* Team header - Fixed to user's team */}
             <div className="mb-4 flex items-center gap-2">
-              <h3 className="text-lg font-semibold text-white">Team A</h3>
-              <select value={giveTeam} onChange={e => handleGiveTeamChange(e.target.value)} className="px-2 py-1 rounded bg-gray-700 text-white text-lg font-semibold w-full">
-                <option value="All">Select Team</option>
-                {teams.slice().sort((a, b) => a.name.localeCompare(b.name)).map(team => (
-                  <option key={team.id} value={team.name}>{team.name}</option>
-                ))}
-              </select>
+              <h3 className="text-lg font-semibold text-white">Your Team</h3>
+              <div className="px-2 py-1 rounded bg-gray-600 text-white text-lg font-semibold w-full text-center">
+                {user ? (
+                  teams.find(t => t.id === user.id)?.name || 'Loading...'
+                ) : (
+                  'Loading...'
+                )}
+              </div>
             </div>
             
             {/* Team Financials Section */}
@@ -818,7 +823,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           
           {/* Team A Sending Panel */}
           <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-red-400 mb-3">Team A Sending</h3>
+            <h3 className="text-lg font-semibold text-red-400 mb-3">Your Team Sending</h3>
             {givePlayers.length === 0 ? (
               <p className="text-gray-400 text-sm">No players selected</p>
             ) : (
@@ -995,8 +1000,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             <div className="flex items-center gap-1">
               {getVerdictIcon(verdict)}
               <span className={`font-bold ${getVerdictColor(verdict)}`}>
-                {netValue > 15 ? 'Team A Wins' : 
-                 netValue < -15 ? 'Team B Wins' : 
+                {netValue > 15 ? 'You Win' : 
+                 netValue < -15 ? 'They Win' : 
                  'Fair Trade'}
               </span>
             </div>
@@ -1235,9 +1240,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">💰 Salary Cap Impact</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Team A (Give Team) Salary Cap */}
+                {/* Your Team Salary Cap */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-blue-300">Team A - {giveTeam}</h4>
+                  <h4 className="text-sm font-semibold text-blue-300">Your Team - {giveTeam}</h4>
                   {giveTeamFinancials && (
                     <div className="space-y-3">
                       <div className="flex justify-between">
@@ -1514,7 +1519,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             {givePlayers.length > 0 && (
               <div className="space-y-4">
                 <h4 className="text-md font-semibold text-red-300 border-b border-red-500/30 pb-2">
-                  Team A Sending ({givePlayers.length} player{givePlayers.length !== 1 ? 's' : ''})
+                  Your Team Sending ({givePlayers.length} player{givePlayers.length !== 1 ? 's' : ''})
                 </h4>
                 
                 {givePlayers.map((player) => {
@@ -1569,7 +1574,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                 
                 <div className="bg-red-900/30 rounded-lg p-3 border border-red-500/30">
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-red-300">Team A Total Value:</span>
+                    <span className="font-semibold text-red-300">Your Team Total Value:</span>
                     <span className="font-bold text-red-400 text-lg">{giveValue}</span>
                   </div>
                 </div>
