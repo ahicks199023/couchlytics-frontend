@@ -37,9 +37,20 @@ interface Team {
 
 interface User {
   id: number
-  email: string
+  email?: string
   is_premium?: boolean
   teamId?: number
+  name?: string
+  city?: string
+  user?: string
+  user_id?: number
+  leagueId?: string
+  financials?: {
+    salaryCap: number
+    usedCapSpace: number
+    availableCapSpace: number
+    deadCapSpace: number
+  }
 }
 
 interface PositionalPlayer {
