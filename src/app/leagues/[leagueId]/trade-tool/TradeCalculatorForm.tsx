@@ -771,6 +771,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         // Auto-select user's team AFTER both user and teams are set
         if (userTeamData && teamsData.length > 0) {
           console.log('🎯 Auto-selecting user team after data is loaded')
+          // Set the team immediately to trigger player loading
+          setGiveTeam(userTeamData.name)
           // Use a longer delay to ensure React state updates are complete
           setTimeout(() => {
             handleGiveTeamChange(userTeamData.name)
@@ -1146,6 +1148,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                   'Loading...'
                 )}
               </div>
+              {/* Debug Team State */}
+              <div className="text-xs text-yellow-400">
+                giveTeam: {giveTeam} | user.name: {user?.name} | teams: {teams.length}
+              </div>
             </div>
             
             {/* Team Financials Section */}
@@ -1200,12 +1206,17 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               </div>
             </div>
             <div className="mb-2 text-gray-400 text-xs">Showing {givePlayersList.length} of {giveTotal} (Page {givePage} of {giveTotalPages})</div>
+            {/* Debug Info */}
+            <div className="mb-2 text-xs text-yellow-400">
+              Debug: givePlayersList length: {givePlayersList.length}, giveTotal: {giveTotal}
+            </div>
             {givePlayersList.length === 0 ? (
               <div className="text-center py-8 text-gray-400">No players found.</div>
             ) : (
               <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto">
                 {sortPlayers(givePlayersList.filter(p => !givePlayers.some(sel => sel.id === p.id)), giveSort).map(player => (
                   <div key={player.id} className="flex items-center gap-3 p-2 bg-gray-700/50 rounded-lg hover:bg-gray-700 cursor-pointer" onClick={() => addPlayer(player, true)}>
+
                     <Image src={'/default-avatar.png'} alt={typeof player.name === 'string' ? player.name : 'Player'} width={32} height={32} className="rounded-full bg-white" />
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium truncate">{player.name || '—'}</p>
