@@ -746,7 +746,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       return
     }
 
-    if (hasInitialized) {
+    if (hasInitialized || isRateLimited) {
       return
     }
 
@@ -1085,10 +1085,25 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   if (error) {
     return (
       <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
-        <div className="flex items-center gap-2 text-red-400">
+        <div className="flex items-center gap-2 text-red-400 mb-3">
           <AlertCircle className="w-5 h-5" />
           <p>{error}</p>
         </div>
+        {error.includes('Rate limit') && (
+          <div className="mt-3 p-3 bg-gray-800/50 rounded-lg">
+            <p className="text-gray-300 text-sm mb-2">
+              ⏰ The API is temporarily rate limited. This usually happens when:
+            </p>
+            <ul className="text-gray-400 text-sm list-disc list-inside space-y-1 mb-3">
+              <li>Too many requests were made in a short time</li>
+              <li>Multiple users are accessing the system simultaneously</li>
+              <li>The backend is processing heavy operations</li>
+            </ul>
+            <p className="text-gray-300 text-sm">
+              The system will automatically retry in 30 seconds, or you can refresh the page.
+            </p>
+          </div>
+        )}
       </div>
     )
   }
