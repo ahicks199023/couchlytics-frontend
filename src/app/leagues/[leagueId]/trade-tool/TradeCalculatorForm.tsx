@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { Loader2, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
 import { API_BASE } from '@/lib/config'
@@ -256,11 +256,21 @@ const getVerdictIcon = (verdict: string) => {
 }
 
 export default function TradeCalculatorForm({ league_id }: { league_id: string }) {
+  // Debug: Track render count to detect infinite loops
+  const renderCount = useRef(0)
+  renderCount.current += 1
+  console.log(`🔄 Trade Calculator Render #${renderCount.current} for league:`, league_id)
+  
   // State management
   const [user, setUser] = useState<User | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Loading states to prevent infinite loops
+  const [isLoadingUserTeam, setIsLoadingUserTeam] = useState(false)
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false)
+  const [hasInitialized, setHasInitialized] = useState(false)
   
   // Financial data state
   const [giveTeamFinancials, setGiveTeamFinancials] = useState<Team['financials'] | null>(null)
@@ -286,14 +296,85 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     }
   }, [teams])
   
+  // Memoized API functions to prevent infinite loops
+  const fetchUserTeam = useCallback(async () => {
+    if (!league_id || isLoadingUserTeam) return null
+    
+    console.log('🔍 Fetching user team for league:', league_id)
+    setIsLoadingUserTeam(true)
+    
+    try {
+      const response = await fetch(`${API_BASE}/leagues/${league_id}/user-team`, { 
+        credentials: 'include' 
+      })
+      
+      if (response.status === 429) {
+        console.error('⚠️ Rate limited - user team endpoint')
+        setError('Rate limit exceeded. Please wait 30 seconds and refresh.')
+        return null
+      }
+      
+      if (response.ok) {
+        const userTeamData = await response.json()
+        if (userTeamData.success && userTeamData.team) {
+          console.log('✅ User team data loaded:', userTeamData.team)
+          return { ...userTeamData.team, leagueId: league_id }
+        }
+      }
+      
+      console.error('❌ User team request failed:', response.status)
+      return null
+    } catch (error) {
+      console.error('❌ User team fetch error:', error)
+      return null
+    } finally {
+      setIsLoadingUserTeam(false)
+    }
+  }, [league_id, isLoadingUserTeam])
+
+  const fetchTeams = useCallback(async () => {
+    if (!league_id || isLoadingTeams) return []
+    
+    console.log('🔍 Fetching teams for league:', league_id)
+    setIsLoadingTeams(true)
+    
+    try {
+      const response = await fetch(`${API_BASE}/leagues/${league_id}/teams`, {
+        credentials: 'include'
+      })
+      
+      if (response.status === 429) {
+        console.error('⚠️ Rate limited - teams endpoint')
+        setError('Rate limit exceeded. Please wait 30 seconds and refresh.')
+        return []
+      }
+      
+      if (response.ok) {
+        const teamsData = await response.json()
+        console.log('✅ Teams data loaded:', teamsData.teams?.length || 0, 'teams')
+        return teamsData.teams || []
+      }
+      
+      console.error('❌ Teams request failed:', response.status)
+      return []
+    } catch (error) {
+      console.error('❌ Teams fetch error:', error)
+      return []
+    } finally {
+      setIsLoadingTeams(false)
+    }
+  }, [league_id, isLoadingTeams])
+
   // Team selection handlers that update financial data
   const handleGiveTeamChange = useCallback((teamName: string) => {
+    console.log('🎯 Changing give team to:', teamName)
     setGiveTeam(teamName)
     setGivePage(1)
     setGiveTeamFinancials(getTeamFinancials(teamName))
   }, [getTeamFinancials])
   
   const handleReceiveTeamChange = useCallback((teamName: string) => {
+    console.log('🎯 Changing receive team to:', teamName)
     setReceiveTeam(teamName)
     setReceivePage(1)
     setReceiveTeamFinancials(getTeamFinancials(teamName))
@@ -344,62 +425,62 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   console.log('Current user state:', user)
   console.log('Computed userTeamId:', userTeamId)
 
-  // Load initial data
+  // Initialize data - runs only once per league_id
   useEffect(() => {
-    const loadData = async () => {
-      if (!league_id || league_id === 'undefined') {
-        setError('Invalid or missing league ID.');
-        setLoading(false);
-        return;
-      }
+    console.log('🚀 Trade Calculator initializing for league:', league_id)
+    
+    if (!league_id || league_id === 'undefined') {
+      setError('Invalid or missing league ID.')
+      setLoading(false)
+      return
+    }
+
+    if (hasInitialized) {
+      console.log('⏭️ Already initialized, skipping')
+      return
+    }
+
+    const initializeData = async () => {
+      console.log('🔄 Starting data initialization...')
+      setLoading(true)
+      setError(null)
+      setHasInitialized(true)
+      
       try {
-        setLoading(true)
-        setError(null)
+        // Fetch user team and teams in parallel
+        const [userTeamData, teamsData] = await Promise.all([
+          fetchUserTeam(),
+          fetchTeams()
+        ])
         
-        // Load user team info using new endpoint
-        const userTeamRes = await fetch(`${API_BASE}/leagues/${league_id}/user-team`, { 
-          credentials: 'include' 
-        })
-        if (userTeamRes.ok) {
-          const userTeamData = await userTeamRes.json()
-          if (userTeamData.success && userTeamData.team) {
-            console.log('Setting user state with team data:', userTeamData.team)
-            const userTeam = { ...userTeamData.team, leagueId: league_id }
-            setUser(userTeam)
-            console.log('User team object:', userTeamData.team)
-            
-            // Automatically set user's team as Team A (giving team)
-            handleGiveTeamChange(userTeam.name)
-          } else {
-            console.error('User team response not successful:', userTeamData)
-          }
-        } else {
-          console.error('User team request failed:', userTeamRes.status, userTeamRes.statusText)
+        // Set teams data
+        if (teamsData.length > 0) {
+          setTeams(teamsData)
+          console.log('✅ Teams loaded:', teamsData.length)
         }
         
-        // Load teams
-        const teamsRes = await fetch(`${API_BASE}/leagues/${league_id}/teams`, {
-          credentials: 'include'
-        })
-        if (teamsRes.ok) {
-          const teamsData = await teamsRes.json()
-          console.log('Teams response data:', teamsData)
-          console.log('Teams array:', teamsData.teams)
-          setTeams(teamsData.teams || [])
-        } else {
-          throw new Error('Failed to load teams')
+        // Set user data and auto-select their team
+        if (userTeamData) {
+          setUser(userTeamData)
+          console.log('✅ User team loaded:', userTeamData.name)
+          
+          // Auto-select user's team (delayed to ensure teams are loaded)
+          setTimeout(() => {
+            handleGiveTeamChange(userTeamData.name)
+          }, 100)
         }
         
       } catch (err) {
-        console.error('Failed to load data:', err)
-        setError('Failed to load league data. Please try again.')
+        console.error('❌ Initialization failed:', err)
+        setError('Failed to load league data. Please refresh the page.')
       } finally {
         setLoading(false)
+        console.log('✅ Trade Calculator initialization complete')
       }
     }
     
-    loadData()
-  }, [league_id, handleGiveTeamChange])
+    initializeData()
+  }, [league_id, hasInitialized, fetchUserTeam, fetchTeams, handleGiveTeamChange])
 
   const availableTeams = useMemo(() => {
     // For pagination, we'll use a fixed list of teams or get from teams API
@@ -466,6 +547,19 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     setReceivePlayers([])
     setResult(null)
   }, [])
+
+  // Emergency reset function to break infinite loops
+  const resetComponent = useCallback(() => {
+    console.log('🔄 Emergency reset triggered')
+    setHasInitialized(false)
+    setIsLoadingUserTeam(false)
+    setIsLoadingTeams(false)
+    setLoading(false)
+    setError(null)
+    setUser(null)
+    setTeams([])
+    clearTrade()
+  }, [clearTrade])
 
   const fetchTradeSuggestions = async () => {
     if (!league_id || league_id === 'undefined') {
@@ -1664,7 +1758,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       )}
 
       {/* 3. Add Clear All button above trade summary */}
-      <button onClick={clearTrade} className="w-full py-2 mb-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-bold">Clear All</button>
+      <div className="grid grid-cols-2 gap-2 mb-2">
+        <button onClick={clearTrade} className="py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-bold">Clear All</button>
+        {(renderCount.current > 10 || error?.includes('Rate limit')) && (
+          <button onClick={resetComponent} className="py-2 bg-red-700 hover:bg-red-600 rounded-lg text-white font-bold text-xs">Emergency Reset</button>
+        )}
+      </div>
 
       {/* 4. Player Detail Modal */}
       {modalOpen && modalPlayer && (
