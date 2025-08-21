@@ -770,7 +770,14 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         
         // Set user data and auto-select their team
         if (userTeamData) {
-          setUser(userTeamData)
+          // Ensure we're setting the user data correctly with the team structure
+          setUser({
+            ...userTeamData.team,
+            id: userTeamData.team.id,
+            name: userTeamData.team.name,
+            city: userTeamData.team.city,
+            financials: userTeamData.financials
+          })
         }
         
         // Auto-select user's team AFTER both user and teams are set
@@ -1057,9 +1064,26 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   }
 
   // Helper to open player modal
-  function openPlayerModal(player: Player) {
+  async function openPlayerModal(player: Player) {
     setModalPlayer(player);
     setModalOpen(true);
+    
+    // Fetch enhanced player data if not already available
+    if (!player.enhancedData) {
+      try {
+        const response = await fetch(`${API_BASE}/leagues/${league_id}/players/${player.id}/enhanced`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const enhancedData = await response.json();
+          // Update the modal player with enhanced data
+          setModalPlayer(prev => prev ? { ...prev, enhancedData } : prev);
+        }
+      } catch (error) {
+        console.error('Failed to fetch enhanced player data:', error);
+      }
+    }
   }
 
   // Top-level check for valid league_id (after hooks)
@@ -2408,7 +2432,14 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <span className="text-2xl font-bold text-neon-green">{calculatePlayerValue(modalPlayer)}</span>
                     <span className="text-gray-400 ml-2">Trade Value</span>
                     <div className="text-xs text-gray-500 mt-2">
-                      Enhanced breakdown will be available once backend data is loaded
+                      {!modalPlayer.enhancedData ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading enhanced breakdown...
+                        </div>
+                      ) : (
+                        'Enhanced breakdown will be available once backend data is loaded'
+                      )}
                     </div>
                   </div>
                 )}
