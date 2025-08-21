@@ -2455,34 +2455,83 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-white border-b border-gray-600 pb-2">Trade Value Breakdown</h3>
                 
-                {/* Debug info - remove this after fixing */}
-                <div className="bg-gray-900/50 p-2 rounded text-xs text-gray-400 mb-2">
-                  Debug: modalPlayer.enhancedData = {JSON.stringify(modalPlayer.enhancedData, null, 2)}
-                </div>
-
                 {modalPlayer.enhancedData?.valueBreakdown ? (
                   <div className="space-y-3">
-                    <div className="bg-gray-800 rounded-lg p-4">
-                      <div className="text-center mb-3">
-                        <span className="text-2xl font-bold text-neon-green">{modalPlayer.enhancedData.valueBreakdown.finalValue}</span>
-                        <span className="text-gray-400 ml-2">Trade Value</span>
-                      </div>
-                      
-                      <div className="space-y-2 text-sm">
-                        {modalPlayer.enhancedData.valueBreakdown.calculationSteps.map((step, index) => (
-                          <div key={index} className="text-gray-300 font-mono text-xs">
-                            {step}
-                          </div>
-                        ))}
+                    {/* Base Value */}
+                    <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded border border-gray-700">
+                      <span className="text-gray-300 font-medium">Base Value</span>
+                      <span className="text-white font-semibold">{modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} OVR</span>
+                    </div>
+                    
+                    {/* Age Factor */}
+                    <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded border border-gray-700">
+                      <span className="text-gray-300 font-medium">Age Factor</span>
+                      <div className="text-right">
+                        <div className="text-white font-medium">
+                          {modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData.valueBreakdown.ageFactor || 1}
+                        </div>
+                        <div className={`text-xs ${(modalPlayer.enhancedData.valueBreakdown.ageFactor || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData.valueBreakdown.ageFactor || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {(modalPlayer.enhancedData.valueBreakdown.ageFactor || 1) > 1 ? '↑ Age bonus' : (modalPlayer.enhancedData.valueBreakdown.ageFactor || 1) < 1 ? '↓ Age penalty' : 'No age adjustment'}
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="space-y-2 text-xs text-gray-400">
-                      <div>Age Factor: {modalPlayer.enhancedData.valueBreakdown.ageFactor}</div>
-                      <div>Dev Trait: {modalPlayer.enhancedData.valueBreakdown.devTrait}</div>
-                      <div>Position: {modalPlayer.enhancedData.valueBreakdown.position}</div>
-                      <div>Team Need: {modalPlayer.enhancedData.valueBreakdown.teamNeed}</div>
-                      <div>Speed: {modalPlayer.enhancedData.valueBreakdown.speed}</div>
+                    {/* Development Trait */}
+                    <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded border border-gray-700">
+                      <span className="text-gray-300 font-medium">Development Trait</span>
+                      <div className="text-right">
+                        <div className="text-white font-medium">
+                          {modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData.valueBreakdown.devTrait || 1}
+                        </div>
+                        <div className={`text-xs ${(modalPlayer.enhancedData.valueBreakdown.devTrait || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData.valueBreakdown.devTrait || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {getDevTraitDisplay(modalPlayer.enhancedData.valueBreakdown.devTrait || 1)} {(modalPlayer.enhancedData.valueBreakdown.devTrait || 1) > 1 ? '↑ Trait bonus' : (modalPlayer.enhancedData.valueBreakdown.devTrait || 1) < 1 ? '↓ Trait penalty' : 'No trait adjustment'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Speed Bonus */}
+                    <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded border border-gray-700">
+                      <span className="text-gray-300 font-medium">Speed Bonus</span>
+                      <div className="text-right">
+                        <div className="text-white font-medium">
+                          {modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData.valueBreakdown.speed || 1}
+                        </div>
+                        <div className={`text-xs ${(modalPlayer.enhancedData.valueBreakdown.speed || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData.valueBreakdown.speed || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {(modalPlayer.enhancedData.valueBreakdown.speed || 1) > 1 ? '↑ Speed bonus' : (modalPlayer.enhancedData.valueBreakdown.speed || 1) < 1 ? '↓ Speed penalty' : 'No speed adjustment'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Position Multiplier */}
+                    <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded border border-gray-700">
+                      <span className="text-gray-300 font-medium">Position</span>
+                      <div className="text-right">
+                        <div className="text-white font-medium">
+                          {modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData.valueBreakdown.position || 1}
+                        </div>
+                        <div className={`text-xs ${(modalPlayer.enhancedData.valueBreakdown.position || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData.valueBreakdown.position || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {(modalPlayer.enhancedData.valueBreakdown.position || 1) > 1 ? '↑ Position premium' : (modalPlayer.enhancedData.valueBreakdown.position || 1) < 1 ? '↓ Position discount' : 'Standard position value'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Team Need */}
+                    <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded border border-gray-700">
+                      <span className="text-gray-300 font-medium">Team Need</span>
+                      <div className="text-right">
+                        <div className="text-white font-medium">
+                          {modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData.valueBreakdown.teamNeed || 1}
+                        </div>
+                        <div className={`text-xs ${(modalPlayer.enhancedData.valueBreakdown.teamNeed || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData.valueBreakdown.teamNeed || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {(modalPlayer.enhancedData.valueBreakdown.teamNeed || 1) > 1 ? '↑ High team need' : (modalPlayer.enhancedData.valueBreakdown.teamNeed || 1) < 1 ? '↓ Low team need' : 'Standard team need'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Final Value */}
+                    <div className="flex justify-between items-center p-4 bg-green-900/30 border border-green-500/50 rounded">
+                      <span className="text-green-300 font-semibold text-lg">Final Trade Value</span>
+                      <span className="text-green-400 font-bold text-2xl">{modalPlayer.enhancedData.valueBreakdown.finalValue || calculatePlayerValue(modalPlayer)}</span>
                     </div>
                   </div>
                 ) : (
