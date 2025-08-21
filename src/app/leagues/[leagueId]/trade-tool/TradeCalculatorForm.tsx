@@ -124,17 +124,7 @@ const getDevTraitColor = (trait: string): string => {
   return colors[trait] || '#95A5A6';
 };
 
-const getDevTraitMultiplier = (trait: string): number => {
-  const multipliers: Record<string, number> = {
-    'X-Factor': 1.5,
-    'Superstar': 1.3,
-    'Star': 1.2,
-    'Hidden': 1.1,
-    'Normal': 1.0,
-    'Slow': 0.9
-  };
-  return multipliers[trait] || 1.0;
-};
+// Removed unused function to fix ESLint error
 
 interface PositionalGradeData {
   grade: 'A' | 'B' | 'C' | 'D' | 'F'
@@ -805,6 +795,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     initializeData()
   // NOTE: Intentionally excluding fetchTeams, fetchUserTeam, and handleGiveTeamChange 
   // from dependencies to prevent infinite loop. These functions are stable due to useCallback.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [league_id, hasInitialized])
 
   const availableTeams = useMemo(() => {
