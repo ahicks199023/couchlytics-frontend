@@ -649,11 +649,18 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         hasUserFinancials: !!user?.financials,
         userFinancials: user?.financials 
       })
+      
+      // Safety check: ensure teams are loaded before proceeding
+      if (teams.length === 0) {
+        console.log('⚠️ Teams not loaded yet, skipping financial data lookup')
+        return
+      }
+      
       const teamFinancials = getTeamFinancials(teamName)
       console.log('🔍 Team financials from teams array:', teamFinancials)
       setGiveTeamFinancials(teamFinancials)
     }
-  }, [getTeamFinancials, user])
+  }, [getTeamFinancials, user, teams])
   
   const handleReceiveTeamChange = useCallback((teamName: string) => {
     console.log('🎯 Changing receive team to:', teamName)
@@ -753,11 +760,15 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           setUser(userTeamData)
           console.log('✅ User team loaded:', userTeamData.name)
           console.log('🔍 User team data structure:', JSON.stringify(userTeamData, null, 2))
-          
-          // Auto-select user's team (delayed to ensure teams are loaded)
+        }
+        
+        // Auto-select user's team AFTER both user and teams are set
+        if (userTeamData && teamsData.length > 0) {
+          console.log('🎯 Auto-selecting user team after data is loaded')
+          // Use a longer delay to ensure React state updates are complete
           setTimeout(() => {
             handleGiveTeamChange(userTeamData.name)
-          }, 100)
+          }, 200)
         }
         
       } catch (err) {
