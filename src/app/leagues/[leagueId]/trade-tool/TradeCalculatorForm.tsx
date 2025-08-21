@@ -507,7 +507,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   // Debug: Track render count to detect infinite loops
   const renderCount = useRef(0)
   renderCount.current += 1
-  console.log(`🔄 Trade Calculator Render #${renderCount.current} for league:`, league_id)
+
   
   // State management
   const [user, setUser] = useState<User | null>(null)
@@ -530,13 +530,11 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     if (teamName === 'All') return null
     const team = teams.find(t => t.name === teamName)
     
-    console.log(`🔍 Looking for financial data for team: ${teamName}`)
-    console.log(`🔍 Found team:`, team)
-    console.log(`🔍 Team has financials:`, !!team?.financials)
+
     
     // Return real financial data if available, otherwise fallback
     if (team?.financials) {
-      console.log(`✅ Using real financial data for ${teamName}:`, team.financials)
+
       return team.financials
     }
     
@@ -554,7 +552,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const fetchUserTeam = useCallback(async () => {
     if (!league_id || isLoadingUserTeam || isRateLimited) return null
     
-    console.log('🔍 Fetching user team for league:', league_id)
+
     setIsLoadingUserTeam(true)
     
     try {
@@ -571,7 +569,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         setTimeout(() => {
           setIsRateLimited(false)
           setError(null)
-          console.log('✅ Rate limit reset - API calls allowed again')
         }, 30000)
         
         return null
@@ -580,7 +577,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       if (response.ok) {
         const userTeamData = await response.json()
         if (userTeamData.success && userTeamData.team) {
-          console.log('✅ User team data loaded:', userTeamData.team)
           return { ...userTeamData.team, leagueId: league_id }
         }
       }
@@ -598,7 +594,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const fetchTeams = useCallback(async () => {
     if (!league_id || isLoadingTeams || isRateLimited) return []
     
-    console.log('🔍 Fetching teams for league:', league_id)
+
     setIsLoadingTeams(true)
     
     try {
@@ -615,7 +611,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         setTimeout(() => {
           setIsRateLimited(false)
           setError(null)
-          console.log('✅ Rate limit reset - API calls allowed again')
         }, 30000)
         
         return []
@@ -623,7 +618,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       
       if (response.ok) {
         const teamsData = await response.json()
-        console.log('✅ Teams data loaded:', teamsData.teams?.length || 0, 'teams')
+
         return teamsData.teams || []
       }
       
@@ -639,13 +634,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   // Team selection handlers that update financial data
   const handleGiveTeamChange = useCallback((teamName: string) => {
-    console.log('🎯 Changing give team to:', teamName)
+
     setGiveTeam(teamName)
     setGivePage(1)
     
     // Check if this is the user's team and use userTeam financial data if available
     if (user && user.name === teamName && user.financials) {
-      console.log('✅ Using user team financial data:', user.financials)
       setGiveTeamFinancials(user.financials)
     } else {
       // Use financial data from teams array
@@ -659,17 +653,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       // Only fall back to teams array if we have teams data
       if (teams.length > 0) {
         const teamFinancials = getTeamFinancials(teamName)
-        console.log('🔍 Team financials from teams array:', teamFinancials)
         setGiveTeamFinancials(teamFinancials)
-      } else {
-        console.log('⚠️ Teams not loaded yet, but user team data should be available')
-        // Don't return here - let the user team data display if available
       }
     }
   }, [getTeamFinancials, user, teams])
   
   const handleReceiveTeamChange = useCallback((teamName: string) => {
-    console.log('🎯 Changing receive team to:', teamName)
+
     setReceiveTeam(teamName)
     setReceivePage(1)
     setReceiveTeamFinancials(getTeamFinancials(teamName))
@@ -717,12 +707,11 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   // Get user's team ID directly from the user state (set by /user-team endpoint)
   const userTeamId = user?.id
-  console.log('Current user state:', user)
-  console.log('Computed userTeamId:', userTeamId)
+
 
   // Initialize data - runs only once per league_id
   useEffect(() => {
-    console.log('🚀 Trade Calculator initializing for league:', league_id)
+
     
     if (!league_id || league_id === 'undefined') {
       setError('Invalid or missing league ID.')
@@ -731,12 +720,11 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     }
 
     if (hasInitialized) {
-      console.log('⏭️ Already initialized, skipping')
       return
     }
 
     const initializeData = async () => {
-      console.log('🔄 Starting data initialization...')
+
       setLoading(true)
       setError(null)
       setHasInitialized(true)
@@ -751,26 +739,15 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         // Set teams data
         if (teamsData.length > 0) {
           setTeams(teamsData)
-          console.log('✅ Teams loaded:', teamsData.length)
-          
-          // Check if any teams have financial data
-          const teamsWithFinancials = teamsData.filter((team: Team) => team.financials)
-          console.log('🔍 Teams with financial data:', teamsWithFinancials.length)
-          if (teamsWithFinancials.length > 0) {
-            console.log('💰 Sample team financials:', teamsWithFinancials[0].financials)
-          }
         }
         
         // Set user data and auto-select their team
         if (userTeamData) {
           setUser(userTeamData)
-          console.log('✅ User team loaded:', userTeamData.name)
-          console.log('🔍 User team data structure:', JSON.stringify(userTeamData, null, 2))
         }
         
         // Auto-select user's team AFTER both user and teams are set
         if (userTeamData && teamsData.length > 0) {
-          console.log('🎯 Auto-selecting user team after data is loaded')
           // Set the team immediately to trigger player loading
           setGiveTeam(userTeamData.name)
           // Use a longer delay to ensure React state updates are complete
@@ -784,7 +761,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         setError('Failed to load league data. Please refresh the page.')
       } finally {
         setLoading(false)
-        console.log('✅ Trade Calculator initialization complete')
+
       }
     }
     
@@ -795,14 +772,11 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   const availableTeams = useMemo(() => {
     // For pagination, we'll use a fixed list of teams or get from teams API
-    console.log('Computing availableTeams with teams:', teams)
     const teamNames = teams.map(t => t.name).filter(Boolean).sort();
-    console.log('Extracted team names:', teamNames)
     if (teamNames.length === 0) {
       console.warn('No team names found in teams data. Team filter will be disabled.');
     }
     const result = ['All', ...teamNames];
-    console.log('Final availableTeams:', result)
     return result;
   }, [teams]);
 
@@ -861,7 +835,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   // Emergency reset function to break infinite loops
   const resetComponent = useCallback(() => {
-    console.log('🔄 Emergency reset triggered')
     setHasInitialized(false)
     setIsLoadingUserTeam(false)
     setIsLoadingTeams(false)
@@ -919,20 +892,15 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('🔍 handleSubmit called with:', { league_id, userTeamId, givePlayers, receivePlayers })
     
     if (!league_id || league_id === 'undefined') {
-      console.log('❌ League ID validation failed:', league_id)
       setError('Invalid or missing league ID.');
       return;
     }
     if (!userTeamId) {
-      console.log('❌ User team ID validation failed:', { user, userTeamId })
       setError('Unable to determine your team. Please refresh the page.')
       return
     }
-    
-    console.log('✅ Validation passed, proceeding with trade analysis...')
     setSubmitting(true)
     setError(null)
     setResult(null)
@@ -948,8 +916,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         includeSuggestions
       }
       
-      console.log('🚀 Making API call to trade-tool with data:', tradeData)
-      console.log('🌐 API URL:', `${API_BASE}/leagues/${league_id}/trade-tool`)
+
 
       const res = await fetch(`${API_BASE}/leagues/${league_id}/trade-tool`, {
         method: 'POST',
@@ -1148,10 +1115,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                   'Loading...'
                 )}
               </div>
-              {/* Debug Team State */}
-              <div className="text-xs text-yellow-400">
-                giveTeam: {giveTeam} | user.name: {user?.name} | teams: {teams.length}
-              </div>
+
             </div>
             
             {/* Team Financials Section */}
@@ -1206,10 +1170,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               </div>
             </div>
             <div className="mb-2 text-gray-400 text-xs">Showing {givePlayersList.length} of {giveTotal} (Page {givePage} of {giveTotalPages})</div>
-            {/* Debug Info */}
-            <div className="mb-2 text-xs text-yellow-400">
-              Debug: givePlayersList length: {givePlayersList.length}, giveTotal: {giveTotal}
-            </div>
+
             {givePlayersList.length === 0 ? (
               <div className="text-center py-8 text-gray-400">No players found.</div>
             ) : (
@@ -2323,15 +2284,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-white border-b border-gray-600 pb-2">Trade Value Breakdown</h3>
                 
-                {/* Debug Info */}
-                <div className="bg-gray-900 p-3 rounded text-xs text-yellow-400">
-                  <div>Debug: Player has enhancedData: {modalPlayer.enhancedData ? 'YES' : 'NO'}</div>
-                  <div>Debug: enhancedData.valueBreakdown: {modalPlayer.enhancedData?.valueBreakdown ? 'YES' : 'NO'}</div>
-                  <div>Debug: Player properties: {Object.keys(modalPlayer).join(', ')}</div>
-                  {modalPlayer.enhancedData && (
-                    <div>Debug: enhancedData properties: {Object.keys(modalPlayer.enhancedData).join(', ')}</div>
-                  )}
-                </div>
+
                 {modalPlayer.enhancedData?.valueBreakdown ? (
                   <div className="space-y-3">
                     <div className="bg-gray-800 rounded-lg p-4">
@@ -2361,9 +2314,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                   <div className="bg-gray-800 rounded-lg p-4 text-center">
                     <span className="text-2xl font-bold text-neon-green">{calculatePlayerValue(modalPlayer)}</span>
                     <span className="text-gray-400 ml-2">Trade Value</span>
-                    <div className="text-xs text-gray-500 mt-2">Enhanced breakdown not available - using calculated value</div>
-                    <div className="text-xs text-blue-400 mt-2">
-                      Backend enhanced data not loaded for this player
+                    <div className="text-xs text-gray-500 mt-2">
+                      Enhanced breakdown will be available once backend data is loaded
                     </div>
                   </div>
                 )}
