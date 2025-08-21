@@ -1457,6 +1457,18 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm truncate">{player.name || '—'}</p>
                       <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR • Age {player.age || '?'}</p>
+                      
+                      {/* Development Trait Display */}
+                      {player.devTrait && (
+                        <div className="mt-1">
+                          <span 
+                            className="text-xs font-bold px-2 py-1 rounded text-white"
+                            style={{ backgroundColor: getDevTraitColor(player.devTrait) }}
+                          >
+                            {player.devTrait}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); removePlayer(player.id, false) }}
@@ -1490,8 +1502,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             <div className="flex items-center gap-1">
               {getVerdictIcon(verdict)}
               <span className={`font-bold ${getVerdictColor(verdict)}`}>
-                {netValue > 15 ? 'You Win' : 
-                 netValue < -15 ? 'They Win' : 
+                {netValue > 15 ? 'Team A Wins' : 
+                 netValue < -15 ? 'Team B Wins' : 
                  'Fair Trade'}
               </span>
             </div>
