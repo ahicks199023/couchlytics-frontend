@@ -532,8 +532,16 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     console.log('🎯 Changing give team to:', teamName)
     setGiveTeam(teamName)
     setGivePage(1)
-    setGiveTeamFinancials(getTeamFinancials(teamName))
-  }, [getTeamFinancials])
+    
+    // Check if this is the user's team and use userTeam financial data if available
+    if (user && user.name === teamName && user.financials) {
+      console.log('✅ Using user team financial data:', user.financials)
+      setGiveTeamFinancials(user.financials)
+    } else {
+      // Use financial data from teams array
+      setGiveTeamFinancials(getTeamFinancials(teamName))
+    }
+  }, [getTeamFinancials, user])
   
   const handleReceiveTeamChange = useCallback((teamName: string) => {
     console.log('🎯 Changing receive team to:', teamName)
