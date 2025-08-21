@@ -99,6 +99,43 @@ interface PositionalPlayer {
   dev_trait: string
 }
 
+// Development Trait Utility Functions
+const getDevTraitDisplay = (multiplier: number): string => {
+  const traitMap: Record<number, string> = {
+    1.5: 'X-Factor',
+    1.3: 'Superstar', 
+    1.2: 'Star',
+    1.1: 'Hidden',
+    1.0: 'Normal',
+    0.9: 'Slow'
+  };
+  return traitMap[multiplier] || 'Unknown';
+};
+
+const getDevTraitColor = (trait: string): string => {
+  const colors: Record<string, string> = {
+    'X-Factor': '#FFD700',      // Gold
+    'Superstar': '#FF6B6B',     // Red
+    'Star': '#4ECDC4',          // Teal
+    'Hidden': '#45B7D1',        // Blue
+    'Normal': '#95A5A6',        // Gray
+    'Slow': '#E74C3C'           // Dark Red
+  };
+  return colors[trait] || '#95A5A6';
+};
+
+const getDevTraitMultiplier = (trait: string): number => {
+  const multipliers: Record<string, number> = {
+    'X-Factor': 1.5,
+    'Superstar': 1.3,
+    'Star': 1.2,
+    'Hidden': 1.1,
+    'Normal': 1.0,
+    'Slow': 0.9
+  };
+  return multipliers[trait] || 1.0;
+};
+
 interface PositionalGradeData {
   grade: 'A' | 'B' | 'C' | 'D' | 'F'
   avg_ovr: number
@@ -1182,6 +1219,19 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium truncate">{player.name || '—'}</p>
                       <p className="text-gray-400 text-xs">{player.position || '—'} • {player.team || '—'} • Age {player.age || '?'}</p>
+                      
+                      {/* Development Trait Display */}
+                      {player.devTrait && (
+                        <div className="mt-1">
+                          <span 
+                            className="text-xs font-bold px-2 py-1 rounded text-white"
+                            style={{ backgroundColor: getDevTraitColor(player.devTrait) }}
+                          >
+                            {player.devTrait}
+                          </span>
+                        </div>
+                      )}
+                      
                       {/* Enhanced Value Display */}
                       {player.enhancedData?.valueBreakdown && (
                         <div className="mt-1">
@@ -1235,6 +1285,18 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm truncate">{player.name || '—'}</p>
                       <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR • Age {player.age || '?'}</p>
+                      
+                      {/* Development Trait Display */}
+                      {player.devTrait && (
+                        <div className="mt-1">
+                          <span 
+                            className="text-xs font-bold px-2 py-1 rounded text-white"
+                            style={{ backgroundColor: getDevTraitColor(player.devTrait) }}
+                          >
+                            {player.devTrait}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); removePlayer(player.id, true) }}
@@ -1329,6 +1391,19 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium truncate">{player.name || '—'}</p>
                       <p className="text-gray-400 text-xs">{player.position || '—'} • {player.team || '—'} • Age {player.age || '?'}</p>
+                      
+                      {/* Development Trait Display */}
+                      {player.devTrait && (
+                        <div className="mt-1">
+                          <span 
+                            className="text-xs font-bold px-2 py-1 rounded text-white"
+                            style={{ backgroundColor: getDevTraitColor(player.devTrait) }}
+                          >
+                            {player.devTrait}
+                          </span>
+                        </div>
+                      )}
+                      
                       {/* Enhanced Value Display */}
                       {player.enhancedData?.valueBreakdown && (
                         <div className="mt-1">
@@ -2096,7 +2171,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                           <div className="text-center bg-gray-600/50 rounded p-2">
                             <div className="font-mono text-white">{breakdown.afterDev}</div>
                             <div className="text-xs text-gray-400">After Dev</div>
-                            <div className="text-xs text-purple-300">×{breakdown.devTraitMultiplier.toFixed(1)}</div>
+                            <div className="text-xs text-purple-300">({getDevTraitDisplay(breakdown.devTraitMultiplier)})</div>
                           </div>
                         </div>
                         
@@ -2105,11 +2180,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                           <span className="font-mono text-yellow-300">×{breakdown.positionMultiplier.toFixed(1)}</span>
                         </div>
                         
-                        {breakdown.devTrait !== 'Normal' && (
-                          <div className="text-xs text-purple-300">
-                            🌟 {breakdown.devTrait} Development Trait
-                          </div>
-                        )}
+                        <div className="text-xs text-purple-300">
+                          🌟 {breakdown.devTrait} Development Trait
+                        </div>
                       </div>
                     </div>
                   )
@@ -2159,10 +2232,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                             <div className="text-xs text-blue-300">×{breakdown.ageFactor.toFixed(2)}</div>
                           </div>
                           
-                          <div className="text-center bg-gray-600/50 rounded p-2">
+                                                      <div className="text-center bg-gray-600/50 rounded p-2">
                             <div className="font-mono text-white">{breakdown.afterDev}</div>
                             <div className="text-xs text-gray-400">After Dev</div>
-                            <div className="text-xs text-purple-300">×{breakdown.devTraitMultiplier.toFixed(1)}</div>
+                            <div className="text-xs text-purple-300">({getDevTraitDisplay(breakdown.devTraitMultiplier)})</div>
                           </div>
                         </div>
                         
@@ -2171,11 +2244,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                           <span className="font-mono text-yellow-300">×{breakdown.positionMultiplier.toFixed(1)}</span>
                         </div>
                         
-                        {breakdown.devTrait !== 'Normal' && (
-                          <div className="text-xs text-purple-300">
-                            🌟 {breakdown.devTrait} Development Trait
-                          </div>
-                        )}
+                        <div className="text-xs text-purple-300">
+                          🌟 {breakdown.devTrait} Development Trait
+                        </div>
                       </div>
                     </div>
                   )
@@ -2196,7 +2267,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             <h5 className="font-semibold text-gray-300 mb-2">💡 Value Calculation Formula</h5>
             <div className="text-sm text-gray-400 space-y-1">
               <div>1. <span className="text-blue-300">Age Factor</span>: Younger players more valuable (22 = 1.0, decreases by 0.02 per year, min 0.7)</div>
-              <div>2. <span className="text-purple-300">Development Trait</span>: Superstar ×1.3, Star ×1.2, Hidden ×1.1, Normal ×1.0</div>
+              <div>2. <span className="text-purple-300">Development Trait</span>: X-Factor ×1.5, Superstar ×1.3, Star ×1.2, Hidden ×1.1, Normal ×1.0, Slow ×0.9</div>
               <div>3. <span className="text-yellow-300">Position Multiplier</span>: QB ×1.2, WR ×1.1, HB/CB/MLB ×1.0, etc.</div>
               <div className="font-mono text-xs bg-gray-800 p-2 rounded mt-2">
                 Final Value = ((Base OVR × Age Factor) × Dev Trait) × Position Multiplier
