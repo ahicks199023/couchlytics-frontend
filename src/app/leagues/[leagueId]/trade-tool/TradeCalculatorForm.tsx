@@ -987,7 +987,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           <div className="flex items-center justify-between">
             <span className="text-gray-400">Net Value:</span>
             <span className={`font-bold ${netValue >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {netValue >= 0 ? '+' : ''}{netValue}
+              {netValue >= 0 ? '+' : ''}{netValue.toFixed(2)}
             </span>
           </div>
           <div className="flex items-center gap-2">
