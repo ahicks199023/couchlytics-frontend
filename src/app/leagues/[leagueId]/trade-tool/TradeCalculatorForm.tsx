@@ -575,9 +575,34 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     }
   }, [teams])
   
+  // Request cache to prevent duplicate API calls
+  const requestCache = useRef(new Map())
+  
+  // Request throttling to prevent rapid successive calls
+  const lastRequestTime = useRef(0)
+  const THROTTLE_DELAY = 1000 // 1 second between requests
+  
+  // Cache expiration (5 minutes)
+  const CACHE_EXPIRY = 5 * 60 * 1000
+  
   // Memoized API functions to prevent infinite loops
   const fetchUserTeam = useCallback(async () => {
     if (!league_id || isLoadingUserTeam || isRateLimited) return null
+    
+    // Check cache first
+    const cacheKey = `user-team-${league_id}`
+    const cached = requestCache.current.get(cacheKey)
+    if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY) {
+      return cached.data
+    }
+    
+    // Throttle requests to prevent rate limiting
+    const now = Date.now()
+    if (now - lastRequestTime.current < THROTTLE_DELAY) {
+      console.log('⏱️ Request throttled to prevent rate limiting')
+      return null
+    }
+    lastRequestTime.current = now
     
 
     setIsLoadingUserTeam(true)
@@ -604,7 +629,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       if (response.ok) {
         const userTeamData = await response.json()
         if (userTeamData.success && userTeamData.team) {
-          return { ...userTeamData.team, leagueId: league_id }
+          const result = { ...userTeamData.team, leagueId: league_id }
+          // Cache the successful result with timestamp
+          requestCache.current.set(cacheKey, {
+            data: result,
+            timestamp: Date.now()
+          })
+          return result
         }
       }
       
@@ -620,6 +651,21 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
   const fetchTeams = useCallback(async () => {
     if (!league_id || isLoadingTeams || isRateLimited) return []
+    
+    // Check cache first
+    const cacheKey = `teams-${league_id}`
+    const cached = requestCache.current.get(cacheKey)
+    if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY) {
+      return cached.data
+    }
+    
+    // Throttle requests to prevent rate limiting
+    const now = Date.now()
+    if (now - lastRequestTime.current < THROTTLE_DELAY) {
+      console.log('⏱️ Request throttled to prevent rate limiting')
+      return []
+    }
+    lastRequestTime.current = now
     
 
     setIsLoadingTeams(true)
@@ -645,8 +691,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       
       if (response.ok) {
         const teamsData = await response.json()
-
-        return teamsData.teams || []
+        const result = teamsData.teams || []
+        // Cache the successful result with timestamp
+        requestCache.current.set(cacheKey, {
+          data: result,
+          timestamp: Date.now()
+        })
+        return result
       }
       
       console.error('❌ Teams request failed:', response.status)
