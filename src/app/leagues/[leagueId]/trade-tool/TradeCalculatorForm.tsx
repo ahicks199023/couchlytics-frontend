@@ -524,8 +524,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     if (teamName === 'All') return null
     const team = teams.find(t => t.name === teamName)
     
+    console.log(`🔍 Looking for financial data for team: ${teamName}`)
+    console.log(`🔍 Found team:`, team)
+    console.log(`🔍 Team has financials:`, !!team?.financials)
+    
     // Return real financial data if available, otherwise fallback
     if (team?.financials) {
+      console.log(`✅ Using real financial data for ${teamName}:`, team.financials)
       return team.financials
     }
     
@@ -638,7 +643,15 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       setGiveTeamFinancials(user.financials)
     } else {
       // Use financial data from teams array
-      setGiveTeamFinancials(getTeamFinancials(teamName))
+      console.log('🔍 User state check:', { 
+        user: user?.name, 
+        teamName, 
+        hasUserFinancials: !!user?.financials,
+        userFinancials: user?.financials 
+      })
+      const teamFinancials = getTeamFinancials(teamName)
+      console.log('🔍 Team financials from teams array:', teamFinancials)
+      setGiveTeamFinancials(teamFinancials)
     }
   }, [getTeamFinancials, user])
   
@@ -726,12 +739,20 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         if (teamsData.length > 0) {
           setTeams(teamsData)
           console.log('✅ Teams loaded:', teamsData.length)
+          
+          // Check if any teams have financial data
+          const teamsWithFinancials = teamsData.filter((team: Team) => team.financials)
+          console.log('🔍 Teams with financial data:', teamsWithFinancials.length)
+          if (teamsWithFinancials.length > 0) {
+            console.log('💰 Sample team financials:', teamsWithFinancials[0].financials)
+          }
         }
         
         // Set user data and auto-select their team
         if (userTeamData) {
           setUser(userTeamData)
           console.log('✅ User team loaded:', userTeamData.name)
+          console.log('🔍 User team data structure:', JSON.stringify(userTeamData, null, 2))
           
           // Auto-select user's team (delayed to ensure teams are loaded)
           setTimeout(() => {
