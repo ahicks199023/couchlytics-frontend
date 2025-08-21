@@ -6,6 +6,36 @@ import { Loader2, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-r
 import { API_BASE } from '@/lib/config'
 
 // Types
+interface PlayerStat {
+  label: string
+  value: number | string
+  importance: 'Critical' | 'High' | 'Medium' | 'Low'
+}
+
+interface ValueBreakdown {
+  baseOVR: number
+  ageFactor: number
+  ageFactorExplanation: string
+  devTraitMultiplier: number
+  devTraitExplanation: string
+  positionMultiplier: number
+  positionExplanation: string
+  calculationSteps: string[]
+  finalValue: number
+}
+
+interface PositionAttributes {
+  keyStats: PlayerStat[]
+  physicalTraits: PlayerStat[]
+  specialties: string[]
+}
+
+interface ContractInfo {
+  capHit: number
+  yearsLeft: number
+  contractType: string
+}
+
 interface Player {
   id: number
   name?: string | null
@@ -19,6 +49,9 @@ interface Player {
   devTrait?: string
   age?: number
   yearsPro?: number
+  valueBreakdown?: ValueBreakdown
+  positionAttributes?: PositionAttributes
+  contractInfo?: ContractInfo
 }
 
 interface Team {
@@ -212,6 +245,30 @@ const calculatePlayerValue = (player: Player): number => {
 
 // Helper function to get detailed value breakdown for a player
 const getPlayerValueBreakdown = (player: Player) => {
+  // Use backend valueBreakdown if available, otherwise calculate frontend fallback
+  if (player.valueBreakdown) {
+    return {
+      baseOVR: player.valueBreakdown.baseOVR,
+      positionMultiplier: player.valueBreakdown.positionMultiplier,
+      ageFactor: player.valueBreakdown.ageFactor,
+      devTraitMultiplier: player.valueBreakdown.devTraitMultiplier,
+      afterAge: Math.round(player.valueBreakdown.baseOVR * player.valueBreakdown.ageFactor),
+      afterDev: Math.round(player.valueBreakdown.baseOVR * player.valueBreakdown.ageFactor * player.valueBreakdown.devTraitMultiplier),
+      finalValue: player.valueBreakdown.finalValue,
+      position: player.position || 'Unknown',
+      age: player.age || 'Unknown',
+      devTrait: player.devTrait || 'Normal',
+      calculationSteps: player.valueBreakdown.calculationSteps,
+      explanations: {
+        age: player.valueBreakdown.ageFactorExplanation,
+        devTrait: player.valueBreakdown.devTraitExplanation,
+        position: player.valueBreakdown.positionExplanation
+      },
+      isBackendCalculated: true
+    }
+  }
+  
+  // Frontend fallback calculation
   const baseOVR = player.ovr || 75
   
   // Position multipliers
@@ -259,7 +316,19 @@ const getPlayerValueBreakdown = (player: Player) => {
     finalValue,
     position: player.position || 'Unknown',
     age: player.age || 'Unknown',
-    devTrait: player.devTrait || 'Normal'
+    devTrait: player.devTrait || 'Normal',
+    calculationSteps: [
+      `Base Value: ${baseOVR} OVR`,
+      `Age Factor: ${baseOVR} × ${ageFactor.toFixed(2)} = ${Math.round(afterAge)}`,
+      `Dev Trait: ${Math.round(afterAge)} × ${devTraitMultiplier} = ${Math.round(afterDev)}`,
+      `Position: ${Math.round(afterDev)} × ${positionMultiplier} = ${finalValue}`
+    ],
+    explanations: {
+      age: `Age ${player.age || 'Unknown'}: ${ageFactor.toFixed(2)}x multiplier`,
+      devTrait: `${player.devTrait || 'Normal'} trait: ${devTraitMultiplier}x multiplier`,
+      position: `${player.position} position: ${positionMultiplier}x multiplier`
+    },
+    isBackendCalculated: false
   }
 }
 
@@ -1985,26 +2054,169 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         )}
       </div>
 
-      {/* 4. Player Detail Modal */}
+      {/* 4. Enhanced Player Detail Modal */}
       {modalOpen && modalPlayer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-          <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md relative">
-            <button onClick={() => setModalOpen(false)} className="absolute top-2 right-2 text-gray-400 hover:text-white">×</button>
-            <div className="flex items-center gap-4 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
+          <div className="bg-gray-900 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
+            <button onClick={() => setModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">×</button>
+            
+            {/* Player Header */}
+            <div className="flex items-center gap-4 mb-6">
               <Image src={'/default-avatar.png'} alt={typeof modalPlayer.name === 'string' ? modalPlayer.name : 'Player'} width={64} height={64} className="rounded-full bg-white" />
               <div>
-                <h2 className="text-xl font-bold text-white">{modalPlayer.name || '—'}</h2>
-                <p className="text-gray-400">{modalPlayer.position || '—'} • {modalPlayer.team || '—'}</p>
+                <h2 className="text-2xl font-bold text-white">{modalPlayer.name || '—'}</h2>
+                <p className="text-gray-400 text-lg">{modalPlayer.position || '—'} • {modalPlayer.team || '—'}</p>
               </div>
             </div>
-            <div className="space-y-2 text-gray-300">
-              <div>OVR: <span className="font-bold text-neon-green">{modalPlayer.ovr}</span></div>
-              {modalPlayer.age && <div>Age: {modalPlayer.age}</div>}
-              {modalPlayer.devTrait && <div>Dev Trait: {modalPlayer.devTrait}</div>}
-              {modalPlayer.yearsPro && <div>Years Pro: {modalPlayer.yearsPro}</div>}
-              {modalPlayer.espnId && <div>ESPN ID: {modalPlayer.espnId}</div>}
-              <div>Value: <span className="font-bold">{calculatePlayerValue(modalPlayer)}</span></div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white border-b border-gray-600 pb-2">Basic Information</h3>
+                <div className="space-y-2 text-gray-300">
+                  <div className="flex justify-between">
+                    <span>Overall Rating:</span>
+                    <span className="font-bold text-neon-green">{modalPlayer.ovr}</span>
+                  </div>
+                  {modalPlayer.age && (
+                    <div className="flex justify-between">
+                      <span>Age:</span>
+                      <span>{modalPlayer.age}</span>
+                    </div>
+                  )}
+                  {modalPlayer.devTrait && (
+                    <div className="flex justify-between">
+                      <span>Development Trait:</span>
+                      <span className="font-medium">{modalPlayer.devTrait}</span>
+                    </div>
+                  )}
+                  {modalPlayer.yearsPro && (
+                    <div className="flex justify-between">
+                      <span>Years Pro:</span>
+                      <span>{modalPlayer.yearsPro}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Contract Information */}
+                {modalPlayer.contractInfo && (
+                  <div>
+                    <h4 className="text-md font-semibold text-white border-b border-gray-600 pb-1 mb-2">Contract Info</h4>
+                    <div className="space-y-2 text-gray-300 text-sm">
+                      <div className="flex justify-between">
+                        <span>Cap Hit:</span>
+                        <span>${modalPlayer.contractInfo.capHit.toFixed(1)}M</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Years Left:</span>
+                        <span>{modalPlayer.contractInfo.yearsLeft}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Contract Type:</span>
+                        <span>{modalPlayer.contractInfo.contractType}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Value Breakdown */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white border-b border-gray-600 pb-2">Trade Value Breakdown</h3>
+                {modalPlayer.valueBreakdown ? (
+                  <div className="space-y-3">
+                    <div className="bg-gray-800 rounded-lg p-4">
+                      <div className="text-center mb-3">
+                        <span className="text-2xl font-bold text-neon-green">{modalPlayer.valueBreakdown.finalValue}</span>
+                        <span className="text-gray-400 ml-2">Trade Value</span>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm">
+                        {modalPlayer.valueBreakdown.calculationSteps.map((step, index) => (
+                          <div key={index} className="text-gray-300 font-mono text-xs">
+                            {step}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 text-xs text-gray-400">
+                      <div>{modalPlayer.valueBreakdown.ageFactorExplanation}</div>
+                      <div>{modalPlayer.valueBreakdown.devTraitExplanation}</div>
+                      <div>{modalPlayer.valueBreakdown.positionExplanation}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-800 rounded-lg p-4 text-center">
+                    <span className="text-2xl font-bold text-neon-green">{calculatePlayerValue(modalPlayer)}</span>
+                    <span className="text-gray-400 ml-2">Trade Value</span>
+                    <div className="text-xs text-gray-500 mt-2">Detailed breakdown not available</div>
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Position-Specific Attributes */}
+            {modalPlayer.positionAttributes && (
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold text-white border-b border-gray-600 pb-2 mb-4">
+                  {modalPlayer.position} Attributes
+                </h3>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Key Stats */}
+                  {modalPlayer.positionAttributes.keyStats.length > 0 && (
+                    <div>
+                      <h4 className="text-md font-semibold text-blue-300 mb-3">Key Stats</h4>
+                      <div className="space-y-2">
+                        {modalPlayer.positionAttributes.keyStats.map((stat, index) => (
+                          <div key={index} className="flex justify-between items-center">
+                            <span className={`text-sm ${
+                              stat.importance === 'Critical' ? 'text-red-300' :
+                              stat.importance === 'High' ? 'text-yellow-300' :
+                              stat.importance === 'Medium' ? 'text-blue-300' :
+                              'text-gray-300'
+                            }`}>
+                              {stat.label}
+                            </span>
+                            <span className="font-bold text-white">{stat.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Physical Traits */}
+                  {modalPlayer.positionAttributes.physicalTraits.length > 0 && (
+                    <div>
+                      <h4 className="text-md font-semibold text-green-300 mb-3">Physical Traits</h4>
+                      <div className="space-y-2">
+                        {modalPlayer.positionAttributes.physicalTraits.map((trait, index) => (
+                          <div key={index} className="flex justify-between items-center">
+                            <span className="text-sm text-gray-300">{trait.label}</span>
+                            <span className="font-bold text-white">{trait.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Specialties */}
+                  {modalPlayer.positionAttributes.specialties.length > 0 && (
+                    <div>
+                      <h4 className="text-md font-semibold text-purple-300 mb-3">Specialties</h4>
+                      <div className="space-y-2">
+                        {modalPlayer.positionAttributes.specialties.map((specialty, index) => (
+                          <div key={index} className="bg-purple-900/20 border border-purple-500/30 rounded px-3 py-1 text-sm text-purple-200">
+                            {specialty}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
