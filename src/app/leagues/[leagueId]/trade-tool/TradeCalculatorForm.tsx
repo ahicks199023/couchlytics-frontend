@@ -42,6 +42,27 @@ interface User {
   teamId?: number
 }
 
+interface PositionalPlayer {
+  name: string
+  ovr: number
+  age: number
+  dev_trait: string
+}
+
+interface PositionalGradeData {
+  grade: 'A' | 'B' | 'C' | 'D' | 'F'
+  avg_ovr: number
+  players: PositionalPlayer[]
+  total_depth: number
+}
+
+interface GradeChange {
+  position: string
+  from: 'A' | 'B' | 'C' | 'D' | 'F'
+  to: 'A' | 'B' | 'C' | 'D' | 'F'
+  ovr_change: number
+}
+
 interface TradeResult {
   success?: boolean
   tradeAssessment: {
@@ -88,6 +109,14 @@ interface TradeResult {
         current: number
         affected: boolean
       }>
+    }
+
+    positionalGrades?: {
+      beforeTrade: Record<string, PositionalGradeData>
+      afterTrade: Record<string, PositionalGradeData>
+      improvements: GradeChange[]
+      downgrades: GradeChange[]
+      summary: string
     }
   }
   
@@ -254,6 +283,139 @@ const getVerdictIcon = (verdict: string) => {
       return null
   }
 }
+
+// Helper functions for positional grading
+const getGradeColorDark = (grade: 'A' | 'B' | 'C' | 'D' | 'F') => {
+  const colors = {
+    'A': 'text-green-400 bg-green-900/20 border-green-500/30',
+    'B': 'text-blue-400 bg-blue-900/20 border-blue-500/30', 
+    'C': 'text-yellow-400 bg-yellow-900/20 border-yellow-500/30',
+    'D': 'text-orange-400 bg-orange-900/20 border-orange-500/30',
+    'F': 'text-red-400 bg-red-900/20 border-red-500/30'
+  };
+  return colors[grade] || 'text-gray-400 bg-gray-900/20 border-gray-500/30';
+};
+
+// Grade component definitions
+const PositionalGradeComparison = ({ 
+  improvements, 
+  downgrades 
+}: {
+  improvements: GradeChange[]
+  downgrades: GradeChange[]
+}) => {
+  if (improvements.length === 0 && downgrades.length === 0) {
+    return (
+      <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+        No positional grade changes from this trade
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Positional Grade Impact</h3>
+      
+      {/* Improvements */}
+      {improvements.length > 0 && (
+        <div>
+          <h4 className="text-md font-medium text-green-600 dark:text-green-400 mb-2 flex items-center gap-2">
+            <span>📈</span> Improvements
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {improvements.map((imp) => (
+              <div key={imp.position} className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-500/30">
+                <div className="font-semibold text-gray-800 dark:text-gray-200 min-w-[2rem]">{imp.position}</div>
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2 py-1 rounded text-sm border ${getGradeColorDark(imp.from)}`}>
+                    {imp.from}
+                  </span>
+                  <span className="text-gray-400">→</span>
+                  <span className={`px-2 py-1 rounded text-sm border ${getGradeColorDark(imp.to)}`}>
+                    {imp.to}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  +{imp.ovr_change.toFixed(1)} OVR
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Downgrades */}
+      {downgrades.length > 0 && (
+        <div>
+          <h4 className="text-md font-medium text-red-600 dark:text-red-400 mb-2 flex items-center gap-2">
+            <span>📉</span> Downgrades
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {downgrades.map((down) => (
+              <div key={down.position} className="flex items-center space-x-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-500/30">
+                <div className="font-semibold text-gray-800 dark:text-gray-200 min-w-[2rem]">{down.position}</div>
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2 py-1 rounded text-sm border ${getGradeColorDark(down.from)}`}>
+                    {down.from}
+                  </span>
+                  <span className="text-gray-400">→</span>
+                  <span className={`px-2 py-1 rounded text-sm border ${getGradeColorDark(down.to)}`}>
+                    {down.to}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {down.ovr_change.toFixed(1)} OVR
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const TeamGradeOverview = ({ 
+  grades, 
+  title = "Current Team Grades" 
+}: {
+  grades: Record<string, PositionalGradeData>
+  title?: string
+}) => {
+  const positionOrder = ['QB', 'RB', 'WR', 'TE', 'LT', 'LG', 'C', 'RG', 'RT', 
+                       'LE', 'DT', 'RE', 'LOLB', 'MLB', 'ROLB', 'CB', 'FS', 'SS', 'K', 'P'];
+
+  const displayPositions = positionOrder.filter(position => grades[position]);
+
+  if (displayPositions.length === 0) {
+    return (
+      <div className="bg-gray-700/50 rounded-lg p-4">
+        <h3 className="text-lg font-semibold text-gray-200 mb-3">{title}</h3>
+        <div className="text-center py-4 text-gray-400">No positional grades available</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-700/50 rounded-lg p-4">
+      <h3 className="text-lg font-semibold text-gray-200 mb-3">{title}</h3>
+      <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
+        {displayPositions.map((position) => {
+          const gradeData = grades[position];
+          return (
+            <div key={position} className="text-center">
+              <div className="text-xs font-medium text-gray-400 mb-1">{position}</div>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border ${getGradeColorDark(gradeData.grade)}`}>
+                {gradeData.grade}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">{gradeData.avg_ovr.toFixed(1)}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 export default function TradeCalculatorForm({ league_id }: { league_id: string }) {
   // Debug: Track render count to detect infinite loops
@@ -1490,12 +1652,37 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             </div>
           )}
 
-          {/* AI Analysis */}
-          <div className="ai-analysis bg-gray-800/50 rounded-lg p-6 border border-gray-600">
+          {/* Enhanced AI Analysis with Positional Grading */}
+          <div className="ai-analysis bg-gray-800/50 rounded-lg p-6 border border-gray-600 space-y-4">
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2">🤖 AI Analysis</h3>
             <div className="reasoning bg-gray-700/50 p-4 rounded text-sm leading-relaxed text-white">
               {result.reasoning}
             </div>
+
+            {/* Positional Grade Summary */}
+            {result.advancedMetrics?.positionalGrades?.summary && (
+              <div className="bg-gray-700/50 rounded-lg p-4">
+                <h4 className="text-white font-medium mb-2 flex items-center gap-2">
+                  <span>📊</span> Positional Impact Summary
+                </h4>
+                <div className="text-gray-300 text-sm">
+                  {result.advancedMetrics.positionalGrades.summary}
+                </div>
+              </div>
+            )}
+
+            {/* Grade Changes Display */}
+            {result.advancedMetrics?.positionalGrades && (
+              result.advancedMetrics.positionalGrades.improvements.length > 0 || 
+              result.advancedMetrics.positionalGrades.downgrades.length > 0
+            ) && (
+              <div className="mt-4">
+                <PositionalGradeComparison 
+                  improvements={result.advancedMetrics.positionalGrades.improvements}
+                  downgrades={result.advancedMetrics.positionalGrades.downgrades}
+                />
+              </div>
+            )}
           </div>
 
           {/* AI Recommendations */}
@@ -1599,7 +1786,21 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         </div>
       ) : null}
 
-
+      {/* Team Grade Overview - Before/After Comparison */}
+      {result?.advancedMetrics?.positionalGrades && (
+        <div className="team-grades-comparison space-y-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TeamGradeOverview 
+              grades={result.advancedMetrics.positionalGrades.beforeTrade}
+              title="Before Trade - Team Grades"
+            />
+            <TeamGradeOverview 
+              grades={result.advancedMetrics.positionalGrades.afterTrade}
+              title="After Trade - Team Grades"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Player Value Breakdown Panel */}
       {(givePlayers.length > 0 || receivePlayers.length > 0) && (
