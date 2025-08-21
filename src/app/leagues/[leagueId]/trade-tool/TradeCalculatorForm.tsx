@@ -2322,16 +2322,26 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               {/* Value Breakdown */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-white border-b border-gray-600 pb-2">Trade Value Breakdown</h3>
-                {modalPlayer.valueBreakdown ? (
+                
+                {/* Debug Info */}
+                <div className="bg-gray-900 p-3 rounded text-xs text-yellow-400">
+                  <div>Debug: Player has enhancedData: {modalPlayer.enhancedData ? 'YES' : 'NO'}</div>
+                  <div>Debug: enhancedData.valueBreakdown: {modalPlayer.enhancedData?.valueBreakdown ? 'YES' : 'NO'}</div>
+                  <div>Debug: Player properties: {Object.keys(modalPlayer).join(', ')}</div>
+                  {modalPlayer.enhancedData && (
+                    <div>Debug: enhancedData properties: {Object.keys(modalPlayer.enhancedData).join(', ')}</div>
+                  )}
+                </div>
+                {modalPlayer.enhancedData?.valueBreakdown ? (
                   <div className="space-y-3">
                     <div className="bg-gray-800 rounded-lg p-4">
                       <div className="text-center mb-3">
-                        <span className="text-2xl font-bold text-neon-green">{modalPlayer.valueBreakdown.finalValue}</span>
+                        <span className="text-2xl font-bold text-neon-green">{modalPlayer.enhancedData.valueBreakdown.finalValue}</span>
                         <span className="text-gray-400 ml-2">Trade Value</span>
                       </div>
                       
                       <div className="space-y-2 text-sm">
-                        {modalPlayer.valueBreakdown.calculationSteps.map((step, index) => (
+                        {modalPlayer.enhancedData.valueBreakdown.calculationSteps.map((step, index) => (
                           <div key={index} className="text-gray-300 font-mono text-xs">
                             {step}
                           </div>
@@ -2340,16 +2350,21 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     </div>
                     
                     <div className="space-y-2 text-xs text-gray-400">
-                      <div>Age Factor: {modalPlayer.enhancedData?.valueBreakdown?.ageFactor || 'N/A'}</div>
-                      <div>Dev Trait: {modalPlayer.enhancedData?.valueBreakdown?.devTrait || 'N/A'}</div>
-                      <div>Position: {modalPlayer.enhancedData?.valueBreakdown?.position || 'N/A'}</div>
+                      <div>Age Factor: {modalPlayer.enhancedData.valueBreakdown.ageFactor}</div>
+                      <div>Dev Trait: {modalPlayer.enhancedData.valueBreakdown.devTrait}</div>
+                      <div>Position: {modalPlayer.enhancedData.valueBreakdown.position}</div>
+                      <div>Team Need: {modalPlayer.enhancedData.valueBreakdown.teamNeed}</div>
+                      <div>Speed: {modalPlayer.enhancedData.valueBreakdown.speed}</div>
                     </div>
                   </div>
                 ) : (
                   <div className="bg-gray-800 rounded-lg p-4 text-center">
                     <span className="text-2xl font-bold text-neon-green">{calculatePlayerValue(modalPlayer)}</span>
                     <span className="text-gray-400 ml-2">Trade Value</span>
-                    <div className="text-xs text-gray-500 mt-2">Detailed breakdown not available</div>
+                    <div className="text-xs text-gray-500 mt-2">Enhanced breakdown not available - using calculated value</div>
+                    <div className="text-xs text-blue-400 mt-2">
+                      Backend enhanced data not loaded for this player
+                    </div>
                   </div>
                 )}
               </div>
