@@ -2373,6 +2373,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-white border-b border-gray-600 pb-2">Trade Value Breakdown</h3>
                 
+                {/* Debug info - remove this after fixing */}
+                <div className="bg-gray-900/50 p-2 rounded text-xs text-gray-400 mb-2">
+                  Debug: modalPlayer.enhancedData = {JSON.stringify(modalPlayer.enhancedData, null, 2)}
+                </div>
 
                 {modalPlayer.enhancedData?.valueBreakdown ? (
                   <div className="space-y-3">
