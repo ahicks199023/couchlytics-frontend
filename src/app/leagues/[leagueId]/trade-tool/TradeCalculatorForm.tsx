@@ -900,7 +900,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <Image src={'/default-avatar.png'} alt={typeof player.name === 'string' ? player.name : 'Player'} width={32} height={32} className="rounded-full bg-white" />
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium truncate">{player.name || '—'}</p>
-                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.team || '—'}</p>
+                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.team || '—'} • Age {player.age || '?'}</p>
                     </div>
                     <p className="text-neon-green font-bold">{player.ovr}</p>
                     <button className="ml-2 text-gray-400 hover:text-white" onClick={e => { e.stopPropagation(); openPlayerModal(player); }} title="View Details" type="button">i</button>
@@ -933,7 +933,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm truncate">{player.name || '—'}</p>
-                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR</p>
+                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR • Age {player.age || '?'}</p>
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); removePlayer(player.id, true) }}
@@ -1027,7 +1027,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <Image src={'/default-avatar.png'} alt={typeof player.name === 'string' ? player.name : 'Player'} width={32} height={32} className="rounded-full bg-white" />
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-medium truncate">{player.name || '—'}</p>
-                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.team || '—'}</p>
+                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.team || '—'} • Age {player.age || '?'}</p>
                     </div>
                     <p className="text-neon-green font-bold">{player.ovr}</p>
                     <button className="ml-2 text-gray-400 hover:text-white" onClick={e => { e.stopPropagation(); openPlayerModal(player); }} title="View Details" type="button">i</button>
@@ -1060,7 +1060,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm truncate">{player.name || '—'}</p>
-                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR</p>
+                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR • Age {player.age || '?'}</p>
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); removePlayer(player.id, false) }}
