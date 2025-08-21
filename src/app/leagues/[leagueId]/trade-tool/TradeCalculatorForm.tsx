@@ -1055,6 +1055,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         const params = new URLSearchParams({
           page: String(givePage),
           pageSize: String(givePageSize),
+          include_enhanced: 'true'
         })
         if (giveTeam !== 'All') params.append('team', giveTeam)
         if (givePosition !== 'All') params.append('position', givePosition)
@@ -1094,6 +1095,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         const params = new URLSearchParams({
           page: String(receivePage),
           pageSize: String(receivePageSize),
+          include_enhanced: 'true'
         })
         if (receiveTeam !== 'All') params.append('team', receiveTeam)
         if (receivePosition !== 'All') params.append('position', receivePosition)
@@ -1130,26 +1132,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   }
 
   // Helper to open player modal
-  async function openPlayerModal(player: Player) {
+  function openPlayerModal(player: Player) {
     setModalPlayer(player);
     setModalOpen(true);
     
-    // Fetch enhanced player data if not already available
-    if (!player.enhancedData) {
-      try {
-        const response = await fetch(`${API_BASE}/leagues/${league_id}/players/${player.id}/enhanced`, {
-          credentials: 'include'
-        });
-        
-        if (response.ok) {
-          const enhancedData = await response.json();
-          // Update the modal player with enhanced data
-          setModalPlayer(prev => prev ? { ...prev, enhancedData } : prev);
-        }
-      } catch (error) {
-        console.error('Failed to fetch enhanced player data:', error);
-      }
-    }
+    // Enhanced data is already included in the main player data
+    // No need for separate API calls - the data is already there!
   }
 
   // Top-level check for valid league_id (after hooks)
@@ -2498,11 +2486,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <span className="text-2xl font-bold text-neon-green">{calculatePlayerValue(modalPlayer)}</span>
                     <span className="text-gray-400 ml-2">Trade Value</span>
                     <div className="text-xs text-gray-500 mt-2">
-                      {!modalPlayer.enhancedData ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Loading enhanced breakdown...
-                        </div>
+                      {modalPlayer.enhancedData?.valueBreakdown ? (
+                        'Enhanced breakdown loaded successfully!'
                       ) : (
                         'Enhanced breakdown will be available once backend data is loaded'
                       )}
