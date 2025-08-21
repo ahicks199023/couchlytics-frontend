@@ -650,15 +650,15 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         userFinancials: user?.financials 
       })
       
-      // Safety check: ensure teams are loaded before proceeding
-      if (teams.length === 0) {
-        console.log('⚠️ Teams not loaded yet, skipping financial data lookup')
-        return
+      // Only fall back to teams array if we have teams data
+      if (teams.length > 0) {
+        const teamFinancials = getTeamFinancials(teamName)
+        console.log('🔍 Team financials from teams array:', teamFinancials)
+        setGiveTeamFinancials(teamFinancials)
+      } else {
+        console.log('⚠️ Teams not loaded yet, but user team data should be available')
+        // Don't return here - let the user team data display if available
       }
-      
-      const teamFinancials = getTeamFinancials(teamName)
-      console.log('🔍 Team financials from teams array:', teamFinancials)
-      setGiveTeamFinancials(teamFinancials)
     }
   }, [getTeamFinancials, user, teams])
   
