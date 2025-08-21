@@ -466,7 +466,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     setIsLoadingUserTeam(true)
     
     try {
-      const response = await fetch(`${API_BASE}/leagues/${league_id}/user-team`, { 
+      const response = await fetch(`${API_BASE}/leagues/${league_id}/user-team?include_financials=true`, { 
         credentials: 'include' 
       })
       
@@ -501,7 +501,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     setIsLoadingTeams(true)
     
     try {
-      const response = await fetch(`${API_BASE}/leagues/${league_id}/teams`, {
+      const response = await fetch(`${API_BASE}/leagues/${league_id}/teams?include_financials=true`, {
         credentials: 'include'
       })
       
