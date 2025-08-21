@@ -513,6 +513,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [isLoadingUserTeam, setIsLoadingUserTeam] = useState(false)
   const [isLoadingTeams, setIsLoadingTeams] = useState(false)
   const [hasInitialized, setHasInitialized] = useState(false)
+  const [isRateLimited, setIsRateLimited] = useState(false)
   
   // Financial data state
   const [giveTeamFinancials, setGiveTeamFinancials] = useState<Team['financials'] | null>(null)
@@ -540,7 +541,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   
   // Memoized API functions to prevent infinite loops
   const fetchUserTeam = useCallback(async () => {
-    if (!league_id || isLoadingUserTeam) return null
+    if (!league_id || isLoadingUserTeam || isRateLimited) return null
     
     console.log('🔍 Fetching user team for league:', league_id)
     setIsLoadingUserTeam(true)
@@ -551,8 +552,17 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       })
       
       if (response.status === 429) {
-        console.error('⚠️ Rate limited - user team endpoint')
-        setError('Rate limit exceeded. Please wait 30 seconds and refresh.')
+        console.error('⚠️ Rate limited - user team endpoint. Waiting 30 seconds...')
+        setIsRateLimited(true)
+        setError('Rate limit exceeded. Please wait 30 seconds for reset.')
+        
+        // Auto-reset rate limit after 30 seconds
+        setTimeout(() => {
+          setIsRateLimited(false)
+          setError(null)
+          console.log('✅ Rate limit reset - API calls allowed again')
+        }, 30000)
+        
         return null
       }
       
@@ -572,10 +582,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     } finally {
       setIsLoadingUserTeam(false)
     }
-  }, [league_id, isLoadingUserTeam])
+  }, [league_id, isLoadingUserTeam, isRateLimited])
 
   const fetchTeams = useCallback(async () => {
-    if (!league_id || isLoadingTeams) return []
+    if (!league_id || isLoadingTeams || isRateLimited) return []
     
     console.log('🔍 Fetching teams for league:', league_id)
     setIsLoadingTeams(true)
@@ -586,8 +596,17 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       })
       
       if (response.status === 429) {
-        console.error('⚠️ Rate limited - teams endpoint')
-        setError('Rate limit exceeded. Please wait 30 seconds and refresh.')
+        console.error('⚠️ Rate limited - teams endpoint. Waiting 30 seconds...')
+        setIsRateLimited(true)
+        setError('Rate limit exceeded. Please wait 30 seconds for reset.')
+        
+        // Auto-reset rate limit after 30 seconds
+        setTimeout(() => {
+          setIsRateLimited(false)
+          setError(null)
+          console.log('✅ Rate limit reset - API calls allowed again')
+        }, 30000)
+        
         return []
       }
       
@@ -605,7 +624,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     } finally {
       setIsLoadingTeams(false)
     }
-  }, [league_id, isLoadingTeams])
+  }, [league_id, isLoadingTeams, isRateLimited])
 
   // Team selection handlers that update financial data
   const handleGiveTeamChange = useCallback((teamName: string) => {
@@ -730,7 +749,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     }
     
     initializeData()
-  }, [league_id, hasInitialized, fetchUserTeam, fetchTeams, handleGiveTeamChange])
+  // NOTE: Intentionally excluding fetchTeams, fetchUserTeam, and handleGiveTeamChange 
+  // from dependencies to prevent infinite loop. These functions are stable due to useCallback.
+  }, [league_id, hasInitialized])
 
   const availableTeams = useMemo(() => {
     // For pagination, we'll use a fixed list of teams or get from teams API
