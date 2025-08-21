@@ -100,16 +100,28 @@ interface PositionalPlayer {
 }
 
 // Development Trait Utility Functions
-const getDevTraitDisplay = (multiplier: number): string => {
+const getDevTraitDisplay = (traitValue: number): string => {
   const traitMap: Record<number, string> = {
-    1.5: 'X-Factor',
-    1.3: 'Superstar', 
-    1.2: 'Star',
-    1.1: 'Hidden',
-    1.0: 'Normal',
-    0.9: 'Slow'
+    0: 'Normal',
+    1: 'Star', 
+    2: 'Superstar',
+    3: 'X-Factor',
+    4: 'Hidden',
+    5: 'Slow'
   };
-  return traitMap[multiplier] || 'Unknown';
+  return traitMap[traitValue] || 'Unknown';
+};
+
+const getDevTraitMultiplier = (traitValue: number): number => {
+  const multiplierMap: Record<number, number> = {
+    0: 1.0,  // Normal
+    1: 1.2,  // Star
+    2: 1.3,  // Superstar
+    3: 1.5,  // X-Factor
+    4: 1.1,  // Hidden
+    5: 0.9   // Slow
+  };
+  return multiplierMap[traitValue] || 1.0;
 };
 
 const getDevTraitColor = (trait: string): string => {
@@ -2418,7 +2430,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                   {modalPlayer.devTrait && (
                     <div className="flex justify-between">
                       <span>Development Trait:</span>
-                      <span className="font-medium">{modalPlayer.devTrait}</span>
+                      <span className="font-medium">{getDevTraitDisplay(Number(modalPlayer.devTrait))}</span>
                     </div>
                   )}
                   {modalPlayer.yearsPro && (
@@ -2481,10 +2493,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <span className="text-gray-300 font-medium">Development Trait</span>
                       <div className="text-right">
                         <div className="text-white font-medium">
-                          {modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData.valueBreakdown.devTrait || 1}
+                          {modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} × {getDevTraitMultiplier(modalPlayer.enhancedData.valueBreakdown.devTrait || 0)}
                         </div>
-                        <div className={`text-xs ${(modalPlayer.enhancedData.valueBreakdown.devTrait || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData.valueBreakdown.devTrait || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
-                          {getDevTraitDisplay(modalPlayer.enhancedData.valueBreakdown.devTrait || 1)} {(modalPlayer.enhancedData.valueBreakdown.devTrait || 1) > 1 ? '↑ Trait bonus' : (modalPlayer.enhancedData.valueBreakdown.devTrait || 1) < 1 ? '↓ Trait penalty' : 'No trait adjustment'}
+                        <div className={`text-xs ${getDevTraitMultiplier(modalPlayer.enhancedData.valueBreakdown.devTrait || 0) > 1 ? 'text-green-400' : getDevTraitMultiplier(modalPlayer.enhancedData.valueBreakdown.devTrait || 0) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {getDevTraitDisplay(modalPlayer.enhancedData.valueBreakdown.devTrait || 0)} {getDevTraitMultiplier(modalPlayer.enhancedData.valueBreakdown.devTrait || 0) > 1 ? '↑ Trait bonus' : getDevTraitMultiplier(modalPlayer.enhancedData.valueBreakdown.devTrait || 0) < 1 ? '↓ Trait penalty' : 'No trait adjustment'}
                         </div>
                       </div>
                     </div>
