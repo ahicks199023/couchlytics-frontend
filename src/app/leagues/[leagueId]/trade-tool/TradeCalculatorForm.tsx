@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { Loader2, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
 import { API_BASE } from '@/lib/config'
-import TeamFinancials from '../../../../components/TradeCalculator/TeamFinancials'
+
 
 // Types
 // Note: PlayerStat interface removed as it's no longer used with enhanced backend data
@@ -277,13 +277,16 @@ const calculatePlayerValue = (player: Player): number => {
   
   // Development trait bonus
   if (player.devTrait) {
-    const devMultipliers: Record<string, number> = {
-      'Superstar': 1.3,
-      'Star': 1.2,
-      'Normal': 1.0,
-      'Hidden': 1.1
+    const devMultipliers: Record<number, number> = {
+      0: 1.0,  // Normal
+      1: 1.2,  // Star
+      2: 1.3,  // Superstar
+      3: 1.5,  // X-Factor
+      4: 1.1,  // Hidden
+      5: 0.9   // Slow
     }
-    baseValue *= devMultipliers[player.devTrait] || 1.0
+    const traitValue = Number(player.devTrait)
+    baseValue *= devMultipliers[traitValue] || 1.0
   }
   
   return Math.round(baseValue * multiplier)
@@ -303,11 +306,11 @@ const getPlayerValueBreakdown = (player: Player) => {
       finalValue: player.enhancedData.valueBreakdown.finalValue,
       position: player.position || 'Unknown',
       age: player.age || 'Unknown',
-      devTrait: player.devTrait || 'Normal',
+      devTrait: getDevTraitDisplay(Number(player.devTrait)) || 'Normal',
       calculationSteps: player.enhancedData.valueBreakdown.calculationSteps,
       explanations: {
         age: `Age ${player.enhancedData.positionAttributes?.age || 'Unknown'}: ${player.enhancedData.valueBreakdown.ageFactor.toFixed(2)}x multiplier`,
-        devTrait: `${player.enhancedData.positionAttributes?.developmentTrait || 'Normal'} trait: ${player.enhancedData.valueBreakdown.devTrait.toFixed(2)}x multiplier`,
+        devTrait: `${getDevTraitDisplay(Number(player.devTrait)) || 'Normal'} trait: ${player.enhancedData.valueBreakdown.devTrait.toFixed(2)}x multiplier`,
         position: `${player.position} position: ${player.enhancedData.valueBreakdown.position.toFixed(2)}x multiplier`
       },
       isBackendCalculated: true
@@ -338,13 +341,16 @@ const getPlayerValueBreakdown = (player: Player) => {
   // Development trait multiplier
   let devTraitMultiplier = 1.0
   if (player.devTrait) {
-    const devMultipliers: Record<string, number> = {
-      'Superstar': 1.3,
-      'Star': 1.2,
-      'Normal': 1.0,
-      'Hidden': 1.1
+    const devMultipliers: Record<number, number> = {
+      0: 1.0,  // Normal
+      1: 1.2,  // Star
+      2: 1.3,  // Superstar
+      3: 1.5,  // X-Factor
+      4: 1.1,  // Hidden
+      5: 0.9   // Slow
     }
-    devTraitMultiplier = devMultipliers[player.devTrait] || 1.0
+    const traitValue = Number(player.devTrait)
+    devTraitMultiplier = devMultipliers[traitValue] || 1.0
   }
   
   // Step-by-step calculation
@@ -362,7 +368,7 @@ const getPlayerValueBreakdown = (player: Player) => {
     finalValue,
     position: player.position || 'Unknown',
     age: player.age || 'Unknown',
-    devTrait: player.devTrait || 'Normal',
+    devTrait: getDevTraitDisplay(Number(player.devTrait)) || 'Normal',
     calculationSteps: [
       `Base Value: ${baseOVR} OVR`,
       `Age Factor: ${baseOVR} × ${ageFactor.toFixed(2)} = ${Math.round(afterAge)}`,
@@ -371,7 +377,7 @@ const getPlayerValueBreakdown = (player: Player) => {
     ],
     explanations: {
       age: `Age ${player.age || 'Unknown'}: ${ageFactor.toFixed(2)}x multiplier`,
-      devTrait: `${player.devTrait || 'Normal'} trait: ${devTraitMultiplier}x multiplier`,
+      devTrait: `${getDevTraitDisplay(Number(player.devTrait)) || 'Normal'} trait: ${devTraitMultiplier}x multiplier`,
       position: `${player.position} position: ${positionMultiplier}x multiplier`
     },
     isBackendCalculated: false
@@ -1233,14 +1239,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
             </div>
             
-            {/* Team Financials Section */}
-            {giveTeam !== 'All' && teams.find(t => t.name === giveTeam) && (
-              <TeamFinancials 
-                team={teams.find(t => t.name === giveTeam)!}
-                currentUserId={user?.id || 0}
-                isUserTeam={teams.find(t => t.name === giveTeam)?.user_id === user?.id}
-              />
-            )}
+
             
             {/* Filters stacked in two rows */}
             <div className="flex flex-col gap-2 mb-2">
@@ -1388,14 +1387,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               </select>
             </div>
             
-            {/* Team Financials Section */}
-            {receiveTeam !== 'All' && teams.find(t => t.name === receiveTeam) && (
-              <TeamFinancials 
-                team={teams.find(t => t.name === receiveTeam)!}
-                currentUserId={user?.id || 0}
-                isUserTeam={teams.find(t => t.name === receiveTeam)?.user_id === user?.id}
-              />
-            )}
+
             
             {/* Filters stacked in two rows */}
             <div className="flex flex-col gap-2 mb-2">
