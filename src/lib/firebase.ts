@@ -27,26 +27,45 @@ export const getFirebaseUserEmail = (user: User | null): string => {
 }
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyC...", // Replace with your actual config
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyAnwwyssiHV9FICVikHig2xyThhamdscqk",
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "couchlytics-3a2b5.firebaseapp.com",
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "couchlytics-3a2b5",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "couchlytics-3a2b5.appspot.com",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "123456789",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:123456789:web:abcdef123456"
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "couchlytics-3a2b5.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "150702987792",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:150702987792:web:f0a87b90716f570f098895",
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-Z5MH74NZ4B"
 }
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig)
+// Initialize Firebase with error handling
+let app
+let db
+let auth
 
-// Initialize Firestore
-export const db = getFirestore(app)
+try {
+  app = initializeApp(firebaseConfig)
+  console.log('✅ Firebase initialized successfully')
+  
+  // Initialize Firestore
+  db = getFirestore(app)
+  console.log('✅ Firestore initialized successfully')
+  
+  // Initialize Auth
+  auth = getAuth(app)
+  console.log('✅ Firebase Auth initialized successfully')
+} catch (error) {
+  console.error('❌ Firebase initialization failed:', error)
+  // Provide fallback objects to prevent crashes
+  app = null
+  db = null
+  auth = null
+}
 
-// Initialize Auth
-export const auth = getAuth(app)
+// Export with null checks
+export { db, auth }
 
 // Firebase Authentication Service Class
 class FirebaseAuthService {
-  private auth = auth
+  private auth = auth || null
   private user: User | null = null
   private isAuthenticated = false
   private listeners: Array<() => void> = []
@@ -90,6 +109,10 @@ class FirebaseAuthService {
    */
   async signInToFirebase(): Promise<User> {
     try {
+      if (!this.auth) {
+        throw new Error('Firebase Auth not initialized')
+      }
+      
       // Get custom token from Couchlytics backend
       const customToken = await this.getFirebaseToken()
       console.log('🔑 Got custom token:', customToken ? 'Token received' : 'No token')
@@ -161,6 +184,11 @@ class FirebaseAuthService {
    */
   async signOutFromFirebase(): Promise<void> {
     try {
+      if (!this.auth) {
+        console.warn('⚠️ Firebase Auth not initialized, skipping sign out')
+        return
+      }
+      
       await firebaseSignOut(this.auth)
       this.user = null
       this.isAuthenticated = false
@@ -175,20 +203,25 @@ class FirebaseAuthService {
    * Check if user is authenticated with Firebase
    */
   isFirebaseAuthenticated(): boolean {
-    return this.isAuthenticated && this.auth.currentUser !== null
+    return this.isAuthenticated && this.auth?.currentUser !== null
   }
 
   /**
    * Get current Firebase user
    */
   getCurrentFirebaseUser(): User | null {
-    return this.auth.currentUser
+    return this.auth?.currentUser || null
   }
 
   /**
    * Listen to Firebase authentication state changes
    */
   onAuthStateChanged(callback: (user: User | null) => void): () => void {
+    if (!this.auth) {
+      console.warn('⚠️ Firebase Auth not initialized, returning no-op listener')
+      return () => {} // Return no-op function
+    }
+    
     return onAuthStateChanged(this.auth, (user) => {
       this.user = user
       this.isAuthenticated = !!user
