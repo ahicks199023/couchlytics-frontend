@@ -205,7 +205,7 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
   }, [leagueId, enabled])
 
   const loadMoreMessages = useCallback(async () => {
-    if (!leagueId || !hasMore || !lastMessage || !enabled) return
+    if (!leagueId || !hasMore || !lastMessage || !enabled || !db) return
 
     try {
       const messagesRef = collection(db, 'leagueChats', leagueId, 'messages')

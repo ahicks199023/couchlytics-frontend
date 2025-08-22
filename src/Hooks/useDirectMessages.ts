@@ -113,7 +113,7 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string, ena
   }, [currentUserEmail, recipientEmail, conversationId, enabled])
 
   const deleteMessage = useCallback(async (messageId: string) => {
-    if (!currentUserEmail || !recipientEmail || !enabled) return
+    if (!currentUserEmail || !recipientEmail || !enabled || !db) return
 
     try {
       const messageRef = doc(db, 'privateMessages', conversationId, 'messages', messageId)
@@ -128,7 +128,7 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string, ena
   }, [currentUserEmail, recipientEmail, conversationId, enabled])
 
   const editMessage = useCallback(async (messageId: string, newText: string) => {
-    if (!newText.trim() || !currentUserEmail || !recipientEmail || !enabled) return
+    if (!newText.trim() || !currentUserEmail || !recipientEmail || !enabled || !db) return
 
     try {
       const messageRef = doc(db, 'privateMessages', conversationId, 'messages', messageId)
@@ -144,7 +144,7 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string, ena
   }, [currentUserEmail, recipientEmail, conversationId, enabled])
 
   const reactToMessage = useCallback(async (messageId: string, emoji: string, userEmail: string) => {
-    if (!currentUserEmail || !recipientEmail || !enabled) return
+    if (!currentUserEmail || !recipientEmail || !enabled || !db) return
 
     try {
       const messageRef = doc(db, 'privateMessages', conversationId, 'messages', messageId)
@@ -206,7 +206,7 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string, ena
   }, [currentUserEmail, recipientEmail, conversationId, enabled])
 
   const loadMoreMessages = useCallback(async () => {
-    if (!hasMore || !lastMessage || !currentUserEmail || !recipientEmail || !enabled) return
+    if (!hasMore || !lastMessage || !currentUserEmail || !recipientEmail || !enabled || !db) return
 
     try {
       const messagesRef = collection(db, 'privateMessages', conversationId, 'messages')

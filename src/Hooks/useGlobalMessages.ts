@@ -200,7 +200,7 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
   }, [])
 
   const loadMoreMessages = useCallback(async () => {
-    if (!hasMore || !lastMessage || !enabled) return
+    if (!hasMore || !lastMessage || !enabled || !db) return
 
     try {
       const messagesRef = collection(db, 'globalChatMessages')

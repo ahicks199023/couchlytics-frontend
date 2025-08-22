@@ -42,7 +42,7 @@ export function useInbox(currentUserEmail: string) {
         const otherUser = user1 === currentUserEmail ? user2 : user1
         
         // Get the last message in this conversation
-        const messagesRef = collection(db, 'privateMessages', conversationId, 'messages')
+        const messagesRef = collection(db!, 'privateMessages', conversationId, 'messages')
         const messagesQuery = query(
           messagesRef,
           orderBy('timestamp', 'desc'),
@@ -104,7 +104,7 @@ export function useInbox(currentUserEmail: string) {
     if (!currentUserEmail || !db) return
 
     try {
-      const messagesRef = collection(db, 'privateMessages', conversationId, 'messages')
+      const messagesRef = collection(db!, 'privateMessages', conversationId, 'messages')
       const unreadQuery = query(
         messagesRef,
         where('senderEmail', '!=', currentUserEmail),

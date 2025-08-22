@@ -301,7 +301,7 @@ class FirebaseAuthService {
         }
       })
       
-      if (tokenResponse.ok) {
+      if (tokenResponse.ok && this.auth) {
         const tokenData = await tokenResponse.json()
         console.log('Token response:', tokenData)
         

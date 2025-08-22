@@ -67,7 +67,7 @@ export default function Login() {
           console.log('✅ Couchlytics authentication successful');
           
           // Check if we have a Firebase token in the response
-          if (data.firebase_token) {
+          if (data.firebase_token && auth) {
             console.log('🔥 Firebase token received, signing in with Firebase...');
             
             try {
