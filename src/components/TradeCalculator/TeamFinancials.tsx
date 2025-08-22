@@ -1,13 +1,21 @@
 import React from 'react';
-import { formatFinancialData, shouldShowFinancialDetails } from '../../utils/financialDisplay';
+import { formatFinancialData } from '../../utils/financialDisplay';
 
 interface TeamFinancialsProps {
-  team: any;
+  team: {
+    name: string;
+    financials?: {
+      salaryCap: string | number;
+      usedCapSpace: string | number;
+      availableCapSpace: string | number;
+      deadCapSpace: string | number;
+    };
+  };
   currentUserId: number;
   isUserTeam: boolean;
 }
 
-const TeamFinancials: React.FC<TeamFinancialsProps> = ({ team, currentUserId, isUserTeam }) => {
+const TeamFinancials: React.FC<TeamFinancialsProps> = ({ team, isUserTeam }) => {
   const financials = formatFinancialData(team, isUserTeam);
   
   return (

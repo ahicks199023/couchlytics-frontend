@@ -17,7 +17,7 @@ const RateLimitHandler: React.FC<RateLimitHandlerProps> = ({ error, onRetry }) =
         <h3 className="text-lg font-semibold text-red-400">Rate Limit Exceeded</h3>
       </div>
       <p className="text-red-300 mb-4">
-        We're experiencing high traffic. Please wait a moment and try again.
+        We&apos;re experiencing high traffic. Please wait a moment and try again.
       </p>
       <button 
         onClick={onRetry} 

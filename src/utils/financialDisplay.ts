@@ -1,4 +1,12 @@
-export const formatFinancialData = (team: any, isUserTeam: boolean = false) => {
+export const formatFinancialData = (team: {
+  name: string;
+  financials?: {
+    salaryCap: string | number;
+    usedCapSpace: string | number;
+    availableCapSpace: string | number;
+    deadCapSpace: string | number;
+  };
+}, isUserTeam: boolean = false) => {
   if (isUserTeam && team.financials) {
     // User's team - show full financial data
     return {
@@ -18,8 +26,4 @@ export const formatFinancialData = (team: any, isUserTeam: boolean = false) => {
       isCalculated: false
     };
   }
-};
-
-export const shouldShowFinancialDetails = (team: any, currentUserId: number) => {
-  return team.user_id === currentUserId;
 };

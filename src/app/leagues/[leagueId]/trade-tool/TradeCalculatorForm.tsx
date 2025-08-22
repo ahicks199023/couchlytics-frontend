@@ -564,28 +564,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   // Financial data state
 
   
-  // Helper function to get team financial data with fallback
-  const getTeamFinancials = useCallback((teamName: string) => {
-    if (teamName === 'All') return null
-    const team = teams.find(t => t.name === teamName)
-    
 
-    
-    // Return real financial data if available, otherwise fallback
-    if (team?.financials) {
-
-      return team.financials
-    }
-    
-    // Fallback financial data if backend doesn't provide it
-    console.warn(`No financial data available for team: ${teamName}`)
-    return {
-      salaryCap: 324.0,        // 2027 salary cap
-      usedCapSpace: 0.0,       // Unknown usage
-      availableCapSpace: 324.0, // Full cap available
-      deadCapSpace: 0.0        // No dead cap data
-    }
-  }, [teams])
   
   // Request cache to prevent duplicate API calls
   const requestCache = useRef(new Map())
@@ -660,7 +639,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     } finally {
       setIsLoadingUserTeam(false)
     }
-  }, [league_id, isLoadingUserTeam, isRateLimited])
+  }, [league_id, isLoadingUserTeam, isRateLimited, CACHE_EXPIRY])
 
   const fetchTeams = useCallback(async () => {
     if (!league_id || isLoadingTeams || isRateLimited) return []
@@ -721,7 +700,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     } finally {
       setIsLoadingTeams(false)
     }
-  }, [league_id, isLoadingTeams, isRateLimited])
+  }, [league_id, isLoadingTeams, isRateLimited, CACHE_EXPIRY])
 
   // Team selection handlers that update financial data
   const handleGiveTeamChange = useCallback((teamName: string) => {
@@ -746,14 +725,14 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           // Team financials are now handled by the TeamFinancials component
         }
     }
-  }, [getTeamFinancials, user, teams])
+  }, [user, teams])
   
   const handleReceiveTeamChange = useCallback((teamName: string) => {
 
     setReceiveTeam(teamName)
     setReceivePage(1)
     
-  }, [getTeamFinancials])
+  }, [])
   
   // Trade state
   const [givePlayers, setGivePlayers] = useState<Player[]>([])
