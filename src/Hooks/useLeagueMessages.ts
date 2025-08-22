@@ -28,7 +28,7 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
 
   // Load initial messages
   useEffect(() => {
-    if (!leagueId || !enabled) {
+    if (!leagueId || !enabled || !db) {
       setLoading(false)
       return
     }
@@ -93,7 +93,7 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
   }, [leagueId, enabled])
 
   const sendMessage = useCallback(async ({ text, sender, senderEmail }: SendMessageParams) => {
-    if (!leagueId || !text.trim() || !enabled) return
+    if (!leagueId || !text.trim() || !enabled || !db) return
 
     try {
       const messagesRef = collection(db, 'leagueChats', leagueId, 'messages')
@@ -112,7 +112,7 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
   }, [leagueId, enabled])
 
   const deleteMessage = useCallback(async (messageId: string) => {
-    if (!leagueId || !enabled) return
+    if (!leagueId || !enabled || !db) return
 
     try {
       const messageRef = doc(db, 'leagueChats', leagueId, 'messages', messageId)
@@ -127,7 +127,7 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
   }, [leagueId, enabled])
 
   const editMessage = useCallback(async (messageId: string, newText: string) => {
-    if (!leagueId || !newText.trim() || !enabled) return
+    if (!leagueId || !newText.trim() || !enabled || !db) return
 
     try {
       const messageRef = doc(db, 'leagueChats', leagueId, 'messages', messageId)
@@ -143,7 +143,7 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
   }, [leagueId, enabled])
 
   const reactToMessage = useCallback(async (messageId: string, emoji: string, userEmail: string) => {
-    if (!leagueId || !enabled) return
+    if (!leagueId || !enabled || !db) return
 
     try {
       const messageRef = doc(db, 'leagueChats', leagueId, 'messages', messageId)

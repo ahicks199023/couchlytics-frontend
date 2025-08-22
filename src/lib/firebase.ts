@@ -37,9 +37,9 @@ const firebaseConfig = {
 }
 
 // Initialize Firebase with error handling
-let app
-let db
-let auth
+let app: ReturnType<typeof initializeApp> | null = null
+let db: ReturnType<typeof getFirestore> | null = null
+let auth: ReturnType<typeof getAuth> | null = null
 
 try {
   app = initializeApp(firebaseConfig)

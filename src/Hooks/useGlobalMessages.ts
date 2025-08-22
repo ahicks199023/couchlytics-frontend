@@ -28,7 +28,7 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
 
   // Load initial messages
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || !db) {
       setLoading(false)
       return
     }
@@ -91,7 +91,7 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
   }, [enabled])
 
   const sendMessage = useCallback(async ({ text, sender, senderEmail }: SendMessageParams) => {
-    if (!text.trim() || !enabled) return
+    if (!text.trim() || !enabled || !db) return
 
     try {
       const messagesRef = collection(db, 'globalChatMessages')
@@ -109,6 +109,7 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
   }, [enabled])
 
   const deleteMessage = useCallback(async (messageId: string) => {
+    if (!db) return
     try {
       const messageRef = doc(db, 'globalChatMessages', messageId)
       await updateDoc(messageRef, {
@@ -122,7 +123,7 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
   }, [])
 
   const editMessage = useCallback(async (messageId: string, newText: string) => {
-    if (!newText.trim() || !enabled) return
+    if (!newText.trim() || !enabled || !db) return
 
     try {
       const messageRef = doc(db, 'globalChatMessages', messageId)
@@ -138,6 +139,7 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
   }, [enabled])
 
   const reactToMessage = useCallback(async (messageId: string, emoji: string, userEmail: string) => {
+    if (!db) return
     try {
       const messageRef = doc(db, 'globalChatMessages', messageId)
       const messageDoc = await getDoc(messageRef)

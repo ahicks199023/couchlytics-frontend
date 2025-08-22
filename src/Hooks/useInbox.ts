@@ -25,7 +25,7 @@ export function useInbox(currentUserEmail: string) {
   const [totalUnreadCount, setTotalUnreadCount] = useState(0)
 
   const loadConversations = useCallback(async () => {
-    if (!currentUserEmail) return
+    if (!currentUserEmail || !db) return
 
     try {
       setLoading(true)
@@ -101,7 +101,7 @@ export function useInbox(currentUserEmail: string) {
   }, [loadConversations])
 
   const markAsRead = useCallback(async (conversationId: string) => {
-    if (!currentUserEmail) return
+    if (!currentUserEmail || !db) return
 
     try {
       const messagesRef = collection(db, 'privateMessages', conversationId, 'messages')

@@ -31,7 +31,7 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string, ena
 
   // Load initial messages
   useEffect(() => {
-    if (!currentUserEmail || !recipientEmail || !enabled) {
+    if (!currentUserEmail || !recipientEmail || !enabled || !db) {
       setLoading(false)
       return
     }
@@ -94,7 +94,7 @@ function useDirectMessages(currentUserEmail: string, recipientEmail: string, ena
   }, [currentUserEmail, recipientEmail, conversationId, enabled])
 
   const sendMessage = useCallback(async ({ text, sender, senderEmail }: SendMessageParams) => {
-    if (!text.trim() || !currentUserEmail || !recipientEmail || !enabled) return
+    if (!text.trim() || !currentUserEmail || !recipientEmail || !enabled || !db) return
 
     try {
       const messagesRef = collection(db, 'privateMessages', conversationId, 'messages')

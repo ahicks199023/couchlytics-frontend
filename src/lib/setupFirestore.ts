@@ -6,6 +6,11 @@ import { doc, setDoc } from 'firebase/firestore'
  * This creates the necessary league membership documents that the security rules require
  */
 export async function setupFirestoreForChat(userId: string, userEmail: string, leagueId: string) {
+  if (!db) {
+    console.error('❌ Firestore not initialized')
+    return false
+  }
+  
   try {
     console.log('🔧 Setting up Firestore documents for chat...')
     
@@ -49,6 +54,11 @@ export async function setupFirestoreForChat(userId: string, userEmail: string, l
  * Setup global chat documents
  */
 export async function setupGlobalChat() {
+  if (!db) {
+    console.error('❌ Firestore not initialized')
+    return false
+  }
+  
   try {
     console.log('🔧 Setting up global chat documents...')
     
