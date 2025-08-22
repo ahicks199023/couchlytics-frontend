@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { Loader2, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
 import { API_BASE } from '@/lib/config'
+import TeamFinancials from '../../../../components/TradeCalculator/TeamFinancials'
 
 // Types
 // Note: PlayerStat interface removed as it's no longer used with enhanced backend data
@@ -561,8 +562,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [isRateLimited, setIsRateLimited] = useState(false)
   
   // Financial data state
-  const [giveTeamFinancials, setGiveTeamFinancials] = useState<Team['financials'] | null>(null)
-  const [receiveTeamFinancials, setReceiveTeamFinancials] = useState<Team['financials'] | null>(null)
+
   
   // Helper function to get team financial data with fallback
   const getTeamFinancials = useCallback((teamName: string) => {
@@ -621,7 +621,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     setIsLoadingUserTeam(true)
     
     try {
-      const response = await fetch(`${API_BASE}/leagues/${league_id}/user-team?include_financials=true`, { 
+      const response = await fetch(`${API_BASE}/leagues/${league_id}/user-team`, { 
         credentials: 'include' 
       })
       
@@ -684,7 +684,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     setIsLoadingTeams(true)
     
     try {
-      const response = await fetch(`${API_BASE}/leagues/${league_id}/teams?include_financials=true`, {
+      const response = await fetch(`${API_BASE}/leagues/${league_id}/teams`, {
         credentials: 'include'
       })
       
@@ -731,7 +731,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     
     // Check if this is the user's team and use userTeam financial data if available
     if (user && user.name === teamName && user.financials) {
-      setGiveTeamFinancials(user.financials)
+      
     } else {
       // Use financial data from teams array
       console.log('🔍 User state check:', { 
@@ -742,10 +742,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       })
       
       // Only fall back to teams array if we have teams data
-      if (teams.length > 0) {
-        const teamFinancials = getTeamFinancials(teamName)
-        setGiveTeamFinancials(teamFinancials)
-      }
+              if (teams.length > 0) {
+          // Team financials are now handled by the TeamFinancials component
+        }
     }
   }, [getTeamFinancials, user, teams])
   
@@ -753,7 +752,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
 
     setReceiveTeam(teamName)
     setReceivePage(1)
-    setReceiveTeamFinancials(getTeamFinancials(teamName))
+    
   }, [getTeamFinancials])
   
   // Trade state
@@ -1256,31 +1255,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             </div>
             
             {/* Team Financials Section */}
-            {giveTeam !== 'All' && giveTeamFinancials && (
-              <div className="mb-4 p-3 bg-gray-700/50 rounded-lg">
-                <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
-                  Team Financials
-                  {!teams.find(t => t.name === giveTeam)?.financials && (
-                    <span className="text-xs text-yellow-400" title="Using fallback data - real financial data unavailable">⚠️</span>
-                  )}
-                </h4>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <span className="text-gray-400">Salary Cap:</span>
-                    <span className="text-white ml-2">${giveTeamFinancials.salaryCap.toFixed(0)}M</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400">Used:</span>
-                    <span className="text-white ml-2">${giveTeamFinancials.usedCapSpace.toFixed(1)}M</span>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-gray-400">Available:</span>
-                    <span className={`ml-2 ${giveTeamFinancials.availableCapSpace > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      ${giveTeamFinancials.availableCapSpace.toFixed(1)}M
-                    </span>
-                  </div>
-                </div>
-              </div>
+            {giveTeam !== 'All' && teams.find(t => t.name === giveTeam) && (
+              <TeamFinancials 
+                team={teams.find(t => t.name === giveTeam)!}
+                currentUserId={user?.id || 0}
+                isUserTeam={teams.find(t => t.name === giveTeam)?.user_id === user?.id}
+              />
             )}
             
             {/* Filters stacked in two rows */}
@@ -1430,31 +1410,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             </div>
             
             {/* Team Financials Section */}
-            {receiveTeam !== 'All' && receiveTeamFinancials && (
-              <div className="mb-4 p-3 bg-gray-700/50 rounded-lg">
-                <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
-                  Team Financials
-                  {!teams.find(t => t.name === receiveTeam)?.financials && (
-                    <span className="text-xs text-yellow-400" title="Using fallback data - real financial data unavailable">⚠️</span>
-                  )}
-                </h4>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <span className="text-gray-400">Salary Cap:</span>
-                    <span className="text-white ml-2">${receiveTeamFinancials.salaryCap.toFixed(0)}M</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400">Used:</span>
-                    <span className="text-white ml-2">${receiveTeamFinancials.usedCapSpace.toFixed(1)}M</span>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-gray-400">Available:</span>
-                    <span className={`ml-2 ${receiveTeamFinancials.availableCapSpace > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      ${receiveTeamFinancials.availableCapSpace.toFixed(1)}M
-                    </span>
-                  </div>
-                </div>
-              </div>
+            {receiveTeam !== 'All' && teams.find(t => t.name === receiveTeam) && (
+              <TeamFinancials 
+                team={teams.find(t => t.name === receiveTeam)!}
+                currentUserId={user?.id || 0}
+                isUserTeam={teams.find(t => t.name === receiveTeam)?.user_id === user?.id}
+              />
             )}
             
             {/* Filters stacked in two rows */}
@@ -1837,7 +1798,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           </div>
 
           {/* Salary Cap Impact */}
-          {(result.advancedMetrics?.salaryImpact || (giveTeamFinancials && receiveTeamFinancials)) && (
+          {(result.advancedMetrics?.salaryImpact || (teams.find(t => t.name === giveTeam)?.financials && teams.find(t => t.name === receiveTeam)?.financials)) && (
             <div className="salary-cap-impact bg-gray-800/50 rounded-lg p-6 border border-gray-600">
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">💰 Salary Cap Impact</h3>
               
@@ -1845,17 +1806,17 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                 {/* Your Team Salary Cap */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-blue-300">Your Team - {giveTeam}</h4>
-                  {giveTeamFinancials && (
+                  {teams.find(t => t.name === giveTeam)?.financials && (
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Current Used:</span>
-                        <span className="font-mono text-white">${giveTeamFinancials.usedCapSpace.toFixed(1)}M</span>
+                        <span className="font-mono text-white">${teams.find(t => t.name === giveTeam)?.financials?.usedCapSpace?.toFixed(1) || 'N/A'}M</span>
                       </div>
                       
                       <div className="flex justify-between">
                         <span className="text-gray-400">Available:</span>
-                        <span className={`font-mono ${giveTeamFinancials.availableCapSpace > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          ${giveTeamFinancials.availableCapSpace.toFixed(1)}M
+                        <span className={`font-mono ${(teams.find(t => t.name === giveTeam)?.financials?.availableCapSpace || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          ${teams.find(t => t.name === giveTeam)?.financials?.availableCapSpace?.toFixed(1) || 'N/A'}M
                         </span>
                       </div>
                       
@@ -1863,12 +1824,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         <div className="w-full bg-gray-700 rounded-full h-2 mb-1">
                           <div 
                             className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full transition-all duration-500"
-                            style={{ width: `${(giveTeamFinancials.usedCapSpace / giveTeamFinancials.salaryCap) * 100}%` }}
+                            style={{ width: `${((teams.find(t => t.name === giveTeam)?.financials?.usedCapSpace || 0) / (teams.find(t => t.name === giveTeam)?.financials?.salaryCap || 1)) * 100}%` }}
                           ></div>
                         </div>
                         <div className="flex justify-between text-xs text-gray-400">
                           <span>$0M</span>
-                          <span>${giveTeamFinancials.salaryCap.toFixed(0)}M</span>
+                          <span>${teams.find(t => t.name === giveTeam)?.financials?.salaryCap?.toFixed(0) || 'N/A'}M</span>
                         </div>
                       </div>
                     </div>
@@ -1878,17 +1839,17 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                 {/* Team B (Receive Team) Salary Cap */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-purple-300">Team B - {receiveTeam}</h4>
-                  {receiveTeamFinancials && (
+                  {teams.find(t => t.name === receiveTeam)?.financials && (
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Current Used:</span>
-                        <span className="font-mono text-white">${receiveTeamFinancials.usedCapSpace.toFixed(1)}M</span>
+                        <span className="font-mono text-white">${teams.find(t => t.name === receiveTeam)?.financials?.usedCapSpace?.toFixed(1) || 'N/A'}M</span>
                       </div>
                       
                       <div className="flex justify-between">
                         <span className="text-gray-400">Available:</span>
-                        <span className={`font-mono ${receiveTeamFinancials.availableCapSpace > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          ${receiveTeamFinancials.availableCapSpace.toFixed(1)}M
+                        <span className={`font-mono ${(teams.find(t => t.name === receiveTeam)?.financials?.availableCapSpace || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          ${teams.find(t => t.name === receiveTeam)?.financials?.availableCapSpace?.toFixed(1) || 'N/A'}M
                         </span>
                       </div>
                       
@@ -1896,12 +1857,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         <div className="w-full bg-gray-700 rounded-full h-2 mb-1">
                           <div 
                             className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full transition-all duration-500"
-                            style={{ width: `${(receiveTeamFinancials.usedCapSpace / receiveTeamFinancials.salaryCap) * 100}%` }}
+                            style={{ width: `${((teams.find(t => t.name === receiveTeam)?.financials?.usedCapSpace || 0) / (teams.find(t => t.name === receiveTeam)?.financials?.salaryCap || 1)) * 100}%` }}
                           ></div>
                         </div>
                         <div className="flex justify-between text-xs text-gray-400">
                           <span>$0M</span>
-                          <span>${receiveTeamFinancials.salaryCap.toFixed(0)}M</span>
+                          <span>${teams.find(t => t.name === receiveTeam)?.financials?.salaryCap?.toFixed(0) || 'N/A'}M</span>
                         </div>
                       </div>
                     </div>
@@ -1928,7 +1889,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <div className="text-sm text-gray-400 mb-1">New Cap Room</div>
                       <div className={`font-mono font-bold ${
                         result.advancedMetrics.salaryImpact.newCapRoom < 10 ? 'text-red-400' :
-                        result.advancedMetrics.salaryImpact.newCapRoom < 30 ? 'text-yellow-400' : 'text-green-400'
+                        result.advancedMetrics.salaryImpact.newCapRoom < 10 ? 'text-yellow-400' : 'text-green-400'
                       }`}>
                         ${result.advancedMetrics.salaryImpact.newCapRoom.toFixed(1)}M
                       </div>
