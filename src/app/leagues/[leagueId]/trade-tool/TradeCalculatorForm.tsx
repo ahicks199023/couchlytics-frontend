@@ -468,7 +468,7 @@ const PositionalGradeComparison = ({
                   </span>
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  +{imp.ovr_change.toFixed(1)} OVR
+                  +{(Number(imp.ovr_change) || 0).toFixed(1)} OVR
                 </div>
               </div>
             ))}
@@ -496,7 +496,7 @@ const PositionalGradeComparison = ({
                   </span>
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  {down.ovr_change.toFixed(1)} OVR
+                  {(Number(down.ovr_change) || 0).toFixed(1)} OVR
                 </div>
               </div>
             ))}
@@ -540,7 +540,7 @@ const TeamGradeOverview = ({
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border ${getGradeColorDark(gradeData.grade)}`}>
                 {gradeData.grade}
               </div>
-              <div className="text-xs text-gray-500 mt-1">{gradeData.avg_ovr.toFixed(1)}</div>
+              <div className="text-xs text-gray-500 mt-1">{(Number(gradeData.avg_ovr) || 0).toFixed(1)}</div>
             </div>
           );
         })}
@@ -1526,7 +1526,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
           <div className="flex items-center justify-between">
             <span className="text-gray-400">Net Value:</span>
             <span className={`font-bold ${netValue >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {netValue >= 0 ? '+' : ''}{netValue.toFixed(2)}
+              {netValue >= 0 ? '+' : ''}{(Number(netValue) || 0).toFixed(2)}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -1781,13 +1781,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Current Used:</span>
-                        <span className="font-mono text-white">${teams.find(t => t.name === giveTeam)?.financials?.usedCapSpace?.toFixed(1) || 'N/A'}M</span>
+                        <span className="font-mono text-white">${(Number(teams.find(t => t.name === giveTeam)?.financials?.usedCapSpace) || 0).toFixed(1)}M</span>
                       </div>
                       
                       <div className="flex justify-between">
                         <span className="text-gray-400">Available:</span>
                         <span className={`font-mono ${(teams.find(t => t.name === giveTeam)?.financials?.availableCapSpace || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          ${teams.find(t => t.name === giveTeam)?.financials?.availableCapSpace?.toFixed(1) || 'N/A'}M
+                          ${(Number(teams.find(t => t.name === giveTeam)?.financials?.availableCapSpace) || 0).toFixed(1)}M
                         </span>
                       </div>
                       
@@ -1800,7 +1800,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         </div>
                         <div className="flex justify-between text-xs text-gray-400">
                           <span>$0M</span>
-                          <span>${teams.find(t => t.name === giveTeam)?.financials?.salaryCap?.toFixed(0) || 'N/A'}M</span>
+                          <span>${(Number(teams.find(t => t.name === giveTeam)?.financials?.salaryCap) || 0).toFixed(0)}M</span>
                         </div>
                       </div>
                     </div>
@@ -1814,13 +1814,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Current Used:</span>
-                        <span className="font-mono text-white">${teams.find(t => t.name === receiveTeam)?.financials?.usedCapSpace?.toFixed(1) || 'N/A'}M</span>
+                        <span className="font-mono text-white">${(Number(teams.find(t => t.name === receiveTeam)?.financials?.usedCapSpace) || 0).toFixed(1)}M</span>
                       </div>
                       
                       <div className="flex justify-between">
                         <span className="text-gray-400">Available:</span>
                         <span className={`font-mono ${(teams.find(t => t.name === receiveTeam)?.financials?.availableCapSpace || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          ${teams.find(t => t.name === receiveTeam)?.financials?.availableCapSpace?.toFixed(1) || 'N/A'}M
+                          ${(Number(teams.find(t => t.name === receiveTeam)?.financials?.availableCapSpace) || 0).toFixed(1)}M
                         </span>
                       </div>
                       
@@ -1833,7 +1833,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         </div>
                         <div className="flex justify-between text-xs text-gray-400">
                           <span>$0M</span>
-                          <span>${teams.find(t => t.name === receiveTeam)?.financials?.salaryCap?.toFixed(0) || 'N/A'}M</span>
+                          <span>${(Number(teams.find(t => t.name === receiveTeam)?.financials?.salaryCap) || 0).toFixed(0)}M</span>
                         </div>
                       </div>
                     </div>
@@ -1848,12 +1848,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="text-center">
                       <div className="text-sm text-gray-400 mb-1">Current Cap Hit</div>
-                      <div className="font-mono text-white">${result.advancedMetrics.salaryImpact.currentCapHit.toFixed(1)}M</div>
+                      <div className="font-mono text-white">${(Number(result.advancedMetrics.salaryImpact.currentCapHit) || 0).toFixed(1)}M</div>
                     </div>
                     <div className="text-center">
                       <div className="text-sm text-gray-400 mb-1">Trade Impact</div>
                       <div className={`font-mono ${result.advancedMetrics.salaryImpact.tradeImpact >= 0 ? 'text-red-400' : 'text-green-400'}`}>
-                        {result.advancedMetrics.salaryImpact.tradeImpact >= 0 ? '+' : ''}${result.advancedMetrics.salaryImpact.tradeImpact.toFixed(1)}M
+                        {result.advancedMetrics.salaryImpact.tradeImpact >= 0 ? '+' : ''}${(Number(result.advancedMetrics.salaryImpact.tradeImpact) || 0).toFixed(1)}M
                       </div>
                     </div>
                     <div className="text-center">
@@ -1862,7 +1862,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         result.advancedMetrics.salaryImpact.newCapRoom < 10 ? 'text-red-400' :
                         result.advancedMetrics.salaryImpact.newCapRoom < 10 ? 'text-yellow-400' : 'text-green-400'
                       }`}>
-                        ${result.advancedMetrics.salaryImpact.newCapRoom.toFixed(1)}M
+                        ${(Number(result.advancedMetrics.salaryImpact.newCapRoom) || 0).toFixed(1)}M
                       </div>
                     </div>
                   </div>
@@ -2380,7 +2380,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     <div className="space-y-2 text-gray-300 text-sm">
                       <div className="flex justify-between">
                         <span>Cap Hit:</span>
-                        <span>${modalPlayer.contractInfo.capHit.toFixed(1)}M</span>
+                        <span>${(Number(modalPlayer.contractInfo?.capHit) || 0).toFixed(1)}M</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Years Left:</span>
