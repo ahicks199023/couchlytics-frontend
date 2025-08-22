@@ -309,9 +309,9 @@ const getPlayerValueBreakdown = (player: Player) => {
       devTrait: getDevTraitDisplay(Number(player.devTrait)) || 'Normal',
       calculationSteps: player.enhancedData.valueBreakdown.calculationSteps,
       explanations: {
-        age: `Age ${player.enhancedData.positionAttributes?.age || 'Unknown'}: ${player.enhancedData.valueBreakdown.ageFactor.toFixed(2)}x multiplier`,
-        devTrait: `${getDevTraitDisplay(Number(player.devTrait)) || 'Normal'} trait: ${player.enhancedData.valueBreakdown.devTrait.toFixed(2)}x multiplier`,
-        position: `${player.position} position: ${player.enhancedData.valueBreakdown.position.toFixed(2)}x multiplier`
+        age: `Age ${player.enhancedData.positionAttributes?.age || 'Unknown'}: ${(Number(player.enhancedData.valueBreakdown.ageFactor) || 1.0).toFixed(2)}x multiplier`,
+        devTrait: `${getDevTraitDisplay(Number(player.devTrait)) || 'Normal'} trait: ${(Number(player.enhancedData.valueBreakdown.devTrait) || 1.0).toFixed(2)}x multiplier`,
+        position: `${player.position} position: ${(Number(player.enhancedData.valueBreakdown.position) || 1.0).toFixed(2)}x multiplier`
       },
       isBackendCalculated: true
     }
@@ -2209,7 +2209,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                           <div className="text-center bg-gray-600/50 rounded p-2">
                             <div className="font-mono text-white">{breakdown.afterAge}</div>
                             <div className="text-xs text-gray-400">After Age</div>
-                            <div className="text-xs text-blue-300">×{breakdown.ageFactor.toFixed(2)}</div>
+                            <div className="text-xs text-blue-300">×{(Number(breakdown.ageFactor) || 1.0).toFixed(2)}</div>
                           </div>
                           
                           <div className="text-center bg-gray-600/50 rounded p-2">
@@ -2221,7 +2221,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         
                         <div className="flex justify-between items-center bg-gray-600/30 rounded p-2">
                           <span className="text-gray-300">Position Multiplier ({breakdown.position}):</span>
-                          <span className="font-mono text-yellow-300">×{breakdown.positionMultiplier.toFixed(1)}</span>
+                          <span className="font-mono text-yellow-300">×{(Number(breakdown.positionMultiplier) || 1.0).toFixed(1)}</span>
                         </div>
                         
                         <div className="text-xs text-purple-300">
@@ -2273,10 +2273,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                           <div className="text-center bg-gray-600/50 rounded p-2">
                             <div className="font-mono text-white">{breakdown.afterAge}</div>
                             <div className="text-xs text-gray-400">After Age</div>
-                            <div className="text-xs text-blue-300">×{breakdown.ageFactor.toFixed(2)}</div>
+                            <div className="text-xs text-blue-300">×{(Number(breakdown.ageFactor) || 1.0).toFixed(2)}</div>
                           </div>
                           
-                                                      <div className="text-center bg-gray-600/50 rounded p-2">
+                          <div className="text-center bg-gray-600/50 rounded p-2">
                             <div className="font-mono text-white">{breakdown.afterDev}</div>
                             <div className="text-xs text-gray-400">After Dev</div>
                             <div className="text-xs text-purple-300">({getDevTraitDisplay(breakdown.devTraitMultiplier)})</div>
@@ -2285,7 +2285,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         
                         <div className="flex justify-between items-center bg-gray-600/30 rounded p-2">
                           <span className="text-gray-300">Position Multiplier ({breakdown.position}):</span>
-                          <span className="font-mono text-yellow-300">×{breakdown.positionMultiplier.toFixed(1)}</span>
+                          <span className="font-mono text-yellow-300">×{(Number(breakdown.positionMultiplier) || 1.0).toFixed(1)}</span>
                         </div>
                         
                         <div className="text-xs text-purple-300">
@@ -2425,10 +2425,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <span className="text-gray-300 font-medium">Development Trait</span>
                       <div className="text-right">
                         <div className="text-white font-medium">
-                          {modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} × {getDevTraitMultiplier(modalPlayer.enhancedData.valueBreakdown.devTrait || 0)}
+                          {modalPlayer.enhancedData?.valueBreakdown?.baseValue || modalPlayer.ovr} × {getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0)}
                         </div>
-                        <div className={`text-xs ${getDevTraitMultiplier(modalPlayer.enhancedData.valueBreakdown.devTrait || 0) > 1 ? 'text-green-400' : getDevTraitMultiplier(modalPlayer.enhancedData.valueBreakdown.devTrait || 0) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
-                          {getDevTraitDisplay(modalPlayer.enhancedData.valueBreakdown.devTrait || 0)} {getDevTraitMultiplier(modalPlayer.enhancedData.valueBreakdown.devTrait || 0) > 1 ? '↑ Trait bonus' : getDevTraitMultiplier(modalPlayer.enhancedData.valueBreakdown.devTrait || 0) < 1 ? '↓ Trait penalty' : 'No trait adjustment'}
+                        <div className={`text-xs ${getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0) > 1 ? 'text-green-400' : getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {getDevTraitDisplay(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0)} {getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0) > 1 ? '↑ Trait bonus' : getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0) < 1 ? '↓ Trait penalty' : 'No trait adjustment'}
                         </div>
                       </div>
                     </div>
@@ -2438,10 +2438,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <span className="text-gray-300 font-medium">Speed Bonus</span>
                       <div className="text-right">
                         <div className="text-white font-medium">
-                          {modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData.valueBreakdown.speed || 1}
+                          {modalPlayer.enhancedData?.valueBreakdown?.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData?.valueBreakdown?.speed || 1}
                         </div>
-                        <div className={`text-xs ${(modalPlayer.enhancedData.valueBreakdown.speed || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData.valueBreakdown.speed || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
-                          {(modalPlayer.enhancedData.valueBreakdown.speed || 1) > 1 ? '↑ Speed bonus' : (modalPlayer.enhancedData.valueBreakdown.speed || 1) < 1 ? '↓ Speed penalty' : 'No speed adjustment'}
+                        <div className={`text-xs ${(modalPlayer.enhancedData?.valueBreakdown?.speed || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData?.valueBreakdown?.speed || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {(modalPlayer.enhancedData?.valueBreakdown?.speed || 1) > 1 ? '↑ Speed bonus' : (modalPlayer.enhancedData?.valueBreakdown?.speed || 1) < 1 ? '↓ Speed penalty' : 'No speed adjustment'}
                         </div>
                       </div>
                     </div>
@@ -2451,10 +2451,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <span className="text-gray-300 font-medium">Position</span>
                       <div className="text-right">
                         <div className="text-white font-medium">
-                          {modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData.valueBreakdown.position || 1}
+                          {modalPlayer.enhancedData?.valueBreakdown?.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData?.valueBreakdown?.position || 1}
                         </div>
-                        <div className={`text-xs ${(modalPlayer.enhancedData.valueBreakdown.position || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData.valueBreakdown.position || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
-                          {(modalPlayer.enhancedData.valueBreakdown.position || 1) > 1 ? '↑ Position premium' : (modalPlayer.enhancedData.valueBreakdown.position || 1) < 1 ? '↓ Position discount' : 'Standard position value'}
+                        <div className={`text-xs ${(modalPlayer.enhancedData?.valueBreakdown?.position || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData?.valueBreakdown?.position || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {(modalPlayer.enhancedData?.valueBreakdown?.position || 1) > 1 ? '↑ Position premium' : (modalPlayer.enhancedData?.valueBreakdown?.position || 1) < 1 ? '↓ Position discount' : 'Standard position value'}
                         </div>
                       </div>
                     </div>
@@ -2464,10 +2464,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <span className="text-gray-300 font-medium">Team Need</span>
                       <div className="text-right">
                         <div className="text-white font-medium">
-                          {modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData.valueBreakdown.teamNeed || 1}
+                          {modalPlayer.enhancedData?.valueBreakdown?.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData?.valueBreakdown?.teamNeed || 1}
                         </div>
-                        <div className={`text-xs ${(modalPlayer.enhancedData.valueBreakdown.teamNeed || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData.valueBreakdown.teamNeed || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
-                          {(modalPlayer.enhancedData.valueBreakdown.teamNeed || 1) > 1 ? '↑ High team need' : (modalPlayer.enhancedData.valueBreakdown.teamNeed || 1) < 1 ? '↓ Low team need' : 'Standard team need'}
+                        <div className={`text-xs ${(modalPlayer.enhancedData?.valueBreakdown?.teamNeed || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData?.valueBreakdown?.teamNeed || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {(modalPlayer.enhancedData?.valueBreakdown?.teamNeed || 1) > 1 ? '↑ High team need' : (modalPlayer.enhancedData?.valueBreakdown?.teamNeed || 1) < 1 ? '↓ Low team need' : 'Standard team need'}
                         </div>
                       </div>
                     </div>
@@ -2475,7 +2475,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     {/* Final Value */}
                     <div className="flex justify-between items-center p-4 bg-green-900/30 border border-green-500/50 rounded">
                       <span className="text-green-300 font-semibold text-lg">Final Trade Value</span>
-                      <span className="text-green-400 font-bold text-2xl">{modalPlayer.enhancedData.valueBreakdown.finalValue || calculatePlayerValue(modalPlayer)}</span>
+                      <span className="text-green-400 font-bold text-2xl">{modalPlayer.enhancedData?.valueBreakdown?.finalValue || calculatePlayerValue(modalPlayer)}</span>
                     </div>
                   </div>
                 ) : (
