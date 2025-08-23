@@ -42,7 +42,29 @@ interface ContractInfo {
   yearsLeft: number
   contractType: string
 }
- 
+
+// Draft Pick Trading System Interfaces
+interface DraftPick {
+  id: string
+  year: number
+  round: number
+  pick_position: number
+  team_id: string
+}
+
+interface DraftPickValue {
+  year: number
+  round: number
+  pick_position: number
+  value: number
+  breakdown: {
+    baseValue: number
+    yearMultiplier: number
+    roundMultiplier: number
+    pickPositionMultiplier: number
+  }
+}
+
 interface Player {
   id: number
   name?: string | null
@@ -876,13 +898,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [receiveSearch, setReceiveSearch] = useState('')
   const [receivePage, setReceivePage] = useState(1)
   const [receivePageSize, setReceivePageSize] = useState(50)
-  const [receivePlayersList, setReceivePlayersList] = useState<Player[]>([])
+  const [receiveSort, setReceiveSort] = useState('Name')
   const [receiveTotal, setReceiveTotal] = useState(0)
   const [receiveTotalPages, setReceiveTotalPages] = useState(1)
+  const [receivePlayersList, setReceivePlayersList] = useState<Player[]>([])
 
   // 1. Add sort state for each panel
   const [giveSort, setGiveSort] = useState('Name')
-  const [receiveSort, setReceiveSort] = useState('Name')
 
   // 4. Add modal state
   const [modalPlayer, setModalPlayer] = useState<Player | null>(null)
@@ -891,6 +913,11 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   // Get user's team ID directly from the user state (set by /user-team endpoint)
   const userTeamId = user?.id
 
+  // Draft Pick Trading System State
+  const [availableDraftYears, setAvailableDraftYears] = useState<number[]>([])
+  const [givingDraftPicks, setGivingDraftPicks] = useState<DraftPick[]>([])
+  const [receivingDraftPicks, setReceivingDraftPicks] = useState<DraftPick[]>([])
+  const [draftPickValues, setDraftPickValues] = useState<Record<string, DraftPickValue>>({})
 
   // Initialize data - runs only once per league_id
   useEffect(() => {
@@ -963,6 +990,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             }, 200)
           }
         }
+        
+        // Fetch available draft years for draft pick trading
+        fetchAvailableDraftYears()
         
       } catch (err) {
         console.error('❌ Initialization failed:', err)
@@ -1251,6 +1281,110 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     })
   }
 
+  // Draft Pick Trading System Functions
+  const fetchAvailableDraftYears = useCallback(async () => {
+    if (!league_id || isRateLimited) return
+    
+    try {
+      const response = await fetch(`${API_BASE}/leagues/${league_id}/draft-pick-years`, {
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.years) {
+          setAvailableDraftYears(data.years)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching draft years:', error)
+    }
+  }, [league_id, isRateLimited])
+
+  const calculateDraftPickValue = useCallback(async (pick: DraftPick) => {
+    if (!league_id || isRateLimited) return
+    
+    try {
+      const response = await fetch(`${API_BASE}/leagues/${league_id}/draft-pick-value`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          year: pick.year,
+          round: pick.round,
+          pick_position: pick.pick_position
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.valuation) {
+          setDraftPickValues(prev => ({
+            ...prev,
+            [pick.id]: data.valuation
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Error calculating draft pick value:', error)
+    }
+  }, [league_id, isRateLimited])
+
+  const addDraftPick = useCallback((isGiving: boolean) => {
+    if (availableDraftYears.length === 0) return
+    
+    const newPick: DraftPick = {
+      id: Date.now().toString(),
+      year: availableDraftYears[0],
+      round: 1,
+      pick_position: 1,
+      team_id: isGiving ? String(user?.id || '') : selectedTeamBId || ''
+    }
+    
+    if (isGiving) {
+      setGivingDraftPicks(prev => [...prev, newPick])
+    } else {
+      setReceivingDraftPicks(prev => [...prev, newPick])
+    }
+    
+    // Calculate value for the new pick
+    calculateDraftPickValue(newPick)
+  }, [availableDraftYears, user?.id, selectedTeamBId, calculateDraftPickValue])
+
+  const removeDraftPick = useCallback((pickId: string, isGiving: boolean) => {
+    if (isGiving) {
+      setGivingDraftPicks(prev => prev.filter(pick => pick.id !== pickId))
+    } else {
+      setReceivingDraftPicks(prev => prev.filter(pick => pick.id !== pickId))
+    }
+    
+    // Remove from values cache
+    setDraftPickValues(prev => {
+      const newValues = { ...prev }
+      delete newValues[pickId]
+      return newValues
+    })
+  }, [])
+
+  const updateDraftPick = useCallback((pickId: string, field: keyof DraftPick, value: string | number, isGiving: boolean) => {
+    const updatePick = (picks: DraftPick[]) => 
+      picks.map(pick => pick.id === pickId ? { ...pick, [field]: value } : pick)
+    
+    if (isGiving) {
+      setGivingDraftPicks(updatePick)
+    } else {
+      setReceivingDraftPicks(updatePick)
+    }
+    
+    // Recalculate value for the updated pick
+    const updatedPick = (isGiving ? givingDraftPicks : receivingDraftPicks)
+      .find(pick => pick.id === pickId)
+    
+    if (updatedPick) {
+      calculateDraftPickValue(updatedPick)
+    }
+  }, [givingDraftPicks, receivingDraftPicks, calculateDraftPickValue])
+
   // Helper to open player modal
   function openPlayerModal(player: Player) {
     setModalPlayer(player);
@@ -1496,6 +1630,98 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               </div>
             )}
           </div>
+          
+          {/* Draft Picks Giving Panel */}
+          <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-blue-400 mb-3">Draft Picks Giving</h3>
+            <div className="space-y-3">
+              {/* Draft Pick Controls */}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300 text-sm">Add draft picks to trade</span>
+                <button 
+                  onClick={() => addDraftPick(true)}
+                  className="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded text-white text-sm font-medium transition-colors"
+                >
+                  + Add Draft Pick
+                </button>
+              </div>
+              
+              {/* Draft Pick List */}
+              {givingDraftPicks.length === 0 ? (
+                <p className="text-gray-400 text-sm">No draft picks selected</p>
+              ) : (
+                <div className="space-y-2">
+                  {givingDraftPicks.map((pick) => (
+                    <div key={pick.id} className="flex items-center gap-2 p-2 bg-blue-900/30 rounded">
+                      <div className="flex gap-2 flex-1">
+                        {/* Year Selection */}
+                        <select 
+                          value={pick.year} 
+                          onChange={(e) => updateDraftPick(pick.id, 'year', parseInt(e.target.value), true)}
+                          className="px-2 py-1 rounded bg-blue-800 text-white text-sm border border-blue-600"
+                        >
+                          {availableDraftYears.map(year => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
+                        
+                        {/* Round Selection */}
+                        <select 
+                          value={pick.round} 
+                          onChange={(e) => updateDraftPick(pick.id, 'round', parseInt(e.target.value), true)}
+                          className="px-2 py-1 rounded bg-blue-800 text-white text-sm border border-blue-600"
+                        >
+                          {[1, 2, 3, 4, 5, 6, 7].map(round => (
+                            <option key={round} value={round}>{round}</option>
+                          ))}
+                        </select>
+                        
+                        {/* Pick Position Selection */}
+                        <select 
+                          value={pick.pick_position} 
+                          onChange={(e) => updateDraftPick(pick.id, 'pick_position', parseInt(e.target.value), true)}
+                          className="px-2 py-1 rounded bg-blue-800 text-white text-sm border border-blue-600"
+                        >
+                          {Array.from({length: 32}, (_, i) => i + 1).map(position => (
+                            <option key={position} value={position}>{position}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {/* Pick Summary */}
+                      <div className="text-white text-sm font-medium">
+                        {pick.year} {pick.round}.{pick.pick_position.toString().padStart(2, '0')}
+                      </div>
+                      
+                      {/* Pick Value */}
+                      <div className="text-blue-300 text-sm">
+                        {draftPickValues[pick.id] ? `Value: ${draftPickValues[pick.id].value}` : 'Calculating...'}
+                      </div>
+                      
+                      {/* Remove Button */}
+                      <button
+                        onClick={() => removeDraftPick(pick.id, true)}
+                        className="text-blue-400 hover:text-blue-300 text-lg font-bold"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  
+                  {/* Total Draft Pick Value */}
+                  <div className="pt-2 border-t border-blue-500/30">
+                    <p className="text-blue-400 font-bold">
+                      Total Draft Pick Value: {
+                        givingDraftPicks.reduce((sum, pick) => 
+                          sum + (draftPickValues[pick.id]?.value || 0), 0
+                        )
+                      }
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
         
         {/* Team B Section */}
@@ -1648,6 +1874,98 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                 </div>
               </div>
             )}
+          </div>
+          
+          {/* Draft Picks Receiving Panel */}
+          <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-purple-400 mb-3">Draft Picks Receiving</h3>
+            <div className="space-y-3">
+              {/* Draft Pick Controls */}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300 text-sm">Add draft picks to receive</span>
+                <button 
+                  onClick={() => addDraftPick(false)}
+                  className="px-3 py-1 bg-purple-600 hover:bg-purple-500 rounded text-white text-sm font-medium transition-colors"
+                >
+                  + Add Draft Pick
+                </button>
+              </div>
+              
+              {/* Draft Pick List */}
+              {receivingDraftPicks.length === 0 ? (
+                <p className="text-gray-400 text-sm">No draft picks selected</p>
+              ) : (
+                <div className="space-y-2">
+                  {receivingDraftPicks.map((pick) => (
+                    <div key={pick.id} className="flex items-center gap-2 p-2 bg-purple-900/30 rounded">
+                      <div className="flex gap-2 flex-1">
+                        {/* Year Selection */}
+                        <select 
+                          value={pick.year} 
+                          onChange={(e) => updateDraftPick(pick.id, 'year', parseInt(e.target.value), false)}
+                          className="px-2 py-1 rounded bg-purple-800 text-white text-sm border border-purple-600"
+                        >
+                          {availableDraftYears.map(year => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
+                        
+                        {/* Round Selection */}
+                        <select 
+                          value={pick.round} 
+                          onChange={(e) => updateDraftPick(pick.id, 'round', parseInt(e.target.value), false)}
+                          className="px-2 py-1 rounded bg-purple-800 text-white text-sm border border-purple-600"
+                        >
+                          {[1, 2, 3, 4, 5, 6, 7].map(round => (
+                            <option key={round} value={round}>{round}</option>
+                          ))}
+                        </select>
+                        
+                        {/* Pick Position Selection */}
+                        <select 
+                          value={pick.pick_position} 
+                          onChange={(e) => updateDraftPick(pick.id, 'pick_position', parseInt(e.target.value), false)}
+                          className="px-2 py-1 rounded bg-purple-800 text-white text-sm border border-purple-600"
+                        >
+                          {Array.from({length: 32}, (_, i) => i + 1).map(position => (
+                            <option key={position} value={position}>{position}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {/* Pick Summary */}
+                      <div className="text-white text-sm font-medium">
+                        {pick.year} {pick.round}.{pick.pick_position.toString().padStart(2, '0')}
+                      </div>
+                      
+                      {/* Pick Value */}
+                      <div className="text-purple-300 text-sm">
+                        {draftPickValues[pick.id] ? `Value: ${draftPickValues[pick.id].value}` : 'Calculating...'}
+                      </div>
+                      
+                      {/* Remove Button */}
+                      <button
+                        onClick={() => removeDraftPick(pick.id, false)}
+                        className="text-purple-400 hover:text-purple-300 text-lg font-bold"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  
+                  {/* Total Draft Pick Value */}
+                  <div className="pt-2 border-t border-purple-500/30">
+                    <p className="text-purple-400 font-bold">
+                      Total Draft Pick Value: {
+                        receivingDraftPicks.reduce((sum, pick) => 
+                          sum + (draftPickValues[pick.id]?.value || 0), 0
+                        )
+                      }
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
