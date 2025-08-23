@@ -59,6 +59,20 @@ interface Player {
   positionAttributes?: PositionAttributes
   contractInfo?: ContractInfo
   enhancedData?: EnhancedPlayerData
+  careerStats?: Array<{
+    season: number
+    attempts?: number
+    rushYards?: number
+    rushAvg?: number
+    rushTDs?: number
+    rushLong?: number
+    fumbles?: number
+    receptions?: number
+    receivingYards?: number
+    receivingAvg?: number
+    receivingTDs?: number
+    receivingLong?: number
+  }>
 }
 
 interface Team {
@@ -2339,7 +2353,15 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             <div className="flex items-center gap-4 mb-6">
               <Image src={'/default-avatar.png'} alt={typeof modalPlayer.name === 'string' ? modalPlayer.name : 'Player'} width={64} height={64} className="rounded-full bg-white" />
               <div>
-                <h2 className="text-2xl font-bold text-white">{modalPlayer.name || '—'}</h2>
+                <h2 className="text-2xl font-bold text-white">
+                  <a 
+                    href={`/leagues/${league_id}/players/${modalPlayer.id}`}
+                    className="hover:text-neon-green transition-colors cursor-pointer"
+                    title="Click to view full player details"
+                  >
+                    {modalPlayer.name || '—'}
+                  </a>
+                </h2>
                 <p className="text-gray-400 text-lg">{modalPlayer.position || '—'} • {modalPlayer.team || '—'}</p>
               </div>
             </div>
@@ -2372,6 +2394,62 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     </div>
                   )}
                 </div>
+
+                {/* Career Statistics Table */}
+                {modalPlayer.careerStats && modalPlayer.careerStats.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-md font-semibold text-white border-b border-gray-600 pb-1 mb-2">Career Statistics</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-gray-600">
+                            <th className="text-left text-gray-300 p-1">Season</th>
+                            <th className="text-right text-gray-300 p-1">ATT</th>
+                            <th className="text-right text-gray-300 p-1">YDS</th>
+                            <th className="text-right text-gray-300 p-1">AVG</th>
+                            <th className="text-right text-gray-300 p-1">TD</th>
+                            <th className="text-right text-gray-300 p-1">LNG</th>
+                            <th className="text-right text-gray-300 p-1">FUM</th>
+                            <th className="text-right text-gray-300 p-1">REC</th>
+                            <th className="text-right text-gray-300 p-1">YDS</th>
+                            <th className="text-right text-gray-300 p-1">AVG</th>
+                            <th className="text-right text-gray-300 p-1">TD</th>
+                            <th className="text-right text-gray-300 p-1">LNG</th>
+                            <th className="text-right text-gray-300 p-1">Total YDS</th>
+                            <th className="text-right text-gray-300 p-1">Total TD</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {modalPlayer.careerStats.map((season, index) => (
+                            <tr key={index} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                              <td className="text-left text-white p-1 font-medium">{season.season}</td>
+                              <td className="text-right text-white p-1">{season.attempts || '-'}</td>
+                              <td className="text-right text-white p-1">{season.rushYards || '-'}</td>
+                              <td className="text-right text-white p-1">{season.rushAvg ? season.rushAvg.toFixed(1) : '-'}</td>
+                              <td className="text-right text-white p-1">{season.rushTDs || '-'}</td>
+                              <td className="text-right text-white p-1">{season.rushLong || '-'}</td>
+                              <td className="text-right text-white p-1">{season.fumbles || '-'}</td>
+                              <td className="text-right text-white p-1">{season.receptions || '-'}</td>
+                              <td className="text-right text-white p-1">{season.receivingYards || '-'}</td>
+                              <td className="text-right text-white p-1">{season.receivingAvg ? season.receivingAvg.toFixed(1) : '-'}</td>
+                              <td className="text-right text-white p-1">{season.receivingTDs || '-'}</td>
+                              <td className="text-right text-white p-1">{season.receivingLong || '-'}</td>
+                              <td className="text-right text-white p-1 font-semibold text-blue-300">
+                                {((season.rushYards || 0) + (season.receivingYards || 0)) || '-'}
+                              </td>
+                              <td className="text-right text-white p-1 font-semibold text-green-300">
+                                {((season.rushTDs || 0) + (season.receivingTDs || 0)) || '-'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-2 text-center">
+                      Stats aggregated by season • Most recent season first
+                    </div>
+                  </div>
+                )}
 
                 {/* Contract Information */}
                 {modalPlayer.contractInfo && (
