@@ -868,13 +868,40 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   }, [user, teams])
   
   const handleReceiveTeamChange = useCallback((teamName: string) => {
+    console.log('🔄 Team B selection changed:', teamName)
+    
     setReceiveTeam(teamName)
     // Find the team ID for the selected team name
     const selectedTeam = teams.find(t => t.name === teamName)
+    
     if (selectedTeam && teamName !== 'All') {
-      setSelectedTeamBId(String(selectedTeam.id))
+      const teamId = String(selectedTeam.id)
+      setSelectedTeamBId(teamId)
+      
+      // Clear cached player data when team changes
+      console.log('🧹 Clearing cached player data for fresh team context')
+      setReceivePlayersList([])
+      setReceivePlayers([])
+      setReceiveTotal(0)
+      setReceivePage(1)
+      
+      // Clear any cached trade analysis results
+      setResult(null)
+      console.log('🧹 Cleared cached trade analysis results')
+      
+      // Force fresh API call with new team context
+      setTimeout(() => {
+        console.log('🔄 Fetching fresh players with team context:', teamId)
+        // Trigger useEffect by changing page to force refresh
+        setReceivePage(1)
+      }, 100)
+      
     } else {
       setSelectedTeamBId(null)
+      // Clear data when "All" is selected
+      setReceivePlayersList([])
+      setReceivePlayers([])
+      setReceiveTotal(0)
     }
   }, [teams])
   
@@ -1212,7 +1239,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         const params = new URLSearchParams({
           page: String(givePage),
           pageSize: String(givePageSize),
-          include_enhanced: 'true'
+          include_enhanced: 'true',
+          _t: String(Date.now()) // Cache buster to prevent stale data
         })
         if (giveTeam !== 'All') params.append('team', giveTeam)
         if (givePosition !== 'All') params.append('position', givePosition)
@@ -1221,6 +1249,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         // Add trade_team_id for team need calculations for the user's team
         if (user?.id) {
           params.append('trade_team_id', String(user.id))
+          console.log('🎯 Adding trade_team_id for user team:', user.id)
         }
         
         const res = await fetch(`${API_BASE}/leagues/${league_id}/players?${params.toString()}`, {
@@ -1258,7 +1287,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         const params = new URLSearchParams({
           page: String(receivePage),
           pageSize: String(receivePageSize),
-          include_enhanced: 'true'
+          include_enhanced: 'true',
+          _t: String(Date.now()) // Cache buster to prevent stale data
         })
         if (receiveTeam !== 'All') params.append('team', receiveTeam)
         if (receivePosition !== 'All') params.append('position', receivePosition)
@@ -1267,6 +1297,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         // Add trade_team_id for team need calculations when a team is selected
         if (selectedTeamBId) {
           params.append('trade_team_id', selectedTeamBId)
+          console.log('🎯 Adding trade_team_id to API call:', selectedTeamBId)
         }
         
         const res = await fetch(`${API_BASE}/leagues/${league_id}/players?${params.toString()}`, {
