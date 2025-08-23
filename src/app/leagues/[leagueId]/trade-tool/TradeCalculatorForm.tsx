@@ -1384,9 +1384,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-neon-green font-bold">{getPlayerDisplayValue(player)}</p>
+                      <p className="text-neon-green font-bold">{player.ovr || 'N/A'}</p>
                       {player.enhancedData?.valueBreakdown && (
-                        <p className="text-xs text-blue-300">{player.enhancedData.valueBreakdown.finalValue}</p>
+                        <p className="text-xs text-blue-300">Value: {player.enhancedData.valueBreakdown.finalValue}</p>
                       )}
                     </div>
                     <button className="ml-2 text-gray-400 hover:text-white" onClick={e => { e.stopPropagation(); openPlayerModal(player); }} title="View Details" type="button">i</button>
@@ -1530,9 +1530,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-neon-green font-bold">{getPlayerDisplayValue(player)}</p>
+                      <p className="text-neon-green font-bold">{player.ovr || 'N/A'}</p>
                       {player.enhancedData?.valueBreakdown && (
-                        <p className="text-xs text-blue-300">{player.enhancedData.valueBreakdown.finalValue}</p>
+                        <p className="text-xs text-blue-300">Value: {player.enhancedData.valueBreakdown.finalValue}</p>
                       )}
                     </div>
                     <button className="ml-2 text-gray-400 hover:text-white" onClick={e => { e.stopPropagation(); openPlayerModal(player); }} title="View Details" type="button">i</button>
