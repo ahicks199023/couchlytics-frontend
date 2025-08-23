@@ -2494,92 +2494,140 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               </div>
             </div>
 
-            {/* Position-Specific Attributes */}
-            {modalPlayer.enhancedData?.positionAttributes && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-white border-b border-gray-600 pb-2 mb-4">
-                  {modalPlayer.position} Key Attributes
-                </h3>
-                
-                {/* Debug Info */}
-                <div className="mb-4 p-3 bg-gray-800/50 rounded border border-gray-600 text-xs text-gray-400">
-                  <div>Debug: enhancedData exists: {modalPlayer.enhancedData ? 'Yes' : 'No'}</div>
-                  <div>Debug: positionAttributes exists: {modalPlayer.enhancedData?.positionAttributes ? 'Yes' : 'No'}</div>
-                  <div>Debug: keyAttributes exists: {modalPlayer.enhancedData?.positionAttributes?.keyAttributes ? 'Yes' : 'No'}</div>
-                  <div>Debug: keyAttributes keys: {modalPlayer.enhancedData?.positionAttributes?.keyAttributes ? Object.keys(modalPlayer.enhancedData.positionAttributes.keyAttributes).join(', ') : 'None'}</div>
+            {/* Key Attributes Section - Positioned below Basic Information */}
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold text-white border-b border-gray-600 pb-2 mb-4">
+                {modalPlayer.position} Key Attributes
+              </h3>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Core Physical Attributes */}
+                <div>
+                  <h4 className="text-md font-semibold text-blue-300 mb-3">Core Attributes</h4>
+                  <div className="space-y-2">
+                    {modalPlayer.enhancedData?.positionAttributes?.keyAttributes ? (
+                      <>
+                        <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                          <span className="text-sm text-blue-300">Speed</span>
+                          <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.speed || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                          <span className="text-sm text-blue-300">Strength</span>
+                          <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.strength || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                          <span className="text-sm text-blue-300">Agility</span>
+                          <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.agility || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                          <span className="text-sm text-blue-300">Awareness</span>
+                          <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.awareness || 'N/A'}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-4 text-gray-400 text-sm">
+                        Core attributes not available
+                      </div>
+                    )}
+                  </div>
                 </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Key Attributes */}
-                  {modalPlayer.enhancedData?.positionAttributes?.keyAttributes && Object.keys(modalPlayer.enhancedData.positionAttributes.keyAttributes).length > 0 ? (
-                    <div>
-                      <h4 className="text-md font-semibold text-blue-300 mb-3">Key Attributes</h4>
-                      <div className="space-y-2">
-                        {Object.entries(modalPlayer.enhancedData.positionAttributes.keyAttributes).map(([key, value], index) => (
-                          <div key={index} className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
-                            <span className="text-sm text-blue-300 capitalize">{key}</span>
-                            <span className="font-bold text-white">{value}</span>
+
+                {/* Position-Specific Attributes */}
+                <div>
+                  <h4 className="text-md font-semibold text-green-300 mb-3">Position Skills</h4>
+                  <div className="space-y-2">
+                    {modalPlayer.enhancedData?.positionAttributes?.keyAttributes ? (
+                      <>
+                        {/* HB/RB Specific Attributes */}
+                        {['HB', 'RB', 'FB'].includes(modalPlayer.position || '') && (
+                          <>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Carrying</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.carrying || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Break Tackle</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.breakTackle || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Juke Move</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.jukeMove || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Spin Move</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.spinMove || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Stiff Arm</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.stiffArm || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Trucking</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.trucking || 'N/A'}</span>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* QB Specific Attributes */}
+                        {modalPlayer.position === 'QB' && (
+                          <>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Throw Accuracy</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.accuracy || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Arm Strength</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.armStrength || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Throw on Run</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.throwOnRun || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Play Action</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.playAction || 'N/A'}</span>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* WR Specific Attributes */}
+                        {['WR', 'SE', 'FL'].includes(modalPlayer.position || '') && (
+                          <>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Catching</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.catching || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Route Running</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.routeRunning || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Catch in Traffic</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.catchInTraffic || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Release</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.release || 'N/A'}</span>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Default for other positions */}
+                        {!['HB', 'RB', 'FB', 'QB', 'WR', 'SE', 'FL'].includes(modalPlayer.position || '') && (
+                          <div className="text-center py-4 text-gray-400 text-sm">
+                            Position-specific attributes not available for {modalPlayer.position}
                           </div>
-                        ))}
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-4 text-gray-400 text-sm">
+                        Position skills not available
                       </div>
-                    </div>
-                  ) : (
-                    <div className="col-span-3 text-center py-8 text-gray-400">
-                      <div className="text-lg mb-2">🔍 No Key Attributes Found</div>
-                      <div className="text-sm">The backend should be sending position-specific key attributes.</div>
-                      <div className="text-xs mt-2">Check the debug info above to see what data is available.</div>
-                    </div>
-                  )}
-
-                  {/* Development & Age */}
-                  {modalPlayer.enhancedData?.positionAttributes && (
-                    <div>
-                      <h4 className="text-md font-semibold text-green-300 mb-3">Player Info</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-300">Development Trait</span>
-                          <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.developmentTrait}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-300">Age</span>
-                          <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.age}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-300">Speed</span>
-                          <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.speed}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Additional Key Attributes - Position Specific */}
-                  {modalPlayer.enhancedData?.positionAttributes?.keyAttributes && (
-                    <div>
-                      <h4 className="text-md font-semibold text-green-300 mb-3">Additional Attributes</h4>
-                      <div className="space-y-2">
-                        {/* Show additional attributes that aren't already displayed in the main Key Attributes section */}
-                        {Object.entries(modalPlayer.enhancedData.positionAttributes.keyAttributes)
-                          .filter(([key]) => !['agility', 'awareness', 'speed', 'strength'].includes(key))
-                          .map(([key, value], index) => (
-                            <div key={index} className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
-                              <span className="text-sm text-green-300 capitalize">{key}</span>
-                              <span className="font-bold text-white">{value}</span>
-                            </div>
-                          ))}
-                        {/* If no additional attributes, show a message */}
-                        {Object.keys(modalPlayer.enhancedData.positionAttributes.keyAttributes)
-                          .filter(key => !['agility', 'awareness', 'speed', 'strength'].includes(key))
-                          .length === 0 && (
-                            <div className="text-center py-4 text-gray-400 text-sm">
-                              All key attributes displayed above
-                            </div>
-                          )}
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}
