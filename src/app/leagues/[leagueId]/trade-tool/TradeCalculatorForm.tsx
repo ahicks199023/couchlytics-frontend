@@ -923,7 +923,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     if (result?.tradeAssessment?.teamGives && givePlayers.length > 0) {
       return result.tradeAssessment.teamGives
     }
-    return givePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0)
+    return givePlayers.reduce((sum, p) => sum + getPlayerDisplayValue(p), 0)
   }, [givePlayers, result?.tradeAssessment?.teamGives])
 
   const receiveValue = useMemo(() => {
@@ -931,7 +931,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     if (result?.tradeAssessment?.teamReceives && receivePlayers.length > 0) {
       return result.tradeAssessment.teamReceives
     }
-    return receivePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0)
+    return receivePlayers.reduce((sum, p) => sum + getPlayerDisplayValue(p), 0)
   }, [receivePlayers, result?.tradeAssessment?.teamReceives])
 
   const netValue = receiveValue - giveValue
