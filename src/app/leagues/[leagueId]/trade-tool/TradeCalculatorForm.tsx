@@ -2383,7 +2383,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                 <div className="space-y-2 text-gray-300">
                   <div className="flex justify-between">
                     <span>Overall Rating:</span>
-                    <span className="font-bold text-neon-green">{getPlayerDisplayValue(modalPlayer)}</span>
+                    <span className="font-bold text-neon-green">{modalPlayer.ovr}</span>
                   </div>
                   {modalPlayer.age && (
                     <div className="flex justify-between">
