@@ -63,6 +63,7 @@ interface Player {
   tradeValue?: number
   careerStats?: Array<{
     season: number
+    // Offensive skill positions (HB, RB, FB, WR, SE, FL, TE)
     attempts?: number
     rushYards?: number
     rushAvg?: number
@@ -74,6 +75,58 @@ interface Player {
     receivingAvg?: number
     receivingTDs?: number
     receivingLong?: number
+    targets?: number
+    catchPercentage?: number
+    
+    // Quarterback stats
+    passAttempts?: number
+    passCompletions?: number
+    passYards?: number
+    passTDs?: number
+    passInts?: number
+    passRating?: number
+    passLong?: number
+    sacksTaken?: number
+    rushAttempts?: number
+    
+    // Defensive positions (RE, LE, DT, NT, LOLB, MLB, ROLB, CB, FS, SS)
+    gamesPlayed?: number
+    gamesStarted?: number
+    tackles?: number
+    assistedTackles?: number
+    sacks?: number
+    tacklesForLoss?: number
+    quarterbackHits?: number
+    passesDefended?: number
+    interceptions?: number
+    interceptionYards?: number
+    interceptionTDs?: number
+    forcedFumbles?: number
+    fumbleRecoveries?: number
+    safeties?: number
+    
+    // Offensive line positions (LT, LG, C, RG, RT)
+    passBlockSnaps?: number
+    runBlockSnaps?: number
+    sacksAllowed?: number
+    penalties?: number
+    pancakeBlocks?: number
+    
+    // Kicker and Punter
+    fieldGoalAttempts?: number
+    fieldGoalsMade?: number
+    fieldGoalPercentage?: number
+    fieldGoalLong?: number
+    extraPointAttempts?: number
+    extraPointsMade?: number
+    touchbacks?: number
+    totalPoints?: number
+    punts?: number
+    puntYards?: number
+    puntAverage?: number
+    puntLong?: number
+    puntsInside20?: number
+    netAverage?: number
   }>
 }
 
@@ -2410,50 +2463,332 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                   <div className="mt-4">
                     <h4 className="text-md font-semibold text-white border-b border-gray-600 pb-1 mb-2">Career Statistics</h4>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="border-b border-gray-600">
-                            <th className="text-left text-gray-300 p-1">Season</th>
-                            <th className="text-right text-gray-300 p-1">ATT</th>
-                            <th className="text-right text-gray-300 p-1">YDS</th>
-                            <th className="text-right text-gray-300 p-1">AVG</th>
-                            <th className="text-right text-gray-300 p-1">TD</th>
-                            <th className="text-right text-gray-300 p-1">LNG</th>
-                            <th className="text-right text-gray-300 p-1">FUM</th>
-                            <th className="text-right text-gray-300 p-1">REC</th>
-                            <th className="text-right text-gray-300 p-1">YDS</th>
-                            <th className="text-right text-gray-300 p-1">AVG</th>
-                            <th className="text-right text-gray-300 p-1">TD</th>
-                            <th className="text-right text-gray-300 p-1">LNG</th>
-                            <th className="text-right text-gray-300 p-1">Total YDS</th>
-                            <th className="text-right text-gray-300 p-1">Total TD</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {modalPlayer.careerStats.map((season, index) => (
-                            <tr key={index} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                              <td className="text-left text-white p-1 font-medium">{season.season}</td>
-                              <td className="text-right text-white p-1">{season.attempts || '-'}</td>
-                              <td className="text-right text-white p-1">{season.rushYards || '-'}</td>
-                              <td className="text-right text-white p-1">{season.rushAvg ? season.rushAvg.toFixed(1) : '-'}</td>
-                              <td className="text-right text-white p-1">{season.rushTDs || '-'}</td>
-                              <td className="text-right text-white p-1">{season.rushLong || '-'}</td>
-                              <td className="text-right text-white p-1">{season.fumbles || '-'}</td>
-                              <td className="text-right text-white p-1">{season.receptions || '-'}</td>
-                              <td className="text-right text-white p-1">{season.receivingYards || '-'}</td>
-                              <td className="text-right text-white p-1">{season.receivingAvg ? season.receivingAvg.toFixed(1) : '-'}</td>
-                              <td className="text-right text-white p-1">{season.receivingTDs || '-'}</td>
-                              <td className="text-right text-white p-1">{season.receivingLong || '-'}</td>
-                              <td className="text-right text-white p-1 font-semibold text-blue-300">
-                                {((season.rushYards || 0) + (season.receivingYards || 0)) || '-'}
-                              </td>
-                              <td className="text-right text-white p-1 font-semibold text-green-300">
-                                {((season.rushTDs || 0) + (season.receivingTDs || 0)) || '-'}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      {(() => {
+                        const position = modalPlayer.position || '';
+                        
+                        // Render position-specific stats table
+                        if (['HB', 'RB', 'FB'].includes(position)) {
+                          return (
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="border-b border-gray-600">
+                                  <th className="text-left text-gray-300 p-1">Season</th>
+                                  <th className="text-right text-gray-300 p-1">ATT</th>
+                                  <th className="text-right text-gray-300 p-1">YDS</th>
+                                  <th className="text-right text-gray-300 p-1">AVG</th>
+                                  <th className="text-right text-gray-300 p-1">TD</th>
+                                  <th className="text-right text-gray-300 p-1">LNG</th>
+                                  <th className="text-right text-gray-300 p-1">FUM</th>
+                                  <th className="text-right text-gray-300 p-1">REC</th>
+                                  <th className="text-right text-gray-300 p-1">YDS</th>
+                                  <th className="text-right text-gray-300 p-1">AVG</th>
+                                  <th className="text-right text-gray-300 p-1">TD</th>
+                                  <th className="text-right text-gray-300 p-1">LNG</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {modalPlayer.careerStats.map((season, index) => (
+                                  <tr key={index} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                                    <td className="text-left text-white p-1 font-medium">{season.season}</td>
+                                    <td className="text-right text-white p-1">{season.attempts || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.rushYards || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.rushAvg ? season.rushAvg.toFixed(1) : '-'}</td>
+                                    <td className="text-right text-white p-1">{season.rushTDs || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.rushLong || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.fumbles || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.receptions || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.receivingYards || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.receivingAvg ? season.receivingAvg.toFixed(1) : '-'}</td>
+                                    <td className="text-right text-white p-1">{season.receivingTDs || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.receivingLong || '-'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          );
+                        } else if (position === 'QB') {
+                          return (
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="border-b border-gray-600">
+                                  <th className="text-left text-gray-300 p-1">Season</th>
+                                  <th className="text-right text-gray-300 p-1">CMP</th>
+                                  <th className="text-right text-gray-300 p-1">ATT</th>
+                                  <th className="text-right text-gray-300 p-1">YDS</th>
+                                  <th className="text-right text-gray-300 p-1">TD</th>
+                                  <th className="text-right text-gray-300 p-1">INT</th>
+                                  <th className="text-right text-gray-300 p-1">RTG</th>
+                                  <th className="text-right text-gray-300 p-1">LNG</th>
+                                  <th className="text-right text-gray-300 p-1">SK</th>
+                                  <th className="text-right text-gray-300 p-1">RUSH</th>
+                                  <th className="text-right text-gray-300 p-1">YDS</th>
+                                  <th className="text-right text-gray-300 p-1">TD</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {modalPlayer.careerStats.map((season, index) => (
+                                  <tr key={index} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                                    <td className="text-left text-white p-1 font-medium">{season.season}</td>
+                                    <td className="text-right text-white p-1">{season.passCompletions || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.passAttempts || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.passYards || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.passTDs || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.passInts || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.passRating ? season.passRating.toFixed(1) : '-'}</td>
+                                    <td className="text-right text-white p-1">{season.passLong || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.sacksTaken || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.rushAttempts || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.rushYards || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.rushTDs || '-'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          );
+                        } else if (['WR', 'SE', 'FL', 'TE'].includes(position)) {
+                          return (
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="border-b border-gray-600">
+                                  <th className="text-left text-gray-300 p-1">Season</th>
+                                  <th className="text-right text-gray-300 p-1">REC</th>
+                                  <th className="text-right text-gray-300 p-1">TGT</th>
+                                  <th className="text-right text-gray-300 p-1">YDS</th>
+                                  <th className="text-right text-gray-300 p-1">AVG</th>
+                                  <th className="text-right text-gray-300 p-1">TD</th>
+                                  <th className="text-right text-gray-300 p-1">LNG</th>
+                                  <th className="text-right text-gray-300 p-1">CATCH%</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {modalPlayer.careerStats.map((season, index) => (
+                                  <tr key={index} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                                    <td className="text-left text-white p-1 font-medium">{season.season}</td>
+                                    <td className="text-right text-white p-1">{season.receptions || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.targets || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.receivingYards || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.receivingAvg ? season.receivingAvg.toFixed(1) : '-'}</td>
+                                    <td className="text-right text-white p-1">{season.receivingTDs || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.receivingLong || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.catchPercentage ? season.catchPercentage.toFixed(1) + '%' : '-'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          );
+                        } else if (['RE', 'LE', 'DT', 'NT'].includes(position)) {
+                          return (
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="border-b border-gray-600">
+                                  <th className="text-left text-gray-300 p-1">Season</th>
+                                  <th className="text-right text-gray-300 p-1">GP</th>
+                                  <th className="text-right text-gray-300 p-1">TKL</th>
+                                  <th className="text-right text-gray-300 p-1">AST</th>
+                                  <th className="text-right text-gray-300 p-1">SACK</th>
+                                  <th className="text-right text-gray-300 p-1">TFL</th>
+                                  <th className="text-right text-gray-300 p-1">QBH</th>
+                                  <th className="text-right text-gray-300 p-1">PD</th>
+                                  <th className="text-right text-gray-300 p-1">FF</th>
+                                  <th className="text-right text-gray-300 p-1">FR</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {modalPlayer.careerStats.map((season, index) => (
+                                  <tr key={index} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                                    <td className="text-left text-white p-1 font-medium">{season.season}</td>
+                                    <td className="text-right text-white p-1">{season.gamesPlayed || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.tackles || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.assistedTackles || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.sacks || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.tacklesForLoss || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.quarterbackHits || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.passesDefended || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.forcedFumbles || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.fumbleRecoveries || '-'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          );
+                        } else if (['LOLB', 'MLB', 'ROLB'].includes(position)) {
+                          return (
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="border-b border-gray-600">
+                                  <th className="text-left text-gray-300 p-1">Season</th>
+                                  <th className="text-right text-gray-300 p-1">GP</th>
+                                  <th className="text-right text-gray-300 p-1">TKL</th>
+                                  <th className="text-right text-gray-300 p-1">AST</th>
+                                  <th className="text-right text-gray-300 p-1">SACK</th>
+                                  <th className="text-right text-gray-300 p-1">TFL</th>
+                                  <th className="text-right text-gray-300 p-1">INT</th>
+                                  <th className="text-right text-gray-300 p-1">PD</th>
+                                  <th className="text-right text-gray-300 p-1">FF</th>
+                                  <th className="text-right text-gray-300 p-1">FR</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {modalPlayer.careerStats.map((season, index) => (
+                                  <tr key={index} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                                    <td className="text-left text-white p-1 font-medium">{season.season}</td>
+                                    <td className="text-right text-white p-1">{season.gamesPlayed || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.tackles || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.assistedTackles || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.sacks || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.tacklesForLoss || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.interceptions || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.passesDefended || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.forcedFumbles || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.fumbleRecoveries || '-'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          );
+                        } else if (['CB', 'FS', 'SS'].includes(position)) {
+                          return (
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="border-b border-gray-600">
+                                  <th className="text-left text-gray-300 p-1">Season</th>
+                                  <th className="text-right text-gray-300 p-1">GP</th>
+                                  <th className="text-right text-gray-300 p-1">TKL</th>
+                                  <th className="text-right text-gray-300 p-1">AST</th>
+                                  <th className="text-right text-gray-300 p-1">INT</th>
+                                  <th className="text-right text-gray-300 p-1">YDS</th>
+                                  <th className="text-right text-gray-300 p-1">TD</th>
+                                  <th className="text-right text-gray-300 p-1">PD</th>
+                                  <th className="text-right text-gray-300 p-1">FF</th>
+                                  <th className="text-right text-gray-300 p-1">FR</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {modalPlayer.careerStats.map((season, index) => (
+                                  <tr key={index} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                                    <td className="text-left text-white p-1 font-medium">{season.season}</td>
+                                    <td className="text-right text-white p-1">{season.gamesPlayed || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.tackles || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.assistedTackles || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.interceptions || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.interceptionYards || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.interceptionTDs || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.passesDefended || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.forcedFumbles || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.fumbleRecoveries || '-'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          );
+                        } else if (['LT', 'LG', 'C', 'RG', 'RT'].includes(position)) {
+                          return (
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="border-b border-gray-600">
+                                  <th className="text-left text-gray-300 p-1">Season</th>
+                                  <th className="text-right text-gray-300 p-1">GP</th>
+                                  <th className="text-right text-gray-300 p-1">GS</th>
+                                  <th className="text-right text-gray-300 p-1">PASS</th>
+                                  <th className="text-right text-gray-300 p-1">RUN</th>
+                                  <th className="text-right text-gray-300 p-1">SACK</th>
+                                  <th className="text-right text-gray-300 p-1">PEN</th>
+                                  <th className="text-right text-gray-300 p-1">PAN</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {modalPlayer.careerStats.map((season, index) => (
+                                  <tr key={index} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                                    <td className="text-left text-white p-1 font-medium">{season.season}</td>
+                                    <td className="text-right text-white p-1">{season.gamesPlayed || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.gamesStarted || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.passBlockSnaps || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.runBlockSnaps || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.sacksAllowed || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.penalties || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.pancakeBlocks || '-'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          );
+                        } else if (position === 'K') {
+                          return (
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="border-b border-gray-600">
+                                  <th className="text-left text-gray-300 p-1">Season</th>
+                                  <th className="text-right text-gray-300 p-1">GP</th>
+                                  <th className="text-right text-gray-300 p-1">FG</th>
+                                  <th className="text-right text-gray-300 p-1">FGA</th>
+                                  <th className="text-right text-gray-300 p-1">FG%</th>
+                                  <th className="text-right text-gray-300 p-1">LNG</th>
+                                  <th className="text-right text-gray-300 p-1">XP</th>
+                                  <th className="text-right text-gray-300 p-1">XPA</th>
+                                  <th className="text-right text-gray-300 p-1">TB</th>
+                                  <th className="text-right text-gray-300 p-1">PTS</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {modalPlayer.careerStats.map((season, index) => (
+                                  <tr key={index} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                                    <td className="text-left text-white p-1 font-medium">{season.season}</td>
+                                    <td className="text-right text-white p-1">{season.gamesPlayed || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.fieldGoalsMade || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.fieldGoalAttempts || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.fieldGoalPercentage ? season.fieldGoalPercentage.toFixed(1) + '%' : '-'}</td>
+                                    <td className="text-right text-white p-1">{season.fieldGoalLong || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.extraPointsMade || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.extraPointAttempts || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.touchbacks || '-'}</td>
+                                    <td className="text-right text-white p-1 font-semibold text-green-300">{season.totalPoints || '-'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          );
+                        } else if (position === 'P') {
+                          return (
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="border-b border-gray-600">
+                                  <th className="text-left text-gray-300 p-1">Season</th>
+                                  <th className="text-right text-gray-300 p-1">GP</th>
+                                  <th className="text-right text-gray-300 p-1">PUNTS</th>
+                                  <th className="text-right text-gray-300 p-1">YDS</th>
+                                  <th className="text-right text-gray-300 p-1">AVG</th>
+                                  <th className="text-right text-gray-300 p-1">LNG</th>
+                                  <th className="text-right text-gray-300 p-1">IN20</th>
+                                  <th className="text-right text-gray-300 p-1">TB</th>
+                                  <th className="text-right text-gray-300 p-1">NET</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {modalPlayer.careerStats.map((season, index) => (
+                                  <tr key={index} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                                    <td className="text-left text-white p-1 font-medium">{season.season}</td>
+                                    <td className="text-right text-white p-1">{season.gamesPlayed || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.punts || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.puntYards || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.puntAverage ? season.puntAverage.toFixed(1) : '-'}</td>
+                                    <td className="text-right text-white p-1">{season.puntLong || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.puntsInside20 || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.touchbacks || '-'}</td>
+                                    <td className="text-right text-white p-1">{season.netAverage ? season.netAverage.toFixed(1) : '-'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          );
+                        } else {
+                          // Generic fallback for any other positions
+                          return (
+                            <div className="text-center py-4 text-gray-400 text-sm">
+                              Career statistics format not defined for position: {position}
+                            </div>
+                          );
+                        }
+                      })()}
                     </div>
                     <div className="text-xs text-gray-500 mt-2 text-center">
                       Stats aggregated by season • Most recent season first
