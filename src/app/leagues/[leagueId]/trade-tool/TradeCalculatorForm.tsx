@@ -837,11 +837,15 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   }, [user, teams])
   
   const handleReceiveTeamChange = useCallback((teamName: string) => {
-
     setReceiveTeam(teamName)
-    setReceivePage(1)
-    
-  }, [])
+    // Find the team ID for the selected team name
+    const selectedTeam = teams.find(t => t.name === teamName)
+    if (selectedTeam && teamName !== 'All') {
+      setSelectedTeamBId(String(selectedTeam.id))
+    } else {
+      setSelectedTeamBId(null)
+    }
+  }, [teams])
   
   // Trade state
   const [givePlayers, setGivePlayers] = useState<Player[]>([])
@@ -867,6 +871,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [giveTotalPages, setGiveTotalPages] = useState(1)
 
   const [receiveTeam, setReceiveTeam] = useState('All')
+  const [selectedTeamBId, setSelectedTeamBId] = useState<string | null>(null)
   const [receivePosition, setReceivePosition] = useState('All')
   const [receiveSearch, setReceiveSearch] = useState('')
   const [receivePage, setReceivePage] = useState(1)
@@ -1163,6 +1168,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         if (giveTeam !== 'All') params.append('team', giveTeam)
         if (givePosition !== 'All') params.append('position', givePosition)
         if (giveSearch) params.append('search', giveSearch)
+        
+        // Add trade_team_id for team need calculations for the user's team
+        if (user?.id) {
+          params.append('trade_team_id', String(user.id))
+        }
+        
         const res = await fetch(`${API_BASE}/leagues/${league_id}/players?${params.toString()}`, {
           credentials: 'include'
         })
@@ -1181,7 +1192,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       }
     }
     fetchGivePlayers()
-  }, [league_id, giveTeam, givePosition, giveSearch, givePage, givePageSize])
+  }, [league_id, giveTeam, givePosition, giveSearch, givePage, givePageSize, user?.id])
 
   // Fetch players for Receive panel
   useEffect(() => {
@@ -1203,6 +1214,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         if (receiveTeam !== 'All') params.append('team', receiveTeam)
         if (receivePosition !== 'All') params.append('position', receivePosition)
         if (receiveSearch) params.append('search', receiveSearch)
+        
+        // Add trade_team_id for team need calculations when a team is selected
+        if (selectedTeamBId) {
+          params.append('trade_team_id', selectedTeamBId)
+        }
+        
         const res = await fetch(`${API_BASE}/leagues/${league_id}/players?${params.toString()}`, {
           credentials: 'include'
         })
@@ -1221,7 +1238,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       }
     }
     fetchReceivePlayers()
-  }, [league_id, receiveTeam, receivePosition, receiveSearch, receivePage, receivePageSize])
+  }, [league_id, receiveTeam, receivePosition, receiveSearch, receivePage, receivePageSize, selectedTeamBId])
 
   // Helper: sort function
   function sortPlayers(players: Player[], sort: string) {
@@ -1339,8 +1356,14 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                   'Loading...'
                 )}
               </div>
-
             </div>
+            
+            {/* Team Need Calculation Indicator for User's Team */}
+            {user?.id && (
+              <div className="mb-3 p-2 bg-blue-900/20 border border-blue-500/30 rounded text-xs text-blue-300">
+                🎯 <strong>Team Need Calculations Active</strong> - Player values include team-specific multipliers based on your roster needs
+              </div>
+            )}
             
 
             
@@ -1489,6 +1512,13 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                 ))}
               </select>
             </div>
+            
+            {/* Team Need Calculation Indicator */}
+            {selectedTeamBId && (
+              <div className="mb-3 p-2 bg-green-900/20 border border-green-500/30 rounded text-xs text-green-300">
+                🎯 <strong>Team Need Calculations Active</strong> - Player values now include team-specific multipliers based on {receiveTeam}&apos;s roster needs
+              </div>
+            )}
             
 
             
