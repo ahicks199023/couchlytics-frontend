@@ -2700,8 +2700,132 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                           </>
                         )}
                         
-                        {/* Default for other positions */}
-                        {!['HB', 'RB', 'FB', 'QB', 'WR', 'SE', 'FL'].includes(modalPlayer.position || '') && (
+                        {/* Defensive Line Positions (RE, LE, DT, NT) */}
+                        {['RE', 'LE', 'DT', 'NT'].includes(modalPlayer.position || '') && (
+                          <>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Block Shedding</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.blockShedding || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Power Moves</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.powerMoves || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Finesse Moves</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.finesseMoves || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Tackle</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.tackle || 'N/A'}</span>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Linebacker Positions (LOLB, MLB, ROLB) */}
+                        {['LOLB', 'MLB', 'ROLB'].includes(modalPlayer.position || '') && (
+                          <>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Tackle</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.tackle || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Hit Power</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.hitPower || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Coverage</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.coverage || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Play Recognition</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.playRecognition || 'N/A'}</span>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Defensive Back Positions (CB, FS, SS) */}
+                        {['CB', 'FS', 'SS'].includes(modalPlayer.position || '') && (
+                          <>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Man Coverage</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.manCoverage || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Zone Coverage</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.zoneCoverage || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Tackle</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.tackle || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Hit Power</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.hitPower || 'N/A'}</span>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Offensive Line Positions (LT, LG, C, RG, RT) */}
+                        {['LT', 'LG', 'C', 'RG', 'RT'].includes(modalPlayer.position || '') && (
+                          <>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Pass Block</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.passBlock || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Run Block</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.runBlock || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Impact Blocking</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.impactBlocking || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Lead Block</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.leadBlock || 'N/A'}</span>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Tight End Positions (TE) */}
+                        {modalPlayer.position === 'TE' && (
+                          <>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Catching</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.catching || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Route Running</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.routeRunning || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Catch in Traffic</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.catchInTraffic || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Run Block</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.runBlock || 'N/A'}</span>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Kicker and Punter */}
+                        {['K', 'P'].includes(modalPlayer.position || '') && (
+                          <>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Kick Power</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.kickPower || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300">Kick Accuracy</span>
+                              <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.kickAccuracy || 'N/A'}</span>
+                            </div>
+                          </>
+                        )}
+                        
+                        {/* Default for any other positions not covered */}
+                        {!['HB', 'RB', 'FB', 'QB', 'WR', 'SE', 'FL', 'RE', 'LE', 'DT', 'NT', 'LOLB', 'MLB', 'ROLB', 'CB', 'FS', 'SS', 'LT', 'LG', 'C', 'RG', 'RT', 'TE', 'K', 'P'].includes(modalPlayer.position || '') && (
                           <div className="text-center py-4 text-gray-400 text-sm">
                             Position-specific attributes not available for {modalPlayer.position}
                           </div>
