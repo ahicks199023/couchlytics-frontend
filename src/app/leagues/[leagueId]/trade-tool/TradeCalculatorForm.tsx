@@ -392,12 +392,21 @@ const calculatePlayerValue = (player: Player): number => {
   return Math.round(baseValue * multiplier)
 }
 
-// Helper function to get detailed value breakdown for a player
-const getPlayerValueBreakdown = (player: Player) => {
-  // Use backend enhancedData if available, otherwise calculate frontend fallback
-  if (player.enhancedData?.valueBreakdown) {
-    const teamNeed = player.enhancedData.valueBreakdown.teamNeed || 1.0
-    const speedMultiplier = player.enhancedData.valueBreakdown.speedMultiplier || 1.0
+  // Helper function to get detailed value breakdown for a player
+  const getPlayerValueBreakdown = (player: Player) => {
+    // Use backend enhancedData if available, otherwise calculate frontend fallback
+    if (player.enhancedData?.valueBreakdown) {
+      const teamNeed = player.enhancedData.valueBreakdown.teamNeed || 1.0
+      const speedMultiplier = player.enhancedData.valueBreakdown.speedMultiplier || 1.0
+      
+      // Debug logging for team need multiplier
+      console.log(`🔍 Player ${player.name} (${player.position}) team need debug:`, {
+        playerId: player.id,
+        teamNeed: player.enhancedData.valueBreakdown.teamNeed,
+        fallbackTeamNeed: teamNeed,
+        hasEnhancedData: !!player.enhancedData,
+        valueBreakdown: player.enhancedData.valueBreakdown
+      })
     
     return {
       baseValue: player.enhancedData.valueBreakdown.baseValue,
@@ -1696,6 +1705,18 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                 <p className="text-gray-400 text-sm">No draft picks selected</p>
               ) : (
                 <div className="space-y-2">
+                  {/* Draft Pick Headers */}
+                  <div className="flex items-center gap-2 p-2 bg-blue-800/50 rounded text-white text-sm font-medium">
+                    <div className="flex gap-2 flex-1">
+                      <div className="w-24 text-center">Draft Year</div>
+                      <div className="w-20 text-center">Draft Round</div>
+                      <div className="w-20 text-center">Draft Pick</div>
+                    </div>
+                    <div className="w-24 text-center">Summary</div>
+                    <div className="w-24 text-center">Value</div>
+                    <div className="w-8 text-center">Action</div>
+                  </div>
+                  
                   {givingDraftPicks.map((pick) => (
                     <div key={pick.id} className="flex items-center gap-2 p-2 bg-blue-900/30 rounded">
                       <div className="flex gap-2 flex-1">
@@ -1941,6 +1962,18 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                 <p className="text-gray-400 text-sm">No draft picks selected</p>
               ) : (
                 <div className="space-y-2">
+                  {/* Draft Pick Headers */}
+                  <div className="flex items-center gap-2 p-2 bg-purple-800/50 rounded text-white text-sm font-medium">
+                    <div className="flex gap-2 flex-1">
+                      <div className="w-24 text-center">Draft Year</div>
+                      <div className="w-20 text-center">Draft Round</div>
+                      <div className="w-20 text-center">Draft Pick</div>
+                    </div>
+                    <div className="w-24 text-center">Summary</div>
+                    <div className="w-24 text-center">Value</div>
+                    <div className="w-8 text-center">Action</div>
+                  </div>
+                  
                   {receivingDraftPicks.map((pick) => (
                     <div key={pick.id} className="flex items-center gap-2 p-2 bg-purple-900/30 rounded">
                       <div className="flex gap-2 flex-1">
