@@ -41,7 +41,7 @@ interface ContractInfo {
   yearsLeft: number
   contractType: string
 }
-
+Stats 
 interface Player {
   id: number
   name?: string | null
