@@ -639,7 +639,7 @@ const TeamGradeOverview = ({
   grades: Record<string, PositionalGradeData>
   title?: string
 }) => {
-  const positionOrder = ['QB', 'RB', 'WR', 'TE', 'LT', 'LG', 'C', 'RG', 'RT', 
+  const positionOrder = ['QB', 'HB', 'WR', 'TE', 'LT', 'LG', 'C', 'RG', 'RT', 
                        'LE', 'DT', 'RE', 'LOLB', 'MLB', 'ROLB', 'CB', 'FS', 'SS', 'K', 'P'];
 
   const displayPositions = positionOrder.filter(position => grades[position]);
