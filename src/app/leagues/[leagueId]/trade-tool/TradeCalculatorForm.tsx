@@ -918,6 +918,16 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [givingDraftPicks, setGivingDraftPicks] = useState<DraftPick[]>([])
   const [receivingDraftPicks, setReceivingDraftPicks] = useState<DraftPick[]>([])
   const [draftPickValues, setDraftPickValues] = useState<Record<string, DraftPickValue>>({})
+  
+  // Initialize draft years with fallback values
+  useEffect(() => {
+    if (availableDraftYears.length === 0) {
+      const currentYear = new Date().getFullYear()
+      const defaultYears = [currentYear, currentYear + 1, currentYear + 2, currentYear + 3, currentYear + 4, currentYear + 5]
+      setAvailableDraftYears(defaultYears)
+      console.log('🔄 Initializing with fallback draft years:', defaultYears)
+    }
+  }, [availableDraftYears.length])
 
   // Initialize data - runs only once per league_id
   useEffect(() => {
@@ -1294,10 +1304,30 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         const data = await response.json()
         if (data.success && data.years) {
           setAvailableDraftYears(data.years)
+          console.log('✅ Draft years fetched successfully:', data.years)
+        } else {
+          console.warn('⚠️ Draft years API response format unexpected:', data)
+          // Fallback to default years if API format is unexpected
+          const currentYear = new Date().getFullYear()
+          const defaultYears = [currentYear, currentYear + 1, currentYear + 2, currentYear + 3, currentYear + 4, currentYear + 5]
+          setAvailableDraftYears(defaultYears)
+          console.log('🔄 Using fallback draft years:', defaultYears)
         }
+      } else {
+        console.warn(`⚠️ Draft years API returned ${response.status}: ${response.statusText}`)
+        // Fallback to default years if API fails
+        const currentYear = new Date().getFullYear()
+        const defaultYears = [currentYear, currentYear + 1, currentYear + 2, currentYear + 3, currentYear + 4, currentYear + 5]
+        setAvailableDraftYears(defaultYears)
+        console.log('🔄 Using fallback draft years due to API error:', defaultYears)
       }
     } catch (error) {
-      console.error('Error fetching draft years:', error)
+      console.error('❌ Error fetching draft years:', error)
+      // Fallback to default years if API call fails completely
+      const currentYear = new Date().getFullYear()
+      const defaultYears = [currentYear, currentYear + 1, currentYear + 2, currentYear + 3, currentYear + 4, currentYear + 5]
+      setAvailableDraftYears(defaultYears)
+      console.log('🔄 Using fallback draft years due to network error:', defaultYears)
     }
   }, [league_id, isRateLimited])
 
@@ -1331,7 +1361,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   }, [league_id, isRateLimited])
 
   const addDraftPick = useCallback((isGiving: boolean) => {
-    if (availableDraftYears.length === 0) return
+    console.log('🔘 Add Draft Pick clicked:', { isGiving, availableDraftYears, user: user?.id, selectedTeamBId })
+    
+    if (availableDraftYears.length === 0) {
+      console.warn('⚠️ Cannot add draft pick: No available years loaded')
+      return
+    }
     
     const newPick: DraftPick = {
       id: Date.now().toString(),
@@ -1341,10 +1376,20 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       team_id: isGiving ? String(user?.id || '') : selectedTeamBId || ''
     }
     
+    console.log('➕ Creating new draft pick:', newPick)
+    
     if (isGiving) {
-      setGivingDraftPicks(prev => [...prev, newPick])
+      setGivingDraftPicks(prev => {
+        const updated = [...prev, newPick]
+        console.log('📤 Updated giving draft picks:', updated)
+        return updated
+      })
     } else {
-      setReceivingDraftPicks(prev => [...prev, newPick])
+      setReceivingDraftPicks(prev => {
+        const updated = [...prev, newPick]
+        console.log('📥 Updated receiving draft picks:', updated)
+        return updated
+      })
     }
     
     // Calculate value for the new pick
