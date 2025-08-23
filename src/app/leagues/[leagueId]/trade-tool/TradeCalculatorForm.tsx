@@ -1366,7 +1366,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm truncate">{player.name || '—'}</p>
-                      <p className="text-gray-400 text-xs">{player.position || '—'} • {getPlayerDisplayValue(player)} OVR • Age {player.age || '?'}</p>
+                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR • Age {player.age || '?'}</p>
                       
                       {/* Development Trait Display */}
                       {player.devTrait && (
@@ -1512,7 +1512,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm truncate">{player.name || '—'}</p>
-                      <p className="text-gray-400 text-xs">{player.position || '—'} • {getPlayerDisplayValue(player)} OVR • Age {player.age || '?'}</p>
+                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR • Age {player.age || '?'}</p>
                       
                       {/* Development Trait Display */}
                       {player.devTrait && (
