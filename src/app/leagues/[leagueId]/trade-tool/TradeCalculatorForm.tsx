@@ -2552,23 +2552,28 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     </div>
                   )}
 
-                  {/* Development & Age Info */}
-                  {modalPlayer.enhancedData?.positionAttributes && (
+                  {/* Additional Key Attributes - Position Specific */}
+                  {modalPlayer.enhancedData?.positionAttributes?.keyAttributes && (
                     <div>
-                      <h4 className="text-md font-semibold text-green-300 mb-3">Player Info</h4>
+                      <h4 className="text-md font-semibold text-green-300 mb-3">Additional Attributes</h4>
                       <div className="space-y-2">
-                        <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
-                          <span className="text-sm text-gray-300">Development Trait</span>
-                          <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.developmentTrait || 'Unknown'}</span>
-                        </div>
-                        <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
-                          <span className="text-sm text-gray-300">Age</span>
-                          <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.age || modalPlayer.age || 'Unknown'}</span>
-                        </div>
-                        <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
-                          <span className="text-sm text-gray-300">Position</span>
-                          <span className="font-bold text-white">{modalPlayer.position || 'Unknown'}</span>
-                        </div>
+                        {/* Show additional attributes that aren't already displayed in the main Key Attributes section */}
+                        {Object.entries(modalPlayer.enhancedData.positionAttributes.keyAttributes)
+                          .filter(([key]) => !['agility', 'awareness', 'speed', 'strength'].includes(key))
+                          .map(([key, value], index) => (
+                            <div key={index} className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
+                              <span className="text-sm text-green-300 capitalize">{key}</span>
+                              <span className="font-bold text-white">{value}</span>
+                            </div>
+                          ))}
+                        {/* If no additional attributes, show a message */}
+                        {Object.keys(modalPlayer.enhancedData.positionAttributes.keyAttributes)
+                          .filter(key => !['agility', 'awareness', 'speed', 'strength'].includes(key))
+                          .length === 0 && (
+                            <div className="text-center py-4 text-gray-400 text-sm">
+                              All key attributes displayed above
+                            </div>
+                          )}
                       </div>
                     </div>
                   )}
