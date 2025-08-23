@@ -1712,7 +1712,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <div className="w-20 text-center">Draft Round</div>
                       <div className="w-20 text-center">Draft Pick</div>
                     </div>
-                    <div className="w-24 text-center">Summary</div>
                     <div className="w-24 text-center">Value</div>
                     <div className="w-8 text-center">Action</div>
                   </div>
@@ -1752,11 +1751,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                             <option key={position} value={position}>{position}</option>
                           ))}
                         </select>
-                      </div>
-                      
-                      {/* Pick Summary */}
-                      <div className="text-white text-sm font-medium">
-                        {pick.year} {pick.round}.{pick.pick_position.toString().padStart(2, '0')}
                       </div>
                       
                       {/* Pick Value */}
@@ -1969,7 +1963,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <div className="w-20 text-center">Draft Round</div>
                       <div className="w-20 text-center">Draft Pick</div>
                     </div>
-                    <div className="w-24 text-center">Summary</div>
                     <div className="w-24 text-center">Value</div>
                     <div className="w-8 text-center">Action</div>
                   </div>
@@ -2009,11 +2002,6 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                             <option key={position} value={position}>{position}</option>
                           ))}
                         </select>
-                      </div>
-                      
-                      {/* Pick Summary */}
-                      <div className="text-white text-sm font-medium">
-                        {pick.year} {pick.round}.{pick.pick_position.toString().padStart(2, '0')}
                       </div>
                       
                       {/* Pick Value */}
