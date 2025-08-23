@@ -14,6 +14,7 @@ interface ValueBreakdown {
   ageFactor: number
   devTrait: number
   speed: number
+  speedMultiplier?: number
   position: number
   teamNeed: number
   finalValue: number
@@ -373,13 +374,20 @@ const calculatePlayerValue = (player: Player): number => {
 const getPlayerValueBreakdown = (player: Player) => {
   // Use backend enhancedData if available, otherwise calculate frontend fallback
   if (player.enhancedData?.valueBreakdown) {
+    const teamNeed = player.enhancedData.valueBreakdown.teamNeed || 1.0
+    const speedMultiplier = player.enhancedData.valueBreakdown.speedMultiplier || 1.0
+    
     return {
       baseValue: player.enhancedData.valueBreakdown.baseValue,
       positionMultiplier: player.enhancedData.valueBreakdown.position,
       ageFactor: player.enhancedData.valueBreakdown.ageFactor,
       devTraitMultiplier: player.enhancedData.valueBreakdown.devTrait,
+      teamNeed: teamNeed,
+      speedMultiplier: speedMultiplier,
       afterAge: Math.round(player.enhancedData.valueBreakdown.baseValue * player.enhancedData.valueBreakdown.ageFactor),
       afterDev: Math.round(player.enhancedData.valueBreakdown.baseValue * player.enhancedData.valueBreakdown.ageFactor * player.enhancedData.valueBreakdown.devTrait),
+      afterPosition: Math.round(player.enhancedData.valueBreakdown.baseValue * player.enhancedData.valueBreakdown.ageFactor * player.enhancedData.valueBreakdown.devTrait * player.enhancedData.valueBreakdown.position),
+      afterTeamNeed: Math.round(player.enhancedData.valueBreakdown.baseValue * player.enhancedData.valueBreakdown.ageFactor * player.enhancedData.valueBreakdown.devTrait * player.enhancedData.valueBreakdown.position * teamNeed),
       finalValue: player.enhancedData.valueBreakdown.finalValue,
       position: player.position || 'Unknown',
       age: player.age || 'Unknown',
@@ -388,7 +396,9 @@ const getPlayerValueBreakdown = (player: Player) => {
       explanations: {
         age: `Age ${player.enhancedData.positionAttributes?.age || 'Unknown'}: ${(Number(player.enhancedData.valueBreakdown.ageFactor) || 1.0).toFixed(2)}x multiplier`,
         devTrait: `${getDevTraitDisplay(Number(player.devTrait)) || 'Normal'} trait: ${(Number(player.enhancedData.valueBreakdown.devTrait) || 1.0).toFixed(2)}x multiplier`,
-        position: `${player.position} position: ${(Number(player.enhancedData.valueBreakdown.position) || 1.0).toFixed(2)}x multiplier`
+        position: `${player.position} position: ${(Number(player.enhancedData.valueBreakdown.position) || 1.0).toFixed(2)}x multiplier`,
+        teamNeed: `Team Need: ${teamNeed.toFixed(2)}x multiplier`,
+        speed: `Speed Bonus: ${speedMultiplier.toFixed(2)}x multiplier`
       },
       isBackendCalculated: true
     }
@@ -430,18 +440,30 @@ const getPlayerValueBreakdown = (player: Player) => {
     devTraitMultiplier = devMultipliers[traitValue] || 1.0
   }
   
+  // Team Need multiplier (placeholder - would need team analysis logic)
+  const teamNeed = 1.0
+  
+  // Speed multiplier (placeholder - would need speed rating analysis)
+  const speedMultiplier = 1.0
+  
   // Step-by-step calculation
   const afterAge = baseOVR * ageFactor
   const afterDev = afterAge * devTraitMultiplier
-  const finalValue = Math.round(afterDev * positionMultiplier)
+  const afterPosition = afterDev * positionMultiplier
+  const afterTeamNeed = afterPosition * teamNeed
+  const finalValue = Math.round(afterTeamNeed * speedMultiplier)
   
   return {
     baseOVR,
     positionMultiplier,
     ageFactor,
     devTraitMultiplier,
+    teamNeed,
+    speedMultiplier,
     afterAge: Math.round(afterAge),
     afterDev: Math.round(afterDev),
+    afterPosition: Math.round(afterPosition),
+    afterTeamNeed: Math.round(afterTeamNeed),
     finalValue,
     position: player.position || 'Unknown',
     age: player.age || 'Unknown',
@@ -450,12 +472,16 @@ const getPlayerValueBreakdown = (player: Player) => {
       `Base Value: ${baseOVR} OVR`,
       `Age Factor: ${baseOVR} × ${ageFactor.toFixed(2)} = ${Math.round(afterAge)}`,
       `Dev Trait: ${Math.round(afterAge)} × ${devTraitMultiplier} = ${Math.round(afterDev)}`,
-      `Position: ${Math.round(afterDev)} × ${positionMultiplier} = ${finalValue}`
+      `Position: ${Math.round(afterDev)} × ${positionMultiplier} = ${Math.round(afterPosition)}`,
+      `Team Need: ${Math.round(afterPosition)} × ${teamNeed} = ${Math.round(afterTeamNeed)}`,
+      `Speed Bonus: ${Math.round(afterTeamNeed)} × ${speedMultiplier} = ${finalValue}`
     ],
     explanations: {
       age: `Age ${player.age || 'Unknown'}: ${ageFactor.toFixed(2)}x multiplier`,
       devTrait: `${getDevTraitDisplay(Number(player.devTrait)) || 'Normal'} trait: ${devTraitMultiplier}x multiplier`,
-      position: `${player.position} position: ${positionMultiplier}x multiplier`
+      position: `${player.position} position: ${positionMultiplier}x multiplier`,
+      teamNeed: `Team Need: ${teamNeed}x multiplier`,
+      speed: `Speed Bonus: ${speedMultiplier}x multiplier`
     },
     isBackendCalculated: false
   }
@@ -2277,7 +2303,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       </div>
                       
                       <div className="space-y-2 text-sm">
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-5 gap-2">
                           <div className="text-center bg-gray-600/50 rounded p-2">
                             <div className="font-mono text-white">{breakdown.baseOVR}</div>
                             <div className="text-xs text-gray-400">Base OVR</div>
@@ -2294,11 +2320,31 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                             <div className="text-xs text-gray-400">After Dev</div>
                             <div className="text-xs text-purple-300">({getDevTraitDisplay(breakdown.devTraitMultiplier)})</div>
                           </div>
+                          
+                          <div className="text-center bg-gray-600/50 rounded p-2">
+                            <div className="font-mono text-white">{breakdown.afterPosition || breakdown.afterDev}</div>
+                            <div className="text-xs text-gray-400">After Position</div>
+                            <div className="text-xs text-yellow-300">×{(Number(breakdown.positionMultiplier) || 1.0).toFixed(1)}</div>
+                          </div>
+                          
+                          <div className="text-center bg-gray-600/50 rounded p-2">
+                            <div className="font-mono text-white">{breakdown.afterTeamNeed || breakdown.afterPosition || breakdown.afterDev}</div>
+                            <div className="text-xs text-gray-400">After Team Need</div>
+                            <div className="text-xs text-green-300">×{(Number(breakdown.teamNeed) || 1.0).toFixed(2)}</div>
+                          </div>
                         </div>
                         
-                        <div className="flex justify-between items-center bg-gray-600/30 rounded p-2">
-                          <span className="text-gray-300">Position Multiplier ({breakdown.position}):</span>
-                          <span className="font-mono text-yellow-300">×{(Number(breakdown.positionMultiplier) || 1.0).toFixed(1)}</span>
+                        {/* Additional multipliers display */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="flex justify-between items-center bg-gray-600/30 rounded p-2">
+                            <span className="text-gray-300">Speed Bonus:</span>
+                            <span className="font-mono text-orange-300">×{(Number(breakdown.speedMultiplier) || 1.0).toFixed(2)}</span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center bg-gray-600/30 rounded p-2">
+                            <span className="text-gray-300">Position ({breakdown.position}):</span>
+                            <span className="font-mono text-yellow-300">×{(Number(breakdown.positionMultiplier) || 1.0).toFixed(1)}</span>
+                          </div>
                         </div>
                         
                         <div className="text-xs text-purple-300">
@@ -2341,7 +2387,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       </div>
                       
                       <div className="space-y-2 text-sm">
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-5 gap-2">
                           <div className="text-center bg-gray-600/50 rounded p-2">
                             <div className="font-mono text-white">{breakdown.baseOVR}</div>
                             <div className="text-xs text-gray-400">Base OVR</div>
@@ -2358,11 +2404,31 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                             <div className="text-xs text-gray-400">After Dev</div>
                             <div className="text-xs text-purple-300">({getDevTraitDisplay(breakdown.devTraitMultiplier)})</div>
                           </div>
+                          
+                          <div className="text-center bg-gray-600/50 rounded p-2">
+                            <div className="font-mono text-white">{breakdown.afterPosition || breakdown.afterDev}</div>
+                            <div className="text-xs text-gray-400">After Position</div>
+                            <div className="text-xs text-yellow-300">×{(Number(breakdown.positionMultiplier) || 1.0).toFixed(1)}</div>
+                          </div>
+                          
+                          <div className="text-center bg-gray-600/50 rounded p-2">
+                            <div className="font-mono text-white">{breakdown.afterTeamNeed || breakdown.afterPosition || breakdown.afterDev}</div>
+                            <div className="text-xs text-gray-400">After Team Need</div>
+                            <div className="text-xs text-green-300">×{(Number(breakdown.teamNeed) || 1.0).toFixed(2)}</div>
+                          </div>
                         </div>
                         
-                        <div className="flex justify-between items-center bg-gray-600/30 rounded p-2">
-                          <span className="text-gray-300">Position Multiplier ({breakdown.position}):</span>
-                          <span className="font-mono text-yellow-300">×{(Number(breakdown.positionMultiplier) || 1.0).toFixed(1)}</span>
+                        {/* Additional multipliers display */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="flex justify-between items-center bg-gray-600/30 rounded p-2">
+                            <span className="text-gray-300">Speed Bonus:</span>
+                            <span className="font-mono text-orange-300">×{(Number(breakdown.speedMultiplier) || 1.0).toFixed(2)}</span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center bg-gray-600/30 rounded p-2">
+                            <span className="text-gray-300">Position ({breakdown.position}):</span>
+                            <span className="font-mono text-yellow-300">×{(Number(breakdown.positionMultiplier) || 1.0).toFixed(1)}</span>
+                          </div>
                         </div>
                         
                         <div className="text-xs text-purple-300">
@@ -2390,8 +2456,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               <div>1. <span className="text-blue-300">Age Factor</span>: Younger players more valuable (22 = 1.0, decreases by 0.02 per year, min 0.7)</div>
               <div>2. <span className="text-purple-300">Development Trait</span>: X-Factor ×1.5, Superstar ×1.3, Star ×1.2, Hidden ×1.1, Normal ×1.0, Slow ×0.9</div>
               <div>3. <span className="text-yellow-300">Position Multiplier</span>: QB ×1.2, WR ×1.1, HB/CB/MLB ×1.0, etc.</div>
+              <div>4. <span className="text-green-300">Team Need Multiplier</span>: Based on team&apos;s current roster depth and positional needs</div>
+              <div>5. <span className="text-orange-300">Speed Multiplier</span>: High speed ratings provide additional value bonuses</div>
               <div className="font-mono text-xs bg-gray-800 p-2 rounded mt-2">
-                Final Value = ((Base OVR × Age Factor) × Dev Trait) × Position Multiplier
+                Final Value = (((Base OVR × Age Factor) × Dev Trait) × Position Multiplier) × Team Need × Speed Bonus
               </div>
             </div>
           </div>
