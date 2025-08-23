@@ -1636,12 +1636,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       )}
                       
                       {/* Enhanced Value Display */}
-                      {player.enhancedData?.valueBreakdown && (
+                      {player.valueBreakdown && (
                         <div className="mt-1">
-                          <span className="text-xs text-blue-300">Value: {player.enhancedData.valueBreakdown.finalValue}</span>
-                          {player.enhancedData.positionAttributes?.specialties && player.enhancedData.positionAttributes.specialties.length > 0 && (
+                          <span className="text-xs text-blue-300">Value: {player.valueBreakdown.finalValue}</span>
+                          {player.positionAttributes?.specialties && player.positionAttributes.specialties.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {player.enhancedData.positionAttributes.specialties.slice(0, 2).map((specialty, index) => (
+                              {player.positionAttributes.specialties.slice(0, 2).map((specialty, index) => (
                                 <span key={index} className="text-xs bg-blue-900/30 border border-blue-500/30 rounded px-1 py-0.5 text-blue-200">
                                   {specialty}
                                 </span>
@@ -1653,8 +1653,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     </div>
                     <div className="text-right">
                       <p className="text-neon-green font-bold">{player.ovr || 'N/A'}</p>
-                      {player.enhancedData?.valueBreakdown && (
-                        <p className="text-xs text-blue-300">Value: {player.enhancedData.valueBreakdown.finalValue}</p>
+                      {player.valueBreakdown && (
+                        <p className="text-xs text-blue-300">Value: {player.valueBreakdown.finalValue}</p>
                       )}
                     </div>
                     <button className="ml-2 text-gray-400 hover:text-white" onClick={e => { e.stopPropagation(); openPlayerModal(player); }} title="View Details" type="button">i</button>
@@ -1887,12 +1887,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       )}
                       
                       {/* Enhanced Value Display */}
-                      {player.enhancedData?.valueBreakdown && (
+                      {player.valueBreakdown && (
                         <div className="mt-1">
-                          <span className="text-xs text-blue-300">Value: {player.enhancedData.valueBreakdown.finalValue}</span>
-                          {player.enhancedData.positionAttributes?.specialties && player.enhancedData.positionAttributes.specialties.length > 0 && (
+                          <span className="text-xs text-blue-300">Value: {player.valueBreakdown.finalValue}</span>
+                          {player.positionAttributes?.specialties && player.positionAttributes.specialties.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {player.enhancedData.positionAttributes.specialties.slice(0, 2).map((specialty, index) => (
+                              {player.positionAttributes.specialties.slice(0, 2).map((specialty, index) => (
                                 <span key={index} className="text-xs bg-blue-900/30 border border-blue-500/30 rounded px-1 py-0.5 text-blue-200">
                                   {specialty}
                                 </span>
@@ -1904,8 +1904,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     </div>
                     <div className="text-right">
                       <p className="text-neon-green font-bold">{player.ovr || 'N/A'}</p>
-                      {player.enhancedData?.valueBreakdown && (
-                        <p className="text-xs text-blue-300">Value: {player.enhancedData.valueBreakdown.finalValue}</p>
+                      {player.valueBreakdown && (
+                        <p className="text-xs text-blue-300">Value: {player.valueBreakdown.finalValue}</p>
                       )}
                     </div>
                     <button className="ml-2 text-gray-400 hover:text-white" onClick={e => { e.stopPropagation(); openPlayerModal(player); }} title="View Details" type="button">i</button>
@@ -2438,16 +2438,16 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         </div>
                       </div>
                       
-                      {player.enhancedData?.valueBreakdown ? (
+                      {player.valueBreakdown ? (
                         <div className="enhanced-value">
                           <div className="final-value text-center mb-3">
-                            <span className="text-2xl font-bold text-red-300">Value: {player.enhancedData.valueBreakdown.finalValue}</span>
+                            <span className="text-2xl font-bold text-red-300">Value: {player.valueBreakdown.finalValue}</span>
                           </div>
                           <div className="value-breakdown">
                             <details className="text-sm">
                               <summary className="cursor-pointer text-blue-300 hover:text-blue-200">View Value Calculation</summary>
                               <div className="mt-2 space-y-1 text-gray-300">
-                                {player.enhancedData.valueBreakdown.calculationSteps.map((step, index) => (
+                                {player.valueBreakdown.calculationSteps.map((step, index) => (
                                   <div key={index} className="breakdown-step text-xs">{step}</div>
                                 ))}
                               </div>
@@ -2479,16 +2479,16 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         </div>
                       </div>
                       
-                      {player.enhancedData?.valueBreakdown ? (
+                      {player.valueBreakdown ? (
                         <div className="enhanced-value">
                           <div className="final-value text-center mb-3">
-                            <span className="text-2xl font-bold text-green-300">Value: {player.enhancedData.valueBreakdown.finalValue}</span>
+                            <span className="text-2xl font-bold text-green-300">Value: {player.valueBreakdown.finalValue}</span>
                           </div>
                           <div className="value-breakdown">
                             <details className="text-sm">
                               <summary className="cursor-pointer text-blue-300 hover:text-blue-200">View Value Calculation</summary>
                               <div className="mt-2 space-y-1 text-gray-300">
-                                {player.enhancedData.valueBreakdown.calculationSteps.map((step, index) => (
+                                {player.valueBreakdown.calculationSteps.map((step, index) => (
                                   <div key={index} className="breakdown-step text-xs">{step}</div>
                                 ))}
                               </div>
@@ -3348,10 +3348,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <span className="text-gray-300 font-medium">Age Factor</span>
                       <div className="text-right">
                         <div className="text-white font-medium">
-                          {modalPlayer.enhancedData.valueBreakdown.baseValue || getPlayerDisplayValue(modalPlayer)} × {modalPlayer.enhancedData.valueBreakdown.ageFactor || 1}
+                          {modalPlayer.valueBreakdown.baseValue || getPlayerDisplayValue(modalPlayer)} × {modalPlayer.valueBreakdown.ageFactor || 1}
                         </div>
-                        <div className={`text-xs ${(modalPlayer.enhancedData.valueBreakdown.ageFactor || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData.valueBreakdown.ageFactor || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
-                          {(modalPlayer.enhancedData.valueBreakdown.ageFactor || 1) > 1 ? '↑ Age bonus' : (modalPlayer.enhancedData.valueBreakdown.ageFactor || 1) < 1 ? '↓ Age penalty' : 'No age adjustment'}
+                        <div className={`text-xs ${(modalPlayer.valueBreakdown.ageFactor || 1) > 1 ? 'text-green-400' : (modalPlayer.valueBreakdown.ageFactor || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {(modalPlayer.valueBreakdown.ageFactor || 1) > 1 ? '↑ Age bonus' : (modalPlayer.valueBreakdown.ageFactor || 1) < 1 ? '↓ Age penalty' : 'No age adjustment'}
                         </div>
                       </div>
                     </div>
@@ -3361,10 +3361,10 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <span className="text-gray-300 font-medium">Development Trait</span>
                       <div className="text-right">
                         <div className="text-white font-medium">
-                          {modalPlayer.enhancedData?.valueBreakdown?.baseValue || getPlayerDisplayValue(modalPlayer)} × {getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0)}
+                          {modalPlayer.valueBreakdown?.baseValue || getPlayerDisplayValue(modalPlayer)} × {getDevTraitMultiplier(modalPlayer.valueBreakdown?.devTrait || 0)}
                         </div>
-                        <div className={`text-xs ${getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0) > 1 ? 'text-green-400' : getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
-                          {getDevTraitDisplay(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0)} {getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0) > 1 ? '↑ Trait bonus' : getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0) < 1 ? '↓ Trait penalty' : 'No trait adjustment'}
+                        <div className={`text-xs ${getDevTraitMultiplier(modalPlayer.valueBreakdown?.devTrait || 0) > 1 ? 'text-green-400' : getDevTraitMultiplier(modalPlayer.valueBreakdown?.devTrait || 0) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {getDevTraitDisplay(modalPlayer.valueBreakdown?.devTrait || 0)} {getDevTraitMultiplier(modalPlayer.valueBreakdown?.devTrait || 0) > 1 ? '↑ Trait bonus' : getDevTraitMultiplier(modalPlayer.valueBreakdown?.devTrait || 0) < 1 ? '↓ Trait penalty' : 'No trait adjustment'}
                         </div>
                       </div>
                     </div>
@@ -3422,7 +3422,15 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       {modalPlayer.valueBreakdown ? (
                         'Enhanced breakdown loaded successfully!'
                       ) : (
-                        'Enhanced breakdown will be available once backend data is loaded'
+                        <>
+                          Enhanced breakdown will be available once backend data is loaded
+                          <br />
+                          <span className="text-xs text-red-400">
+                            Debug: {modalPlayer.name} - valueBreakdown: {modalPlayer.valueBreakdown ? 'EXISTS' : 'MISSING'} | 
+                            positionAttributes: {modalPlayer.positionAttributes ? 'EXISTS' : 'MISSING'} |
+                            contractInfo: {modalPlayer.contractInfo ? 'EXISTS' : 'MISSING'}
+                          </span>
+                        </>
                       )}
                     </div>
                   </div>
