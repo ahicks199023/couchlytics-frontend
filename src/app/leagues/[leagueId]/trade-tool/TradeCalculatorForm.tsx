@@ -59,6 +59,8 @@ interface Player {
   positionAttributes?: PositionAttributes
   contractInfo?: ContractInfo
   enhancedData?: EnhancedPlayerData
+  calculatedValue?: number
+  tradeValue?: number
   careerStats?: Array<{
     season: number
     attempts?: number
@@ -149,6 +151,14 @@ const getDevTraitColor = (trait: string): string => {
     'Slow': '#E74C3C'           // Dark Red
   };
   return colors[trait] || '#95A5A6';
+};
+
+// Helper function to get player display value (enhanced or fallback)
+const getPlayerDisplayValue = (player: Player): number => {
+  return player.calculatedValue || 
+         player.tradeValue || 
+         player.enhancedData?.valueBreakdown?.finalValue || 
+         player.ovr;
 };
 
 // Removed unused function to fix ESLint error
@@ -1321,7 +1331,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-neon-green font-bold">{player.ovr}</p>
+                      <p className="text-neon-green font-bold">{getPlayerDisplayValue(player)}</p>
                       {player.enhancedData?.valueBreakdown && (
                         <p className="text-xs text-blue-300">{player.enhancedData.valueBreakdown.finalValue}</p>
                       )}
@@ -1334,7 +1344,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             <div className="flex items-center justify-center gap-2 mt-2">
               <button onClick={() => setGivePage(givePage - 1)} disabled={givePage === 1} className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50">Prev</button>
               <span className="text-gray-300">Page {givePage} of {giveTotalPages}</span>
-              <button onClick={() => setGivePage(givePage + 1)} disabled={givePage === giveTotalPages} className="px-2 py-1 rounded bg-gray-700 text-white disabled:opacity-50">Next</button>
+              <button onClick={() => setGivePage(givePage + 1)} disabled={givePage === giveTotalPages} className="px-2 px-1 rounded bg-gray-700 text-white disabled:opacity-50">Next</button>
             </div>
           </div>
           
@@ -1356,7 +1366,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm truncate">{player.name || '—'}</p>
-                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR • Age {player.age || '?'}</p>
+                      <p className="text-gray-400 text-xs">{player.position || '—'} • {getPlayerDisplayValue(player)} OVR • Age {player.age || '?'}</p>
                       
                       {/* Development Trait Display */}
                       {player.devTrait && (
@@ -1467,7 +1477,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-neon-green font-bold">{player.ovr}</p>
+                      <p className="text-neon-green font-bold">{getPlayerDisplayValue(player)}</p>
                       {player.enhancedData?.valueBreakdown && (
                         <p className="text-xs text-blue-300">{player.enhancedData.valueBreakdown.finalValue}</p>
                       )}
@@ -1502,7 +1512,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm truncate">{player.name || '—'}</p>
-                      <p className="text-gray-400 text-xs">{player.position || '—'} • {player.ovr} OVR • Age {player.age || '?'}</p>
+                      <p className="text-gray-400 text-xs">{player.position || '—'} • {getPlayerDisplayValue(player)} OVR • Age {player.age || '?'}</p>
                       
                       {/* Development Trait Display */}
                       {player.devTrait && (
@@ -1900,7 +1910,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         <Image src={'/default-avatar.png'} alt={player.name || 'Player'} width={32} height={32} className="rounded-full bg-white" />
                         <div>
                           <h5 className="font-semibold text-white">{player.name}</h5>
-                          <p className="text-sm text-gray-400">{player.position} • {player.ovr} OVR • Age {player.age}</p>
+                          <p className="text-sm text-gray-400">{player.position} • {getPlayerDisplayValue(player)} OVR • Age {player.age}</p>
                         </div>
                       </div>
                       
@@ -1941,7 +1951,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         <Image src={'/default-avatar.png'} alt={player.name || 'Player'} width={32} height={32} className="rounded-full bg-white" />
                         <div>
                           <h5 className="font-semibold text-white">{player.name}</h5>
-                          <p className="text-sm text-gray-400">{player.position} • {player.ovr} OVR • Age {player.age}</p>
+                          <p className="text-sm text-gray-400">{player.position} • {getPlayerDisplayValue(player)} OVR • Age {player.age}</p>
                         </div>
                       </div>
                       
@@ -2373,7 +2383,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                 <div className="space-y-2 text-gray-300">
                   <div className="flex justify-between">
                     <span>Overall Rating:</span>
-                    <span className="font-bold text-neon-green">{modalPlayer.ovr}</span>
+                    <span className="font-bold text-neon-green">{getPlayerDisplayValue(modalPlayer)}</span>
                   </div>
                   {modalPlayer.age && (
                     <div className="flex justify-between">
@@ -2482,7 +2492,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     {/* Base Value */}
                     <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded border border-gray-700">
                       <span className="text-gray-300 font-medium">Base Value</span>
-                      <span className="text-white font-semibold">{modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} OVR</span>
+                      <span className="text-white font-semibold">{modalPlayer.enhancedData.valueBreakdown.baseValue || getPlayerDisplayValue(modalPlayer)} OVR</span>
                     </div>
                     
                     {/* Age Factor */}
@@ -2490,7 +2500,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <span className="text-gray-300 font-medium">Age Factor</span>
                       <div className="text-right">
                         <div className="text-white font-medium">
-                          {modalPlayer.enhancedData.valueBreakdown.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData.valueBreakdown.ageFactor || 1}
+                          {modalPlayer.enhancedData.valueBreakdown.baseValue || getPlayerDisplayValue(modalPlayer)} × {modalPlayer.enhancedData.valueBreakdown.ageFactor || 1}
                         </div>
                         <div className={`text-xs ${(modalPlayer.enhancedData.valueBreakdown.ageFactor || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData.valueBreakdown.ageFactor || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
                           {(modalPlayer.enhancedData.valueBreakdown.ageFactor || 1) > 1 ? '↑ Age bonus' : (modalPlayer.enhancedData.valueBreakdown.ageFactor || 1) < 1 ? '↓ Age penalty' : 'No age adjustment'}
@@ -2503,7 +2513,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <span className="text-gray-300 font-medium">Development Trait</span>
                       <div className="text-right">
                         <div className="text-white font-medium">
-                          {modalPlayer.enhancedData?.valueBreakdown?.baseValue || modalPlayer.ovr} × {getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0)}
+                          {modalPlayer.enhancedData?.valueBreakdown?.baseValue || getPlayerDisplayValue(modalPlayer)} × {getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0)}
                         </div>
                         <div className={`text-xs ${getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0) > 1 ? 'text-green-400' : getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
                           {getDevTraitDisplay(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0)} {getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0) > 1 ? '↑ Trait bonus' : getDevTraitMultiplier(modalPlayer.enhancedData?.valueBreakdown?.devTrait || 0) < 1 ? '↓ Trait penalty' : 'No trait adjustment'}
@@ -2516,7 +2526,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <span className="text-gray-300 font-medium">Speed Bonus</span>
                       <div className="text-right">
                         <div className="text-white font-medium">
-                          {modalPlayer.enhancedData?.valueBreakdown?.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData?.valueBreakdown?.speed || 1}
+                          {modalPlayer.enhancedData?.valueBreakdown?.baseValue || getPlayerDisplayValue(modalPlayer)} × {modalPlayer.enhancedData?.valueBreakdown?.speed || 1}
                         </div>
                         <div className={`text-xs ${(modalPlayer.enhancedData?.valueBreakdown?.speed || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData?.valueBreakdown?.speed || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
                           {(modalPlayer.enhancedData?.valueBreakdown?.speed || 1) > 1 ? '↑ Speed bonus' : (modalPlayer.enhancedData?.valueBreakdown?.speed || 1) < 1 ? '↓ Speed penalty' : 'No speed adjustment'}
@@ -2529,7 +2539,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <span className="text-gray-300 font-medium">Position</span>
                       <div className="text-right">
                         <div className="text-white font-medium">
-                          {modalPlayer.enhancedData?.valueBreakdown?.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData?.valueBreakdown?.position || 1}
+                          {modalPlayer.enhancedData?.valueBreakdown?.baseValue || getPlayerDisplayValue(modalPlayer)} × {modalPlayer.enhancedData?.valueBreakdown?.position || 1}
                         </div>
                         <div className={`text-xs ${(modalPlayer.enhancedData?.valueBreakdown?.position || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData?.valueBreakdown?.position || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
                           {(modalPlayer.enhancedData?.valueBreakdown?.position || 1) > 1 ? '↑ Position premium' : (modalPlayer.enhancedData?.valueBreakdown?.position || 1) < 1 ? '↓ Position discount' : 'Standard position value'}
@@ -2542,7 +2552,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       <span className="text-gray-300 font-medium">Team Need</span>
                       <div className="text-right">
                         <div className="text-white font-medium">
-                          {modalPlayer.enhancedData?.valueBreakdown?.baseValue || modalPlayer.ovr} × {modalPlayer.enhancedData?.valueBreakdown?.teamNeed || 1}
+                          {modalPlayer.enhancedData?.valueBreakdown?.baseValue || getPlayerDisplayValue(modalPlayer)} × {modalPlayer.enhancedData?.valueBreakdown?.teamNeed || 1}
                         </div>
                         <div className={`text-xs ${(modalPlayer.enhancedData?.valueBreakdown?.teamNeed || 1) > 1 ? 'text-green-400' : (modalPlayer.enhancedData?.valueBreakdown?.teamNeed || 1) < 1 ? 'text-red-400' : 'text-gray-400'}`}>
                           {(modalPlayer.enhancedData?.valueBreakdown?.teamNeed || 1) > 1 ? '↑ High team need' : (modalPlayer.enhancedData?.valueBreakdown?.teamNeed || 1) < 1 ? '↓ Low team need' : 'Standard team need'}
