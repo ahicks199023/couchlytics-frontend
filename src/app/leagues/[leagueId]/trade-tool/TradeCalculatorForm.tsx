@@ -2438,16 +2438,16 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         </div>
                       </div>
                       
-                      {player.valueBreakdown ? (
+                      {player.enhancedData?.valueBreakdown ? (
                         <div className="enhanced-value">
                           <div className="final-value text-center mb-3">
-                            <span className="text-2xl font-bold text-red-300">Value: {player.valueBreakdown.finalValue}</span>
+                            <span className="text-2xl font-bold text-red-300">Value: {player.enhancedData.valueBreakdown.finalValue}</span>
                           </div>
                           <div className="value-breakdown">
                             <details className="text-sm">
                               <summary className="cursor-pointer text-blue-300 hover:text-blue-200">View Value Calculation</summary>
                               <div className="mt-2 space-y-1 text-gray-300">
-                                {player.valueBreakdown.calculationSteps.map((step, index) => (
+                                {player.enhancedData.valueBreakdown.calculationSteps.map((step, index) => (
                                   <div key={index} className="breakdown-step text-xs">{step}</div>
                                 ))}
                               </div>
@@ -2479,16 +2479,16 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         </div>
                       </div>
                       
-                      {player.valueBreakdown ? (
+                      {player.enhancedData?.valueBreakdown ? (
                         <div className="enhanced-value">
                           <div className="final-value text-center mb-3">
-                            <span className="text-2xl font-bold text-green-300">Value: {player.valueBreakdown.finalValue}</span>
+                            <span className="text-2xl font-bold text-green-300">Value: {player.enhancedData.valueBreakdown.finalValue}</span>
                           </div>
                           <div className="value-breakdown">
                             <details className="text-sm">
                               <summary className="cursor-pointer text-blue-300 hover:text-blue-200">View Value Calculation</summary>
                               <div className="mt-2 space-y-1 text-gray-300">
-                                {player.valueBreakdown.calculationSteps.map((step, index) => (
+                                {player.enhancedData.valueBreakdown.calculationSteps.map((step, index) => (
                                   <div key={index} className="breakdown-step text-xs">{step}</div>
                                 ))}
                               </div>
