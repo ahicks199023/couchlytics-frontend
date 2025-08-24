@@ -3604,28 +3604,28 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         {/* Defensive Line Positions (RE, LE, DT, NT) */}
                         {['RE', 'LE', 'DT', 'NT'].includes(modalPlayer.position || '') && (
                           <>
-                            {modalPlayer.positionAttributes.keyAttributes.blockShedding !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.blockShedding !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Block Shedding</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.blockShedding}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.blockShedding}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.powerMoves !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.powerMoves !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Power Moves</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.powerMoves}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.powerMoves}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.finesseMoves !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.finesseMoves !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Finesse Moves</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.finesseMoves}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.finesseMoves}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.tackle !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.tackle !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Tackle</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.tackle}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.tackle}</span>
                               </div>
                             )}
                           </>
@@ -3634,28 +3634,28 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         {/* Linebacker Positions (LOLB, MLB, ROLB) */}
                         {['LOLB', 'MLB', 'ROLB'].includes(modalPlayer.position || '') && (
                           <>
-                            {modalPlayer.positionAttributes.keyAttributes.tackle !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.tackle !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Tackle</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.tackle}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.tackle}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.hitPower !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.hitPower !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Hit Power</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.hitPower}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.hitPower}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.coverage !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.coverage !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Coverage</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.coverage}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.coverage}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.playRecognition !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.playRecognition !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Play Recognition</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.playRecognition}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.playRecognition}</span>
                               </div>
                             )}
                           </>
@@ -3664,35 +3664,35 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         {/* Defensive Back Positions (CB, FS, SS) */}
                         {['CB', 'FS', 'SS'].includes(modalPlayer.position || '') && (
                           <>
-                            {modalPlayer.positionAttributes.keyAttributes.manCoverage !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.manCoverage !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Man Coverage</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.manCoverage}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.manCoverage}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.zoneCoverage !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.zoneCoverage !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Zone Coverage</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.zoneCoverage}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.zoneCoverage}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.press !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.press !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Press</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.press}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.press}</span>
                               </div>
                             )}
                             {/* Only show tackle and hit power if they exist in backend data */}
-                            {modalPlayer.positionAttributes.keyAttributes.tackle !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.tackle !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Tackle</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.tackle}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.tackle}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.hitPower !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.hitPower !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Hit Power</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.hitPower}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.hitPower}</span>
                               </div>
                             )}
                           </>
@@ -3701,28 +3701,28 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         {/* Offensive Line Positions (LT, LG, C, RG, RT) */}
                         {['LT', 'LG', 'C', 'RG', 'RT'].includes(modalPlayer.position || '') && (
                           <>
-                            {modalPlayer.positionAttributes.keyAttributes.passBlock !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.passBlock !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Pass Block</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.passBlock}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.passBlock}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.runBlock !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.runBlock !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Run Block</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.runBlock}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.runBlock}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.impactBlocking !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.impactBlocking !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Impact Blocking</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.impactBlocking}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.impactBlocking}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.leadBlock !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.leadBlock !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Lead Block</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.leadBlock}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.leadBlock}</span>
                               </div>
                             )}
                           </>
@@ -3731,28 +3731,28 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         {/* Tight End Positions (TE) */}
                         {modalPlayer.position === 'TE' && (
                           <>
-                            {modalPlayer.positionAttributes.keyAttributes.catching !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.catching !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Catching</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.catching}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.catching}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.routeRunning !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.routeRunning !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Route Running</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.routeRunning}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.routeRunning}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.catchInTraffic !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.catchInTraffic !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Catch in Traffic</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.catchInTraffic}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.catchInTraffic}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.runBlock !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.runBlock !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Run Block</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.runBlock}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.runBlock}</span>
                               </div>
                             )}
                           </>
