@@ -1887,12 +1887,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                       )}
                       
                       {/* Enhanced Value Display */}
-                      {player.valueBreakdown && (
+                      {player.enhancedData?.valueBreakdown && (
                         <div className="mt-1">
-                          <span className="text-xs text-blue-300">Value: {player.valueBreakdown.finalValue}</span>
-                          {player.positionAttributes?.specialties && player.positionAttributes.specialties.length > 0 && (
+                          <span className="text-xs text-blue-300">Value: {player.enhancedData.valueBreakdown.finalValue}</span>
+                          {player.enhancedData.positionAttributes?.specialties && player.enhancedData.positionAttributes.specialties.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {player.positionAttributes.specialties.slice(0, 2).map((specialty, index) => (
+                              {player.enhancedData.positionAttributes.specialties.slice(0, 2).map((specialty, index) => (
                                 <span key={index} className="text-xs bg-blue-900/30 border border-blue-500/30 rounded px-1 py-0.5 text-blue-200">
                                   {specialty}
                                 </span>
@@ -1904,8 +1904,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                     </div>
                     <div className="text-right">
                       <p className="text-neon-green font-bold">{player.ovr || 'N/A'}</p>
-                      {player.valueBreakdown && (
-                        <p className="text-xs text-blue-300">Value: {player.valueBreakdown.finalValue}</p>
+                      {player.enhancedData?.valueBreakdown && (
+                        <p className="text-xs text-blue-300">Value: {player.enhancedData.valueBreakdown.finalValue}</p>
                       )}
                     </div>
                     <button className="ml-2 text-gray-400 hover:text-white" onClick={e => { e.stopPropagation(); openPlayerModal(player); }} title="View Details" type="button">i</button>
