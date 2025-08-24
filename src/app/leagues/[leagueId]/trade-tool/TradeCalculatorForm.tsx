@@ -1257,6 +1257,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         })
         if (!res.ok) throw new Error('Failed to load players')
         const data = await res.json()
+        console.log('🔍 Your Team Players Data:', data.players?.slice(0, 3).map((p: Player) => ({
+          name: p.name,
+          hasEnhancedData: !!p.enhancedData,
+          hasValueBreakdown: !!p.enhancedData?.valueBreakdown,
+          hasPositionAttributes: !!p.enhancedData?.positionAttributes
+        })))
         setGivePlayersList(data.players || [])
         setGiveTotal(data.total || 0)
         setGiveTotalPages(Math.max(1, Math.ceil((data.total || 0) / givePageSize)))
@@ -1305,6 +1311,12 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         })
         if (!res.ok) throw new Error('Failed to load players')
         const data = await res.json()
+        console.log('🔍 Team B Players Data:', data.players?.slice(0, 3).map((p: Player) => ({
+          name: p.name,
+          hasEnhancedData: !!p.enhancedData,
+          hasValueBreakdown: !!p.enhancedData?.valueBreakdown,
+          hasPositionAttributes: !!p.enhancedData?.positionAttributes
+        })))
         setReceivePlayersList(data.players || [])
         setReceiveTotal(data.total || 0)
         setReceiveTotalPages(Math.max(1, Math.ceil((data.total || 0) / receivePageSize)))
