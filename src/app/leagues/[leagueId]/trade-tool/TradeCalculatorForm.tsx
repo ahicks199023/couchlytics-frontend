@@ -3761,16 +3761,16 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
                         {/* Kicker/Punter Positions (K, P) */}
                         {['K', 'P'].includes(modalPlayer.position || '') && (
                           <>
-                            {modalPlayer.positionAttributes.keyAttributes.kickPower !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.kickPower !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Kick Power</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.kickPower}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.kickPower}</span>
                               </div>
                             )}
-                            {modalPlayer.positionAttributes.keyAttributes.kickAccuracy !== undefined && (
+                            {modalPlayer.enhancedData?.positionAttributes?.keyAttributes?.kickAccuracy !== undefined && (
                               <div className="flex justify-between items-center p-2 bg-gray-700/50 rounded border border-gray-600">
                                 <span className="text-sm text-green-300">Kick Accuracy</span>
-                                <span className="font-bold text-white">{modalPlayer.positionAttributes.keyAttributes.kickAccuracy}</span>
+                                <span className="font-bold text-white">{modalPlayer.enhancedData.positionAttributes.keyAttributes.kickAccuracy}</span>
                               </div>
                             )}
                           </>
