@@ -9,7 +9,6 @@ import { API_BASE } from '@/lib/config'
 export default function DraftPickValuesPage() {
   const { leagueId } = useParams()
   const [hasCommissionerAccess, setHasCommissionerAccess] = useState(false)
-  const [isGlobalCommissioner, setIsGlobalCommissioner] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,8 +21,14 @@ export default function DraftPickValuesPage() {
         
         if (userRes.ok) {
           const userData = await userRes.json()
-          setIsGlobalCommissioner(userData.is_commissioner || false)
-          setHasCommissionerAccess(userData.is_commissioner || false)
+          
+          // Check if user is a developer (universal access)
+          const isDev = userData.isDeveloper || userData.email === 'antoinehickssales@gmail.com'
+          
+          // Check if user is a league commissioner
+          const isLeagueComm = userData.isCommissioner || false
+          
+          setHasCommissionerAccess(isDev || isLeagueComm)
         }
       } catch (error) {
         console.error('Error checking commissioner access:', error)
@@ -49,7 +54,7 @@ export default function DraftPickValuesPage() {
   }
 
   // Check if user has commissioner access
-  if (!hasCommissionerAccess && !isGlobalCommissioner) {
+  if (!hasCommissionerAccess) {
     return (
       <div className="min-h-screen bg-black text-white p-6">
         <div className="max-w-7xl mx-auto">

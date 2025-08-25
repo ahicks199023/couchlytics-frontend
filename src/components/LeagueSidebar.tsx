@@ -8,9 +8,15 @@ import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 import { API_BASE } from '@/lib/config'
 
-interface LeagueMember {
-  user_id: string
-  role: string
+
+
+interface UserData {
+  id: number
+  email: string
+  isAdmin: boolean
+  isCommissioner: boolean
+  isPremium: boolean
+  isDeveloper?: boolean // New developer flag
 }
 
 const links = [
@@ -74,41 +80,25 @@ export default function LeagueSidebar() {
         })
         
         if (userRes.ok) {
-          const userData = await userRes.json()
-          const isGlobalComm = userData.is_commissioner || false
-          setIsGlobalCommissioner(isGlobalComm)
+          const userData: UserData = await userRes.json()
+          console.log('User data received:', userData)
           
-          // Check if user is commissioner for this specific league
-          if (isGlobalComm) {
-            console.log('User is global commissioner, granting access')
-            setHasCommissionerAccess(true)
-          } else {
-            // Check league-specific commissioner status
-            try {
-              console.log('Checking league-specific commissioner status for league:', leagueId)
-              const leagueRes = await fetch(`${API_BASE}/leagues/${leagueId}/members`, {
-                credentials: 'include'
-              })
-              
-              if (leagueRes.ok) {
-                const leagueData = await leagueRes.json()
-                console.log('League members data:', leagueData)
-                const userMembership = leagueData.members?.find((member: LeagueMember) => 
-                  member.user_id === userData.id
-                )
-                console.log('User membership:', userMembership)
-                const isLeagueComm = userMembership?.role === 'commissioner' || false
-                console.log('Is league commissioner:', isLeagueComm)
-                setHasCommissionerAccess(isLeagueComm)
-              } else {
-                console.log('Failed to fetch league members, status:', leagueRes.status)
-              }
-            } catch (leagueError) {
-              console.error('Error checking league membership:', leagueError)
-              // Fallback to global commissioner status
-              setHasCommissionerAccess(isGlobalComm)
-            }
-          }
+          // Check if user is a developer (universal access)
+          const isDeveloper = userData.isDeveloper || userData.email === 'antoinehickssales@gmail.com'
+          
+          // Check if user is a league commissioner
+          const isLeagueComm = userData.isCommissioner || false
+          
+          console.log('Is developer:', isDeveloper)
+          console.log('Is league commissioner:', isLeagueComm)
+          
+          // Developer gets universal access, league commissioners get league-specific access
+          const hasAccess = isDeveloper || isLeagueComm
+          
+          setIsGlobalCommissioner(isDeveloper) // Developer = global access
+          setHasCommissionerAccess(hasAccess)
+          
+          console.log('Permission check complete - hasCommissionerAccess:', hasAccess)
         }
       } catch (error) {
         console.error('Error checking commissioner access:', error)
@@ -144,14 +134,14 @@ export default function LeagueSidebar() {
     <aside className="w-full h-full bg-gray-900 text-white p-4 flex flex-col">
       <h2 className="text-lg font-bold mb-2">League Menu</h2>
       
-      {/* Debug Info - Remove this after testing */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="text-xs text-gray-500 mb-2 p-2 bg-gray-800 rounded">
-          <div>Global Comm: {isGlobalCommissioner ? 'Yes' : 'No'}</div>
-          <div>League Comm: {hasCommissionerAccess ? 'Yes' : 'No'}</div>
-          <div>League ID: {leagueId}</div>
-        </div>
-      )}
+             {/* Debug Info - Remove this after testing */}
+       {process.env.NODE_ENV === 'development' && (
+         <div className="text-xs text-gray-500 mb-2 p-2 bg-gray-800 rounded">
+           <div>Developer: {isGlobalCommissioner ? 'Yes' : 'No'}</div>
+           <div>League Comm: {hasCommissionerAccess ? 'Yes' : 'No'}</div>
+           <div>League ID: {leagueId}</div>
+         </div>
+       )}
       <nav className="flex flex-col space-y-1 flex-1">
         {/* Regular navigation links */}
         {links && links.map(({ label, path, prefetch, subItems }) => {

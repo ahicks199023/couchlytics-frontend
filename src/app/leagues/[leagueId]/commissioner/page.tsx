@@ -19,7 +19,6 @@ export default function CommissionerHub() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [hasCommissionerAccess, setHasCommissionerAccess] = useState(false)
-  const [isGlobalCommissioner, setIsGlobalCommissioner] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,8 +32,14 @@ export default function CommissionerHub() {
         
         if (userRes.ok) {
           const userData = await userRes.json()
-          setIsGlobalCommissioner(userData.is_commissioner || false)
-          setHasCommissionerAccess(userData.is_commissioner || false)
+          
+          // Check if user is a developer (universal access)
+          const isDev = userData.isDeveloper || userData.email === 'antoinehickssales@gmail.com'
+          
+          // Check if user is a league commissioner
+          const isLeagueComm = userData.isCommissioner || false
+          
+          setHasCommissionerAccess(isDev || isLeagueComm)
         }
         
         // Fetch league info
@@ -94,7 +99,7 @@ export default function CommissionerHub() {
   }
 
   // Check if user has commissioner access
-  if (!hasCommissionerAccess && !isGlobalCommissioner) {
+  if (!hasCommissionerAccess) {
     return (
       <div className="min-h-screen bg-black text-white p-6">
         <div className="max-w-6xl mx-auto">
