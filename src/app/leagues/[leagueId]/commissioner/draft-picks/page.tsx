@@ -25,10 +25,29 @@ export default function DraftPickValuesPage() {
           // Check if user is a developer (universal access)
           const isDev = userData.isDeveloper || userData.email === 'antoinehickssales@gmail.com'
           
-          // Check if user is a league commissioner
-          const isLeagueComm = userData.isCommissioner || false
-          
-          setHasCommissionerAccess(isDev || isLeagueComm)
+          if (isDev) {
+            // Developer gets universal access
+            setHasCommissionerAccess(true)
+          } else {
+            // Check league-specific commissioner status
+            try {
+              const leagueRes = await fetch(`${API_BASE}/leagues/${leagueId}/members/me`, {
+                credentials: 'include'
+              })
+              
+              if (leagueRes.ok) {
+                const memberData = await leagueRes.json()
+                const isLeagueComm = memberData.role === 'commissioner' || memberData.role === 'admin'
+                setHasCommissionerAccess(isLeagueComm)
+              } else {
+                // Fallback to global commissioner status for backward compatibility
+                setHasCommissionerAccess(userData.isCommissioner || false)
+              }
+            } catch {
+              // Fallback to global commissioner status for backward compatibility
+              setHasCommissionerAccess(userData.isCommissioner || false)
+            }
+          }
         }
       } catch (error) {
         console.error('Error checking commissioner access:', error)
@@ -38,7 +57,7 @@ export default function DraftPickValuesPage() {
     }
 
     checkAccess()
-  }, [])
+  }, [leagueId])
 
   if (loading) {
     return (

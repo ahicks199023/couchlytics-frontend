@@ -16,7 +16,17 @@ interface UserData {
   isAdmin: boolean
   isCommissioner: boolean
   isPremium: boolean
-  isDeveloper?: boolean // New developer flag
+  isDeveloper?: boolean // Developer flag for universal access
+}
+
+interface LeagueMember {
+  id: number
+  league_id: number
+  user_id: number
+  role: string // 'commissioner', 'member', 'admin'
+  permissions?: Record<string, boolean>
+  created_at: string
+  updated_at: string
 }
 
 const links = [
@@ -86,19 +96,48 @@ export default function LeagueSidebar() {
           // Check if user is a developer (universal access)
           const isDeveloper = userData.isDeveloper || userData.email === 'antoinehickssales@gmail.com'
           
-          // Check if user is a league commissioner
-          const isLeagueComm = userData.isCommissioner || false
+          if (isDeveloper) {
+            // Developer gets universal access to all leagues
+            console.log('User is developer - granting universal access')
+            setIsGlobalCommissioner(true)
+            setHasCommissionerAccess(true)
+          } else {
+            // Check league-specific commissioner status
+            try {
+              console.log('Checking league-specific commissioner status for league:', leagueId)
+              const leagueRes = await fetch(`${API_BASE}/leagues/${leagueId}/members/me`, {
+                credentials: 'include'
+              })
+              
+              if (leagueRes.ok) {
+                const memberData: LeagueMember = await leagueRes.json()
+                console.log('League member data:', memberData)
+                
+                const isLeagueComm = memberData.role === 'commissioner' || memberData.role === 'admin'
+                console.log('Is league commissioner:', isLeagueComm)
+                
+                setIsGlobalCommissioner(false)
+                setHasCommissionerAccess(isLeagueComm)
+              } else if (leagueRes.status === 404) {
+                // User is not a member of this league
+                console.log('User is not a member of this league')
+                setIsGlobalCommissioner(false)
+                setHasCommissionerAccess(false)
+              } else {
+                console.log('Failed to fetch league membership, status:', leagueRes.status)
+                // Fallback to global commissioner status for backward compatibility
+                setIsGlobalCommissioner(userData.isCommissioner || false)
+                setHasCommissionerAccess(userData.isCommissioner || false)
+              }
+            } catch (leagueError) {
+              console.error('Error checking league membership:', leagueError)
+              // Fallback to global commissioner status for backward compatibility
+              setIsGlobalCommissioner(userData.isCommissioner || false)
+              setHasCommissionerAccess(userData.isCommissioner || false)
+            }
+          }
           
-          console.log('Is developer:', isDeveloper)
-          console.log('Is league commissioner:', isLeagueComm)
-          
-          // Developer gets universal access, league commissioners get league-specific access
-          const hasAccess = isDeveloper || isLeagueComm
-          
-          setIsGlobalCommissioner(isDeveloper) // Developer = global access
-          setHasCommissionerAccess(hasAccess)
-          
-          console.log('Permission check complete - hasCommissionerAccess:', hasAccess)
+          console.log('Permission check complete - hasCommissionerAccess:', hasCommissionerAccess)
         }
       } catch (error) {
         console.error('Error checking commissioner access:', error)
