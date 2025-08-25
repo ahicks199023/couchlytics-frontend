@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { Loader2, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
 import { API_BASE } from '@/lib/config'
+import DraftPickValueManager from '@/components/draft-picks/DraftPickValueManager'
 
 
 // Types
@@ -52,18 +53,20 @@ interface DraftPick {
   team_id: string
 }
 
+// New database-driven draft pick value interface
 interface DraftPickValue {
-  year: number
-  round: number
-  pick_position: number
+  id: string
+  league_id: number
+  round_num: number
+  pick_in_round: number
   value: number
-  breakdown: {
-    baseValue: number
-    yearMultiplier: number
-    roundMultiplier: number
-    pickPositionMultiplier: number
-  }
+  created_at: string
+  updated_at: string
 }
+
+
+
+
 
 interface Player {
   id: number
@@ -955,6 +958,9 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [receivingDraftPicks, setReceivingDraftPicks] = useState<DraftPick[]>([])
   const [draftPickValues, setDraftPickValues] = useState<Record<string, DraftPickValue>>({})
   
+  // New Database-Driven Draft Pick System State
+  const [showDraftPickManager, setShowDraftPickManager] = useState(false)
+  
   // Initialize draft years with fallback values
   useEffect(() => {
     if (availableDraftYears.length === 0) {
@@ -1039,6 +1045,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         
         // Fetch available draft years for draft pick trading
         fetchAvailableDraftYears()
+        
+
         
       } catch (err) {
         console.error('❌ Initialization failed:', err)
@@ -1383,27 +1391,41 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     }
   }, [league_id, isRateLimited])
 
+
+
   const calculateDraftPickValue = useCallback(async (pick: DraftPick) => {
     if (!league_id || isRateLimited) return
     
     try {
-      const response = await fetch(`${API_BASE}/leagues/${league_id}/draft-pick-value`, {
+      // Use new database-driven system
+      const response = await fetch(`${API_BASE}/leagues/${league_id}/draft-picks/calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          year: pick.year,
           round: pick.round,
-          pick_position: pick.pick_position
+          pickInRound: pick.pick_position,
+          draftYear: pick.year
         })
       })
       
       if (response.ok) {
         const data = await response.json()
-        if (data.success && data.valuation) {
+        if (data.success && data.value !== undefined) {
+          // Create a DraftPickValue object for compatibility
+          const draftPickValue: DraftPickValue = {
+            id: pick.id,
+            league_id: parseInt(league_id),
+            round_num: pick.round,
+            pick_in_round: pick.pick_position,
+            value: data.value,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+          
           setDraftPickValues(prev => ({
             ...prev,
-            [pick.id]: data.valuation
+            [pick.id]: draftPickValue
           }))
         }
       }
@@ -1728,6 +1750,30 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             )}
           </div>
           
+          {/* Draft Pick Value Manager Button */}
+          <div className="mb-4">
+            <button
+              onClick={() => setShowDraftPickManager(!showDraftPickManager)}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              {showDraftPickManager ? 'Hide Draft Pick Manager' : 'Manage Draft Pick Values'}
+            </button>
+          </div>
+
+          {/* Draft Pick Value Manager */}
+          {showDraftPickManager && (
+            <div className="mb-6">
+              <DraftPickValueManager 
+                leagueId={league_id} 
+                onValuesUpdated={() => {
+                  // Refresh draft pick values when they're updated
+                  givingDraftPicks.forEach(pick => calculateDraftPickValue(pick))
+                  receivingDraftPicks.forEach(pick => calculateDraftPickValue(pick))
+                }} 
+              />
+            </div>
+          )}
+
           {/* Draft Picks Giving Panel */}
           <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-blue-400 mb-3">Draft Picks Giving</h3>
