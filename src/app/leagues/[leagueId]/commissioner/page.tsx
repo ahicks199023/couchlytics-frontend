@@ -18,11 +18,26 @@ export default function CommissionerHub() {
   const [leagueInfo, setLeagueInfo] = useState<LeagueInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [hasCommissionerAccess, setHasCommissionerAccess] = useState(false)
+  const [isGlobalCommissioner, setIsGlobalCommissioner] = useState(false)
 
   useEffect(() => {
-    const fetchLeagueInfo = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true)
+        
+        // Check commissioner access first
+        const userRes = await fetch(`${API_BASE}/auth/user`, {
+          credentials: 'include'
+        })
+        
+        if (userRes.ok) {
+          const userData = await userRes.json()
+          setIsGlobalCommissioner(userData.is_commissioner || false)
+          setHasCommissionerAccess(userData.is_commissioner || false)
+        }
+        
+        // Fetch league info
         const response = await fetch(`${API_BASE}/leagues/${leagueId}`, {
           credentials: 'include'
         })
@@ -40,15 +55,15 @@ export default function CommissionerHub() {
           }
         }
       } catch (err) {
-        console.error('Error fetching league info:', err)
-        setError('Failed to load league information')
+        console.error('Error fetching data:', err)
+        setError('Failed to load data')
       } finally {
         setLoading(false)
       }
     }
 
     if (leagueId) {
-      fetchLeagueInfo()
+      fetchData()
     }
   }, [leagueId])
 
@@ -72,6 +87,30 @@ export default function CommissionerHub() {
           <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-red-400 mb-2">Error</h2>
             <p className="text-red-300">{error}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Check if user has commissioner access
+  if (!hasCommissionerAccess && !isGlobalCommissioner) {
+    return (
+      <div className="min-h-screen bg-black text-white p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-red-400 mb-2">Access Denied</h2>
+            <p className="text-red-300">
+              You do not have permission to access the Commissioner Hub. Only league commissioners can view this page.
+            </p>
+            <div className="mt-4">
+              <Link
+                href={`/leagues/${leagueId}`}
+                className="text-blue-400 hover:text-blue-300 underline"
+              >
+                ← Back to League Home
+              </Link>
+            </div>
           </div>
         </div>
       </div>

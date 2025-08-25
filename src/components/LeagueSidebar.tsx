@@ -33,7 +33,11 @@ const links = [
   { label: 'Stats Leaders', path: 'stats-leaders', prefetch: false },
   { label: 'Players', path: 'players', prefetch: false },
   { label: '💬 Chat', path: 'chat', prefetch: false },
-  { label: '🤖 AI Commissioner', path: 'ai-commissioner', prefetch: false },
+  { label: '🤖 AI Commissioner', path: 'ai-commissioner', prefetch: false }
+]
+
+// Commissioner-only links
+const commissionerLinks = [
   { 
     label: '⚖️ Commissioner Hub', 
     path: 'commissioner',
@@ -105,6 +109,7 @@ export default function LeagueSidebar() {
     <aside className="w-full h-full bg-gray-900 text-white p-4 flex flex-col">
       <h2 className="text-lg font-bold mb-2">League Menu</h2>
       <nav className="flex flex-col space-y-1 flex-1">
+        {/* Regular navigation links */}
         {links && links.map(({ label, path, prefetch, subItems }) => {
           const hasSubItems = subItems && subItems.length > 0
           const isExpanded = expandedItems.includes(path)
@@ -121,6 +126,60 @@ export default function LeagueSidebar() {
                 <Link
                   href={hasSubItems ? '#' : `/leagues/${leagueId}/${path}`}
                   prefetch={prefetch !== false}
+                  onClick={hasSubItems ? (e) => { e.preventDefault(); toggleExpanded(path) } : undefined}
+                  className={clsx(
+                    'px-2 py-1 rounded hover:bg-gray-700 flex-1 text-left',
+                    active && 'bg-blue-600 text-white'
+                  )}
+                >
+                  {label}
+                </Link>
+                {hasSubItems && (
+                  <button
+                    onClick={() => toggleExpanded(path)}
+                    className={clsx(
+                      'px-1 py-1 text-gray-400 hover:text-white transition-transform duration-200',
+                      isExpanded && 'rotate-90'
+                    )}
+                  >
+                    ▶
+                  </button>
+                )}
+              </div>
+              
+              {/* Sub-items */}
+              {hasSubItems && isExpanded && (
+                <div className="ml-4 mt-1 space-y-1">
+                  {subItems.map((subItem) => (
+                    <Link
+                      key={subItem.path}
+                      href={`/leagues/${leagueId}/${subItem.path}`}
+                      className={clsx(
+                        'block px-2 py-1 rounded text-sm hover:bg-gray-700',
+                        isSubItemActive(subItem.path) && 'bg-blue-600 text-white'
+                      )}
+                    >
+                      {subItem.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+
+        {/* Commissioner-only navigation links */}
+        {(hasCommissionerAccess || isGlobalCommissioner) && commissionerLinks.map(({ label, path, subItems }) => {
+          const hasSubItems = subItems && subItems.length > 0
+          const isExpanded = expandedItems.includes(path)
+          const active = isActive(path) || (hasSubItems && subItems.some(sub => isSubItemActive(sub.path)))
+
+          return (
+            <div key={path}>
+              <div className="flex items-center justify-between">
+                <Link
+                  href={hasSubItems ? '#' : `/leagues/${leagueId}/${path}`}
+                  prefetch={true}
                   onClick={hasSubItems ? (e) => { e.preventDefault(); toggleExpanded(path) } : undefined}
                   className={clsx(
                     'px-2 py-1 rounded hover:bg-gray-700 flex-1 text-left',

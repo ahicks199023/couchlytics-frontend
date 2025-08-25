@@ -1,11 +1,76 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import DraftPickValueManager from '@/components/draft-picks/DraftPickValueManager'
+import { API_BASE } from '@/lib/config'
 
 export default function DraftPickValuesPage() {
   const { leagueId } = useParams()
+  const [hasCommissionerAccess, setHasCommissionerAccess] = useState(false)
+  const [isGlobalCommissioner, setIsGlobalCommissioner] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      try {
+        setLoading(true)
+        const userRes = await fetch(`${API_BASE}/auth/user`, {
+          credentials: 'include'
+        })
+        
+        if (userRes.ok) {
+          const userData = await userRes.json()
+          setIsGlobalCommissioner(userData.is_commissioner || false)
+          setHasCommissionerAccess(userData.is_commissioner || false)
+        }
+      } catch (error) {
+        console.error('Error checking commissioner access:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkAccess()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-green mx-auto"></div>
+            <p className="mt-4 text-gray-400">Checking access...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Check if user has commissioner access
+  if (!hasCommissionerAccess && !isGlobalCommissioner) {
+    return (
+      <div className="min-h-screen bg-black text-white p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-red-400 mb-2">Access Denied</h2>
+            <p className="text-red-300">
+              You do not have permission to access Draft Pick Values. Only league commissioners can view this page.
+            </p>
+            <div className="mt-4">
+              <Link
+                href={`/leagues/${leagueId}`}
+                className="text-blue-400 hover:text-blue-300 underline"
+              >
+                ← Back to League Home
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
