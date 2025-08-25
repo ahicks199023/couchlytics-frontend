@@ -33,7 +33,15 @@ const links = [
   { label: 'Stats Leaders', path: 'stats-leaders', prefetch: false },
   { label: 'Players', path: 'players', prefetch: false },
   { label: '💬 Chat', path: 'chat', prefetch: false },
-  { label: '🤖 AI Commissioner', path: 'ai-commissioner', prefetch: false }
+  { label: '🤖 AI Commissioner', path: 'ai-commissioner', prefetch: false },
+  { 
+    label: '⚖️ Commissioner Hub', 
+    path: 'commissioner',
+    subItems: [
+      { label: 'League Management', path: 'commissioner' },
+      { label: 'Draft Pick Values', path: 'commissioner/draft-picks' }
+    ]
+  }
 ]
 
 export default function LeagueSidebar() {

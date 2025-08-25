@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Loader2, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
 import { API_BASE } from '@/lib/config'
-import DraftPickValueManager from '@/components/draft-picks/DraftPickValueManager'
 
 
 // Types
@@ -958,8 +958,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [receivingDraftPicks, setReceivingDraftPicks] = useState<DraftPick[]>([])
   const [draftPickValues, setDraftPickValues] = useState<Record<string, DraftPickValue>>({})
   
-  // New Database-Driven Draft Pick System State
-  const [showDraftPickManager, setShowDraftPickManager] = useState(false)
+
   
   // Initialize draft years with fallback values
   useEffect(() => {
@@ -1750,29 +1749,17 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
             )}
           </div>
           
-          {/* Draft Pick Value Manager Button */}
-          <div className="mb-4">
-            <button
-              onClick={() => setShowDraftPickManager(!showDraftPickManager)}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-            >
-              {showDraftPickManager ? 'Hide Draft Pick Manager' : 'Manage Draft Pick Values'}
-            </button>
-          </div>
 
-          {/* Draft Pick Value Manager */}
-          {showDraftPickManager && (
-            <div className="mb-6">
-              <DraftPickValueManager 
-                leagueId={league_id} 
-                onValuesUpdated={() => {
-                  // Refresh draft pick values when they're updated
-                  givingDraftPicks.forEach(pick => calculateDraftPickValue(pick))
-                  receivingDraftPicks.forEach(pick => calculateDraftPickValue(pick))
-                }} 
-              />
-            </div>
-          )}
+
+          {/* Commissioner Hub Link */}
+          <div className="mb-4 text-center">
+            <Link
+              href={`/leagues/${league_id}/commissioner/draft-picks`}
+              className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              ⚖️ Manage Draft Pick Values in Commissioner Hub
+            </Link>
+          </div>
 
           {/* Draft Picks Giving Panel */}
           <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
