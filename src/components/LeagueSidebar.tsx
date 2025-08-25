@@ -8,6 +8,11 @@ import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 import { API_BASE } from '@/lib/config'
 
+interface LeagueMember {
+  user_id: string
+  role: string
+}
+
 const links = [
   { label: 'Home', path: '' },
   { label: 'Analytics', path: 'analytics' },
@@ -70,8 +75,40 @@ export default function LeagueSidebar() {
         
         if (userRes.ok) {
           const userData = await userRes.json()
-          setIsGlobalCommissioner(userData.is_commissioner || false)
-          setHasCommissionerAccess(userData.is_commissioner || false)
+          const isGlobalComm = userData.is_commissioner || false
+          setIsGlobalCommissioner(isGlobalComm)
+          
+          // Check if user is commissioner for this specific league
+          if (isGlobalComm) {
+            console.log('User is global commissioner, granting access')
+            setHasCommissionerAccess(true)
+          } else {
+            // Check league-specific commissioner status
+            try {
+              console.log('Checking league-specific commissioner status for league:', leagueId)
+              const leagueRes = await fetch(`${API_BASE}/leagues/${leagueId}/members`, {
+                credentials: 'include'
+              })
+              
+              if (leagueRes.ok) {
+                const leagueData = await leagueRes.json()
+                console.log('League members data:', leagueData)
+                const userMembership = leagueData.members?.find((member: LeagueMember) => 
+                  member.user_id === userData.id
+                )
+                console.log('User membership:', userMembership)
+                const isLeagueComm = userMembership?.role === 'commissioner' || false
+                console.log('Is league commissioner:', isLeagueComm)
+                setHasCommissionerAccess(isLeagueComm)
+              } else {
+                console.log('Failed to fetch league members, status:', leagueRes.status)
+              }
+            } catch (leagueError) {
+              console.error('Error checking league membership:', leagueError)
+              // Fallback to global commissioner status
+              setHasCommissionerAccess(isGlobalComm)
+            }
+          }
         }
       } catch (error) {
         console.error('Error checking commissioner access:', error)
@@ -101,13 +138,20 @@ export default function LeagueSidebar() {
     return pathname === fullPath
   }
 
-  const isCommissionerHubActive = () => {
-    return pathname.includes('/commissioner/league/')
-  }
+
 
   return (
     <aside className="w-full h-full bg-gray-900 text-white p-4 flex flex-col">
       <h2 className="text-lg font-bold mb-2">League Menu</h2>
+      
+      {/* Debug Info - Remove this after testing */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="text-xs text-gray-500 mb-2 p-2 bg-gray-800 rounded">
+          <div>Global Comm: {isGlobalCommissioner ? 'Yes' : 'No'}</div>
+          <div>League Comm: {hasCommissionerAccess ? 'Yes' : 'No'}</div>
+          <div>League ID: {leagueId}</div>
+        </div>
+      )}
       <nav className="flex flex-col space-y-1 flex-1">
         {/* Regular navigation links */}
         {links && links.map(({ label, path, prefetch, subItems }) => {
@@ -222,19 +266,10 @@ export default function LeagueSidebar() {
           )
         })}
         
-        {/* Commissioner's Hub - Show if user has access */}
+        {/* Commissioner Tools Section */}
         {(hasCommissionerAccess || isGlobalCommissioner) && leagueId && typeof leagueId === 'string' && (
           <div className="pt-2 border-t border-gray-700 mt-auto">
             <div className="text-xs text-gray-400 mb-2 px-2">Commissioner Tools</div>
-            <Link
-              href={`/commissioner/league/${leagueId}`}
-              className={clsx(
-                'block px-2 py-1 rounded hover:bg-gray-700 text-sm font-medium mb-1',
-                isCommissionerHubActive() && 'bg-blue-600 text-white'
-              )}
-            >
-              🏆 Commissioner&apos;s Hub
-            </Link>
             <Link
               href={`/leagues/${leagueId}/ai-commissioner`}
               className={clsx(
