@@ -29,7 +29,7 @@ export default function CommissionerSettingsPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch(`/api/leagues/${leagueId}/commissioner/settings`, {
+        const response = await fetch(`/leagues/${leagueId}/commissioner/settings`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',

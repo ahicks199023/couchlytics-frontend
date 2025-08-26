@@ -30,7 +30,7 @@ export default function CommissionerTradesPage() {
   useEffect(() => {
     const fetchTrades = async () => {
       try {
-        const response = await fetch(`/api/leagues/${leagueId}/commissioner/trades`, {
+        const response = await fetch(`/leagues/${leagueId}/commissioner/trades`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
