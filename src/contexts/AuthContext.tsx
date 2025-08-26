@@ -5,6 +5,7 @@ import { User, UserRole, Permission } from '@/types/user'
 import { http, API_BASE_URL } from '@/lib/http'
 import { firebaseAuthService } from '@/lib/firebase'
 import { User as FirebaseUser } from 'firebase/auth'
+import { checkAuthStatus, establishBackendSession, fetchUserLeagues } from '@/lib/api-utils'
 
 interface AuthContextType {
   // Couchlytics authentication state
@@ -28,11 +29,11 @@ interface AuthContextType {
   refetch: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
 interface AuthProviderProps {
   children: ReactNode
 }
+
+export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
@@ -51,25 +52,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       console.log('🔍 Checking Couchlytics auth status...')
-      const response = await http.get('/auth/status')
+      const data = await checkAuthStatus()
       
-      console.log('🔍 Auth status response:', response.status, response.statusText)
-      
-      if (response.status === 200) {
-        const data = response.data
-        console.log('🔍 Auth status data:', data)
-        
-        if (data.authenticated) {
-          console.log('✅ Couchlytics user is authenticated:', data.user)
-          setUser(data.user)
-          setAuthenticated(true)
-        } else {
-          console.log('❌ Couchlytics user is not authenticated')
-          setUser(null)
-          setAuthenticated(false)
-        }
+      if (data.authenticated) {
+        console.log('✅ Couchlytics user is authenticated:', data.user)
+        setUser(data.user)
+        setAuthenticated(true)
       } else {
-        console.log('❌ Auth status check failed with status:', response.status)
+        console.log('❌ Couchlytics user is not authenticated')
         setUser(null)
         setAuthenticated(false)
       }
@@ -116,7 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return
     }
 
-    const unsubscribe = firebaseAuthService.onAuthStateChanged((user: FirebaseUser | null) => {
+    const unsubscribe = firebaseAuthService.onAuthStateChanged(async (user: FirebaseUser | null) => {
       console.log('🔥 Firebase auth state changed:', user ? 'User signed in' : 'User signed out')
       
       setFirebaseUser(user)
@@ -124,19 +114,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (user) {
         console.log('✅ Firebase user authenticated:', user.email)
+        // Try to establish backend session
+        try {
+          const success = await establishBackendSession(user)
+          if (success) {
+            console.log('✅ Backend session established from Firebase auth')
+            // Refresh auth status
+            await checkAuthStatus()
+          }
+        } catch (error) {
+          console.error('❌ Failed to establish backend session:', error)
+        }
       } else {
         console.log('🚪 Firebase user signed out')
       }
     })
 
     return () => unsubscribe()
-  }, [])
+  }, [checkAuthStatus])
 
+  // Check for existing session on app load
   useEffect(() => {
-    // Only check auth status if we're not in the process of logging out
-    if (!isLoggingOut.current) {
-      checkAuthStatus()
+    const checkExistingSession = async () => {
+      try {
+        console.log('🔍 Checking for existing session...')
+        const data = await checkAuthStatus()
+        
+        if (data.authenticated) {
+          console.log('✅ Existing session found')
+          setUser(data.user)
+          setAuthenticated(true)
+        }
+      } catch (error) {
+        console.error('❌ Session check failed:', error)
+      } finally {
+        setLoading(false)
+      }
     }
+    
+    checkExistingSession()
   }, [checkAuthStatus])
 
   const hasPermission = useCallback((permission: Permission): boolean => {
@@ -160,51 +176,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = useCallback(async () => {
     // Set logging out flag to prevent auth checks
     isLoggingOut.current = true
-    
+
     try {
-      // Clear local state immediately
+      // Sign out from Firebase
+      await firebaseAuthService.signOutFromFirebase()
+      
+      // Clear local state
       setUser(null)
       setAuthenticated(false)
-      setLoading(false)
       setFirebaseUser(null)
       setIsFirebaseAuthenticated(false)
       
-      // Sign out from Firebase first
-      try {
-        console.log('🚪 Signing out from Firebase...')
-        await firebaseAuthService.signOutFromFirebase()
-        console.log('✅ Firebase sign-out successful')
-      } catch (firebaseError) {
-        console.warn('⚠️ Firebase sign-out failed:', firebaseError)
-        // Continue with logout even if Firebase fails
-      }
-      
-      // Call logout endpoint
-      await http.post('/auth/logout')
-      
-      // Clear any cached data
-      if (typeof window !== 'undefined') {
-        // Clear any localStorage/sessionStorage if used
-        localStorage.removeItem('auth_token')
-        sessionStorage.removeItem('auth_token')
-        
-        // Clear any cached API responses
-        if ('caches' in window) {
-          caches.keys().then(names => {
-            names.forEach(name => {
-              caches.delete(name)
-            })
-          })
-        }
-      }
-      
-      // Keep the logout flag active for a longer period to prevent re-auth
-      setTimeout(() => {
-        isLoggingOut.current = false
-        console.log('🔓 Logout protection disabled')
-      }, 5000) // 5 second protection
-      
-      // Add a small delay before redirect to ensure logout completes
+      // Redirect to home
       setTimeout(() => {
         window.location.href = '/'
       }, 100)

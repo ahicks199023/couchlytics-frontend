@@ -3,24 +3,27 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { firebaseAuthService, getFirebaseUserEmail } from '@/lib/firebase'
 import type { User } from '@/lib/firebase'
+import { establishBackendSession, fetchUserLeagues } from '@/lib/api-utils'
 
 interface FirebaseAuthContextType {
   isFirebaseAuthenticated: boolean
   firebaseUser: User | null
   isLoading: boolean
   error: string | null
+  authState: 'checking' | 'authenticated' | 'unauthenticated'
   signInToFirebase: () => Promise<void>
   signOutFromFirebase: () => Promise<void>
   refreshToken: () => Promise<void>
   testHealth: () => Promise<boolean>
   clearSignOutState: () => void
+  fetchUserLeagues: () => Promise<any>
 }
-
-const FirebaseAuthContext = createContext<FirebaseAuthContextType | undefined>(undefined)
 
 interface FirebaseAuthProviderProps {
   children: ReactNode
 }
+
+export const FirebaseAuthContext = createContext<FirebaseAuthContextType | undefined>(undefined)
 
 export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ children }) => {
   const [isFirebaseAuthenticated, setIsFirebaseAuthenticated] = useState(false)
@@ -28,6 +31,54 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [authState, setAuthState] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking')
+
+  // Check existing session and establish Firebase auth if needed
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        console.log('🔍 Checking existing backend session...')
+        
+        // First check if we have a valid backend session
+        const response = await fetch('https://api.couchlytics.com/auth/status', {
+          credentials: 'include'
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          if (data.authenticated) {
+            console.log('✅ Backend session valid')
+            setAuthState('authenticated')
+            setIsFirebaseAuthenticated(true)
+            setIsLoading(false)
+            return
+          }
+        }
+        
+        // If no backend session, check Firebase
+        const firebaseUser = firebaseAuthService.getCurrentFirebaseUser()
+        if (firebaseUser) {
+          console.log('🔥 Firebase user exists, establishing backend session')
+          const success = await establishBackendSession(firebaseUser)
+          if (success) {
+            setAuthState('authenticated')
+            setIsFirebaseAuthenticated(true)
+          } else {
+            setAuthState('unauthenticated')
+          }
+        } else {
+          setAuthState('unauthenticated')
+        }
+      } catch (error) {
+        console.error('❌ Auth check failed:', error)
+        setAuthState('unauthenticated')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    checkAuthStatus()
+  }, [])
 
   useEffect(() => {
     // Don't listen to auth changes if we're logging out
@@ -36,23 +87,41 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
       return
     }
 
-    const unsubscribe = firebaseAuthService.onAuthStateChanged((user: User | null) => {
+    const unsubscribe = firebaseAuthService.onAuthStateChanged(async (user: User | null) => {
       console.log('🔥 Firebase auth state changed:', user ? 'User signed in' : 'User signed out')
 
       if (user && !getFirebaseUserEmail(user)) {
         console.warn('⚠️ Firebase user missing email, may need re-authentication')
       }
 
-      setIsFirebaseAuthenticated(!!user)
-      setFirebaseUser(user)
-      setIsLoading(false)
-      setError(null)
-
       if (user) {
         console.log('✅ Firebase user authenticated:', getFirebaseUserEmail(user))
+        setFirebaseUser(user)
+        setIsFirebaseAuthenticated(true)
+        
+        // Establish backend session when Firebase user signs in
+        try {
+          const success = await establishBackendSession(user)
+          if (success) {
+            setAuthState('authenticated')
+            console.log('✅ Backend session established from Firebase auth')
+          } else {
+            setAuthState('unauthenticated')
+            console.error('❌ Failed to establish backend session')
+          }
+        } catch (error) {
+          console.error('❌ Error establishing backend session:', error)
+          setAuthState('unauthenticated')
+        }
       } else {
         console.log('🚪 Firebase user signed out')
+        setFirebaseUser(null)
+        setIsFirebaseAuthenticated(false)
+        setAuthState('unauthenticated')
       }
+      
+      setIsLoading(false)
+      setError(null)
     })
 
     return () => unsubscribe()
@@ -86,6 +155,7 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
       // Force clear Firebase authentication state
       setIsFirebaseAuthenticated(false)
       setFirebaseUser(null)
+      setAuthState('unauthenticated')
       console.log('🚪 Cleared Firebase authentication state')
       
     } catch (error) {
@@ -134,16 +204,27 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
     console.log('🔄 clearSignOutState called (no longer needed)')
   }
 
+  const fetchUserLeaguesFromContext = async () => {
+    try {
+      return await fetchUserLeagues()
+    } catch (error) {
+      console.error('❌ Error fetching user leagues from context:', error)
+      throw error
+    }
+  }
+
   const value: FirebaseAuthContextType = {
     isFirebaseAuthenticated,
     firebaseUser,
     isLoading,
     error,
+    authState,
     signInToFirebase,
     signOutFromFirebase,
     refreshToken,
     testHealth,
-    clearSignOutState
+    clearSignOutState,
+    fetchUserLeagues: fetchUserLeaguesFromContext
   }
 
   return (

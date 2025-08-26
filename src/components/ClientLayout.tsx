@@ -6,6 +6,7 @@ import NavBar from './NavBar'
 import EnhancedOzzieChat from './EnhancedOzzieChat'
 import TradeTool from './TradeTool'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext'
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -16,16 +17,18 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <AuthProvider>
-      {!hideNav && <NavBar />}
-      <main className="min-h-screen p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-        {children}
-      </main>
-      
-      {/* Enhanced Ozzie Chat - Show on all pages except login/register */}
-      {!hideNav && <EnhancedOzzieChat />}
-      
-      {/* Trade Tool - Show on league pages */}
-      {showFloatingTools && <TradeTool />}
+      <FirebaseAuthProvider>
+        {!hideNav && <NavBar />}
+        <main className="min-h-screen p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+          {children}
+        </main>
+        
+        {/* Enhanced Ozzie Chat - Show on all pages except login/register */}
+        {!hideNav && <EnhancedOzzieChat />}
+        
+        {/* Trade Tool - Show on league pages */}
+        {showFloatingTools && <TradeTool />}
+      </FirebaseAuthProvider>
     </AuthProvider>
   )
 }
