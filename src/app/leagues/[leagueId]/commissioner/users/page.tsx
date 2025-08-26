@@ -27,6 +27,10 @@ export default function CommissionerUsersPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        console.log('🔍 Starting fetchUsers...');
+        console.log('🔍 League ID:', leagueId);
+        console.log('🔍 Full URL:', `https://www.couchlytics.com/leagues/${leagueId}/commissioner/users`);
+        
         const response = await fetch(`https://www.couchlytics.com/leagues/${leagueId}/commissioner/users`, {
           credentials: 'include',
           headers: {
@@ -38,9 +42,14 @@ export default function CommissionerUsersPage() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
+        console.log('🔍 Response status:', response.status);
+        console.log('🔍 Response headers:', response.headers);
+        
         const data = await response.json();
+        console.log('🔍 Response data:', data);
         setUsers(data.users);
       } catch (err) {
+        console.error('🔍 Fetch error:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch users');
       } finally {
         setLoading(false);
