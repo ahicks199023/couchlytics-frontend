@@ -196,3 +196,171 @@ export const calculateDraftPickValue = async (leagueId: string, draftPickData: R
   
   return response.json()
 }
+
+// Missing functions that were causing deployment crashes
+export const getCompanionAppInfo = async (leagueId: string) => {
+  return fetchFromApi(`/leagues/${leagueId}/companion-app-info`)
+}
+
+export const generateInviteLink = async (leagueId: string) => {
+  const response = await fetch(`${API_BASE}/leagues/${leagueId}/invite-link`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include'
+  })
+  
+  if (!response.ok) {
+    throw new Error(`Failed to generate invite link: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
+export const assignTeamToUser = async (leagueId: string, userId: string, teamId: string) => {
+  const response = await fetch(`${API_BASE}/leagues/${leagueId}/assign-team`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include',
+    body: JSON.stringify({ userId, teamId })
+  })
+  
+  if (!response.ok) {
+    throw new Error(`Failed to assign team: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
+export const updateMemberRole = async (leagueId: string, userId: string, role: string) => {
+  const response = await fetch(`${API_BASE}/leagues/${leagueId}/member-role`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include',
+    body: JSON.stringify({ userId, role })
+  })
+  
+  if (!response.ok) {
+    throw new Error(`Failed to update member role: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
+export const assignTeamToUserFlexible = async (leagueId: string, userId: string, teamId: string) => {
+  const response = await fetch(`${API_BASE}/leagues/${leagueId}/assign-team-flexible`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include',
+    body: JSON.stringify({ userId, teamId })
+  })
+  
+  if (!response.ok) {
+    throw new Error(`Failed to assign team flexibly: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
+export const unassignTeam = async (leagueId: string, userId: string) => {
+  const response = await fetch(`${API_BASE}/leagues/${leagueId}/unassign-team`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include',
+    body: JSON.stringify({ userId })
+  })
+  
+  if (!response.ok) {
+    throw new Error(`Failed to unassign team: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
+export const getInvite = async (inviteCode: string) => {
+  return fetchFromApi(`/invites/${inviteCode}`)
+}
+
+export const getVacantTeamsForInvite = async (inviteCode: string) => {
+  return fetchFromApi(`/invites/${inviteCode}/vacant-teams`)
+}
+
+export const acceptInvite = async (inviteCode: string, teamId: string) => {
+  const response = await fetch(`${API_BASE}/invites/${inviteCode}/accept`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include',
+    body: JSON.stringify({ teamId })
+  })
+  
+  if (!response.ok) {
+    throw new Error(`Failed to accept invite: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
+export const getPlayerContract = async (leagueId: string, playerId: string) => {
+  return fetchFromApi(`/leagues/${leagueId}/players/${playerId}/contract`)
+}
+
+export const getLeagueReport = async (leagueId: string) => {
+  return fetchFromApi(`/leagues/${leagueId}/report`)
+}
+
+export const getRuleSuggestions = async (leagueId: string) => {
+  return fetchFromApi(`/leagues/${leagueId}/rule-suggestions`)
+}
+
+export const getAICommissionerHealth = async (leagueId: string) => {
+  return fetchFromApi(`/leagues/${leagueId}/ai-commissioner/health`)
+}
+
+export const evaluateTrade = async (leagueId: string, tradeData: Record<string, unknown>) => {
+  const response = await fetch(`${API_BASE}/leagues/${leagueId}/ai-commissioner/evaluate-trade`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include',
+    body: JSON.stringify(tradeData)
+  })
+  
+  if (!response.ok) {
+    throw new Error(`Failed to evaluate trade: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
+export const resolveDispute = async (leagueId: string, disputeData: Record<string, unknown>) => {
+  const response = await fetch(`${API_BASE}/leagues/${leagueId}/ai-commissioner/resolve-dispute`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include',
+    body: JSON.stringify(disputeData)
+  })
+  
+  if (!response.ok) {
+    throw new Error(`Failed to resolve dispute: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
+export const getPlayerCareerStats = async (leagueId: string, playerId: string) => {
+  return fetchFromApi(`/leagues/${leagueId}/players/${playerId}/career-stats`)
+}

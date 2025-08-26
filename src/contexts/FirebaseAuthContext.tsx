@@ -10,13 +10,14 @@ interface FirebaseAuthContextType {
   firebaseUser: User | null
   isLoading: boolean
   error: string | null
+  isLoggingOut: boolean
   authState: 'checking' | 'authenticated' | 'unauthenticated'
   signInToFirebase: () => Promise<void>
   signOutFromFirebase: () => Promise<void>
   refreshToken: () => Promise<void>
   testHealth: () => Promise<boolean>
   clearSignOutState: () => void
-  fetchUserLeagues: () => Promise<any>
+  fetchUserLeagues: () => Promise<{ leagues: Array<{ leagueId: string; name: string; seasonYear: number; week: number }> }>
 }
 
 interface FirebaseAuthProviderProps {
@@ -218,6 +219,7 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
     firebaseUser,
     isLoading,
     error,
+    isLoggingOut,
     authState,
     signInToFirebase,
     signOutFromFirebase,

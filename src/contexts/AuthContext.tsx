@@ -5,7 +5,7 @@ import { User, UserRole, Permission } from '@/types/user'
 import { http, API_BASE_URL } from '@/lib/http'
 import { firebaseAuthService } from '@/lib/firebase'
 import { User as FirebaseUser } from 'firebase/auth'
-import { checkAuthStatus, establishBackendSession, fetchUserLeagues } from '@/lib/api-utils'
+import { checkAuthStatus, establishBackendSession } from '@/lib/api-utils'
 
 interface AuthContextType {
   // Couchlytics authentication state
