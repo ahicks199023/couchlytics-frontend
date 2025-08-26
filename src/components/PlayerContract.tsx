@@ -111,24 +111,45 @@ export default function PlayerContract({ leagueId, playerId }: PlayerContractPro
           <h4 className="text-blue-400 font-semibold mb-4 text-sm uppercase tracking-wide">Release Information</h4>
           
           <div className="space-y-3">
-            <div className="flex justify-between items-center py-2 border-b border-gray-700">
+            <div className="flex justify-between items-center py-2 border-b border-gray-700">       
               <span className="text-gray-300 text-sm">Release Net Savings:</span>
-              <span className="font-bold text-green-400">{formatCurrency(contractData.releaseNetSavings)}</span>
+              <span className="font-bold text-green-400">{formatCurrency(contractData.releaseNetSavings || 0)}</span>
             </div>
             
             <div className="flex justify-between items-center py-2 border-b border-gray-700">
               <span className="text-gray-300 text-sm">Total Release Penalty:</span>
-              <span className="font-bold text-red-400">{formatCurrency(contractData.totalReleasePenalty)}</span>
+              <span className="font-bold text-red-400">{formatCurrency(contractData.totalReleasePenalty || 0)}</span>
             </div>
-            
+
             <div className="flex justify-between items-center py-2 border-b border-gray-700">
-              <span className="text-gray-300 text-sm">{contractData.penaltyYears.year1.year} Year Penalty:</span>
-              <span className="font-bold text-red-400">{formatCurrency(contractData.penaltyYears.year1.penalty)}</span>
+              <span className="text-gray-300 text-sm">
+                {(() => {
+                  const year = contractData?.penaltyYears?.year1?.year || '2026'
+                  console.log('Displaying year1 penalty year:', year, 'from contractData:', contractData?.penaltyYears?.year1)
+                  return year
+                })()} Year Penalty:
+              </span>
+              <span className="text-white">
+                {contractData?.penaltyYears?.year1?.penalty 
+                  ? formatCurrency(contractData.penaltyYears.year1.penalty)
+                  : formatCurrency(player.releasePenalty2026)
+                }
+              </span>
             </div>
-            
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-300 text-sm">{contractData.penaltyYears.year2.year} Year Penalty:</span>
-              <span className="font-bold text-red-400">{formatCurrency(contractData.penaltyYears.year2.penalty)}</span>
+            <div className="flex justify-between">
+              <span className="text-gray-400">
+                {(() => {
+                  const year = contractData?.penaltyYears?.year2?.year || '2027'
+                  console.log('Displaying year2 penalty year:', year, 'from contractData:', contractData?.penaltyYears?.year2)
+                  return year
+                })()} Year Penalty:
+              </span>
+              <span className="text-white">
+                {contractData?.penaltyYears?.year2?.penalty 
+                  ? formatCurrency(contractData.penaltyYears.year2.penalty)
+                  : formatCurrency(player.releasePenalty2027)
+                }
+              </span>
             </div>
           </div>
         </div>

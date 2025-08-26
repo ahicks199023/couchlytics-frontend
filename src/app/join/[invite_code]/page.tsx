@@ -24,7 +24,7 @@ export default function JoinPage() {
     const run = async () => {
       try {
         const info = (await getInvite(inviteCode)) as InviteInfo
-        setLeague({ id: info.league_id, name: info.league_name })
+        setLeague({ id: String(info.league_id), name: info.league_name })
 
         const t = (await getVacantTeamsForInvite(inviteCode)) as Partial<VacantTeamsResponse>
         setTeams(Array.isArray(t?.teams) ? t.teams : [])

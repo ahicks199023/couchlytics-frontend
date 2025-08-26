@@ -10,14 +10,14 @@ import {
   getAICommissionerHealth 
 } from '@/lib/api'
 
-interface TradeEvaluationData {
+interface TradeEvaluationData extends Record<string, unknown> {
   team1_id: number
   team2_id: number
   team1_players: Array<{player_id: number, name: string, position: string, value: number}>
   team2_players: Array<{player_id: number, name: string, position: string, value: number}>
 }
 
-interface DisputeData {
+interface DisputeData extends Record<string, unknown> {
   dispute_type: string
   teams_involved: number[]
   description: string

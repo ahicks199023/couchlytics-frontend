@@ -1,6 +1,30 @@
 // lib/api.ts
 import { API_BASE } from './config'
 
+// Type definitions
+export interface ContractData {
+  yearsLeft: number
+  length: number
+  capHit: number
+  salary: number
+  bonus: number
+  releaseNetSavings?: number
+  totalReleasePenalty?: number
+  releasePenalty2026?: number
+  releasePenalty2027?: number
+  penaltyYears?: {
+    year1?: {
+      year: string
+      penalty: number
+    }
+    year2?: {
+      year: string
+      penalty: number
+    }
+  }
+}
+
+// API utility function
 export const fetchFromApi = async (endpoint: string) => {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     credentials: 'include'

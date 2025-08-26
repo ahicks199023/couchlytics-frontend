@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { PlayerGameLogRow } from '@/lib/api'
 import { Player } from '@/types/player'
 import { fetchFromApi } from '@/lib/api'
 import TeamLogo from '@/components/TeamLogo'
+
+// Define the game log row type based on usage
+type PlayerGameLogRow = Record<string, unknown>
 
 export default function PlayerGameLogPage() {
   const { leagueId, id: playerId } = useParams()

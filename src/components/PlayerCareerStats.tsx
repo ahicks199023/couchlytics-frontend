@@ -1,7 +1,67 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { getPlayerCareerStats, CareerStatsResponse, CareerStatsSeason } from '@/lib/api'
+import { getPlayerCareerStats } from '@/lib/api'
+
+// Define the career stats types locally
+interface CareerStatsSeason {
+  season: number
+  cmp_att?: string
+  cmp_pct?: number
+  pass_yds?: number
+  pass_avg?: number
+  yds_per_game?: number
+  pass_long?: number
+  pass_tds?: number
+  pass_ints?: number
+  pass_sacks?: number
+  passer_rating?: number
+  rush_att?: number
+  rush_yds?: number
+  rush_avg?: number
+  rush_tds?: number
+  rush_long?: number
+  fumbles?: number
+  rec?: number
+  rec_yds?: number
+  rec_avg?: number
+  rec_tds?: number
+  rec_long?: number
+  total_yds?: number
+  total_tds?: number
+  drops?: number
+  fg?: number
+  fg_pct?: number
+  xp?: number
+  xp_pct?: number
+  pts?: number
+  punt_att?: number
+  punt_yds?: number
+  punt_avg?: number
+  punt_in20?: number
+  punt_long?: number
+  tackles?: number
+  sacks?: number
+  ints?: number
+  int_yds?: number
+  int_tds?: number
+  ff?: number
+  fr?: number
+  pd?: number
+  saf?: number
+  def_pts?: number
+}
+
+interface CareerStatsResponse {
+  player_id: number
+  player_name: string
+  position: string
+  seasons: CareerStatsSeason[]
+  player: {
+    position: string
+  }
+  total_seasons: number
+}
 
 interface PlayerCareerStatsProps {
   leagueId: string
@@ -144,8 +204,8 @@ export default function PlayerCareerStats({ leagueId, playerId }: PlayerCareerSt
           </tr>
         )
       case 'K':
-        const fgMadeAtt = seasonData.fg_made && seasonData.fg_att ? `${seasonData.fg_made}/${seasonData.fg_att}` : '-'
-        const xpMadeAtt = seasonData.xp_made && seasonData.xp_att ? `${seasonData.xp_made}/${seasonData.xp_att}` : '-'
+        const fgMadeAtt = seasonData.fg_pct ? `${seasonData.fg}/${seasonData.fg_pct}` : '-'
+        const xpMadeAtt = seasonData.xp_pct ? `${seasonData.xp}/${seasonData.xp_pct}` : '-'
         return (
           <tr key={seasonData.season} className="hover:bg-gray-700/50 transition-colors">
             <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{seasonData.season}</td>
@@ -153,7 +213,7 @@ export default function PlayerCareerStats({ leagueId, playerId }: PlayerCareerSt
             <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatPercentage(seasonData.fg_pct)}</td>
             <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{xpMadeAtt}</td>
             <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatPercentage(seasonData.xp_pct)}</td>
-            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.kicking_pts)}</td>
+            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.pts)}</td>
           </tr>
         )
       case 'P':
@@ -163,7 +223,7 @@ export default function PlayerCareerStats({ leagueId, playerId }: PlayerCareerSt
             <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.punt_att)}</td>
             <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.punt_yds)}</td>
             <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatDecimal(seasonData.punt_avg)}</td>
-            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.punts_in20)}</td>
+            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.punt_in20)}</td>
             <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.punt_long)}</td>
           </tr>
         )
@@ -174,13 +234,13 @@ export default function PlayerCareerStats({ leagueId, playerId }: PlayerCareerSt
             <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{seasonData.season}</td>
             <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.tackles)}</td>
             <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.sacks)}</td>
-            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.interceptions)}</td>
+            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.ints)}</td>
             <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.int_yds)}</td>
-            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.def_tds)}</td>
-            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.forced_fumbles)}</td>
-            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.fumble_recoveries)}</td>
-            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.pass_deflections)}</td>
-            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.safeties)}</td>
+            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.int_tds)}</td>
+            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.ff)}</td>
+            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.fr)}</td>
+            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.pd)}</td>
+            <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.saf)}</td>
             <td className="px-3 py-2 text-sm text-white border-b border-gray-700">{formatStat(seasonData.def_pts)}</td>
           </tr>
         )
@@ -211,7 +271,7 @@ export default function PlayerCareerStats({ leagueId, playerId }: PlayerCareerSt
     )
   }
 
-  if (!careerData || !careerData.career_stats.length) {
+  if (!careerData || !careerData.seasons.length) {
     return (
       <div className="text-center py-8">
         <p className="text-gray-400">No career stats available for this player</p>
@@ -219,7 +279,7 @@ export default function PlayerCareerStats({ leagueId, playerId }: PlayerCareerSt
     )
   }
 
-  const { player, career_stats, total_seasons } = careerData
+  const { player, seasons, total_seasons } = careerData
   const tableHeaders = getTableHeaders(player.position)
 
   return (
@@ -228,7 +288,7 @@ export default function PlayerCareerStats({ leagueId, playerId }: PlayerCareerSt
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-bold text-white">Career Statistics</h3>
         <div className="text-sm text-gray-400">
-          {total_seasons} season{total_seasons !== 1 ? 's' : ''} • {career_stats.length} entries
+          {total_seasons} season{total_seasons !== 1 ? 's' : ''} • {seasons.length} entries
         </div>
       </div>
 
@@ -247,7 +307,7 @@ export default function PlayerCareerStats({ leagueId, playerId }: PlayerCareerSt
             </thead>
             <tbody className="divide-y divide-gray-700">
               {/* Sort by season descending (most recent first) */}
-              {career_stats
+              {seasons
                 .sort((a, b) => b.season - a.season)
                 .map((seasonData) => renderTableRow(seasonData, player.position))}
             </tbody>

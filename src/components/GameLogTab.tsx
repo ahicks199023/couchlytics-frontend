@@ -3,7 +3,10 @@
 // GameLogTab Component - Fixed TypeScript errors
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { PlayerGameLogRow, fetchFromApi } from '@/lib/api'
+import { fetchFromApi } from '@/lib/api'
+
+// Define the game log row type locally
+type PlayerGameLogRow = Record<string, unknown>
 
 interface GameLog {
   week: string
