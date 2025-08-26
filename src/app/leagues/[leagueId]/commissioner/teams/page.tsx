@@ -27,7 +27,7 @@ export default function CommissionerTeamsPage() {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const response = await fetch(`/api/leagues/${leagueId}/commissioner/teams`, {
+        const response = await fetch(`/leagues/${leagueId}/commissioner/teams`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
