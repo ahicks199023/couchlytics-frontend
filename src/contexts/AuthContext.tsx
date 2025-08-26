@@ -5,7 +5,7 @@ import { User, UserRole, Permission } from '@/types/user'
 import { http, API_BASE_URL } from '@/lib/http'
 import { firebaseAuthService } from '@/lib/firebase'
 import { User as FirebaseUser } from 'firebase/auth'
-import { checkAuthStatus, establishBackendSession } from '@/lib/api-utils'
+import { establishBackendSession } from '@/lib/api-utils'
 
 interface AuthContextType {
   // Couchlytics authentication state
@@ -52,7 +52,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       console.log('🔍 Checking Couchlytics auth status...')
-      const data = await checkAuthStatus()
+      const response = await http.get('/auth/status')
+      const data = response.data
       
       if (data.authenticated) {
         console.log('✅ Couchlytics user is authenticated:', data.user)
@@ -138,7 +139,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const checkExistingSession = async () => {
       try {
         console.log('🔍 Checking for existing session...')
-        const data = await checkAuthStatus()
+        const response = await http.get('/auth/status')
+        const data = response.data
         
         if (data.authenticated) {
           console.log('✅ Existing session found')

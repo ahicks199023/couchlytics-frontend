@@ -202,7 +202,7 @@ export default function LeagueManagement() {
   const assignTeam = async (teamId: number, userEmail: string) => {
     try {
       setError(null)
-      await assignTeamToUser(leagueId, teamId, userEmail)
+      await assignTeamToUser(leagueId, String(teamId), userEmail)
       // Refresh league data to get updated teams and users
       const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
       setTeams(leagueData.teams || [])
@@ -262,7 +262,7 @@ export default function LeagueManagement() {
       }
       
       // Update league settings
-      await updateLeagueSettings(leagueId, updateData)
+      await updateLeagueSettings(leagueId, updateData as Record<string, unknown>)
       
       // Handle image upload if there's a new image
       if (imageFile) {

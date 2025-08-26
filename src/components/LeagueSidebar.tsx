@@ -145,7 +145,7 @@ export default function LeagueSidebar() {
     }
 
     checkAccess()
-  }, [leagueId])
+  }, [leagueId, hasCommissionerAccess])
 
   const toggleExpanded = (path: string) => {
     setExpandedItems(prev => 
