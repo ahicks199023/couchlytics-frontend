@@ -9,14 +9,13 @@ type VacantTeam = { id: number; name: string }
 type InviteInfo = { league_id: number; league_name: string }
 type VacantTeamsResponse = { teams: VacantTeam[] }
 
-export default function JoinLeaguePage() {
-  const { invite_code } = useParams()
-  const inviteCode = invite_code as string
+export default function JoinPage() {
+  const params = useParams()
   const router = useRouter()
-  const { authenticated, user } = useAuth()
-
+  const inviteCode = params.invite_code as string
+  const { authenticated } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [league, setLeague] = useState<{ id: number; name: string } | null>(null)
+  const [league, setLeague] = useState<{ id: string; name: string } | null>(null)
   const [teams, setTeams] = useState<VacantTeam[]>([])
   const [error, setError] = useState<string | null>(null)
   const [selectedTeamId, setSelectedTeamId] = useState<number | undefined>(undefined)
@@ -54,8 +53,7 @@ export default function JoinLeaguePage() {
     if (!league) return
     try {
       setLoading(true)
-      const userId = typeof user?.id === 'number' ? user.id : undefined
-      await acceptInvite(inviteCode, { user_id: userId, team_id: selectedTeamId })
+      await acceptInvite(inviteCode, String(selectedTeamId || ''))
       router.replace(`/leagues/${league.id}`)
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Failed to accept invite'

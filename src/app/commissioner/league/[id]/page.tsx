@@ -618,7 +618,7 @@ export default function LeagueManagement() {
                                 setError(null)
                                 const role = e.target.value as 'commissioner' | 'member'
                                 const userId = (user as unknown as { user_id?: number; id?: number }).user_id ?? user.id
-                                await updateMemberRole(leagueId, Number(userId), role)
+                                await updateMemberRole(leagueId, String(userId), role)
                                 const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
                                 setUsers(leagueData.members || [])
                                 setSuccessMessage('Role updated')
@@ -656,11 +656,11 @@ export default function LeagueManagement() {
                                       ? (typeof team.team_id === 'string' ? team.team_id : Number(team.team_id))
                                       : Number(raw)
                                     const userId = (user as unknown as { user_id?: number; id?: number }).user_id ?? user.id
-                                    await assignTeamToUserFlexible(leagueId, { userId: Number(userId), teamIdentifier })
+                                    await assignTeamToUserFlexible(leagueId, String(userId), String(teamIdentifier))
                                     setSuccessMessage('Team assigned successfully!')
                                   } else {
                                     const userId = (user as unknown as { user_id?: number; id?: number }).user_id ?? user.id
-                                    await unassignTeam(leagueId, Number(userId))
+                                    await unassignTeam(leagueId, String(userId))
                                     setSuccessMessage('Team unassigned')
                                   }
                                   const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
