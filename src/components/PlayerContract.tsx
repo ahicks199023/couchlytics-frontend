@@ -132,7 +132,7 @@ export default function PlayerContract({ leagueId, playerId }: PlayerContractPro
               <span className="text-white">
                 {contractData?.penaltyYears?.year1?.penalty 
                   ? formatCurrency(contractData.penaltyYears.year1.penalty)
-                  : formatCurrency(player.releasePenalty2026)
+                  : formatCurrency(contractData.releasePenalty2026 || 0)
                 }
               </span>
             </div>
@@ -147,7 +147,7 @@ export default function PlayerContract({ leagueId, playerId }: PlayerContractPro
               <span className="text-white">
                 {contractData?.penaltyYears?.year2?.penalty 
                   ? formatCurrency(contractData.penaltyYears.year2.penalty)
-                  : formatCurrency(player.releasePenalty2027)
+                  : formatCurrency(contractData.releasePenalty2027 || 0)
                 }
               </span>
             </div>
@@ -170,7 +170,7 @@ export default function PlayerContract({ leagueId, playerId }: PlayerContractPro
           
           <div className="space-y-1">
             <div className="text-gray-400 text-xs uppercase tracking-wide">Release Savings</div>
-            <div className="text-2xl font-bold text-green-400">{formatCurrency(contractData.releaseNetSavings)}</div>
+            <div className="text-2xl font-bold text-green-400">{formatCurrency(contractData.releaseNetSavings || 0)}</div>
           </div>
         </div>
       </div>
