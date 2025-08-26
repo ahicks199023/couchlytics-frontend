@@ -27,7 +27,7 @@ export default function CommissionerUsersPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch(`/leagues/${leagueId}/commissioner/users`, {
+        const response = await fetch(`https://www.couchlytics.com/leagues/${leagueId}/commissioner/users`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
