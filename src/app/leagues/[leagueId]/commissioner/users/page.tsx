@@ -160,11 +160,7 @@ export default function CommissionerUsersPage() {
     }
   };
 
-  const getTeamName = (teamId: number | null) => {
-    if (!teamId) return 'Unassigned';
-    const team = teams.find(t => t.id === teamId);
-    return team ? `${team.city} ${team.name}` : `Team ${teamId}`;
-  };
+
 
   if (loading) {
     return (
