@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { leagueId: string } }
+  { params }: { params: Promise<{ leagueId: string }> }
 ) {
+  const { leagueId } = await params;
   try {
-    const { leagueId } = params;
-    
     console.log('🔍 API Route: Fetching settings for league:', leagueId);
     
     const response = await fetch(
