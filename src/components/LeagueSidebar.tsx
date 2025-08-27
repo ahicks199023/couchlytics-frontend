@@ -23,7 +23,7 @@ interface LeagueMember {
   id: number
   league_id: number
   user_id: number
-  role: string // 'commissioner', 'member', 'admin'
+  role: string // 'commissioner', 'co-commissioner', 'trade_committee_member', 'user'
   permissions?: Record<string, boolean>
   created_at: string
   updated_at: string
@@ -46,15 +46,14 @@ const links = [
     path: 'trades',
     subItems: [
       { label: 'Trade History', path: 'trades' },
-      { label: 'Submit Trade', path: 'trades/submit' },
+      { label: 'Trade Block', path: 'trade-block' },
       { label: 'Trade Analyzer', path: 'trade-tool' }
     ]
   },
   { label: 'Stats', path: 'stats', prefetch: false },
   { label: 'Stats Leaders', path: 'stats-leaders', prefetch: false },
   { label: 'Players', path: 'players', prefetch: false },
-  { label: '💬 Chat', path: 'chat', prefetch: false },
-  { label: '🤖 AI Commissioner', path: 'ai-commissioner', prefetch: false }
+  { label: '💬 Chat', path: 'chat', prefetch: false }
 ]
 
 // Commissioner-only links
@@ -299,6 +298,15 @@ export default function LeagueSidebar() {
         {(hasCommissionerAccess || isGlobalCommissioner) && leagueId && typeof leagueId === 'string' && (
           <div className="pt-2 border-t border-gray-700 mt-auto">
             <div className="text-xs text-gray-400 mb-2 px-2">Commissioner Tools</div>
+            <Link
+              href={`/leagues/${leagueId}/commissioner`}
+              className={clsx(
+                'block px-2 py-1 rounded hover:bg-gray-700 text-sm font-medium',
+                pathname.includes('/commissioner') && !pathname.includes('/ai-commissioner') && 'bg-blue-600 text-white'
+              )}
+            >
+              🎯 Commissioner's Hub
+            </Link>
             <Link
               href={`/leagues/${leagueId}/ai-commissioner`}
               className={clsx(

@@ -28,10 +28,9 @@ interface Team {
 
 const ROLE_OPTIONS = [
   'commissioner',
-  'co-commissioner', 
-  'owner',
-  'member',
-  'viewer'
+  'co-commissioner',
+  'trade_committee_member',
+  'user'
 ];
 
 export default function CommissionerUsersPage() {
@@ -244,7 +243,10 @@ export default function CommissionerUsersPage() {
                       >
                         {ROLE_OPTIONS.map(role => (
                           <option key={role} value={role}>
-                            {role.charAt(0).toUpperCase() + role.slice(1)}
+                            {role === 'trade_committee_member' 
+                              ? 'Trade Committee Member' 
+                              : role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' ')
+                            }
                           </option>
                         ))}
                       </select>

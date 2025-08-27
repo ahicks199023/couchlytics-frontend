@@ -277,9 +277,12 @@ export default function CommissionerHub() {
         <div className="mt-12 bg-gray-800 rounded-lg p-6 border border-gray-700">
           <h2 className="text-2xl font-bold text-white mb-4">Quick Actions</h2>
           <div className="flex flex-wrap gap-4">
-            <button className="bg-neon-green hover:bg-green-400 text-black font-semibold px-4 py-2 rounded-lg transition-colors">
+            <Link 
+              href={`/leagues/${leagueId}/commissioner/announcements/create`}
+              className="bg-neon-green hover:bg-green-400 text-black font-semibold px-4 py-2 rounded-lg transition-colors inline-block"
+            >
               📧 Send League Announcement
-            </button>
+            </Link>
             <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors">
               📊 Generate League Report
             </button>
