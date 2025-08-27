@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/backend-api/(.*)",
+      "destination": "https://api.couchlytics.com/backend-api/$1"
+    }
+  ]
+}
