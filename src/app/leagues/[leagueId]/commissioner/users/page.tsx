@@ -17,49 +17,154 @@ interface User {
   is_active: boolean;
 }
 
+interface Team {
+  id: number;
+  name: string;
+  abbreviation: string;
+  city: string;
+  conference: string;
+  division: string;
+}
+
+const ROLE_OPTIONS = [
+  'commissioner',
+  'co-commissioner', 
+  'owner',
+  'member',
+  'viewer'
+];
+
 export default function CommissionerUsersPage() {
   const params = useParams();
   const leagueId = params.leagueId;
   const [users, setUsers] = useState<User[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatingUser, setUpdatingUser] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
-        console.log('🔍 Starting fetchUsers...');
+        console.log('🔍 Starting fetchData...');
         console.log('🔍 League ID:', leagueId);
-        console.log('🔍 Full URL:', `/backend-api/leagues/${leagueId}/commissioner/users`);
         
-        const response = await fetch(`/backend-api/leagues/${leagueId}/commissioner/users`, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        // Fetch users and teams in parallel
+        const [usersResponse, teamsResponse] = await Promise.all([
+          fetch(`/backend-api/leagues/${leagueId}/commissioner/users`, {
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }),
+          fetch(`/backend-api/leagues/${leagueId}/commissioner/teams`, {
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+        ]);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!usersResponse.ok) {
+          throw new Error(`Users API error! status: ${usersResponse.status}`);
         }
 
-        console.log('🔍 Response status:', response.status);
-        console.log('🔍 Response headers:', response.headers);
+        if (!teamsResponse.ok) {
+          throw new Error(`Teams API error! status: ${teamsResponse.status}`);
+        }
+
+        const usersData = await usersResponse.json();
+        const teamsData = await teamsResponse.json();
         
-        const data = await response.json();
-        console.log('🔍 Response data:', data);
-        setUsers(data.users);
+        console.log('🔍 Users response data:', usersData);
+        console.log('🔍 Teams response data:', teamsData);
+        
+        setUsers(usersData.users);
+        setTeams(teamsData.teams);
       } catch (err) {
         console.error('🔍 Fetch error:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch users');
+        setError(err instanceof Error ? err.message : 'Failed to fetch data');
       } finally {
         setLoading(false);
       }
     };
 
     if (leagueId) {
-      fetchUsers();
+      fetchData();
     }
   }, [leagueId]);
+
+  const handleRoleChange = async (userId: number, newRole: string) => {
+    try {
+      setUpdatingUser(userId);
+      
+      const response = await fetch(`/backend-api/leagues/${leagueId}/commissioner/users/${userId}/role`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ role: newRole }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update role: ${response.status}`);
+      }
+
+      // Update local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId ? { ...user, role: newRole } : user
+        )
+      );
+
+      console.log(`✅ Role updated successfully for user ${userId} to ${newRole}`);
+    } catch (err) {
+      console.error('❌ Error updating role:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update role');
+    } finally {
+      setUpdatingUser(null);
+    }
+  };
+
+  const handleTeamChange = async (userId: number, newTeamId: number | null) => {
+    try {
+      setUpdatingUser(userId);
+      
+      const response = await fetch(`/backend-api/leagues/${leagueId}/commissioner/users/${userId}/team`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ team_id: newTeamId }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update team: ${response.status}`);
+      }
+
+      // Update local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId ? { ...user, team_id: newTeamId } : user
+        )
+      );
+
+      console.log(`✅ Team updated successfully for user ${userId} to team ${newTeamId}`);
+    } catch (err) {
+      console.error('❌ Error updating team:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update team');
+    } finally {
+      setUpdatingUser(null);
+    }
+  };
+
+  const getTeamName = (teamId: number | null) => {
+    if (!teamId) return 'Unassigned';
+    const team = teams.find(t => t.id === teamId);
+    return team ? `${team.city} ${team.name}` : `Team ${teamId}`;
+  };
 
   if (loading) {
     return (
@@ -135,12 +240,43 @@ export default function CommissionerUsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-900 text-blue-200">
-                        {user.role}
-                      </span>
+                      <select
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                        disabled={updatingUser === user.id}
+                        className="bg-gray-700 border border-gray-600 text-white text-sm rounded px-2 py-1 focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                      >
+                        {ROLE_OPTIONS.map(role => (
+                          <option key={role} value={role}>
+                            {role.charAt(0).toUpperCase() + role.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                      {updatingUser === user.id && (
+                        <div className="mt-1">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                        </div>
+                      )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                      {user.team_id ? `Team ${user.team_id}` : 'Unassigned'}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        value={user.team_id || ''}
+                        onChange={(e) => handleTeamChange(user.id, e.target.value ? parseInt(e.target.value) : null)}
+                        disabled={updatingUser === user.id}
+                        className="bg-gray-700 border border-gray-600 text-white text-sm rounded px-2 py-1 focus:outline-none focus:border-blue-500 disabled:opacity-50 min-w-[150px]"
+                      >
+                        <option value="">Unassigned</option>
+                        {teams.map(team => (
+                          <option key={team.id} value={team.id}>
+                            {team.city} {team.name}
+                          </option>
+                        ))}
+                      </select>
+                      {updatingUser === user.id && (
+                        <div className="mt-1">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                       {user.joined_at ? new Date(user.joined_at).toLocaleDateString() : 'N/A'}
@@ -170,7 +306,7 @@ export default function CommissionerUsersPage() {
 
       {/* Footer */}
       <div className="mt-6 text-xs text-gray-500 text-center">
-        User management data is fetched from the league commissioner API
+        User management data is fetched from the league commissioner API. Role and team assignments are updated in real-time.
       </div>
     </div>
   );
