@@ -16,6 +16,12 @@ class FirebaseAuthManager {
       this.authStateUnsubscribe();
     }
 
+    // Ensure auth is not null before using it
+    if (!auth) {
+      console.error('❌ Firebase auth is not initialized');
+      return;
+    }
+
     this.authStateUnsubscribe = onAuthStateChanged(auth, (user) => {
       // Prevent auth state changes during logout
       if (this.isLoggingOut) {
@@ -117,6 +123,11 @@ class FirebaseAuthManager {
   // Force sign out from Firebase
   async signOutFromFirebase() {
     try {
+      if (!auth) {
+        console.error('❌ Firebase auth is not initialized');
+        return;
+      }
+      
       await signOut(auth);
       console.log('✅ Firebase signout completed');
     } catch (error) {
