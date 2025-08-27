@@ -4,6 +4,8 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { firebaseAuthService, getFirebaseUserEmail } from '@/lib/firebase'
 import type { User } from '@/lib/firebase'
 import { establishBackendSession, fetchUserLeagues } from '@/lib/api-utils'
+import { firebaseAuthManager } from '@/services/firebase-auth-manager'
+import { coordinatedLogoutService } from '@/services/coordinated-logout-service'
 
 interface FirebaseAuthContextType {
   isFirebaseAuthenticated: boolean
@@ -34,14 +36,19 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [authState, setAuthState] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking')
 
-  // Check existing session and establish Firebase auth if needed
+  // Initialize Firebase Auth Manager and check session
   useEffect(() => {
+    console.log('🔧 Initializing Firebase Auth Manager...')
+    
+    // Initialize the auth manager
+    firebaseAuthManager.initAuthStateListener()
+    
     const checkAuthStatus = async () => {
       try {
         console.log('🔍 Checking existing backend session...')
         
         // First check if we have a valid backend session
-        const response = await fetch('https://api.couchlytics.com/auth/status', {
+        const response = await fetch('/backend-api/auth/status', {
           credentials: 'include'
         })
         
@@ -79,16 +86,27 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
     }
     
     checkAuthStatus()
+    
+    // Cleanup on unmount
+    return () => {
+      firebaseAuthManager.cleanup()
+    }
   }, [])
 
   useEffect(() => {
-    // Don't listen to auth changes if we're logging out
-    if (isLoggingOut) {
+    // Don't listen to auth changes if we're logging out or if Firebase Auth Manager is handling it
+    if (isLoggingOut || firebaseAuthManager.isCurrentlyLoggingOut()) {
       console.log('🚫 Firebase auth listener disabled - logout in progress')
       return
     }
 
     const unsubscribe = firebaseAuthService.onAuthStateChanged(async (user: User | null) => {
+      // Double-check logout state (coordinated with Firebase Auth Manager)
+      if (firebaseAuthManager.isCurrentlyLoggingOut() || coordinatedLogoutService.isCurrentlyLoggingOut()) {
+        console.log('🚫 Auth state change blocked - logout in progress')
+        return
+      }
+
       console.log('🔥 Firebase auth state changed:', user ? 'User signed in' : 'User signed out')
 
       if (user && !getFirebaseUserEmail(user)) {
@@ -145,13 +163,13 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
 
   const signOutFromFirebase = async () => {
     try {
-      console.log('🚪 Starting Firebase sign-out process...')
+      console.log('🚪 Starting coordinated logout process...')
       setIsLoading(true)
       setError(null)
       setIsLoggingOut(true) // Set logout flag
       
-      await firebaseAuthService.signOutFromFirebase()
-      console.log('🚪 Firebase sign-out completed successfully')
+      // Use the coordinated logout service
+      await coordinatedLogoutService.logout()
       
       // Force clear Firebase authentication state
       setIsFirebaseAuthenticated(false)
@@ -163,6 +181,14 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
       const errorMessage = error instanceof Error ? error.message : 'Sign out failed'
       setError(errorMessage)
       console.error('❌ Failed to sign out from Firebase:', error)
+      
+      // Try emergency logout if coordinated logout fails
+      try {
+        await coordinatedLogoutService.emergencyLogout()
+      } catch (emergencyError) {
+        console.error('❌ Emergency logout also failed:', emergencyError)
+      }
+      
       throw error
     } finally {
       setIsLoading(false)
