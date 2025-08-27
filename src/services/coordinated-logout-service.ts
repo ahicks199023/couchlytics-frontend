@@ -1,4 +1,5 @@
 import { firebaseAuthManager } from './firebase-auth-manager';
+import { API_BASE } from '@/lib/config';
 
 class CoordinatedLogoutService {
   private isLoggingOut = false;
@@ -23,7 +24,7 @@ class CoordinatedLogoutService {
       // 2. Call backend logout first (to clear sessions)
       try {
         console.log('🔄 Calling backend logout...');
-        const response = await fetch('/backend-api/auth/logout', {
+        const response = await fetch(`${API_BASE}/auth/logout`, {
           method: 'POST',
           credentials: 'include',
           headers: { 

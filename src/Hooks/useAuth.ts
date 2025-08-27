@@ -124,11 +124,16 @@ export default function useAuth() {
         // Continue with logout even if Firebase fails
       }
       
-      // Call logout endpoint
-      await fetch(`${API_BASE}/auth/logout`, {
+      // Call backend logout endpoint to terminate session
+      console.log('🔗 Calling backend logout endpoint...');
+      const logoutResponse = await fetch(`${API_BASE}/auth/logout`, {
         credentials: 'include',
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
+      console.log('🔗 Backend logout response:', logoutResponse.status, logoutResponse.statusText);
       
       // Clear any cached data
       if (typeof window !== 'undefined') {

@@ -180,26 +180,70 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoggingOut.current = true
 
     try {
-      // Sign out from Firebase
-      await firebaseAuthService.signOutFromFirebase()
+      console.log('🚪 Starting logout process...')
       
-      // Clear local state
+      // 1. Call backend logout endpoint FIRST to terminate session
+      try {
+        console.log('🔗 Calling backend logout endpoint...')
+        const response = await http.post('/auth/logout')
+        console.log('✅ Backend logout successful:', response.status)
+      } catch (backendError) {
+        console.error('❌ Backend logout failed:', backendError)
+        // Continue with logout even if backend fails
+      }
+      
+      // 2. Sign out from Firebase
+      try {
+        console.log('🔥 Signing out from Firebase...')
+        await firebaseAuthService.signOutFromFirebase()
+        console.log('✅ Firebase logout successful')
+      } catch (firebaseError) {
+        console.error('❌ Firebase logout failed:', firebaseError)
+        // Continue with logout even if Firebase fails
+      }
+      
+      // 3. Clear local state
+      console.log('🧹 Clearing local authentication state...')
       setUser(null)
       setAuthenticated(false)
       setFirebaseUser(null)
       setIsFirebaseAuthenticated(false)
       
-      // Redirect to home
+      // 4. Clear any cached data
+      if (typeof window !== 'undefined') {
+        // Clear localStorage/sessionStorage
+        localStorage.removeItem('auth_token')
+        sessionStorage.removeItem('auth_token')
+        localStorage.removeItem('user')
+        
+        // Clear any cached API responses
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => {
+              caches.delete(name)
+            })
+          })
+        }
+      }
+      
+      console.log('✅ Logout completed successfully')
+      
+      // 5. Redirect to home
       setTimeout(() => {
         window.location.href = '/'
       }, 100)
       
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error('❌ Logout error:', error)
       // Even if logout fails, redirect to home
       setTimeout(() => {
         window.location.href = '/'
       }, 100)
+    } finally {
+      // Reset logout flag after a delay
+      setTimeout(() => {
+        isLoggingOut.current = false
+      }, 2000)
     }
   }, [])
 
