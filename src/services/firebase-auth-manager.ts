@@ -1,5 +1,6 @@
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { API_BASE_URL } from '@/lib/http';
 
 class FirebaseAuthManager {
   private isLoggingOut = false;
@@ -54,7 +55,7 @@ class FirebaseAuthManager {
       console.log('🔄 Syncing Firebase user with backend session...');
 
       // Sync with backend session
-      const response = await fetch('/backend-api/auth/sync-firebase', {
+      const response = await fetch(`${API_BASE_URL}/auth/sync-firebase`, {
         method: 'POST',
         credentials: 'include',
         headers: { 

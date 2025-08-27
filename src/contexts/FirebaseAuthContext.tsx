@@ -6,6 +6,7 @@ import type { User } from '@/lib/firebase'
 import { establishBackendSession, fetchUserLeagues } from '@/lib/api-utils'
 import { firebaseAuthManager } from '@/services/firebase-auth-manager'
 import { coordinatedLogoutService } from '@/services/coordinated-logout-service'
+import { API_BASE_URL } from '@/lib/http'
 
 interface FirebaseAuthContextType {
   isFirebaseAuthenticated: boolean
@@ -48,7 +49,7 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
         console.log('🔍 Checking existing backend session...')
         
         // First check if we have a valid backend session
-        const response = await fetch('/backend-api/auth/status', {
+        const response = await fetch(`${API_BASE_URL}/auth/status`, {
           credentials: 'include'
         })
         
