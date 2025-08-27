@@ -7,7 +7,7 @@ import {
   getDocs,
   where
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { db, auth } from '@/lib/firebase'
 
 export interface Conversation {
   recipient: string
@@ -26,6 +26,12 @@ export function useInbox(currentUserEmail: string) {
 
   const loadConversations = useCallback(async () => {
     if (!currentUserEmail || !db) return
+
+    // Check if user is authenticated before accessing Firestore
+    if (!auth || !auth.currentUser) {
+      setLoading(false)
+      return
+    }
 
     try {
       setLoading(true)

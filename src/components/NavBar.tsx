@@ -82,9 +82,9 @@ export default function NavBar() {
               const json = await res.json()
               if (json?.authenticated) {
                 try {
-                  router.push('/leagues')
+                  router.push('/')
                 } catch {
-                  window.location.href = '/leagues'
+                  window.location.href = '/'
                 }
                 redirected = true
                 break
@@ -98,7 +98,7 @@ export default function NavBar() {
           try {
             router.push('/leagues')
           } catch {
-            window.location.href = '/leagues'
+            window.location.href = '/'
           }
         }
       } else {

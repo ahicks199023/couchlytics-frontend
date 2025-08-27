@@ -14,7 +14,7 @@ import {
   getDoc,
   DocumentSnapshot
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { db, auth } from '@/lib/firebase'
 import { LeagueChatMessage, SendMessageParams, UseChatReturn } from '@/types/chat'
 
 const MESSAGES_PER_PAGE = 50
@@ -29,6 +29,12 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
   // Load initial messages
   useEffect(() => {
     if (!leagueId || !enabled || !db) {
+      setLoading(false)
+      return
+    }
+
+    // Check if user is authenticated before accessing Firestore
+    if (!auth || !auth.currentUser) {
       setLoading(false)
       return
     }

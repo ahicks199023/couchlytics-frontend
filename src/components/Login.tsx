@@ -24,7 +24,7 @@ export default function Login() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!loading && user) {
-      router.push("/leagues");
+      router.push("/");
     }
   }, [user, loading, router]);
 
@@ -140,7 +140,7 @@ export default function Login() {
                     console.warn('Invite lookup failed after login, falling back to /leagues', e);
                   }
                 }
-                router.push('/leagues');
+                router.push('/');
                 break;
               } else {
                 console.log(`❌ Auth check attempt ${attempt} failed:`, authData.reason);
@@ -202,7 +202,7 @@ export default function Login() {
                     console.warn('Invite lookup failed after login, falling back to /leagues', e);
                   }
                 }
-                router.push('/leagues');
+                router.push('/');
                 break;
               } else {
                 console.log(`❌ Auth check attempt ${attempt} failed:`, authData.reason);

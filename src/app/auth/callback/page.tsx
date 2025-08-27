@@ -49,7 +49,7 @@ function AuthCallbackContent() {
             
             // Redirect to leagues page after successful authentication
             setTimeout(() => {
-              router.push('/leagues')
+              router.push('/')
             }, 1500)
           } else {
             setStatus('error')

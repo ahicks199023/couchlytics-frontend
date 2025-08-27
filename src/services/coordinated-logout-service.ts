@@ -83,15 +83,15 @@ class CoordinatedLogoutService {
 
       console.log('✅ Frontend state cleared');
 
-      // Redirect to login page after a short delay to ensure cleanup
+      // Force page reload to completely reset auth state
       setTimeout(() => {
-        window.location.href = '/login';
-      }, 100);
+        window.location.replace('/login');
+      }, 500);
 
     } catch (error) {
       console.error('❌ Error clearing frontend state:', error);
       // Force redirect even if cleanup fails
-      window.location.href = '/login';
+      window.location.replace('/login');
     }
   }
 
