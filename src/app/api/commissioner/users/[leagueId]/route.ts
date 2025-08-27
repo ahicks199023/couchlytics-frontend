@@ -4,6 +4,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ leagueId: string }> }
 ) {
+  console.log('🚨 API ROUTE CALLED! This should appear in console!');
+  
   const { leagueId } = await params;
   try {
     console.log('🔍 API Route: Fetching users for league:', leagueId);
