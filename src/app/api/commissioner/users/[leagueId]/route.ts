@@ -8,18 +8,31 @@ export async function GET(
   try {
     console.log('🔍 API Route: Fetching users for league:', leagueId);
     
-    const response = await fetch(
-      `https://couchlytics-backend-1-production.up.railway.app/leagues/${leagueId}/commissioner/users`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const backendUrl = `https://couchlytics-backend-1-production.up.railway.app/leagues/${leagueId}/commissioner/users`;
+    console.log('🔍 API Route: Calling backend URL:', backendUrl);
+    
+    const response = await fetch(backendUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    console.log('🔍 API Route: Backend response status:', response.status);
+    console.log('🔍 API Route: Backend response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       console.error('🔍 Backend responded with status:', response.status);
-      throw new Error(`Backend responded with ${response.status}`);
+      
+      // Try to get error details from response
+      let errorText = '';
+      try {
+        errorText = await response.text();
+        console.error('🔍 Backend error response:', errorText);
+      } catch (e) {
+        console.error('🔍 Could not read error response:', e);
+      }
+      
+      throw new Error(`Backend responded with ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
