@@ -224,9 +224,56 @@ export default function Login() {
           console.log('❌ Login response validation failed:', data);
           setError('Invalid email or password');
         }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Native login error:", err);
-      setError("Login failed. Please try again.");
+      
+      // More detailed error handling for better user experience
+      let errorMessage = "Login failed. Please try again.";
+      
+      // Type-safe error handling
+      if (err && typeof err === 'object') {
+        const error = err as {
+          code?: string;
+          message?: string;
+          response?: {
+            status?: number;
+            statusText?: string;
+            data?: { error?: string };
+          };
+          config?: {
+            url?: string;
+            headers?: Record<string, string>;
+          };
+        };
+        
+        if (error.code === 'NETWORK_ERROR' || error.message?.includes('Network Error')) {
+          errorMessage = 'Unable to connect to server. Please check your internet connection.';
+        } else if (error.code === 'ECONNREFUSED' || error.message?.includes('ECONNREFUSED')) {
+          errorMessage = 'Server is not responding. Please try again later.';
+        } else if (error.response?.status === 401) {
+          errorMessage = 'Invalid email or password.';
+        } else if (error.response?.status === 403) {
+          errorMessage = 'Access denied. Please contact support.';
+        } else if (error.response?.status && error.response.status >= 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else if (error.response?.data?.error) {
+          errorMessage = error.response.data.error;
+        } else if (error.message?.includes('CORS')) {
+          errorMessage = 'Connection blocked. Please try accessing the site via www.couchlytics.com';
+        }
+        
+        console.log('🔍 Detailed error analysis:', {
+          code: error.code,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+          url: error.config?.url,
+          headers: error.config?.headers
+        });
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(null);
     }

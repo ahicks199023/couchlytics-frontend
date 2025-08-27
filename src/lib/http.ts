@@ -8,6 +8,7 @@ export const http = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true, // critical for cookies
   headers: { 'Content-Type': 'application/json' },
+  timeout: 10000, // 10 second timeout for better error handling
 })
 
 
