@@ -29,9 +29,9 @@ export default function CommissionerUsersPage() {
       try {
         console.log('🔍 Starting fetchUsers...');
         console.log('🔍 League ID:', leagueId);
-        console.log('🔍 Full URL:', `https://www.couchlytics.com/leagues/${leagueId}/commissioner/users`);
+        console.log('🔍 Full URL:', `https://www.couchlytics.com/backend-api/leagues/${leagueId}/commissioner/users`);
         
-        const response = await fetch(`https://www.couchlytics.com/leagues/${leagueId}/commissioner/users`, {
+        const response = await fetch(`https://www.couchlytics.com/backend-api/leagues/${leagueId}/commissioner/users`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
