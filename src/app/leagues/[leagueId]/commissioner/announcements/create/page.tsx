@@ -40,7 +40,7 @@ export default function CreateAnnouncementPage() {
         throw new Error(errorData.message || 'Failed to create announcement');
       }
 
-      // Success - redirect back to commissioner hub
+                // Success - redirect back to commissioner&apos;s hub
       router.push(`/leagues/${leagueId}/commissioner`);
       
     } catch (error) {
@@ -59,7 +59,7 @@ export default function CreateAnnouncementPage() {
           href={`/leagues/${leagueId}/commissioner`}
           className="text-blue-400 hover:text-blue-300 text-sm mb-4 inline-block"
         >
-          ← Back to Commissioner's Hub
+          ← Back to Commissioner&apos;s Hub
         </Link>
         <h1 className="text-3xl font-bold text-white mb-2">Create League Announcement</h1>
         <p className="text-gray-400">

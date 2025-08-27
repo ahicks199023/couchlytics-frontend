@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
@@ -46,17 +46,7 @@ export default function SystemManagementPage() {
     is_active: true
   });
 
-  // Check developer access
-  useEffect(() => {
-    if (!user || !isAdmin) {
-      // Redirect non-developers
-      window.location.href = '/';
-      return;
-    }
-    fetchSystemData();
-  }, [user, isAdmin, currentPage, searchTerm]);
-
-  const fetchSystemData = async () => {
+  const fetchSystemData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -91,7 +81,17 @@ export default function SystemManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm]);
+
+  // Check developer access
+  useEffect(() => {
+    if (!user || !isAdmin) {
+      // Redirect non-developers
+      window.location.href = '/';
+      return;
+    }
+    fetchSystemData();
+  }, [user, isAdmin, currentPage, searchTerm, fetchSystemData]);
 
   const updateUser = async () => {
     if (!editingUser) return;
@@ -131,7 +131,7 @@ export default function SystemManagementPage() {
     });
   };
 
-  const toggleUserStatus = async (userId: number, currentStatus: boolean) => {
+  const toggleUserStatus = async (userId: number) => {
     try {
       const response = await fetch(`/backend-api/admin/system/users/${userId}/toggle-status`, {
         method: 'POST',
@@ -299,14 +299,14 @@ export default function SystemManagementPage() {
                     >
                       Edit
                     </button>
-                    <button
-                      onClick={() => toggleUserStatus(user.id, user.is_active)}
-                      className={`${
-                        user.is_active ? 'text-red-400 hover:text-red-300' : 'text-green-400 hover:text-green-300'
-                      }`}
-                    >
-                      {user.is_active ? 'Deactivate' : 'Activate'}
-                    </button>
+                                                <button
+                              onClick={() => toggleUserStatus(user.id)}
+                              className={`${
+                                user.is_active ? 'text-red-400 hover:text-red-300' : 'text-green-400 hover:text-green-300'
+                              }`}
+                            >
+                              {user.is_active ? 'Deactivate' : 'Activate'}
+                            </button>
                   </td>
                 </tr>
               ))}

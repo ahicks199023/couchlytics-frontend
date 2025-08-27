@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -39,13 +39,7 @@ export default function TradeBlockPage() {
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
 
-  useEffect(() => {
-    if (leagueId) {
-      fetchTradeBlockData();
-    }
-  }, [leagueId, selectedPosition]);
-
-  const fetchTradeBlockData = async () => {
+  const fetchTradeBlockData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -78,7 +72,13 @@ export default function TradeBlockPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [leagueId, selectedPosition]);
+
+  useEffect(() => {
+    if (leagueId) {
+      fetchTradeBlockData();
+    }
+  }, [leagueId, selectedPosition, fetchTradeBlockData]);
 
   const submitComment = async () => {
     if (!newComment.trim()) return;

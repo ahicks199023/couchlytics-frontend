@@ -305,7 +305,7 @@ export default function LeagueSidebar() {
                 pathname.includes('/commissioner') && !pathname.includes('/ai-commissioner') && 'bg-blue-600 text-white'
               )}
             >
-              🎯 Commissioner's Hub
+              🎯 Commissioner&apos;s Hub
             </Link>
             <Link
               href={`/leagues/${leagueId}/ai-commissioner`}

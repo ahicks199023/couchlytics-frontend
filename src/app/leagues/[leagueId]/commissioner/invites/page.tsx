@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -38,13 +38,7 @@ export default function InvitesPage() {
   });
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    if (leagueId) {
-      fetchData();
-    }
-  }, [leagueId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -77,7 +71,13 @@ export default function InvitesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [leagueId]);
+
+  useEffect(() => {
+    if (leagueId) {
+      fetchData();
+    }
+  }, [leagueId, fetchData]);
 
   const createInvite = async () => {
     if (!newInvite.email.trim()) {
@@ -180,7 +180,7 @@ export default function InvitesPage() {
           href={`/leagues/${leagueId}/commissioner`}
           className="text-blue-400 hover:text-blue-300 text-sm mb-4 inline-block"
         >
-          ← Back to Commissioner's Hub
+          ← Back to Commissioner&apos;s Hub
         </Link>
         <div className="flex justify-between items-center">
           <div>
@@ -353,8 +353,8 @@ export default function InvitesPage() {
         <h3 className="text-blue-400 font-medium mb-2">💡 How Invites Work</h3>
         <ul className="text-sm text-blue-300 space-y-1">
           <li>• Invites are sent via email with a unique join link</li>
-          <li>• If the person doesn't have an account, they'll be prompted to register</li>
-          <li>• After registration/login, they'll automatically join your league</li>
+          <li>• If the person doesn&apos;t have an account, they&apos;ll be prompted to register</li>
+          <li>• After registration/login, they&apos;ll automatically join your league</li>
           <li>• Invites expire after 7 days for security</li>
           <li>• You can assign roles and teams when sending the invite</li>
         </ul>
