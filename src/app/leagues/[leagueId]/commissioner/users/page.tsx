@@ -29,9 +29,9 @@ export default function CommissionerUsersPage() {
       try {
         console.log('🔍 Starting fetchUsers...');
         console.log('🔍 League ID:', leagueId);
-        console.log('🔍 Full URL:', `/api/commissioner/users/${leagueId}`);
+        console.log('🔍 Full URL:', `/backend-api/leagues/${leagueId}/commissioner/users`);
         
-        const response = await fetch(`/api/commissioner/users/${leagueId}`, {
+        const response = await fetch(`/backend-api/leagues/${leagueId}/commissioner/users`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
