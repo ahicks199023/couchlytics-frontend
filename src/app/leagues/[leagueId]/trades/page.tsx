@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import TradesHistory from '@/components/trades/TradesHistory'
 import EnhancedTradeSubmissionForm from '@/components/trades/EnhancedTradeSubmissionForm'
@@ -258,7 +258,7 @@ export default function TradesPage() {
   }, [leagueId])
 
   // Fetch trade offers
-  const fetchTrades = async () => {
+  const fetchTrades = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/leagues/${leagueId}/trade-offers`, {
         credentials: 'include'
@@ -273,14 +273,14 @@ export default function TradesPage() {
     } catch (error) {
       console.error('Error fetching trades:', error)
     }
-  }
+  }, [leagueId])
 
   // Load trade offers when component mounts or leagueId changes
   useEffect(() => {
     if (leagueId && leagueId !== 'undefined') {
       fetchTrades()
     }
-  }, [leagueId])
+  }, [leagueId, fetchTrades])
 
   const handleTradeSubmitted = () => {
     // Switch to history tab to show the new trade
@@ -413,7 +413,7 @@ export default function TradesPage() {
               <p>No pending trade offers</p>
             </div>
           ) : (
-            trades.received.map((trade: any) => (
+            trades.received.map((trade: TradeOffer) => (
               <TradeOfferCard
                 key={trade.id}
                 trade={trade}
@@ -440,7 +440,7 @@ export default function TradesPage() {
               <p>No sent trade offers</p>
             </div>
           ) : (
-            trades.sent.map((trade: any) => (
+            trades.sent.map((trade: TradeOffer) => (
               <TradeOfferCard
                 key={trade.id}
                 trade={trade}
