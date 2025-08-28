@@ -139,8 +139,24 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   const [expirationHours, setExpirationHours] = useState(168) // Default 1 week
 
   // Determine user's team by matching team.user_id to user.id
-  const userTeam = teams.find(team => String(team.user_id) === String(user?.id))
+  const userTeam = useMemo(() => 
+    teams.find(team => String(team.user_id) === String(user?.id)), 
+    [teams, user?.id]
+  )
   const userTeamId = userTeam?.id
+
+  // Debug logging for team detection
+  useEffect(() => {
+    if (user && teams.length > 0) {
+      console.log('🔍 Team Detection Debug:', {
+        userId: user.id,
+        teamsCount: teams.length,
+        teams: teams.map(t => ({ id: t.id, name: t.name, user_id: t.user_id })),
+        userTeam: userTeam ? { id: userTeam.id, name: userTeam.name } : null,
+        userTeamId
+      })
+    }
+  }, [user, teams, userTeam, userTeamId])
 
   // Load user and data
   useEffect(() => {
@@ -166,7 +182,10 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
         const teamsRes = await fetch(`${API_BASE}/leagues/${league_id}/teams`, { credentials: 'include' })
         if (teamsRes.ok) {
           const teamsData = await teamsRes.json()
+          console.log('📊 Teams loaded:', teamsData)
           setTeams(teamsData.teams || [])
+        } else {
+          console.error('Failed to load teams:', teamsRes.status)
         }
         
       } catch (err) {
@@ -442,7 +461,9 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
         {/* User Team Display */}
         <div className="bg-neon-green/20 border border-neon-green/30 rounded-lg p-4 mb-6">
           <h3 className="text-lg font-semibold text-neon-green mb-2">Your Team</h3>
-          <p className="text-white text-xl font-bold">{userTeam.name}</p>
+          <p className="text-white text-xl font-bold">
+            {userTeam?.name || 'Loading team...'}
+          </p>
           <div className="flex items-center space-x-2 mt-2">
             <input
               type="checkbox"
