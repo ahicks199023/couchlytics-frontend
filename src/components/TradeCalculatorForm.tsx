@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
+import { API_BASE } from '@/lib/config'
 
 type Player = {
   id: number
@@ -151,6 +152,11 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
   const [suggestionStrategy, setSuggestionStrategy] = useState('value')
   const [suggestedTrades, setSuggestedTrades] = useState<SuggestedTrade[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+
+  // Trade Offer state
+  const [sendingOffer, setSendingOffer] = useState(false)
+  const [tradeMessage, setTradeMessage] = useState('')
+  const [expirationHours, setExpirationHours] = useState(168) // Default 1 week
 
   // Determine user's team by matching team.user_id to user.id
   const userTeam = teams.find(team => String(team.user_id) === String(user?.id))
@@ -367,6 +373,107 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         </div>
       </div>
     )
+  }
+
+  // Check if trade offer can be sent
+  const canSendOffer = result && 
+    givePlayers.length > 0 && 
+    receivePlayers.length > 0 && 
+    userTeamId && 
+    result.tradeAssessment.verdict !== 'Invalid'
+
+  // Handle sending trade offer
+  const handleSendOffer = async () => {
+    if (!canSendOffer || !userTeamId) {
+      console.error('Cannot send trade offer: missing requirements')
+      return
+    }
+
+    // Find the target team (team receiving our players)
+    const targetTeamIds = [...new Set(receivePlayers.map(p => p.teamId))]
+    if (targetTeamIds.length !== 1) {
+      console.error('Trade must involve exactly one other team')
+      alert('Trade must involve exactly one other team')
+      return
+    }
+
+    const targetTeamId = targetTeamIds[0]
+    if (!targetTeamId) {
+      console.error('Could not determine target team')
+      alert('Could not determine target team')
+      return
+    }
+
+    setSendingOffer(true)
+    
+    try {
+      const offerData = {
+        league_id: league_id,
+        to_team_id: targetTeamId,
+        from_players: givePlayers.map(p => ({
+          player_id: p.id,
+          player_name: p.name,
+          position: p.position,
+          team: p.team,
+          ovr: p.ovr
+        })),
+        to_players: receivePlayers.map(p => ({
+          player_id: p.id,
+          player_name: p.name,
+          position: p.position,
+          team: p.team,
+          ovr: p.ovr
+        })),
+        message: tradeMessage,
+        trade_analysis: {
+          fairnessScore: Math.round((result.tradeAssessment.teamReceives / Math.max(result.tradeAssessment.teamGives, 1)) * 100),
+          recommendation: result.tradeAssessment.verdict,
+          netValue: result.tradeAssessment.netGain,
+          teamGives: result.tradeAssessment.teamGives,
+          teamReceives: result.tradeAssessment.teamReceives,
+          canAutoApprove: result.canAutoApprove,
+          riskLevel: result.riskLevel || 'Medium'
+        },
+        expires_in_hours: expirationHours
+      }
+
+      console.log('Sending trade offer:', offerData)
+
+      const response = await fetch(`${API_BASE}/leagues/${league_id}/trade-offers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(offerData)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const result_data = await response.json()
+      console.log('Trade offer sent successfully:', result_data)
+      
+      // Show success message and redirect
+      alert('Trade offer sent successfully!')
+      
+      // Reset form
+      setGivePlayers([])
+      setReceivePlayers([])
+      setResult(null)
+      setTradeMessage('')
+      
+      // Redirect to trades page
+      window.location.href = `/leagues/${league_id}/trades`
+      
+    } catch (error) {
+      console.error('Error sending trade offer:', error)
+      alert(`Failed to send trade offer: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setSendingOffer(false)
+    }
   }
 
   return (
@@ -742,6 +849,105 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
               <div className="mt-4 p-3 bg-gray-700 rounded">
                 <h4 className="font-medium mb-2">Analysis:</h4>
                 <p className="text-sm text-gray-300">{result.tradeAssessment.explanation}</p>
+              </div>
+            )}
+
+            {/* Send Trade Offer Section */}
+            {canSendOffer && (
+              <div className="mt-6 p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="text-lg font-semibold text-green-400 mb-1">
+                      ✅ Trade Analysis Complete
+                    </h4>
+                    <p className="text-sm text-green-300">
+                      Fairness Score: <span className="font-bold">{Math.round((result.tradeAssessment.teamReceives / Math.max(result.tradeAssessment.teamGives, 1)) * 100)}%</span> • 
+                      Recommendation: <span className="font-bold">{result.tradeAssessment.verdict}</span>
+                    </p>
+                  </div>
+                  
+                  <button
+                    onClick={handleSendOffer}
+                    disabled={sendingOffer}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {sendingOffer ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                        Send Trade Offer
+                      </>
+                    )}
+                  </button>
+                </div>
+                
+                {/* Trade Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="bg-gray-800 p-3 rounded border border-gray-600">
+                    <h5 className="font-semibold text-gray-200 mb-2">Your Team Sends</h5>
+                    <div className="space-y-1">
+                      {givePlayers.map(player => (
+                        <div key={player.id} className="flex justify-between text-sm">
+                          <span>{player.name}</span>
+                          <span className="text-gray-400">{player.position}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-800 p-3 rounded border border-gray-600">
+                    <h5 className="font-semibold text-gray-200 mb-2">You Receive</h5>
+                    <div className="space-y-1">
+                      {receivePlayers.map(player => (
+                        <div key={player.id} className="flex justify-between text-sm">
+                          <span>{player.name}</span>
+                          <span className="text-gray-400">{player.position}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Optional Message */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Message to Trading Partner (Optional)
+                  </label>
+                  <textarea
+                    value={tradeMessage}
+                    onChange={(e) => setTradeMessage(e.target.value)}
+                    placeholder="Add a message to explain your trade proposal..."
+                    className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white resize-none"
+                    rows={3}
+                    maxLength={500}
+                  />
+                  <div className="text-xs text-gray-400 mt-1">
+                    {tradeMessage.length}/500 characters
+                  </div>
+                </div>
+
+                {/* Expiration Settings */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Offer Expires In
+                  </label>
+                  <select
+                    value={expirationHours}
+                    onChange={(e) => setExpirationHours(Number(e.target.value))}
+                    className="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                  >
+                    <option value={24}>24 Hours</option>
+                    <option value={72}>3 Days</option>
+                    <option value={168}>1 Week</option>
+                    <option value={336}>2 Weeks</option>
+                  </select>
+                </div>
               </div>
             )}
           </div>

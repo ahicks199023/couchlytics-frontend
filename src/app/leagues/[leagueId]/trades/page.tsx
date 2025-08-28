@@ -13,13 +13,213 @@ interface UserTeam {
   abbreviation: string
 }
 
+interface TradeOffer {
+  id: number
+  status: string
+  fromTeam: { id: number; name: string }
+  toTeam: { id: number; name: string }
+  fromPlayers: Array<{ id: number; playerName: string; position: string }>
+  toPlayers: Array<{ id: number; playerName: string; position: string }>
+  createdAt: string
+  expiresAt: string
+  message?: string
+  tradeAnalysis?: {
+    fairnessScore: number
+    recommendation: string
+    netValue: number
+    riskLevel?: string
+  }
+}
+
+interface TradeOfferCardProps {
+  trade: TradeOffer
+  type: 'received' | 'sent'
+  onAccept?: () => void
+  onReject?: () => void
+  onCounter?: () => void
+}
+
+function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOfferCardProps) {
+  const [showDetails, setShowDetails] = useState(false)
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'text-yellow-400 bg-yellow-400/20'
+      case 'accepted': return 'text-green-400 bg-green-400/20'
+      case 'rejected': return 'text-red-400 bg-red-400/20'
+      case 'countered': return 'text-blue-400 bg-blue-400/20'
+      case 'expired': return 'text-gray-400 bg-gray-400/20'
+      case 'committee_review': return 'text-purple-400 bg-purple-400/20'
+      default: return 'text-gray-400 bg-gray-400/20'
+    }
+  }
+
+  const formatTimeRemaining = (expiresAt: string) => {
+    const now = new Date()
+    const expires = new Date(expiresAt)
+    const diff = expires.getTime() - now.getTime()
+    
+    if (diff <= 0) return 'Expired'
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    
+    if (days > 0) return `${days}d ${hours}h remaining`
+    return `${hours}h remaining`
+  }
+
+  return (
+    <div className="bg-gray-800 rounded-lg border border-gray-600">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 bg-blue-600/20 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold text-white">
+                {type === 'received' ? `From: ${trade.fromTeam.name}` : `To: ${trade.toTeam.name}`}
+              </h3>
+              <p className="text-sm text-gray-400">
+                {new Date(trade.createdAt).toLocaleDateString()} • {formatTimeRemaining(trade.expiresAt)}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(trade.status)}`}>
+              {trade.status.replace('_', ' ').toUpperCase()}
+            </span>
+            
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="text-gray-400 hover:text-white"
+            >
+              <svg className={`w-5 h-5 transform ${showDetails ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Trade Details */}
+      <div className="p-4">
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <h4 className="font-medium text-gray-200 mb-2">
+              {type === 'received' ? 'You Receive' : 'You Send'}
+            </h4>
+            <div className="space-y-1">
+              {(type === 'received' ? trade.fromPlayers : trade.toPlayers).map(player => (
+                <div key={player.id} className="flex justify-between text-sm">
+                  <span className="text-gray-300">{player.playerName}</span>
+                  <span className="text-gray-500">{player.position}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="font-medium text-gray-200 mb-2">
+              {type === 'received' ? 'You Send' : 'You Receive'}
+            </h4>
+            <div className="space-y-1">
+              {(type === 'received' ? trade.toPlayers : trade.fromPlayers).map(player => (
+                <div key={player.id} className="flex justify-between text-sm">
+                  <span className="text-gray-300">{player.playerName}</span>
+                  <span className="text-gray-500">{player.position}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Trade Analysis */}
+        {trade.tradeAnalysis && (
+          <div className="bg-gray-700/50 rounded-lg p-3 mb-4">
+            <h5 className="font-medium text-gray-200 mb-2">Trade Analysis</h5>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="text-gray-400">Fairness Score</span>
+                <p className="font-semibold text-white">{trade.tradeAnalysis.fairnessScore}%</p>
+              </div>
+              <div>
+                <span className="text-gray-400">Recommendation</span>
+                <p className="font-semibold text-white">{trade.tradeAnalysis.recommendation}</p>
+              </div>
+              <div>
+                <span className="text-gray-400">Net Value</span>
+                <p className="font-semibold text-white">
+                  {trade.tradeAnalysis.netValue > 0 ? '+' : ''}{trade.tradeAnalysis.netValue}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Message */}
+        {trade.message && (
+          <div className="bg-blue-600/20 rounded-lg p-3 mb-4">
+            <h5 className="font-medium text-blue-400 mb-1">Message</h5>
+            <p className="text-sm text-blue-200">{trade.message}</p>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        {type === 'received' && trade.status === 'pending' && (
+          <div className="flex gap-2">
+            <button
+              onClick={onAccept}
+              className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Accept
+            </button>
+            
+            <button
+              onClick={onCounter}
+              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+            >
+              Counter
+            </button>
+            
+            <button
+              onClick={onReject}
+              className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Reject
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function TradesPage() {
   const params = useParams()
   const leagueId = params.leagueId as string
   const [userTeam, setUserTeam] = useState<UserTeam | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'history' | 'submit'>('history')
+  const [activeTab, setActiveTab] = useState<'received' | 'sent' | 'history' | 'submit'>('received')
+  const [trades, setTrades] = useState({
+    sent: [],
+    received: [],
+    committee: []
+  })
 
   // Load user's team assignment
   useEffect(() => {
@@ -57,10 +257,61 @@ export default function TradesPage() {
     loadUserTeam()
   }, [leagueId])
 
+  // Fetch trade offers
+  const fetchTrades = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/trade-offers`, {
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setTrades(data)
+      } else {
+        console.error('Failed to fetch trades:', response.status)
+      }
+    } catch (error) {
+      console.error('Error fetching trades:', error)
+    }
+  }
+
+  // Load trade offers when component mounts or leagueId changes
+  useEffect(() => {
+    if (leagueId && leagueId !== 'undefined') {
+      fetchTrades()
+    }
+  }, [leagueId])
+
   const handleTradeSubmitted = () => {
     // Switch to history tab to show the new trade
     setActiveTab('history')
-    // You could also trigger a refresh of the trades history here
+    // Refresh trade offers
+    fetchTrades()
+  }
+
+  // Handle trade actions (accept, reject, counter)
+  const handleTradeAction = async (tradeId: number, action: string, message = '') => {
+    try {
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/trade-offers/${tradeId}/${action}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ message })
+      })
+
+      if (response.ok) {
+        alert(`Trade ${action}ed successfully`)
+        fetchTrades() // Refresh the trades list
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `Failed to ${action} trade`)
+      }
+    } catch (error) {
+      console.error(`Error ${action}ing trade:`, error)
+      alert(`Failed to ${action} trade: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   if (loading) {
@@ -104,10 +355,30 @@ export default function TradesPage() {
         )}
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-gray-700 mb-6">
+        <div className="flex border-b border-gray-700 mb-6 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('received')}
+            className={`px-6 py-3 font-medium transition-colors whitespace-nowrap ${
+              activeTab === 'received'
+                ? 'text-neon-green border-b-2 border-neon-green'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Received ({trades.received.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('sent')}
+            className={`px-6 py-3 font-medium transition-colors whitespace-nowrap ${
+              activeTab === 'sent'
+                ? 'text-neon-green border-b-2 border-neon-green'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Sent ({trades.sent.length})
+          </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-6 py-3 font-medium transition-colors ${
+            className={`px-6 py-3 font-medium transition-colors whitespace-nowrap ${
               activeTab === 'history'
                 ? 'text-neon-green border-b-2 border-neon-green'
                 : 'text-gray-400 hover:text-white'
@@ -117,7 +388,7 @@ export default function TradesPage() {
           </button>
           <button
             onClick={() => setActiveTab('submit')}
-            className={`px-6 py-3 font-medium transition-colors ${
+            className={`px-6 py-3 font-medium transition-colors whitespace-nowrap ${
               activeTab === 'submit'
                 ? 'text-neon-green border-b-2 border-neon-green'
                 : 'text-gray-400 hover:text-white'
@@ -129,6 +400,57 @@ export default function TradesPage() {
       </div>
 
       {/* Tab Content */}
+      {activeTab === 'received' && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-white mb-4">Received Trade Offers</h2>
+          {trades.received.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-700 flex items-center justify-center">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p>No pending trade offers</p>
+            </div>
+          ) : (
+            trades.received.map((trade: any) => (
+              <TradeOfferCard
+                key={trade.id}
+                trade={trade}
+                type="received"
+                onAccept={() => handleTradeAction(trade.id, 'accept')}
+                onReject={() => handleTradeAction(trade.id, 'reject')}
+                onCounter={() => handleTradeAction(trade.id, 'counter')}
+              />
+            ))
+          )}
+        </div>
+      )}
+
+      {activeTab === 'sent' && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-white mb-4">Sent Trade Offers</h2>
+          {trades.sent.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-700 flex items-center justify-center">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </div>
+              <p>No sent trade offers</p>
+            </div>
+          ) : (
+            trades.sent.map((trade: any) => (
+              <TradeOfferCard
+                key={trade.id}
+                trade={trade}
+                type="sent"
+              />
+            ))
+          )}
+        </div>
+      )}
+
       {activeTab === 'history' && (
         <TradesHistory leagueId={leagueId} />
       )}
