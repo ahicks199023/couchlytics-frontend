@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import TradeCalculatorForm from './TradeCalculatorForm'
+import TradeCalculatorForm from '@/components/TradeCalculatorForm'
 import { API_BASE, authenticatedFetch } from '@/lib/config'
 
 console.log('!!! TradeToolPage file loaded !!!');

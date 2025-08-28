@@ -127,6 +127,8 @@ const calculatePlayerValue = (player: Player): number => {
 }
 
 export default function TradeCalculatorForm({ league_id }: { league_id: string }) {
+  console.log('🚀 TradeCalculatorForm: Component mounted with league_id:', league_id)
+  
   const [user, setUser] = useState<User | null>(null)
   const [players, setPlayers] = useState<Player[]>([])
   const [teams, setTeams] = useState<Team[]>([])
@@ -167,26 +169,30 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     const loadData = async () => {
       try {
         setLoading(true)
+        console.log('🚀 TradeCalculatorForm: Loading data for league:', league_id)
         
         // Load user info
-        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/me`, { credentials: 'include' })
+        const userRes = await fetch(`${API_BASE}/me`, { credentials: 'include' })
         if (userRes.ok) {
           const userData = await userRes.json()
           setUser(userData)
+          console.log('👤 User data loaded:', userData)
         }
         
         // Load league players
-        const playersRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/players?page=1&pageSize=5000`, { credentials: 'include' })
+        const playersRes = await fetch(`${API_BASE}/leagues/${league_id}/players?page=1&pageSize=5000`, { credentials: 'include' })
         if (playersRes.ok) {
           const playersData = await playersRes.json()
           setPlayers(playersData.players || [])
+          console.log('🏃 Players loaded:', playersData.players?.length || 0)
         }
         
         // Load teams
-        const teamsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/teams`, { credentials: 'include' })
+        const teamsRes = await fetch(`${API_BASE}/leagues/${league_id}/teams`, { credentials: 'include' })
         if (teamsRes.ok) {
           const teamsData = await teamsRes.json()
           setTeams(teamsData.teams || [])
+          console.log('🏈 Teams loaded:', teamsData.teams?.length || 0)
         }
         
       } catch (err) {
@@ -194,6 +200,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         setError('Failed to load league data. Please try again.')
       } finally {
         setLoading(false)
+        console.log('✅ TradeCalculatorForm: Data loading complete')
       }
     }
     
@@ -247,6 +254,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     if (found && !givePlayers.find(p => p.id === found.id)) {
       setGivePlayers([...givePlayers, found])
       setSelectedPlayer('')
+      console.log('➕ Added give player:', found.name, 'Total give players:', givePlayers.length + 1)
     }
   }
 
@@ -390,7 +398,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     receivePlayersLength: receivePlayers.length,
     userTeamId: !!userTeamId,
     verdict: result?.tradeAssessment?.verdict,
-    canSendOffer
+    canSendOffer,
+    componentState: 'Rendering TradeCalculatorForm'
   })
 
   // Handle sending trade offer
@@ -487,6 +496,8 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     }
   }
 
+  console.log('🎨 TradeCalculatorForm: Rendering component')
+  
   return (
     <div className="bg-black text-white min-h-screen">
       <div className="p-4 max-w-6xl mx-auto">
