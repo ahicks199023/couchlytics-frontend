@@ -26,11 +26,7 @@ interface Team {
   user_id?: number
 }
 
-interface User {
-  id?: number
-  is_premium?: boolean
-  teamId?: number
-}
+
 
 interface TradeResult {
   tradeAssessment: {
