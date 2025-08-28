@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import { API_BASE } from '@/lib/config'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface Player {
   id: number
@@ -107,7 +108,7 @@ interface TradeCalculatorProps {
 }
 
 export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
-  const [user, setUser] = useState<User | null>(null)
+  const { user } = useAuth()
   const [players, setPlayers] = useState<Player[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
@@ -164,13 +165,6 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
       try {
         setLoading(true)
         
-        // Load user info
-        const userRes = await fetch(`${API_BASE}/me`, { credentials: 'include' })
-        if (userRes.ok) {
-          const userData = await userRes.json()
-          setUser(userData)
-        }
-        
         // Load league players
         const playersRes = await fetch(`${API_BASE}/leagues/${league_id}/players?page=1&pageSize=5000`, { credentials: 'include' })
         if (playersRes.ok) {
@@ -196,8 +190,10 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
       }
     }
     
-    loadData()
-  }, [league_id])
+    if (user) {
+      loadData()
+    }
+  }, [league_id, user])
 
   // Computed values
   const filteredUserPlayers = useMemo(() => {
@@ -416,6 +412,17 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     setResult(null)
     setSelectedTeamB('')
     setTradeMessage('')
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-green mx-auto mb-4"></div>
+          <p>Loading user data...</p>
+        </div>
+      </div>
+    )
   }
 
   if (loading) {
