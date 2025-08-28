@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import TradeCalculatorForm from '@/components/TradeCalculatorForm'
+import TradeCalculator from '@/components/TradeCalculator'
 import { API_BASE, authenticatedFetch } from '@/lib/config'
 
 console.log('!!! TradeToolPage file loaded !!!');
@@ -113,7 +113,7 @@ export default function TradeToolPage() {
       {leagueInfo.seasonYear && (
         <p className="text-gray-400 mb-6">Season Year: {leagueInfo.seasonYear}</p>
       )}
-      <TradeCalculatorForm league_id={league_id} />
+      <TradeCalculator league_id={league_id} />
     </div>
   )
 }
