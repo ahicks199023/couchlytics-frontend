@@ -274,7 +274,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     setSuggestedTrades([])
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool`, {
+      const res = await fetch(`${API_BASE}/leagues/${league_id}/trade-tool`, {
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -329,7 +329,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
         includeSuggestions
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/leagues/${league_id}/trade-tool`, {
+      const res = await fetch(`${API_BASE}/leagues/${league_id}/trade-tool`, {
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -342,6 +342,7 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
       }
 
       const data = await res.json() as TradeResult
+      console.log('🎯 Trade Analysis Response:', data)
       setResult(data)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unknown error')
@@ -381,6 +382,16 @@ export default function TradeCalculatorForm({ league_id }: { league_id: string }
     receivePlayers.length > 0 && 
     userTeamId && 
     result.tradeAssessment.verdict !== 'Invalid'
+
+  // Debug logging
+  console.log('🔍 TradeCalculatorForm Debug:', {
+    result: !!result,
+    givePlayersLength: givePlayers.length,
+    receivePlayersLength: receivePlayers.length,
+    userTeamId: !!userTeamId,
+    verdict: result?.tradeAssessment?.verdict,
+    canSendOffer
+  })
 
   // Handle sending trade offer
   const handleSendOffer = async () => {
