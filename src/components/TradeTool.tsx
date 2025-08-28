@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import TradeSubmissionForm from './trades/TradeSubmissionForm'
-import TradeCalculatorForm from '@/app/leagues/[leagueId]/trade-tool/TradeCalculatorForm'
+import TradeCalculatorForm from '@/components/TradeCalculatorForm'
 
 interface TradeToolProps {
   leagueId?: string
