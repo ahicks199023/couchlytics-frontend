@@ -155,6 +155,18 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     }
   }, [user, teams, userTeam, userTeamId])
 
+  // Debug logging for players
+  useEffect(() => {
+    if (players.length > 0) {
+      console.log('🔍 Players Debug:', {
+        playersCount: players.length,
+        samplePlayers: players.slice(0, 3).map(p => ({ id: p.id, name: p.name, team: p.team, teamId: p.teamId })),
+        userTeamId,
+        filteredUserPlayersCount: filteredUserPlayers.length
+      })
+    }
+  }, [players, userTeamId, filteredUserPlayers.length])
+
   // Load user and data
   useEffect(() => {
     const loadData = async () => {
@@ -165,7 +177,12 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
         const playersRes = await fetch(`${API_BASE}/leagues/${league_id}/players?page=1&pageSize=5000`, { credentials: 'include' })
         if (playersRes.ok) {
           const playersData = await playersRes.json()
+          console.log('📊 Players loaded:', playersData)
           setPlayers(playersData.players || [])
+        } else {
+          console.error('Failed to load players:', playersRes.status)
+          const errorText = await playersRes.text()
+          console.error('Players error response:', errorText)
         }
         
         // Load teams
@@ -193,11 +210,25 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
 
   // Computed values
   const filteredUserPlayers = useMemo(() => {
-    return players.filter(p => 
+    const filtered = players.filter(p => 
       p.teamId === userTeamId &&
       (selectedPosition === 'All' || p.position === selectedPosition) &&
       (searchQuery === '' || p.name.toLowerCase().includes(searchQuery.toLowerCase()))
     ).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
+    
+    // Debug logging for player filtering
+    if (players.length > 0 && userTeamId) {
+      console.log('🔍 Player Filtering Debug:', {
+        totalPlayers: players.length,
+        userTeamId,
+        playersWithTeamId: players.filter(p => p.teamId).length,
+        playersWithoutTeamId: players.filter(p => !p.teamId).length,
+        filteredCount: filtered.length,
+        sampleFiltered: filtered.slice(0, 2).map(p => ({ id: p.id, name: p.name, teamId: p.teamId }))
+      })
+    }
+    
+    return filtered
   }, [players, userTeamId, selectedPosition, searchQuery])
 
   const filteredTeamBPlayers = useMemo(() => {
