@@ -161,11 +161,10 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
       console.log('🔍 Players Debug:', {
         playersCount: players.length,
         samplePlayers: players.slice(0, 3).map(p => ({ id: p.id, name: p.name, team: p.team, teamId: p.teamId })),
-        userTeamId,
-        filteredUserPlayersCount: filteredUserPlayers.length
+        userTeamId
       })
     }
-  }, [players, userTeamId, filteredUserPlayers.length])
+  }, [players, userTeamId])
 
   // Load user and data
   useEffect(() => {
