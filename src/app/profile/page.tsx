@@ -53,11 +53,24 @@ export default function ProfilePage() {
     chat_notifications: true
   });
 
+  // Enhanced state management
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   useEffect(() => {
     if (user) {
       fetchProfile();
     }
   }, [user]);
+
+  // Clear messages when switching tabs
+  useEffect(() => {
+    setSuccessMessage(null);
+    setErrorMessage(null);
+  }, [activeTab]);
 
   const fetchProfile = async () => {
     try {
@@ -92,9 +105,60 @@ export default function ProfilePage() {
     }
   };
 
+  // Check username availability
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username || username === profile?.username) {
+      setUsernameAvailable(null);
+      setUsernameError(null);
+      return;
+    }
+
+    try {
+      setCheckingUsername(true);
+      setUsernameError(null);
+      
+      const response = await fetch('/backend-api/user/username/check', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to check username availability');
+      }
+
+      const data = await response.json();
+      setUsernameAvailable(data.available);
+      
+      if (!data.available) {
+        setUsernameError('Username is already taken');
+      }
+    } catch (err) {
+      console.error('Error checking username:', err);
+      setUsernameError('Failed to check username availability');
+    } finally {
+      setCheckingUsername(false);
+    }
+  };
+
+  // Enhanced personal info update with username validation
   const updatePersonalInfo = async () => {
     try {
       setSaving(true);
+      setSuccessMessage(null);
+      setErrorMessage(null);
+
+      // Validate username if changed
+      if (personalInfo.username !== profile?.username) {
+        if (!usernameAvailable) {
+          setErrorMessage('Please check username availability before saving');
+          return;
+        }
+      }
+
       const response = await fetch('/backend-api/user/profile/personal', {
         method: 'PUT',
         credentials: 'include',
@@ -106,23 +170,37 @@ export default function ProfilePage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update personal information');
+        
+        // Handle specific username change restrictions
+        if (errorData.error === 'Username can only be changed once every 3 months') {
+          throw new Error(`Username can only be changed once every 3 months. Next change available: ${errorData.next_change_date}`);
+        } else if (errorData.error === 'Username already taken') {
+          throw new Error('Username is already taken. Please choose another.');
+        } else {
+          throw new Error(errorData.message || 'Failed to update personal information');
+        }
       }
 
       await fetchProfile(); // Refresh profile data
-      alert('Personal information updated successfully!');
+      setSuccessMessage('Personal information updated successfully!');
+      setUsernameAvailable(null);
+      setUsernameError(null);
       
     } catch (err) {
       console.error('Error updating personal info:', err);
-      alert(err instanceof Error ? err.message : 'Failed to update personal information');
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to update personal information');
     } finally {
       setSaving(false);
     }
   };
 
+  // Enhanced notification settings update with real-time feedback
   const updateNotificationSettings = async () => {
     try {
       setSaving(true);
+      setSuccessMessage(null);
+      setErrorMessage(null);
+
       const response = await fetch('/backend-api/user/profile/notifications', {
         method: 'PUT',
         credentials: 'include',
@@ -137,19 +215,54 @@ export default function ProfilePage() {
       }
 
       await fetchProfile(); // Refresh profile data
-      alert('Notification settings updated successfully!');
+      setSuccessMessage('Notification settings updated successfully!');
       
     } catch (err) {
       console.error('Error updating notifications:', err);
-      alert('Failed to update notification settings');
+      setErrorMessage('Failed to update notification settings');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Real-time notification toggle with auto-save
+  const handleNotificationToggle = async (key: string, value: boolean) => {
+    const newSettings = { ...notifications, [key]: value };
+    setNotifications(newSettings);
+    
+    try {
+      const response = await fetch('/backend-api/user/profile/notifications', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newSettings),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update notification setting');
+      }
+
+      // Show brief success feedback
+      setSuccessMessage(`${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} updated`);
+      setTimeout(() => setSuccessMessage(null), 2000);
+      
+    } catch (err) {
+      console.error('Error updating notification setting:', err);
+      // Revert the change on error
+      setNotifications(notifications);
+      setErrorMessage('Failed to update notification setting');
+      setTimeout(() => setErrorMessage(null), 3000);
     }
   };
 
   const requestPasswordReset = async () => {
     try {
       setSaving(true);
+      setSuccessMessage(null);
+      setErrorMessage(null);
+
       const response = await fetch('/backend-api/user/password-reset-request', {
         method: 'POST',
         credentials: 'include',
@@ -163,11 +276,11 @@ export default function ProfilePage() {
         throw new Error('Failed to send password reset email');
       }
 
-      alert('Password reset email sent! Check your inbox.');
+      setSuccessMessage('Password reset email sent! Check your inbox.');
       
     } catch (err) {
       console.error('Error requesting password reset:', err);
-      alert('Failed to send password reset email');
+      setErrorMessage('Failed to send password reset email');
     } finally {
       setSaving(false);
     }
@@ -254,6 +367,19 @@ export default function ProfilePage() {
         <div className="bg-gray-800 rounded-lg p-6">
           <h2 className="text-xl font-bold text-white mb-6">Personal Information</h2>
           
+          {/* Success/Error Messages */}
+          {successMessage && (
+            <div className="mb-6 p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
+              <p className="text-green-400">{successMessage}</p>
+            </div>
+          )}
+          
+          {errorMessage && (
+            <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+              <p className="text-red-400">{errorMessage}</p>
+            </div>
+          )}
+          
           <div className="space-y-6">
             {/* Email (Read-only) */}
             <div>
@@ -292,13 +418,44 @@ export default function ProfilePage() {
             {/* Username */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
-              <input
-                type="text"
-                value={personalInfo.username}
-                onChange={(e) => setPersonalInfo(prev => ({ ...prev, username: e.target.value }))}
-                disabled={!canChangeUsername()}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500 disabled:opacity-50"
-              />
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={personalInfo.username}
+                  onChange={(e) => {
+                    setPersonalInfo(prev => ({ ...prev, username: e.target.value }));
+                    // Clear previous availability check
+                    setUsernameAvailable(null);
+                    setUsernameError(null);
+                  }}
+                  onBlur={(e) => checkUsernameAvailability(e.target.value)}
+                  disabled={!canChangeUsername()}
+                  className={`flex-1 px-3 py-2 bg-gray-700 border rounded text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 ${
+                    usernameAvailable === true ? 'border-green-500' : 
+                    usernameAvailable === false ? 'border-red-500' : 
+                    'border-gray-600'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => checkUsernameAvailability(personalInfo.username)}
+                  disabled={checkingUsername || !personalInfo.username || personalInfo.username === profile?.username}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded text-white text-sm whitespace-nowrap"
+                >
+                  {checkingUsername ? 'Checking...' : 'Check'}
+                </button>
+              </div>
+              
+              {/* Username feedback messages */}
+              {usernameAvailable === true && (
+                <p className="text-xs text-green-400 mt-1">✓ Username is available</p>
+              )}
+              {usernameAvailable === false && (
+                <p className="text-xs text-red-400 mt-1">✗ Username is already taken</p>
+              )}
+              {usernameError && (
+                <p className="text-xs text-red-400 mt-1">{usernameError}</p>
+              )}
               {!canChangeUsername() && (
                 <p className="text-xs text-yellow-400 mt-1">
                   Username can be changed again on {getNextUsernameChangeDate()}
@@ -309,12 +466,18 @@ export default function ProfilePage() {
             {/* Password Reset */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+              <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-3 mb-3">
+                <p className="text-xs text-yellow-300">
+                  ⚠️ Password reset functionality is temporarily disabled during database migration. 
+                  Will be re-enabled soon.
+                </p>
+              </div>
               <button
                 onClick={requestPasswordReset}
-                disabled={saving}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded text-white text-sm"
+                disabled={true}
+                className="px-4 py-2 bg-gray-600 cursor-not-allowed rounded text-white text-sm opacity-50"
               >
-                {saving ? 'Sending...' : 'Send Password Reset Email'}
+                Temporarily Unavailable
               </button>
             </div>
 
@@ -337,6 +500,19 @@ export default function ProfilePage() {
         <div className="bg-gray-800 rounded-lg p-6">
           <h2 className="text-xl font-bold text-white mb-6">Notification Settings</h2>
           
+          {/* Success/Error Messages */}
+          {successMessage && (
+            <div className="mb-6 p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
+              <p className="text-green-400">{successMessage}</p>
+            </div>
+          )}
+          
+          {errorMessage && (
+            <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+              <p className="text-red-400">{errorMessage}</p>
+            </div>
+          )}
+          
           <div className="space-y-4">
             {Object.entries(notifications).map(([key, value]) => (
               <div key={key} className="flex items-center justify-between">
@@ -356,7 +532,7 @@ export default function ProfilePage() {
                   <input
                     type="checkbox"
                     checked={value}
-                    onChange={(e) => setNotifications(prev => ({ ...prev, [key]: e.target.checked }))}
+                    onChange={(e) => handleNotificationToggle(key, e.target.checked)}
                     className="rounded bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500"
                   />
                 </label>
@@ -365,12 +541,15 @@ export default function ProfilePage() {
           </div>
 
           <div className="pt-6">
+            <p className="text-xs text-gray-400 mb-3">
+              💡 Settings are saved automatically when you toggle them
+            </p>
             <button
               onClick={updateNotificationSettings}
               disabled={saving}
-              className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded text-white font-medium"
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded text-white font-medium"
             >
-              {saving ? 'Saving...' : 'Save Notification Settings'}
+              {saving ? 'Saving...' : 'Refresh Settings'}
             </button>
           </div>
         </div>
