@@ -171,7 +171,7 @@ export default function NavBar() {
             <Link href="/leagues" className="hover:text-neon-green transition-colors">
               Leagues
             </Link>
-            <Link href="/" className="hover:text-neon-green transition-colors">
+            <Link href="/central" className="hover:text-neon-green transition-colors">
               🏠 Couchlytics Central
             </Link>
             {isAdmin() && (
@@ -416,7 +416,7 @@ export default function NavBar() {
                   Leagues
                 </Link>
                 <Link
-                  href="/"
+                  href="/central"
                   className="block py-2 text-gray-300 hover:text-white"
                   onClick={() => setIsOpen(false)}
                 >
