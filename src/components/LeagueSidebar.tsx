@@ -56,17 +56,12 @@ const links = [
   { label: '💬 Chat', path: 'chat', prefetch: false }
 ]
 
-// Commissioner-only links
-const commissionerLinks = [
-  { 
-    label: '⚖️ Commissioner Hub', 
-    path: 'commissioner',
-    subItems: [
-      { label: 'League Management', path: 'commissioner' },
-      { label: 'Draft Pick Values', path: 'commissioner/draft-picks' }
-    ]
-  }
-]
+// Commissioner-only links - Removed duplicate Commissioner Hub entry
+const commissionerLinks: Array<{
+  label: string
+  path: string
+  subItems?: Array<{ label: string; path: string }>
+}> = []
 
 export default function LeagueSidebar() {
   const { leagueId } = useParams()
