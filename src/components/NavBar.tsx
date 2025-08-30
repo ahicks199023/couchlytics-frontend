@@ -171,6 +171,9 @@ export default function NavBar() {
             <Link href="/leagues" className="hover:text-neon-green transition-colors">
               Leagues
             </Link>
+            <Link href="/" className="hover:text-neon-green transition-colors">
+              🏠 Couchlytics Central
+            </Link>
             {isAdmin() && (
               <Link href="/dashboard" className="hover:text-neon-green transition-colors">
                 Dashboard
@@ -412,12 +415,19 @@ export default function NavBar() {
                 >
                   Leagues
                 </Link>
+                <Link
+                  href="/"
+                  className="block py-2 text-gray-300 hover:text-white"
+                  onClick={() => setIsOpen(false)}
+                >
+                  🏠 Couchlytics Central
+                </Link>
                 {isAdmin() && (
                   <Link
                     href="/dashboard"
                     className="block py-2 text-gray-300 hover:text-white"
                     onClick={() => setIsOpen(false)}
-                  >
+                >
                     Dashboard
                   </Link>
                 )}
