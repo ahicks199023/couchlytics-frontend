@@ -64,8 +64,35 @@ export default function TradeBlockPage() {
         commentsResponse.json()
       ]);
 
-      setPlayers(playersData.players);
-      setComments(commentsData.comments);
+      // Safe data handling with null checks
+      console.log('Trade Block API Response:', { playersData, commentsData });
+      
+      // Handle players data safely - check for different possible structures
+      let playersArray = [];
+      if (playersData && playersData.players && Array.isArray(playersData.players)) {
+        playersArray = playersData.players;
+      } else if (playersData && playersData.trade_blocks && Array.isArray(playersData.trade_blocks)) {
+        playersArray = playersData.trade_blocks;
+      } else if (Array.isArray(playersData)) {
+        playersArray = playersData;
+      } else {
+        console.warn('Unexpected players data structure:', playersData);
+        playersArray = [];
+      }
+      
+      // Handle comments data safely
+      let commentsArray = [];
+      if (commentsData && commentsData.comments && Array.isArray(commentsData.comments)) {
+        commentsArray = commentsData.comments;
+      } else if (Array.isArray(commentsData)) {
+        commentsArray = commentsData;
+      } else {
+        console.warn('Unexpected comments data structure:', commentsData);
+        commentsArray = [];
+      }
+      
+      setPlayers(playersArray);
+      setComments(commentsArray);
       
     } catch (err) {
       console.error('Error fetching trade block data:', err);
@@ -158,12 +185,14 @@ export default function TradeBlockPage() {
     );
   }
 
+  // Safe filtering with null checks
   const filteredPlayers = selectedPosition === 'ALL' 
-    ? players 
-    : players.filter(p => p.position === selectedPosition);
+    ? (players || [])
+    : (players || []).filter(p => p && p.position === selectedPosition);
 
+  // Safe grouping with null checks
   const groupedPlayers = POSITIONS.reduce((acc, pos) => {
-    acc[pos] = filteredPlayers.filter(p => p.position === pos);
+    acc[pos] = (filteredPlayers || []).filter(p => p && p.position === pos);
     return acc;
   }, {} as Record<string, TradeBlockPlayer[]>);
 
@@ -215,7 +244,18 @@ export default function TradeBlockPage() {
         {(selectedPosition === 'ALL' ? POSITIONS : [selectedPosition]).map((position) => {
           const positionPlayers = groupedPlayers[position] || [];
           
-          if (positionPlayers.length === 0 && selectedPosition !== 'ALL') return null;
+          // Skip rendering if no players and not showing all positions
+          if (!positionPlayers || positionPlayers.length === 0) {
+            if (selectedPosition === 'ALL') {
+              return (
+                <div key={position} className="bg-gray-800 rounded-lg p-6">
+                  <h2 className="text-xl font-bold text-white mb-4">{position}</h2>
+                  <p className="text-gray-400">No players available at this position</p>
+                </div>
+              );
+            }
+            return null;
+          }
 
           return (
             <div key={position} className="bg-gray-800 rounded-lg p-6">
@@ -227,8 +267,14 @@ export default function TradeBlockPage() {
                 <p className="text-gray-400">No players available at this position</p>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {positionPlayers.map((player) => (
-                    <div key={player.id} className="bg-gray-700 rounded-lg p-4">
+                  {positionPlayers.map((player) => {
+                    // Skip rendering if player data is invalid
+                    if (!player || !player.player_name) {
+                      return null;
+                    }
+                    
+                    return (
+                      <div key={player.id || `player-${Math.random()}`} className="bg-gray-700 rounded-lg p-4">
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <h3 className="font-bold text-white">{player.player_name}</h3>
@@ -274,7 +320,8 @@ export default function TradeBlockPage() {
                         Send Trade Offer
                       </button>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
               )}
             </div>
@@ -308,11 +355,17 @@ export default function TradeBlockPage() {
         
         {/* Comments */}
         <div className="space-y-4">
-          {comments.length === 0 ? (
+          {!comments || comments.length === 0 ? (
             <p className="text-gray-400 text-center py-4">No comments yet. Start the conversation!</p>
           ) : (
-            comments.map((comment) => (
-              <div key={comment.id} className="bg-gray-700 rounded-lg p-4">
+            comments.map((comment) => {
+              // Skip rendering if comment data is invalid
+              if (!comment || !comment.comment) {
+                return null;
+              }
+              
+              return (
+                <div key={comment.id || `comment-${Math.random()}`} className="bg-gray-700 rounded-lg p-4">
                 <div className="flex justify-between items-start mb-2">
                   <strong className="text-white">{comment.user_name}</strong>
                   <span className="text-xs text-gray-400">
@@ -321,7 +374,8 @@ export default function TradeBlockPage() {
                 </div>
                 <p className="text-gray-300 text-sm">{comment.comment}</p>
               </div>
-            ))
+            );
+            })
           )}
         </div>
       </div>
