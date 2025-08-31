@@ -27,7 +27,7 @@ export default function CreateAnnouncementPage() {
     try {
       setLoading(true);
       
-      const response = await fetch(`${API_BASE}/backend-api/leagues/${leagueId}/announcements`, {
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/announcements`, {
         method: 'POST',
         credentials: 'include',
         headers: {
