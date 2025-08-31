@@ -27,7 +27,36 @@ interface TradeBlockComment {
   created_at: string;
 }
 
-const POSITIONS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
+const POSITIONS = [
+  'QB', 'HB', 'FB', 'WR', 'TE', 
+  'LT', 'LG', 'C', 'RG', 'RT',
+  'LE', 'RE', 'DT', 'LOLB', 'MLB', 'ROLB',
+  'CB', 'FS', 'SS', 'K', 'P'
+];
+
+const POSITION_LABELS = {
+  'QB': 'QB',
+  'HB': 'HB', 
+  'FB': 'FB',
+  'WR': 'WR',
+  'TE': 'TE',
+  'LT': 'LT',
+  'LG': 'LG',
+  'C': 'C',
+  'RG': 'RG',
+  'RT': 'RT',
+  'LE': 'LE (Left End)',
+  'RE': 'RE (Right End)',
+  'DT': 'DT',
+  'LOLB': 'SAM (LOLB)',
+  'MLB': 'MIKE (MLB)',
+  'ROLB': 'WILL (ROLB)',
+  'CB': 'CB',
+  'FS': 'FS',
+  'SS': 'SS',
+  'K': 'K',
+  'P': 'P'
+};
 
 export default function TradeBlockPage() {
   const params = useParams();
@@ -39,6 +68,11 @@ export default function TradeBlockPage() {
   const [selectedPosition, setSelectedPosition] = useState<string>('ALL');
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [showTradeBlockModal, setShowTradeBlockModal] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<TradeBlockPlayer | null>(null);
+  const [tradeBlockNotes, setTradeBlockNotes] = useState('');
+  const [askingPrice, setAskingPrice] = useState('');
+  const [submittingTradeBlock, setSubmittingTradeBlock] = useState(false);
 
   const fetchTradeBlockData = useCallback(async () => {
     try {
@@ -161,6 +195,74 @@ export default function TradeBlockPage() {
     }
   };
 
+  const toggleTradeBlock = async (player: TradeBlockPlayer, isOnBlock: boolean) => {
+    if (isOnBlock) {
+      // Remove from trade block
+      try {
+        const response = await fetch(`${API_BASE}/leagues/${leagueId}/trade-block/${player.id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to remove player from trade block');
+        }
+
+        // Refresh data
+        await fetchTradeBlockData();
+        alert('Player removed from trade block');
+        
+      } catch (err) {
+        console.error('Error removing player from trade block:', err);
+        alert('Failed to remove player from trade block');
+      }
+    } else {
+      // Add to trade block - show modal
+      setSelectedPlayer(player);
+      setShowTradeBlockModal(true);
+    }
+  };
+
+  const submitTradeBlock = async () => {
+    if (!selectedPlayer || !tradeBlockNotes.trim()) return;
+
+    try {
+      setSubmittingTradeBlock(true);
+      
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/trade-block`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          player_id: selectedPlayer.player_id,
+          notes: tradeBlockNotes.trim(),
+          asking_price: askingPrice.trim() || 'Open to offers',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add player to trade block');
+      }
+
+      // Reset form and close modal
+      setShowTradeBlockModal(false);
+      setSelectedPlayer(null);
+      setTradeBlockNotes('');
+      setAskingPrice('');
+      
+      // Refresh data
+      await fetchTradeBlockData();
+      alert('Player added to trade block successfully!');
+      
+    } catch (err) {
+      console.error('Error adding player to trade block:', err);
+      alert('Failed to add player to trade block');
+    } finally {
+      setSubmittingTradeBlock(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -212,30 +314,23 @@ export default function TradeBlockPage() {
 
       {/* Position Filter */}
       <div className="mb-6">
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedPosition('ALL')}
-            className={`px-4 py-2 rounded text-sm font-medium ${
-              selectedPosition === 'ALL'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
+        <div className="flex items-center gap-4">
+          <label htmlFor="position-filter" className="text-white text-sm font-medium">
+            Filter by Position:
+          </label>
+          <select
+            id="position-filter"
+            value={selectedPosition}
+            onChange={(e) => setSelectedPosition(e.target.value)}
+            className="px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
           >
-            All Positions
-          </button>
-          {POSITIONS.map((position) => (
-            <button
-              key={position}
-              onClick={() => setSelectedPosition(position)}
-              className={`px-4 py-2 rounded text-sm font-medium ${
-                selectedPosition === position
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              {position} ({groupedPlayers[position]?.length || 0})
-            </button>
-          ))}
+            <option value="ALL">All Positions</option>
+            {POSITIONS.map((position) => (
+              <option key={position} value={position}>
+                {POSITION_LABELS[position as keyof typeof POSITION_LABELS]} ({groupedPlayers[position]?.length || 0})
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -313,12 +408,21 @@ export default function TradeBlockPage() {
                         <span>Listed {new Date(player.listed_at).toLocaleDateString()}</span>
                       </div>
                       
-                      <button
-                        onClick={() => sendTradeOffer(player.player_id, player.owner_id)}
-                        className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white text-sm font-medium"
-                      >
-                        Send Trade Offer
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => sendTradeOffer(player.player_id, player.owner_id)}
+                          className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white text-sm font-medium"
+                        >
+                          Send Trade Offer
+                        </button>
+                        <button
+                          onClick={() => toggleTradeBlock(player, true)}
+                          className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white text-sm font-medium"
+                          title="Remove from Trade Block"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   );
                   })}
@@ -379,6 +483,66 @@ export default function TradeBlockPage() {
           )}
         </div>
       </div>
+
+      {/* Trade Block Modal */}
+      {showTradeBlockModal && selectedPlayer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-white mb-4">
+              Add {selectedPlayer.player_name} to Trade Block
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  What are you seeking in return?
+                </label>
+                <textarea
+                  value={tradeBlockNotes}
+                  onChange={(e) => setTradeBlockNotes(e.target.value)}
+                  placeholder="Describe what you're looking for in a trade..."
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500 resize-none"
+                  rows={4}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Asking Price (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={askingPrice}
+                  onChange={(e) => setAskingPrice(e.target.value)}
+                  placeholder="e.g., Draft picks, specific players, etc."
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowTradeBlockModal(false);
+                  setSelectedPlayer(null);
+                  setTradeBlockNotes('');
+                  setAskingPrice('');
+                }}
+                className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded text-white text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitTradeBlock}
+                disabled={!tradeBlockNotes.trim() || submittingTradeBlock}
+                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded text-white text-sm"
+              >
+                {submittingTradeBlock ? 'Adding...' : 'Add to Trade Block'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
