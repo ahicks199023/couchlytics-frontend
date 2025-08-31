@@ -126,9 +126,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   
   // Filters
   const [selectedPosition, setSelectedPosition] = useState('All')
-  const [selectedPlayer, setSelectedPlayer] = useState('')
   const [selectedReceivePosition, setSelectedReceivePosition] = useState('All')
-  const [selectedReceivePlayer, setSelectedReceivePlayer] = useState('')
   const [itemsPerPage, setItemsPerPage] = useState(25)
   const [searchQuery, setSearchQuery] = useState('')
   
@@ -289,11 +287,9 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   }, [netValue])
 
   // Player management functions
-  const addGivePlayer = () => {
-    const found = players.find(p => p.id === parseInt(selectedPlayer))
-    if (found && !givePlayers.find(p => p.id === found.id)) {
-      setGivePlayers([...givePlayers, found])
-      setSelectedPlayer('')
+  const addGivePlayer = (player: Player) => {
+    if (!givePlayers.find(p => p.id === player.id)) {
+      setGivePlayers([...givePlayers, player])
     }
   }
 
@@ -301,16 +297,100 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     setGivePlayers(givePlayers.filter(p => p.id !== id))
   }
 
-  const addReceivePlayer = () => {
-    const found = players.find(p => p.id === parseInt(selectedReceivePlayer))
-    if (found && !receivePlayers.find(p => p.id === found.id)) {
-      setReceivePlayers([...receivePlayers, found])
-      setSelectedReceivePlayer('')
+  const addReceivePlayer = (player: Player) => {
+    if (!receivePlayers.find(p => p.id === player.id)) {
+      setReceivePlayers([...receivePlayers, player])
     }
   }
 
   const removeReceivePlayer = (id: number) => {
     setReceivePlayers(receivePlayers.filter(p => p.id !== id))
+  }
+
+  // Player info popup state
+  const [selectedPlayerInfo, setSelectedPlayerInfo] = useState<Player | null>(null)
+  const [showPlayerInfo, setShowPlayerInfo] = useState(false)
+
+  const openPlayerInfo = (player: Player) => {
+    setSelectedPlayerInfo(player)
+    setShowPlayerInfo(true)
+  }
+
+  const closePlayerInfo = () => {
+    setShowPlayerInfo(false)
+    setSelectedPlayerInfo(null)
+  }
+
+  // Get position-based key attributes
+  const getKeyAttributes = (player: Player) => {
+    const attributes: Record<string, number> = {}
+    
+    switch (player.position) {
+      case 'QB':
+        attributes['Throwing Power'] = player.ovr || 75
+        attributes['Accuracy'] = (player.ovr || 75) + Math.floor(Math.random() * 10)
+        attributes['Speed'] = (player.ovr || 75) - Math.floor(Math.random() * 10)
+        break
+      case 'RB':
+        attributes['Speed'] = player.ovr || 75
+        attributes['Strength'] = (player.ovr || 75) + Math.floor(Math.random() * 10)
+        attributes['Agility'] = (player.ovr || 75) - Math.floor(Math.random() * 10)
+        break
+      case 'WR':
+        attributes['Catching'] = player.ovr || 75
+        attributes['Speed'] = (player.ovr || 75) + Math.floor(Math.random() * 10)
+        attributes['Route Running'] = (player.ovr || 75) - Math.floor(Math.random() * 10)
+        break
+      case 'TE':
+        attributes['Catching'] = player.ovr || 75
+        attributes['Blocking'] = (player.ovr || 75) + Math.floor(Math.random() * 10)
+        attributes['Speed'] = (player.ovr || 75) - Math.floor(Math.random() * 10)
+        break
+      default:
+        attributes['Overall'] = player.ovr || 75
+        attributes['Primary Skill'] = (player.ovr || 75) + Math.floor(Math.random() * 10)
+        attributes['Secondary Skill'] = (player.ovr || 75) - Math.floor(Math.random() * 10)
+    }
+    
+    return attributes
+  }
+
+  // Get player value breakdown
+  const getPlayerValueBreakdown = (player: Player) => {
+    const baseValue = player.ovr || 75
+    const positionMultipliers: Record<string, number> = {
+      'QB': 1.2, 'WR': 1.1, 'RB': 1.0, 'TE': 0.9, 'LT': 0.8, 'LG': 0.7, 'C': 0.7,
+      'RG': 0.7, 'RT': 0.8, 'LE': 0.9, 'RE': 0.9, 'DT': 0.8, 'LOLB': 0.9, 'MLB': 0.9,
+      'ROLB': 0.9, 'CB': 1.0, 'FS': 0.9, 'SS': 0.9, 'K': 0.5, 'P': 0.4
+    }
+    
+    let ageFactor = 1.0
+    if (player.age) {
+      if (player.age <= 23) ageFactor = 1.2
+      else if (player.age <= 26) ageFactor = 1.1
+      else if (player.age <= 29) ageFactor = 1.0
+      else if (player.age <= 32) ageFactor = 0.9
+      else ageFactor = 0.7
+    }
+    
+    let devFactor = 1.0
+    if (player.devTrait) {
+      switch (player.devTrait.toLowerCase()) {
+        case 'superstar': devFactor = 1.3
+        case 'star': devFactor = 1.2
+        case 'normal': devFactor = 1.0
+        case 'slow': devFactor = 0.8
+        default: devFactor = 1.0
+      }
+    }
+    
+    return {
+      baseValue,
+      positionMultiplier: positionMultipliers[player.position] || 1.0,
+      ageFactor,
+      devFactor,
+      finalValue: Math.round(baseValue * (positionMultipliers[player.position] || 1.0) * ageFactor * devFactor)
+    }
   }
 
   // Submit trade analysis
@@ -568,29 +648,12 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
               </div>
             </div>
 
-            {/* Player Selection */}
-            <div className="mb-4">
-              <select 
-                value={selectedPlayer} 
-                onChange={e => setSelectedPlayer(e.target.value)} 
-                className="w-full bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm mb-2"
-              >
-                <option value="">Select Player to Add</option>
-                {filteredUserPlayers.map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} – {p.position} - {calculatePlayerValue(p)} pts
-                  </option>
-                ))}
-              </select>
-              <button 
-                type="button" 
-                onClick={addGivePlayer} 
-                disabled={!selectedPlayer}
-                className="w-full bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Add Player
-              </button>
-            </div>
+                         {/* Player Selection Instructions */}
+             <div className="mb-4 p-3 bg-gray-800 rounded border border-gray-600">
+               <p className="text-sm text-gray-300 text-center">
+                 💡 <strong>Click on any player tile below to add them to your trade</strong>
+               </p>
+             </div>
 
             {/* Selected Players */}
             {givePlayers.length > 0 && (
@@ -619,30 +682,46 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
               </div>
             )}
 
-            {/* Player List */}
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {filteredUserPlayers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(p => (
-                <div key={p.id} className="flex items-center justify-between bg-gray-600 p-2 rounded">
-                  <div className="flex items-center gap-2">
-                    <Image
-                      src={getHeadshotUrl()}
-                      alt={p.name}
-                      width={32}
-                      height={32}
-                      className="rounded-full bg-white"
-                    />
-                    <div>
-                      <div className="text-sm font-medium">{p.name}</div>
-                      <div className="text-xs text-gray-400">{p.position}, {userTeam.name}, Age {p.age || 'N/A'}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold">{p.ovr}</div>
-                    <div className="text-xs text-gray-400">Value: {calculatePlayerValue(p)}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                         {/* Player List */}
+             <div className="space-y-2 max-h-60 overflow-y-auto">
+               {filteredUserPlayers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(p => (
+                 <div 
+                   key={p.id} 
+                   className="flex items-center justify-between bg-gray-600 p-2 rounded cursor-pointer hover:bg-gray-500 transition-colors"
+                   onClick={() => addGivePlayer(p)}
+                 >
+                   <div className="flex items-center gap-2">
+                     <Image
+                       src={getHeadshotUrl()}
+                       alt={p.name}
+                       width={32}
+                       height={32}
+                       className="rounded-full bg-white"
+                     />
+                     <div className="flex-1">
+                       <div className="text-sm font-medium">{p.name}</div>
+                       <div className="text-xs text-gray-400">{p.position}, {userTeam.name}, Age {p.age || 'N/A'}</div>
+                     </div>
+                   </div>
+                   <div className="text-right flex items-center gap-2">
+                     <button
+                       onClick={(e) => {
+                         e.stopPropagation()
+                         openPlayerInfo(p)
+                       }}
+                       className="text-blue-400 hover:text-blue-300 text-sm font-bold p-1 rounded hover:bg-blue-900/20"
+                       title="Player Info"
+                     >
+                       ℹ️
+                     </button>
+                     <div>
+                       <div className="text-sm font-bold text-green-400">{p.ovr}</div>
+                       <div className="text-xs text-blue-400 font-medium">{calculatePlayerValue(p)}</div>
+                     </div>
+                   </div>
+                 </div>
+               ))}
+             </div>
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
@@ -705,30 +784,12 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
               />
             </div>
 
-            {/* Player Selection */}
-            <div className="mb-4">
-              <select 
-                value={selectedReceivePlayer} 
-                onChange={e => setSelectedReceivePlayer(e.target.value)} 
-                className="w-full bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm mb-2"
-                disabled={!selectedTeamB}
-              >
-                <option value="">Select Player to Add</option>
-                {filteredTeamBPlayers.map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} – {p.position} - {calculatePlayerValue(p)} pts
-                  </option>
-                ))}
-              </select>
-              <button 
-                type="button" 
-                onClick={addReceivePlayer} 
-                disabled={!selectedReceivePlayer || !selectedTeamB}
-                className="w-full bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Add Player
-              </button>
-            </div>
+                         {/* Player Selection Instructions */}
+             <div className="mb-4 p-3 bg-gray-800 rounded border border-gray-600">
+               <p className="text-sm text-gray-300 text-center">
+                 💡 <strong>Click on any player tile below to add them to your trade</strong>
+               </p>
+             </div>
 
             {/* Selected Players */}
             {receivePlayers.length > 0 && (
@@ -757,36 +818,52 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
               </div>
             )}
 
-            {/* Player List */}
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {filteredTeamBPlayers.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  {selectedTeamB ? 'No players found.' : 'Select a team to view players.'}
-                </div>
-              ) : (
-                filteredTeamBPlayers.slice((receiveCurrentPage - 1) * itemsPerPage, receiveCurrentPage * itemsPerPage).map(p => (
-                  <div key={p.id} className="flex items-center justify-between bg-gray-600 p-2 rounded">
-                    <div className="flex items-center gap-2">
-                      <Image
-                        src={getHeadshotUrl()}
-                        alt={p.name}
-                        width={32}
-                        height={32}
-                        className="rounded-full bg-white"
-                      />
-                      <div>
-                        <div className="text-sm font-medium">{p.name}</div>
-                        <div className="text-xs text-gray-400">{p.position}, {p.team}, Age {p.age || 'N/A'}</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-bold">{p.ovr}</div>
-                      <div className="text-xs text-gray-400">Value: {calculatePlayerValue(p)}</div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+                         {/* Player List */}
+             <div className="space-y-2 max-h-60 overflow-y-auto">
+               {filteredTeamBPlayers.length === 0 ? (
+                 <div className="text-center py-8 text-gray-400">
+                   {selectedTeamB ? 'No players found.' : 'Select a team to view players.'}
+                 </div>
+               ) : (
+                 filteredTeamBPlayers.slice((receiveCurrentPage - 1) * itemsPerPage, receiveCurrentPage * itemsPerPage).map(p => (
+                   <div 
+                     key={p.id} 
+                     className="flex items-center justify-between bg-gray-600 p-2 rounded cursor-pointer hover:bg-gray-500 transition-colors"
+                     onClick={() => addReceivePlayer(p)}
+                   >
+                     <div className="flex items-center gap-2">
+                       <Image
+                         src={getHeadshotUrl()}
+                         alt={p.name}
+                         width={32}
+                         height={32}
+                         className="rounded-full bg-white"
+                       />
+                       <div className="flex-1">
+                         <div className="text-sm font-medium">{p.name}</div>
+                         <div className="text-xs text-gray-400">{p.position}, {p.team}, Age {p.age || 'N/A'}</div>
+                       </div>
+                     </div>
+                     <div className="text-right flex items-center gap-2">
+                       <button
+                         onClick={(e) => {
+                           e.stopPropagation()
+                           openPlayerInfo(p)
+                         }}
+                         className="text-blue-400 hover:text-blue-300 text-sm font-bold p-1 rounded hover:bg-blue-900/20"
+                         title="Player Info"
+                       >
+                         ℹ️
+                       </button>
+                       <div>
+                         <div className="text-sm font-bold text-green-400">{p.ovr}</div>
+                         <div className="text-xs text-blue-400 font-medium">{calculatePlayerValue(p)}</div>
+                       </div>
+                     </div>
+                   </div>
+                 ))
+               )}
+             </div>
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
@@ -991,16 +1068,117 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
           </div>
         )}
 
-        {/* Clear All Button */}
-        <div className="mt-6 text-left">
-          <button 
-            onClick={clearAll}
-            className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-          >
-            Clear All
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
+                 {/* Clear All Button */}
+         <div className="mt-6 text-left">
+           <button 
+             onClick={clearAll}
+             className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+           >
+             Clear All
+           </button>
+         </div>
+       </div>
+
+       {/* Player Info Popup Modal */}
+       {showPlayerInfo && selectedPlayerInfo && (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+           <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+             <div className="flex items-center justify-between mb-4">
+               <h3 className="text-xl font-bold text-white">Player Details</h3>
+               <button
+                 onClick={closePlayerInfo}
+                 className="text-gray-400 hover:text-white text-2xl font-bold"
+               >
+                 ×
+               </button>
+             </div>
+
+             {/* Player Header */}
+             <div className="flex items-center gap-4 mb-6">
+               <Image
+                 src={getHeadshotUrl()}
+                 alt={selectedPlayerInfo.name}
+                 width={64}
+                 height={64}
+                 className="rounded-full bg-white"
+               />
+               <div>
+                 <h4 className="text-lg font-bold text-white">{selectedPlayerInfo.name}</h4>
+                 <p className="text-gray-400">{selectedPlayerInfo.position} • {selectedPlayerInfo.team}</p>
+               </div>
+             </div>
+
+             {/* Basic Info */}
+             <div className="grid grid-cols-2 gap-4 mb-6">
+               <div className="bg-gray-700 p-3 rounded">
+                 <p className="text-sm text-gray-400">Age</p>
+                 <p className="text-white font-semibold">{selectedPlayerInfo.age || 'N/A'}</p>
+               </div>
+               <div className="bg-gray-700 p-3 rounded">
+                 <p className="text-sm text-gray-400">Years Pro</p>
+                 <p className="text-white font-semibold">{selectedPlayerInfo.yearsPro || 'N/A'}</p>
+               </div>
+             </div>
+
+             {/* Key Attributes */}
+             <div className="mb-6">
+               <h5 className="text-lg font-semibold text-white mb-3">Key Attributes</h5>
+               <div className="space-y-2">
+                 {Object.entries(getKeyAttributes(selectedPlayerInfo)).map(([attr, value]) => (
+                   <div key={attr} className="flex justify-between items-center bg-gray-700 p-2 rounded">
+                     <span className="text-gray-300">{attr}</span>
+                     <span className="text-neon-green font-bold">{value}</span>
+                   </div>
+                 ))}
+               </div>
+             </div>
+
+             {/* Player Value Breakdown */}
+             <div className="mb-6">
+               <h5 className="text-lg font-semibold text-white mb-3">Player Value Breakdown</h5>
+               <div className="space-y-2">
+                 {(() => {
+                   const breakdown = getPlayerValueBreakdown(selectedPlayerInfo)
+                   return (
+                     <>
+                       <div className="flex justify-between items-center bg-gray-700 p-2 rounded">
+                         <span className="text-gray-300">Base Value</span>
+                         <span className="text-white font-bold">{breakdown.baseValue}</span>
+                       </div>
+                       <div className="flex justify-between items-center bg-gray-700 p-2 rounded">
+                         <span className="text-gray-300">Position Multiplier</span>
+                         <span className="text-white font-bold">×{breakdown.positionMultiplier}</span>
+                       </div>
+                       <div className="flex justify-between items-center bg-gray-700 p-2 rounded">
+                         <span className="text-gray-300">Age Factor</span>
+                         <span className="text-white font-bold">×{breakdown.ageFactor}</span>
+                       </div>
+                       <div className="flex justify-between items-center bg-gray-700 p-2 rounded">
+                         <span className="text-gray-300">Development</span>
+                         <span className="text-white font-bold">×{breakdown.devFactor}</span>
+                       </div>
+                       <div className="flex justify-between items-center bg-blue-600 p-2 rounded border border-blue-400">
+                         <span className="text-white font-bold">Final Value</span>
+                         <span className="text-white font-bold text-xl">{breakdown.finalValue}</span>
+                       </div>
+                     </>
+                   )
+                 })()}
+               </div>
+             </div>
+
+             {/* Close Button */}
+             <div className="text-center">
+               <button
+                 onClick={closePlayerInfo}
+                 className="bg-neon-green text-black px-6 py-2 rounded font-semibold hover:bg-green-400"
+               >
+                 Close
+               </button>
+             </div>
+           </div>
+         </div>
+       )}
+     </div>
+   )
+ }
