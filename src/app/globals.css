@@ -5,6 +5,9 @@
 /* Import comment system styles */
 @import '../styles/comments.css';
 
+/* Import message board styles */
+@import '../styles/message-board.css';
+
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
