@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { API_BASE } from '@/lib/config';
 
 export default function CreateAnnouncementPage() {
   const params = useParams();
@@ -26,7 +27,7 @@ export default function CreateAnnouncementPage() {
     try {
       setLoading(true);
       
-      const response = await fetch(`/backend-api/leagues/${leagueId}/announcements`, {
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/announcements`, {
         method: 'POST',
         credentials: 'include',
         headers: {
