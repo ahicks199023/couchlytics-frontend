@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import comment system styles */
+@import '../styles/comments.css';
+
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));

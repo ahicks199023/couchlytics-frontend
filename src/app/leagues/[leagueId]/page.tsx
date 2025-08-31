@@ -9,6 +9,7 @@ import TeamLogo from '@/components/TeamLogo'
 import { API_BASE } from '@/lib/config'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserRole } from '@/types/user'
+import { CommentsList } from '@/components/comments'
 
 // Helper function to get team configuration
 const getTeamConfig = (teamName: string) => {
@@ -250,9 +251,16 @@ export default function LeagueDetailPage() {
                     </span>
                   </div>
                   <p className="text-gray-300 mb-2">{announcement.content}</p>
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-gray-400 mb-4">
                     Posted by {announcement.created_by}
                   </div>
+                  
+                  {/* Comments Section for Pinned Announcements */}
+                  <CommentsList
+                    announcementId={announcement.id}
+                    leagueId={leagueId as string}
+                    className="mt-4"
+                  />
                 </div>
               ))}
             
@@ -268,9 +276,16 @@ export default function LeagueDetailPage() {
                     </span>
                   </div>
                   <p className="text-gray-300 mb-2">{announcement.content}</p>
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-gray-400 mb-4">
                     Posted by {announcement.created_by}
                   </div>
+                  
+                  {/* Comments Section for Regular Announcements */}
+                  <CommentsList
+                    announcementId={announcement.id}
+                    leagueId={leagueId as string}
+                    className="mt-4"
+                  />
                 </div>
               ))}
           </div>
