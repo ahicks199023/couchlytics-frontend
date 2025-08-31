@@ -7,6 +7,8 @@ import { fetchFromApi } from '@/lib/api'
 import { getTeamByName, getTeamByPartialName } from '@/lib/team-config'
 import TeamLogo from '@/components/TeamLogo'
 import { API_BASE } from '@/lib/config'
+import { useAuth } from '@/contexts/AuthContext'
+import { UserRole } from '@/types/user'
 
 // Helper function to get team configuration
 const getTeamConfig = (teamName: string) => {
@@ -108,11 +110,19 @@ type Announcement = {
 export default function LeagueDetailPage() {
   const { leagueId } = useParams()
   const router = useRouter()
+  const { user, hasRole } = useAuth()
   const [league, setLeague] = useState<LeagueData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true)
+
+  // Check if user has permission to create announcements
+  const canCreateAnnouncements = user && (
+    hasRole(UserRole.ADMIN) || 
+    hasRole(UserRole.COMMISSIONER) || 
+    hasRole(UserRole.SUPER_ADMIN)
+  )
 
   // Debug logging
   console.log('LeagueDetailPage - leagueId from params:', leagueId)
@@ -194,24 +204,28 @@ export default function LeagueDetailPage() {
         >
           View Analytics →
         </Link>
-        <Link
-          href={`/leagues/${leagueId}/commissioner/announcements/create`}
-          className="inline-block text-sm text-green-600 dark:text-green-400 hover:underline"
-        >
-          Create Announcement →
-        </Link>
+        {canCreateAnnouncements && (
+          <Link
+            href={`/leagues/${leagueId}/commissioner/announcements/create`}
+            className="inline-block text-sm text-green-600 dark:text-green-400 hover:underline"
+          >
+            Create Announcement →
+          </Link>
+        )}
       </div>
 
       {/* League Announcements Section */}
       <section className="mt-8 mb-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">League Announcements</h2>
-          <Link
-            href={`/leagues/${leagueId}/commissioner/announcements/create`}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            + New Announcement
-          </Link>
+          {canCreateAnnouncements && (
+            <Link
+              href={`/leagues/${leagueId}/commissioner/announcements/create`}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              + New Announcement
+            </Link>
+          )}
         </div>
         
         {loadingAnnouncements ? (
@@ -267,12 +281,14 @@ export default function LeagueDetailPage() {
             <p className="text-gray-500 text-sm mb-4">
               League commissioners can post announcements to keep members updated
             </p>
-            <Link
-              href={`/leagues/${leagueId}/commissioner/announcements/create`}
-              className="inline-block px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
-            >
-              Create First Announcement
-            </Link>
+            {canCreateAnnouncements && (
+              <Link
+                href={`/leagues/${leagueId}/commissioner/announcements/create`}
+                className="inline-block px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                Create First Announcement
+              </Link>
+            )}
           </div>
         )}
       </section>
