@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { API_BASE } from '@/lib/config';
 
 interface Trade {
   id: number;
@@ -30,7 +31,7 @@ export default function CommissionerTradesPage() {
   useEffect(() => {
     const fetchTrades = async () => {
       try {
-        const response = await fetch(`/backend-api/leagues/${leagueId}/commissioner/trades`, {
+        const response = await fetch(`${API_BASE}/leagues/${leagueId}/commissioner/trades`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',

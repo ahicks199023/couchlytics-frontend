@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { API_BASE } from '@/lib/config';
 
 interface TradeBlockPlayer {
   id: number;
@@ -44,11 +45,11 @@ export default function TradeBlockPage() {
       setLoading(true);
       
       const [playersResponse, commentsResponse] = await Promise.all([
-        fetch(`/backend-api/leagues/${leagueId}/trade-block?position=${selectedPosition}`, {
+        fetch(`${API_BASE}/leagues/${leagueId}/trade-block?position=${selectedPosition}`, {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
         }),
-        fetch(`/backend-api/leagues/${leagueId}/trade-block/comments`, {
+        fetch(`${API_BASE}/leagues/${leagueId}/trade-block/comments`, {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
         })
@@ -86,7 +87,7 @@ export default function TradeBlockPage() {
     try {
       setSubmittingComment(true);
       
-      const response = await fetch(`/backend-api/leagues/${leagueId}/trade-block/comments`, {
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/trade-block/comments`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -110,7 +111,7 @@ export default function TradeBlockPage() {
 
   const sendTradeOffer = async (playerId: number, ownerId: number) => {
     try {
-      const response = await fetch(`/backend-api/leagues/${leagueId}/trades/offer`, {
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/trades/offer`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

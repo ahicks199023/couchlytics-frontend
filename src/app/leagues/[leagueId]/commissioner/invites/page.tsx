@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { API_BASE } from '@/lib/config';
 
 interface Invite {
   id: number;
@@ -43,11 +44,11 @@ export default function InvitesPage() {
       setLoading(true);
       
       const [invitesResponse, teamsResponse] = await Promise.all([
-        fetch(`/backend-api/leagues/${leagueId}/invites`, {
+        fetch(`${API_BASE}/leagues/${leagueId}/invites`, {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
         }),
-        fetch(`/backend-api/leagues/${leagueId}/commissioner/teams`, {
+        fetch(`${API_BASE}/leagues/${leagueId}/commissioner/teams`, {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
         })
@@ -88,7 +89,7 @@ export default function InvitesPage() {
     try {
       setCreating(true);
       
-      const response = await fetch(`/backend-api/leagues/${leagueId}/invites`, {
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/invites`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -130,7 +131,7 @@ export default function InvitesPage() {
     }
 
     try {
-      const response = await fetch(`/backend-api/leagues/${leagueId}/invites/${inviteId}`, {
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/invites/${inviteId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

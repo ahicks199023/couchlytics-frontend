@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import { API_BASE } from '@/lib/config';
 
 interface UserProfile {
   id: number;
@@ -75,7 +76,7 @@ export default function ProfilePage() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/backend-api/user/profile', {
+      const response = await fetch(`${API_BASE}/user/profile`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -117,7 +118,7 @@ export default function ProfilePage() {
       setCheckingUsername(true);
       setUsernameError(null);
       
-      const response = await fetch('/backend-api/user/username/check', {
+      const response = await fetch(`${API_BASE}/user/username/check`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -159,7 +160,7 @@ export default function ProfilePage() {
         }
       }
 
-      const response = await fetch('/backend-api/user/profile/personal', {
+      const response = await fetch(`${API_BASE}/user/profile/personal`, {
         method: 'PUT',
         credentials: 'include',
         headers: {
@@ -201,7 +202,7 @@ export default function ProfilePage() {
       setSuccessMessage(null);
       setErrorMessage(null);
 
-      const response = await fetch('/backend-api/user/profile/notifications', {
+      const response = await fetch(`${API_BASE}/user/profile/notifications`, {
         method: 'PUT',
         credentials: 'include',
         headers: {
@@ -231,7 +232,7 @@ export default function ProfilePage() {
     setNotifications(newSettings);
     
     try {
-      const response = await fetch('/backend-api/user/profile/notifications', {
+      const response = await fetch(`${API_BASE}/user/profile/notifications`, {
         method: 'PUT',
         credentials: 'include',
         headers: {
@@ -263,7 +264,7 @@ export default function ProfilePage() {
       setSuccessMessage(null);
       setErrorMessage(null);
 
-      const response = await fetch('/backend-api/user/password-reset-request', {
+      const response = await fetch(`${API_BASE}/user/password-reset-request`, {
         method: 'POST',
         credentials: 'include',
         headers: {

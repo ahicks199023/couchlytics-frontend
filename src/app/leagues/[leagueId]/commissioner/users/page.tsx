@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { API_BASE } from '@/lib/config';
 
 interface User {
   id: number;
@@ -50,13 +51,13 @@ export default function CommissionerUsersPage() {
         
         // Fetch users and teams in parallel
         const [usersResponse, teamsResponse] = await Promise.all([
-          fetch(`/backend-api/leagues/${leagueId}/commissioner/users`, {
+          fetch(`${API_BASE}/leagues/${leagueId}/commissioner/users`, {
             credentials: 'include',
             headers: {
               'Content-Type': 'application/json',
             },
           }),
-          fetch(`/backend-api/leagues/${leagueId}/commissioner/teams`, {
+          fetch(`${API_BASE}/leagues/${leagueId}/commissioner/teams`, {
             credentials: 'include',
             headers: {
               'Content-Type': 'application/json',
@@ -97,7 +98,7 @@ export default function CommissionerUsersPage() {
     try {
       setUpdatingUser(userId);
       
-      const response = await fetch(`/backend-api/leagues/${leagueId}/commissioner/users/${userId}/role`, {
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/commissioner/users/${userId}/role`, {
         method: 'PUT',
         credentials: 'include',
         headers: {
@@ -130,7 +131,7 @@ export default function CommissionerUsersPage() {
     try {
       setUpdatingUser(userId);
       
-      const response = await fetch(`/backend-api/leagues/${leagueId}/commissioner/users/${userId}/team`, {
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/commissioner/users/${userId}/team`, {
         method: 'PUT',
         credentials: 'include',
         headers: {

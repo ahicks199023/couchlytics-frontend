@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { API_BASE } from '@/lib/config';
 
 interface Team {
   id: number;
@@ -27,7 +28,7 @@ export default function CommissionerTeamsPage() {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const response = await fetch(`/backend-api/leagues/${leagueId}/commissioner/teams`, {
+        const response = await fetch(`${API_BASE}/leagues/${leagueId}/commissioner/teams`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',

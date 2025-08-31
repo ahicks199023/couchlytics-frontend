@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import { API_BASE } from '@/lib/config';
 
 interface SystemUser {
   id: number;
@@ -52,11 +53,11 @@ export default function SystemManagementPage() {
       
       // Fetch system stats and users in parallel
       const [statsResponse, usersResponse] = await Promise.all([
-        fetch('/backend-api/admin/system/stats', {
+        fetch(`${API_BASE}/admin/system/stats`, {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
         }),
-        fetch(`/backend-api/admin/system/users?page=${currentPage}&search=${searchTerm}`, {
+        fetch(`${API_BASE}/admin/system/users?page=${currentPage}&search=${searchTerm}`, {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
         })
@@ -97,7 +98,7 @@ export default function SystemManagementPage() {
     if (!editingUser) return;
 
     try {
-      const response = await fetch(`/backend-api/admin/system/users/${editingUser.id}`, {
+      const response = await fetch(`${API_BASE}/admin/system/users/${editingUser.id}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -133,7 +134,7 @@ export default function SystemManagementPage() {
 
   const toggleUserStatus = async (userId: number) => {
     try {
-      const response = await fetch(`/backend-api/admin/system/users/${userId}/toggle-status`, {
+      const response = await fetch(`${API_BASE}/admin/system/users/${userId}/toggle-status`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
