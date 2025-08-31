@@ -17,11 +17,27 @@ interface Player {
   devTrait?: string
   age?: number
   yearsPro?: number
+  
+  // Backend field mappings
+  overall?: number  // Backend returns 'overall' instead of 'ovr'
+  team_name?: string  // Backend returns 'team_name' instead of 'team'
+  team_abbreviation?: string  // Backend returns 'team_abbreviation'
+  league_id?: string  // Backend returns 'league_id'
 }
 
 // Helper function to get team ID from either field
 const getPlayerTeamId = (player: Player): number | undefined => {
   return player.teamId || player.team_id
+}
+
+// Helper function to get overall rating from either field
+const getPlayerOverall = (player: Player): number => {
+  return player.ovr || player.overall || 75
+}
+
+// Helper function to get team name from either field
+const getPlayerTeamName = (player: Player): string => {
+  return player.team || player.team_name || 'Unknown Team'
 }
 
 interface Team {
@@ -52,7 +68,7 @@ const getHeadshotUrl = () => '/default-avatar.png'
 
 // Enhanced player value calculation
 const calculatePlayerValue = (player: Player): number => {
-  const baseValue = player.ovr || 75
+  const baseValue = getPlayerOverall(player)
   
   // Position multipliers
   const positionMultipliers: Record<string, number> = {
@@ -345,32 +361,33 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   // Get position-based key attributes
   const getKeyAttributes = (player: Player) => {
     const attributes: Record<string, number> = {}
+    const overall = getPlayerOverall(player)
     
     switch (player.position) {
       case 'QB':
-        attributes['Throwing Power'] = player.ovr || 75
-        attributes['Accuracy'] = (player.ovr || 75) + Math.floor(Math.random() * 10)
-        attributes['Speed'] = (player.ovr || 75) - Math.floor(Math.random() * 10)
+        attributes['Throwing Power'] = overall
+        attributes['Accuracy'] = overall + Math.floor(Math.random() * 10)
+        attributes['Speed'] = overall - Math.floor(Math.random() * 10)
         break
       case 'RB':
-        attributes['Speed'] = player.ovr || 75
-        attributes['Strength'] = (player.ovr || 75) + Math.floor(Math.random() * 10)
-        attributes['Agility'] = (player.ovr || 75) - Math.floor(Math.random() * 10)
+        attributes['Speed'] = overall
+        attributes['Strength'] = overall + Math.floor(Math.random() * 10)
+        attributes['Agility'] = overall - Math.floor(Math.random() * 10)
         break
       case 'WR':
-        attributes['Catching'] = player.ovr || 75
-        attributes['Speed'] = (player.ovr || 75) + Math.floor(Math.random() * 10)
-        attributes['Route Running'] = (player.ovr || 75) - Math.floor(Math.random() * 10)
+        attributes['Catching'] = overall
+        attributes['Speed'] = overall + Math.floor(Math.random() * 10)
+        attributes['Route Running'] = overall - Math.floor(Math.random() * 10)
         break
       case 'TE':
-        attributes['Catching'] = player.ovr || 75
-        attributes['Blocking'] = (player.ovr || 75) + Math.floor(Math.random() * 10)
-        attributes['Speed'] = (player.ovr || 75) - Math.floor(Math.random() * 10)
+        attributes['Catching'] = overall
+        attributes['Blocking'] = overall + Math.floor(Math.random() * 10)
+        attributes['Speed'] = overall - Math.floor(Math.random() * 10)
         break
       default:
-        attributes['Overall'] = player.ovr || 75
-        attributes['Primary Skill'] = (player.ovr || 75) + Math.floor(Math.random() * 10)
-        attributes['Secondary Skill'] = (player.ovr || 75) - Math.floor(Math.random() * 10)
+        attributes['Overall'] = overall
+        attributes['Primary Skill'] = overall + Math.floor(Math.random() * 10)
+        attributes['Secondary Skill'] = overall - Math.floor(Math.random() * 10)
     }
     
     return attributes
@@ -378,7 +395,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
 
   // Get player value breakdown
   const getPlayerValueBreakdown = (player: Player) => {
-    const baseValue = player.ovr || 75
+    const baseValue = getPlayerOverall(player)
     const positionMultipliers: Record<string, number> = {
       'QB': 1.2, 'WR': 1.1, 'RB': 1.0, 'TE': 0.9, 'LT': 0.8, 'LG': 0.7, 'C': 0.7,
       'RG': 0.7, 'RT': 0.8, 'LE': 0.9, 'RE': 0.9, 'DT': 0.8, 'LOLB': 0.9, 'MLB': 0.9,
@@ -735,8 +752,8 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                      >
                        ℹ️
                      </button>
-                                            <div className="text-right">
-                         <div className="text-sm font-bold text-green-400">OVR: {p.ovr}</div>
+                       <div className="text-right">
+                         <div className="text-sm font-bold text-green-400">OVR: {getPlayerOverall(p)}</div>
                          <div className="text-xs text-blue-400 font-medium">Value: {calculatePlayerValue(p)}</div>
                        </div>
                    </div>
@@ -877,7 +894,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                          ℹ️
                        </button>
                        <div className="text-right">
-                         <div className="text-sm font-bold text-green-400">OVR: {p.ovr}</div>
+                         <div className="text-sm font-bold text-green-400">OVR: {getPlayerOverall(p)}</div>
                          <div className="text-xs text-blue-400 font-medium">Value: {calculatePlayerValue(p)}</div>
                        </div>
                      </div>
@@ -1125,16 +1142,11 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                />
                <div>
                  <h4 className="text-lg font-bold text-white">{selectedPlayerInfo.name}</h4>
-                 <p className="text-gray-400">{selectedPlayerInfo.position} • {selectedPlayerInfo.team}</p>
+                 <p className="text-gray-400">{selectedPlayerInfo.position} • {getPlayerTeamName(selectedPlayerInfo)}</p>
                </div>
              </div>
              
-             {/* Debug Info (temporary) */}
-             <div className="mb-4 p-3 bg-red-900/20 border border-red-500/30 rounded text-xs">
-               <p className="text-red-300 font-mono">
-                 Debug: {JSON.stringify(selectedPlayerInfo, null, 2)}
-               </p>
-             </div>
+
 
              {/* Basic Info */}
              <div className="grid grid-cols-2 gap-4 mb-6">
@@ -1156,7 +1168,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                </div>
                <div className="bg-gray-700 p-3 rounded">
                  <p className="text-sm text-gray-400">Team</p>
-                 <p className="text-white font-semibold">{selectedPlayerInfo.team}</p>
+                 <p className="text-white font-semibold">{getPlayerTeamName(selectedPlayerInfo)}</p>
                </div>
              </div>
 
