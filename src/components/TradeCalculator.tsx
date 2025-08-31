@@ -261,7 +261,28 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   }, [players, teams, selectedTeamB, selectedReceivePosition])
 
   const positionOptions = useMemo(() => {
-    return ['All', ...new Set(players.map(p => p.position))].sort()
+    // Define the proper order for positions (offense first, then defense, then special teams)
+    const positionOrder = [
+      'All',
+      'QB', 'HB', 'FB', 'WR', 'TE', 'LT', 'LG', 'C', 'RG', 'RT',
+      'LE', 'RE', 'DT', 'LOLB', 'MLB', 'ROLB', 'CB', 'FS', 'SS',
+      'K', 'P'
+    ]
+    
+    // Get unique positions from players
+    const uniquePositions = [...new Set(players.map(p => p.position))]
+    
+    // Filter and sort according to the defined order
+    const orderedPositions = positionOrder.filter(pos => 
+      pos === 'All' || uniquePositions.includes(pos)
+    )
+    
+    // Add any remaining positions that weren't in our predefined list
+    const remainingPositions = uniquePositions.filter(pos => 
+      !positionOrder.includes(pos)
+    ).sort()
+    
+    return [...orderedPositions, ...remainingPositions]
   }, [players])
 
   const teamBOptions = useMemo(() => {
@@ -714,10 +735,10 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                      >
                        ℹ️
                      </button>
-                     <div>
-                       <div className="text-sm font-bold text-green-400">{p.ovr}</div>
-                       <div className="text-xs text-blue-400 font-medium">{calculatePlayerValue(p)}</div>
-                     </div>
+                                            <div className="text-right">
+                         <div className="text-sm font-bold text-green-400">OVR: {p.ovr}</div>
+                         <div className="text-xs text-blue-400 font-medium">Value: {calculatePlayerValue(p)}</div>
+                       </div>
                    </div>
                  </div>
                ))}
@@ -855,9 +876,9 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                        >
                          ℹ️
                        </button>
-                       <div>
-                         <div className="text-sm font-bold text-green-400">{p.ovr}</div>
-                         <div className="text-xs text-blue-400 font-medium">{calculatePlayerValue(p)}</div>
+                       <div className="text-right">
+                         <div className="text-sm font-bold text-green-400">OVR: {p.ovr}</div>
+                         <div className="text-xs text-blue-400 font-medium">Value: {calculatePlayerValue(p)}</div>
                        </div>
                      </div>
                    </div>
@@ -1107,6 +1128,13 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                  <p className="text-gray-400">{selectedPlayerInfo.position} • {selectedPlayerInfo.team}</p>
                </div>
              </div>
+             
+             {/* Debug Info (temporary) */}
+             <div className="mb-4 p-3 bg-red-900/20 border border-red-500/30 rounded text-xs">
+               <p className="text-red-300 font-mono">
+                 Debug: {JSON.stringify(selectedPlayerInfo, null, 2)}
+               </p>
+             </div>
 
              {/* Basic Info */}
              <div className="grid grid-cols-2 gap-4 mb-6">
@@ -1117,6 +1145,18 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                <div className="bg-gray-700 p-3 rounded">
                  <p className="text-sm text-gray-400">Years Pro</p>
                  <p className="text-white font-semibold">{selectedPlayerInfo.yearsPro || 'N/A'}</p>
+               </div>
+             </div>
+             
+             {/* Position and Team */}
+             <div className="grid grid-cols-2 gap-4 mb-6">
+               <div className="bg-gray-700 p-3 rounded">
+                 <p className="text-sm text-gray-400">Position</p>
+                 <p className="text-white font-semibold">{selectedPlayerInfo.position}</p>
+               </div>
+               <div className="bg-gray-700 p-3 rounded">
+                 <p className="text-sm text-gray-400">Team</p>
+                 <p className="text-white font-semibold">{selectedPlayerInfo.team}</p>
                </div>
              </div>
 
