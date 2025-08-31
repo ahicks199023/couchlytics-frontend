@@ -132,6 +132,17 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
+  // Debug API configuration
+  console.log('🔍 Trade Calculator API Debug:', {
+    API_BASE,
+    env_API_BASE: process.env.NEXT_PUBLIC_API_BASE,
+    env_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    league_id,
+    playersUrl: `${API_BASE}/leagues/${league_id}/players`,
+    teamsUrl: `${API_BASE}/leagues/${league_id}/teams`,
+    tradeToolUrl: `${API_BASE}/leagues/${league_id}/trade-tool`
+  })
+  
   // Trade state
   const [result, setResult] = useState<TradeResult | null>(null)
   const [givePlayers, setGivePlayers] = useState<Player[]>([])
