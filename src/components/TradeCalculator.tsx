@@ -12,10 +12,16 @@ interface Player {
   position: string
   ovr: number
   teamId?: number
+  team_id?: number  // Add support for backend snake_case field
   user?: string
   devTrait?: string
   age?: number
   yearsPro?: number
+}
+
+// Helper function to get team ID from either field
+const getPlayerTeamId = (player: Player): number | undefined => {
+  return player.teamId || player.team_id
 }
 
 interface Team {
@@ -160,7 +166,14 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     if (players.length > 0) {
       console.log('🔍 Players Debug:', {
         playersCount: players.length,
-        samplePlayers: players.slice(0, 3).map(p => ({ id: p.id, name: p.name, team: p.team, teamId: p.teamId })),
+        samplePlayers: players.slice(0, 3).map(p => ({ 
+          id: p.id, 
+          name: p.name, 
+          team: p.team, 
+          teamId: p.teamId,
+          team_id: p.team_id,  // Show both field values for debugging
+          resolvedTeamId: getPlayerTeamId(p)  // Show the resolved team ID
+        })),
         userTeamId
       })
     }
@@ -209,21 +222,27 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
 
   // Computed values
   const filteredUserPlayers = useMemo(() => {
-    const filtered = players.filter(p => 
-      p.teamId === userTeamId &&
-      (selectedPosition === 'All' || p.position === selectedPosition) &&
-      (searchQuery === '' || p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    ).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
+    const filtered = players.filter(p => {
+      // Handle both teamId (camelCase) and team_id (snake_case) from backend
+      const playerTeamId = getPlayerTeamId(p)
+      return playerTeamId === userTeamId &&
+        (selectedPosition === 'All' || p.position === selectedPosition) &&
+        (searchQuery === '' || p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    }).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
     
     // Debug logging for player filtering
     if (players.length > 0 && userTeamId) {
       console.log('🔍 Player Filtering Debug:', {
         totalPlayers: players.length,
         userTeamId,
-        playersWithTeamId: players.filter(p => p.teamId).length,
-        playersWithoutTeamId: players.filter(p => !p.teamId).length,
+        playersWithTeamId: players.filter(p => getPlayerTeamId(p)).length,
+        playersWithoutTeamId: players.filter(p => !getPlayerTeamId(p)).length,
         filteredCount: filtered.length,
-        sampleFiltered: filtered.slice(0, 2).map(p => ({ id: p.id, name: p.name, teamId: p.teamId }))
+        sampleFiltered: filtered.slice(0, 2).map(p => ({ 
+          id: p.id, 
+          name: p.name, 
+          teamId: getPlayerTeamId(p)
+        }))
       })
     }
     
@@ -235,10 +254,12 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     const teamB = teams.find(t => t.name === selectedTeamB)
     if (!teamB) return []
     
-    return players.filter(p => 
-      p.teamId === teamB.id &&
-      (selectedReceivePosition === 'All' || p.position === selectedReceivePosition)
-    ).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
+    return players.filter(p => {
+      // Handle both teamId (camelCase) and team_id (snake_case) from backend
+      const playerTeamId = getPlayerTeamId(p)
+      return playerTeamId === teamB.id &&
+        (selectedReceivePosition === 'All' || p.position === selectedReceivePosition)
+    }).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
   }, [players, teams, selectedTeamB, selectedReceivePosition])
 
   const positionOptions = useMemo(() => {
@@ -346,7 +367,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     }
 
     // Find the target team (team receiving our players)
-    const targetTeamIds = [...new Set(receivePlayers.map(p => p.teamId))]
+    const targetTeamIds = [...new Set(receivePlayers.map(p => getPlayerTeamId(p)))]
     if (targetTeamIds.length !== 1) {
       console.error('Trade must involve exactly one other team')
       alert('Trade must involve exactly one other team')
@@ -356,7 +377,6 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     const targetTeamId = targetTeamIds[0]
     if (!targetTeamId) {
       console.error('Could not determine target team')
-      alert('Could not determine target team')
       return
     }
 
