@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { API_BASE } from '@/lib/config'
 import GameThreadCard from './GameThreadCard'
 import CreateGameThreadForm from './CreateGameThreadForm'
@@ -36,6 +37,7 @@ interface GameThreadsProps {
 
 export default function GameThreads({ leagueId }: GameThreadsProps) {
   const { user, hasRole } = useAuth()
+  const router = useRouter()
   const [gameThreads, setGameThreads] = useState<GameThreadsData>({})
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -87,6 +89,11 @@ export default function GameThreads({ leagueId }: GameThreadsProps) {
     fetchGameThreads()
     setShowCreateForm(false)
   }, [fetchGameThreads])
+
+  // Handle game thread navigation
+  const handleGameThreadClick = useCallback((thread: GameThread) => {
+    router.push(`/leagues/${leagueId}/threads/${thread.id}`)
+  }, [router, leagueId])
 
   // Initial load
   useEffect(() => {
@@ -205,7 +212,7 @@ export default function GameThreads({ leagueId }: GameThreadsProps) {
                   <GameThreadCard
                     key={thread.id}
                     thread={thread}
-                    onClick={() => {/* Navigate to thread */}}
+                    onClick={() => handleGameThreadClick(thread)}
                   />
                 ))}
               </div>

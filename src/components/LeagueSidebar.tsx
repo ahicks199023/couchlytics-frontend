@@ -50,6 +50,14 @@ const links = [
       { label: 'Trade Analyzer', path: 'trade-tool' }
     ]
   },
+  { 
+    label: '💬 Message Boards', 
+    path: 'message-boards',
+    subItems: [
+      { label: 'General Boards', path: 'message-boards' },
+      { label: 'Game Threads', path: 'game-threads' }
+    ]
+  },
   { label: 'Stats', path: 'stats', prefetch: false },
   { label: 'Stats Leaders', path: 'stats-leaders', prefetch: false },
   { label: 'Players', path: 'players', prefetch: false },

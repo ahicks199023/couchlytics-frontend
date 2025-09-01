@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { API_BASE } from '@/lib/config'
 import BoardCard from './BoardCard'
 import ThreadList from './ThreadList'
@@ -55,6 +56,7 @@ interface MessageBoardProps {
 
 export default function MessageBoard({ leagueId }: MessageBoardProps) {
   const { user, hasRole } = useAuth()
+  const router = useRouter()
   const [boards, setBoards] = useState<MessageBoard[]>([])
   const [selectedBoard, setSelectedBoard] = useState<MessageBoard | null>(null)
   const [threads, setThreads] = useState<Thread[]>([])
@@ -165,6 +167,11 @@ export default function MessageBoard({ leagueId }: MessageBoardProps) {
     }
   }, [selectedBoard, fetchThreads])
 
+  // Handle thread navigation
+  const handleThreadClick = useCallback((thread: Thread) => {
+    router.push(`/leagues/${leagueId}/threads/${thread.id}`)
+  }, [router, leagueId])
+
   // Initial load
   useEffect(() => {
     fetchBoards()
@@ -265,7 +272,7 @@ export default function MessageBoard({ leagueId }: MessageBoardProps) {
                 threads={threads}
                 loading={loading}
                 pagination={pagination}
-                onThreadClick={() => {/* Navigate to thread */}}
+                onThreadClick={handleThreadClick}
                 onPageChange={handlePageChange}
                 onThreadCreated={handleThreadCreated}
               />
