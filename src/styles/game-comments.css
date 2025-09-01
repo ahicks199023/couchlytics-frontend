@@ -1,0 +1,54 @@
+/* Game Comments Styles */
+.game-comments {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #333;
+}
+
+.comments-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #333;
+}
+
+.comments-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.comments-subtitle {
+  font-size: 16px;
+  color: #888;
+  margin: 0;
+}
+
+.comments-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.comment-form-section {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #444;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .game-comments {
+    padding: 16px;
+  }
+  
+  .comments-title {
+    font-size: 20px;
+  }
+  
+  .comments-subtitle {
+    font-size: 14px;
+  }
+}

@@ -322,13 +322,14 @@ export default function TeamDetailPage() {
                   <th className="py-2 px-2">H/A</th>
                   <th className="py-2 px-2">Result</th>
                   <th className="py-2 px-2">Score</th>
+                  <th className="py-2 px-2">Comments</th>
                   <th className="py-2 px-2">Box Score</th>
                 </tr>
               </thead>
               <tbody>
                 {schedule.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-4 px-2 text-center text-gray-600 dark:text-gray-400">
+                    <td colSpan={7} className="py-4 px-2 text-center text-gray-600 dark:text-gray-400">
                       No games available
                     </td>
                   </tr>
@@ -340,6 +341,11 @@ export default function TeamDetailPage() {
                       <td className="py-2 px-2">{g.isHome ? 'Home' : 'Away'}</td>
                       <td className="py-2 px-2">{g.result ?? '-'}</td>
                       <td className="py-2 px-2">{g.score ?? '-'}</td>
+                      <td className="py-2 px-2">
+                        <Link className="text-blue-600 dark:text-blue-400 hover:text-neon-green" href={`/leagues/${leagueIdString}/games/${g.gameId}/comments`}>
+                          💬
+                        </Link>
+                      </td>
                       <td className="py-2 px-2">
                         <Link className="text-blue-600 dark:text-blue-400 hover:text-neon-green" href={`/leagues/${leagueIdString}/schedule/box-score/${g.gameId}`}>
                           View

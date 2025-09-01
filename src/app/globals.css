@@ -8,6 +8,9 @@
 /* Import message board styles */
 @import '../styles/message-board.css';
 
+/* Import game comments styles */
+@import '../styles/game-comments.css';
+
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));

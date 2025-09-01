@@ -15,7 +15,7 @@ interface CommentUser {
 interface CommentProps {
   comment: {
     id: number
-    announcement_id: number
+    announcement_id: number | string
     user_id: number
     parent_comment_id: number | null
     content: string
@@ -28,7 +28,7 @@ interface CommentProps {
     replies?: unknown[]
     reply_count: number
   }
-  announcementId: number
+  announcementId: number | string
   leagueId: string
   onCommentUpdate: () => void
   onCommentDelete: (commentId: number) => void

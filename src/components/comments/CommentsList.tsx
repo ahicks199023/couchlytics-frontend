@@ -35,15 +35,19 @@ interface CommentsResponse {
 }
 
 interface CommentsListProps {
-  announcementId: number
+  announcementId: number | string
   leagueId: string
   className?: string
+  onCommentCountChange?: (count: number) => void
+  isGameComment?: boolean
 }
 
 export default function CommentsList({ 
   announcementId, 
   leagueId, 
-  className = "" 
+  className = "",
+  onCommentCountChange,
+  isGameComment = false
 }: CommentsListProps) {
   const [comments, setComments] = useState<CommentData[]>([])
   const [loading, setLoading] = useState(true)
@@ -56,13 +60,14 @@ export default function CommentsList({
   const fetchComments = useCallback(async (newOffset = 0) => {
     try {
       setLoading(true)
-      const response = await fetch(
-        `${API_BASE}/leagues/${leagueId}/announcements/${announcementId}/comments?limit=${limit}&offset=${newOffset}`,
-        { 
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' }
-        }
-      )
+      const endpoint = isGameComment 
+        ? `${API_BASE}/leagues/${leagueId}/games/${announcementId}/comments?limit=${limit}&offset=${newOffset}`
+        : `${API_BASE}/leagues/${leagueId}/announcements/${announcementId}/comments?limit=${limit}&offset=${newOffset}`
+      
+      const response = await fetch(endpoint, { 
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      })
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -85,13 +90,18 @@ export default function CommentsList({
       
       setHasMore(data.has_more || false)
       setOffset(newOffset + (data.comments?.length || 0))
+      
+      // Update comment count
+      if (onCommentCountChange) {
+        onCommentCountChange(data.total || 0)
+      }
     } catch (error) {
       console.error('Error fetching comments:', error)
       setError(error instanceof Error ? error.message : 'Failed to fetch comments')
     } finally {
       setLoading(false)
     }
-  }, [leagueId, announcementId, limit])
+  }, [leagueId, announcementId, limit, isGameComment, onCommentCountChange])
   
   const loadMore = () => {
     if (!loading && hasMore) {

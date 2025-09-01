@@ -546,10 +546,22 @@ function GameCard({
             </div>
           )}
 
-          {/* Box Score Link */}
-          {game.is_complete && (
-            <div className="mt-6 pt-4 border-t border-white border-opacity-20">
-              <div className="flex justify-center">
+          {/* Box Score and Comments Links */}
+          <div className="mt-6 pt-4 border-t border-white border-opacity-20">
+            <div className="flex justify-center space-x-4">
+              {/* Comments Link - Always available */}
+              <Link
+                href={`/leagues/${leagueId}/games/${game.game_id}/comments`}
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-lg"
+              >
+                💬 Comments
+                <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+              
+              {/* Box Score Link - Only for completed games */}
+              {game.is_complete && (
                 <Link
                   href={`/leagues/${leagueId}/schedule/box-score/${game.game_id}`}
                   className="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-lg"
@@ -559,9 +571,9 @@ function GameCard({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
