@@ -146,14 +146,10 @@ export default function Comment({
   }
   
   const formatRelativeTime = (timestamp: string) => {
-    // Debug: Log the raw timestamp to see what we're receiving
-    console.log('Comment raw timestamp:', timestamp)
-    
-    const commentTime = new Date(timestamp)
-    
-    // Debug: Log the parsed date to see if it's being interpreted correctly
-    console.log('Comment parsed date:', commentTime)
-    console.log('Comment UTC string:', commentTime.toUTCString())
+    // Backend sends timestamps without timezone info, but they're actually UTC
+    // We need to append 'Z' to indicate UTC, then convert to local time
+    const utcTimestamp = timestamp.endsWith('Z') ? timestamp : timestamp + 'Z'
+    const commentTime = new Date(utcTimestamp)
     
     // Show full timestamp in user's local timezone
     return commentTime.toLocaleString('en-US', {

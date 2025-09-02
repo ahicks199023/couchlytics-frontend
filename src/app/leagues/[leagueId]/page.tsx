@@ -249,22 +249,15 @@ export default function LeagueDetailPage() {
                       <h3 className="text-lg font-semibold text-white">{announcement.title}</h3>
                     </div>
                     <span className="text-xs text-gray-400">
-                      {(() => {
-                        const rawTimestamp = announcement.createdAt || announcement.created_at || new Date()
-                        console.log('Announcement raw timestamp:', rawTimestamp)
-                        const announcementTime = new Date(rawTimestamp)
-                        console.log('Announcement parsed date:', announcementTime)
-                        console.log('Announcement UTC string:', announcementTime.toUTCString())
-                        return announcementTime.toLocaleString('en-US', {
-                          year: 'numeric',
-                          month: 'numeric',
-                          day: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          second: '2-digit',
-                          hour12: true
-                        })
-                      })()}
+                      {new Date(announcement.createdAt || announcement.created_at || new Date()).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                      })}
                     </span>
                   </div>
                   <p className="text-gray-300 mb-2">{announcement.content}</p>
