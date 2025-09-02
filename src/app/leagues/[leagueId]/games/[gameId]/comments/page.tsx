@@ -48,9 +48,38 @@ export default function GameCommentsPage() {
         }
 
         const data = await response.json()
-        setGameData(data.game)
+        console.log('Game data response:', data)
+        
+        // Handle different response formats
+        if (data.game) {
+          // If data is wrapped in a 'game' property
+          setGameData(data.game)
+        } else if (data.game_info) {
+          // If data has game_info (from box score endpoint)
+          setGameData({
+            game_id: data.game_id,
+            week: data.game_info.week,
+            home_team: {
+              name: data.game_info.home_team,
+              abbreviation: data.game_info.home_team
+            },
+            away_team: {
+              name: data.game_info.away_team,
+              abbreviation: data.game_info.away_team
+            },
+            score: {
+              home_score: data.game_info.home_score,
+              away_score: data.game_info.away_score
+            }
+          })
+        } else {
+          // If data is the game object directly
+          setGameData(data)
+        }
       } catch (error) {
         console.error('Error fetching game data:', error)
+        console.error('Response status:', response?.status)
+        console.error('Response headers:', response?.headers)
         setError(error instanceof Error ? error.message : 'Failed to load game data')
       } finally {
         setLoading(false)
