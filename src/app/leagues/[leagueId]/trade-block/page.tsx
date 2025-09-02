@@ -405,7 +405,23 @@ export default function TradeBlockPage() {
                       </div>
                       
                       <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
-                        <span>Listed {new Date(player.listed_at).toLocaleDateString()}</span>
+                        <span>Listed {(() => {
+                          // Backend sends timestamps without timezone info, but they're actually UTC
+                          // We need to append 'Z' to indicate UTC, then convert to local time
+                          const utcTimestamp = player.listed_at.endsWith('Z') ? player.listed_at : player.listed_at + 'Z'
+                          const listedTime = new Date(utcTimestamp)
+                          
+                          // Show full timestamp in user's local timezone
+                          return listedTime.toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'numeric',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: true
+                          })
+                        })()}</span>
                       </div>
                       
                       <div className="flex gap-2">
@@ -473,7 +489,23 @@ export default function TradeBlockPage() {
                 <div className="flex justify-between items-start mb-2">
                   <strong className="text-white">{comment.user_name}</strong>
                   <span className="text-xs text-gray-400">
-                    {new Date(comment.created_at).toLocaleDateString()}
+                    {(() => {
+                      // Backend sends timestamps without timezone info, but they're actually UTC
+                      // We need to append 'Z' to indicate UTC, then convert to local time
+                      const utcTimestamp = comment.created_at.endsWith('Z') ? comment.created_at : comment.created_at + 'Z'
+                      const commentTime = new Date(utcTimestamp)
+                      
+                      // Show full timestamp in user's local timezone
+                      return commentTime.toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                      })
+                    })()}
                   </span>
                 </div>
                 <p className="text-gray-300 text-sm">{comment.comment}</p>
