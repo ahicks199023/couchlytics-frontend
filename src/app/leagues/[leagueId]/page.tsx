@@ -249,7 +249,7 @@ export default function LeagueDetailPage() {
                       <h3 className="text-lg font-semibold text-white">{announcement.title}</h3>
                     </div>
                     <span className="text-xs text-gray-400">
-                      {new Date(announcement.createdAt || announcement.created_at || new Date()).toLocaleDateString()}
+                      {new Date(announcement.createdAt || announcement.created_at || new Date()).toLocaleString()}
                     </span>
                   </div>
                   <p className="text-gray-300 mb-2">{announcement.content}</p>
@@ -274,7 +274,7 @@ export default function LeagueDetailPage() {
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-semibold text-white">{announcement.title}</h3>
                     <span className="text-xs text-gray-400">
-                      {new Date(announcement.createdAt || announcement.created_at || new Date()).toLocaleDateString()}
+                      {new Date(announcement.createdAt || announcement.created_at || new Date()).toLocaleString()}
                     </span>
                   </div>
                   <p className="text-gray-300 mb-2">{announcement.content}</p>
