@@ -103,8 +103,10 @@ type Announcement = {
   id: number
   title: string
   content: string
-  created_by: string
-  created_at: string
+  created_by?: string
+  createdBy?: string
+  created_at?: string
+  createdAt?: string
   is_pinned: boolean
 }
 
@@ -247,12 +249,12 @@ export default function LeagueDetailPage() {
                       <h3 className="text-lg font-semibold text-white">{announcement.title}</h3>
                     </div>
                     <span className="text-xs text-gray-400">
-                      {new Date(announcement.created_at).toLocaleDateString()}
+                      {new Date(announcement.createdAt || announcement.created_at || new Date()).toLocaleDateString()}
                     </span>
                   </div>
                   <p className="text-gray-300 mb-2">{announcement.content}</p>
                   <div className="text-xs text-gray-400 mb-4">
-                    Posted by {announcement.created_by}
+                    Posted by {announcement.createdBy || announcement.created_by}
                   </div>
                   
                   {/* Comments Section for Pinned Announcements */}
@@ -272,12 +274,12 @@ export default function LeagueDetailPage() {
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-semibold text-white">{announcement.title}</h3>
                     <span className="text-xs text-gray-400">
-                      {new Date(announcement.created_at).toLocaleDateString()}
+                      {new Date(announcement.createdAt || announcement.created_at || new Date()).toLocaleDateString()}
                     </span>
                   </div>
                   <p className="text-gray-300 mb-2">{announcement.content}</p>
                   <div className="text-xs text-gray-400 mb-4">
-                    Posted by {announcement.created_by}
+                    Posted by {announcement.createdBy || announcement.created_by}
                   </div>
                   
                   {/* Comments Section for Regular Announcements */}
