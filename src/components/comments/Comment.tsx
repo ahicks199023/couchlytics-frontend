@@ -146,7 +146,14 @@ export default function Comment({
   }
   
   const formatRelativeTime = (timestamp: string) => {
+    // Debug: Log the raw timestamp to see what we're receiving
+    console.log('Comment raw timestamp:', timestamp)
+    
     const commentTime = new Date(timestamp)
+    
+    // Debug: Log the parsed date to see if it's being interpreted correctly
+    console.log('Comment parsed date:', commentTime)
+    console.log('Comment UTC string:', commentTime.toUTCString())
     
     // Show full timestamp in user's local timezone
     return commentTime.toLocaleString('en-US', {
