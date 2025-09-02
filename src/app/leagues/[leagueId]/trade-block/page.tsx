@@ -25,6 +25,12 @@ interface TradeBlockComment {
   user_name: string;
   comment: string;
   created_at: string;
+  is_edited?: boolean;
+  can_reply?: boolean;
+  can_edit?: boolean;
+  can_delete?: boolean;
+  replies?: TradeBlockComment[];
+  parent_comment_id?: number;
 }
 
 const POSITIONS = [
@@ -73,6 +79,12 @@ export default function TradeBlockPage() {
   const [tradeBlockNotes, setTradeBlockNotes] = useState('');
   const [askingPrice, setAskingPrice] = useState('');
   const [submittingTradeBlock, setSubmittingTradeBlock] = useState(false);
+  
+  // Enhanced comment functionality
+  const [editingComment, setEditingComment] = useState<number | null>(null);
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [editText, setEditText] = useState('');
+  const [replyText, setReplyText] = useState('');
 
   const fetchTradeBlockData = useCallback(async () => {
     try {
@@ -167,6 +179,89 @@ export default function TradeBlockPage() {
       alert('Failed to submit comment');
     } finally {
       setSubmittingComment(false);
+    }
+  };
+
+  // Enhanced comment handlers
+  const handleReply = (commentId: number) => {
+    setReplyingTo(commentId);
+    setReplyText('');
+  };
+
+  const handleEdit = (comment: TradeBlockComment) => {
+    setEditingComment(comment.id);
+    setEditText(comment.comment);
+  };
+
+  const handleDelete = async (commentId: number) => {
+    if (window.confirm('Are you sure you want to delete this comment?')) {
+      try {
+        const response = await fetch(`${API_BASE}/leagues/${leagueId}/trade-block/comments/${commentId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        
+        if (response.ok) {
+          await fetchTradeBlockData(); // Refresh comments
+        } else {
+          throw new Error('Failed to delete comment');
+        }
+      } catch (error) {
+        console.error('Error deleting comment:', error);
+        alert('Failed to delete comment');
+      }
+    }
+  };
+
+  const submitReply = async (parentCommentId: number) => {
+    if (!replyText.trim()) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/trade-block/comments`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          comment: replyText.trim(),
+          parent_comment_id: parentCommentId
+        }),
+      });
+      
+      if (response.ok) {
+        setReplyingTo(null);
+        setReplyText('');
+        await fetchTradeBlockData(); // Refresh comments
+      } else {
+        throw new Error('Failed to post reply');
+      }
+    } catch (error) {
+      console.error('Error posting reply:', error);
+      alert('Failed to post reply');
+    }
+  };
+
+  const submitEdit = async (commentId: number) => {
+    if (!editText.trim()) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/leagues/${leagueId}/trade-block/comments/${commentId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comment: editText.trim() }),
+      });
+      
+      if (response.ok) {
+        setEditingComment(null);
+        setEditText('');
+        await fetchTradeBlockData(); // Refresh comments
+      } else {
+        throw new Error('Failed to edit comment');
+      }
+    } catch (error) {
+      console.error('Error editing comment:', error);
+      alert('Failed to edit comment');
     }
   };
 
@@ -297,6 +392,195 @@ export default function TradeBlockPage() {
     acc[pos] = (filteredPlayers || []).filter(p => p && p.position === pos);
     return acc;
   }, {} as Record<string, TradeBlockPlayer[]>);
+
+  // Enhanced comment display components
+  const CommentDisplay = ({ comment, onReply, onEdit, onDelete }: {
+    comment: TradeBlockComment;
+    onReply: (commentId: number) => void;
+    onEdit: (comment: TradeBlockComment) => void;
+    onDelete: (commentId: number) => void;
+  }) => {
+    return (
+      <div className="comment-item bg-gray-700 rounded-lg p-4">
+        {/* Comment Header */}
+        <div className="comment-header flex justify-between items-start mb-2">
+          <span className="comment-author font-semibold text-blue-400">{comment.user_name}</span>
+          <span className="comment-time text-xs text-gray-400">
+            {(() => {
+              const utcTimestamp = comment.created_at.endsWith('Z') ? comment.created_at : comment.created_at + 'Z';
+              const commentTime = new Date(utcTimestamp);
+              return commentTime.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+              });
+            })()}
+            {comment.is_edited && <span className="edited-indicator text-yellow-400 italic"> (edited)</span>}
+          </span>
+        </div>
+        
+        {/* Comment Content */}
+        <div className="comment-content text-gray-300 text-sm mb-3">
+          {comment.comment}
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="comment-actions flex gap-2">
+          {comment.can_reply !== false && (
+            <button 
+              className="action-btn reply-btn px-2 py-1 text-xs bg-transparent border border-blue-500 text-blue-400 rounded hover:bg-blue-500 hover:text-white transition-colors"
+              onClick={() => onReply(comment.id)}
+            >
+              Reply
+            </button>
+          )}
+          {comment.can_edit !== false && (
+            <button 
+              className="action-btn edit-btn px-2 py-1 text-xs bg-transparent border border-yellow-500 text-yellow-400 rounded hover:bg-yellow-500 hover:text-white transition-colors"
+              onClick={() => onEdit(comment)}
+            >
+              Edit
+            </button>
+          )}
+          {comment.can_delete !== false && (
+            <button 
+              className="action-btn delete-btn px-2 py-1 text-xs bg-transparent border border-red-500 text-red-400 rounded hover:bg-red-500 hover:text-white transition-colors"
+              onClick={() => onDelete(comment.id)}
+            >
+              Delete
+            </button>
+          )}
+        </div>
+        
+        {/* Replies Section */}
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="replies-section mt-4 ml-4 border-l-2 border-gray-600 pl-4">
+            {comment.replies.map((reply) => (
+              <div key={reply.id} className="reply-item mb-3 p-3 bg-gray-600 rounded">
+                <div className="reply-header flex justify-between items-start mb-2">
+                  <span className="reply-author font-medium text-blue-300">{reply.user_name}</span>
+                  <span className="reply-time text-xs text-gray-400">
+                    {(() => {
+                      const utcTimestamp = reply.created_at.endsWith('Z') ? reply.created_at : reply.created_at + 'Z';
+                      const replyTime = new Date(utcTimestamp);
+                      return replyTime.toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                      });
+                    })()}
+                    {reply.is_edited && <span className="edited-indicator text-yellow-400 italic"> (edited)</span>}
+                  </span>
+                </div>
+                <div className="reply-content text-gray-300 text-sm mb-2">{reply.comment}</div>
+                <div className="reply-actions flex gap-2">
+                  {reply.can_reply !== false && (
+                    <button 
+                      className="action-btn reply-btn px-2 py-1 text-xs bg-transparent border border-blue-500 text-blue-400 rounded hover:bg-blue-500 hover:text-white transition-colors"
+                      onClick={() => onReply(reply.id)}
+                    >
+                      Reply
+                    </button>
+                  )}
+                  {reply.can_edit !== false && (
+                    <button 
+                      className="action-btn edit-btn px-2 py-1 text-xs bg-transparent border border-yellow-500 text-yellow-400 rounded hover:bg-yellow-500 hover:text-white transition-colors"
+                      onClick={() => onEdit(reply)}
+                    >
+                      Edit
+                    </button>
+                  )}
+                  {reply.can_delete !== false && (
+                    <button 
+                      className="action-btn delete-btn px-2 py-1 text-xs bg-transparent border border-red-500 text-red-400 rounded hover:bg-red-500 hover:text-white transition-colors"
+                      onClick={() => onDelete(reply.id)}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Reply Form Component
+  const ReplyForm = ({ parentCommentId, onCancel, onSubmit }: {
+    parentCommentId: number;
+    onCancel: () => void;
+    onSubmit: (parentCommentId: number, replyText: string) => void;
+  }) => {
+    return (
+      <div className="reply-form mt-3 p-3 bg-gray-600 rounded border border-gray-500">
+        <textarea
+          value={replyText}
+          onChange={(e) => setReplyText(e.target.value)}
+          placeholder="Write your reply..."
+          rows={3}
+          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500 resize-none"
+        />
+        <div className="form-actions flex gap-2 justify-end mt-2">
+          <button 
+            className="btn-cancel px-3 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button 
+            className="btn-submit px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            onClick={() => onSubmit(parentCommentId, replyText)}
+            disabled={!replyText.trim()}
+          >
+            Post Reply
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Edit Form Component
+  const EditForm = ({ comment, onCancel, onSubmit }: {
+    comment: TradeBlockComment;
+    onCancel: () => void;
+    onSubmit: (commentId: number, newText: string) => void;
+  }) => {
+    return (
+      <div className="edit-form p-3 bg-gray-600 rounded border border-gray-500">
+        <textarea
+          value={editText}
+          onChange={(e) => setEditText(e.target.value)}
+          rows={3}
+          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500 resize-none"
+        />
+        <div className="form-actions flex gap-2 justify-end mt-2">
+          <button 
+            className="btn-cancel px-3 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button 
+            className="btn-submit px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            onClick={() => onSubmit(comment.id, editText)}
+            disabled={!editText.trim()}
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -485,32 +769,33 @@ export default function TradeBlockPage() {
               }
               
               return (
-                <div key={comment.id || `comment-${Math.random()}`} className="bg-gray-700 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <strong className="text-white">{comment.user_name}</strong>
-                  <span className="text-xs text-gray-400">
-                    {(() => {
-                      // Backend sends timestamps without timezone info, but they're actually UTC
-                      // We need to append 'Z' to indicate UTC, then convert to local time
-                      const utcTimestamp = comment.created_at.endsWith('Z') ? comment.created_at : comment.created_at + 'Z'
-                      const commentTime = new Date(utcTimestamp)
-                      
-                      // Show full timestamp in user's local timezone
-                      return commentTime.toLocaleString('en-US', {
-                        year: 'numeric',
-                        month: 'numeric',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true
-                      })
-                    })()}
-                  </span>
+                <div key={comment.id || `comment-${Math.random()}`} className="comment-container">
+                  {/* Show Edit Form if editing this comment */}
+                  {editingComment === comment.id ? (
+                    <EditForm
+                      comment={comment}
+                      onCancel={() => setEditingComment(null)}
+                      onSubmit={submitEdit}
+                    />
+                  ) : (
+                    <CommentDisplay
+                      comment={comment}
+                      onReply={handleReply}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
+                  )}
+                  
+                  {/* Show Reply Form if replying to this comment */}
+                  {replyingTo === comment.id && (
+                    <ReplyForm
+                      parentCommentId={comment.id}
+                      onCancel={() => setReplyingTo(null)}
+                      onSubmit={submitReply}
+                    />
+                  )}
                 </div>
-                <p className="text-gray-300 text-sm">{comment.comment}</p>
-              </div>
-            );
+              );
             })
           )}
         </div>
