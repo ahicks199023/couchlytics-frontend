@@ -78,8 +78,6 @@ export default function GameCommentsPage() {
         }
       } catch (error) {
         console.error('Error fetching game data:', error)
-        console.error('Response status:', response?.status)
-        console.error('Response headers:', response?.headers)
         setError(error instanceof Error ? error.message : 'Failed to load game data')
       } finally {
         setLoading(false)
