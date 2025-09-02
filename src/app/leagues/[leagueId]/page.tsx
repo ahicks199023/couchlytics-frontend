@@ -250,7 +250,6 @@ export default function LeagueDetailPage() {
                     </div>
                     <span className="text-xs text-gray-400">
                       {new Date(announcement.createdAt || announcement.created_at || new Date()).toLocaleString('en-US', {
-                        timeZone: 'America/New_York',
                         year: 'numeric',
                         month: 'numeric',
                         day: 'numeric',
@@ -284,7 +283,6 @@ export default function LeagueDetailPage() {
                     <h3 className="text-lg font-semibold text-white">{announcement.title}</h3>
                     <span className="text-xs text-gray-400">
                       {new Date(announcement.createdAt || announcement.created_at || new Date()).toLocaleString('en-US', {
-                        timeZone: 'America/New_York',
                         year: 'numeric',
                         month: 'numeric',
                         day: 'numeric',

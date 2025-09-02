@@ -148,10 +148,8 @@ export default function Comment({
   const formatRelativeTime = (timestamp: string) => {
     const commentTime = new Date(timestamp)
     
-    // Show full timestamp with consistent timezone handling
-    // Use the same format as announcements to ensure consistency
+    // Show full timestamp in user's local timezone
     return commentTime.toLocaleString('en-US', {
-      timeZone: 'America/New_York', // Use Eastern Time to match announcements
       year: 'numeric',
       month: 'numeric',
       day: 'numeric',
