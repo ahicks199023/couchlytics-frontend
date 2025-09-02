@@ -42,41 +42,43 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ leagueId })
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [members, setMembers] = useState<Member[]>([])
   const [showCreateInvite, setShowCreateInvite] = useState(false)
-  const [loading, setLoading] = useState(false)
+
 
   // Fetch invitations and members
   useEffect(() => {
+    const fetchInvitations = async () => {
+      try {
+        const response = await fetch(`/api/leagues/${leagueId}/invitations`, {
+          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        })
+        const data = await response.json()
+        if (data.success) {
+          setInvitations(data.invitations)
+        }
+      } catch (error) {
+        console.error('Error fetching invitations:', error)
+      }
+    }
+
+    const fetchMembers = async () => {
+      try {
+        const response = await fetch(`/api/leagues/${leagueId}/members`, {
+          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        })
+        const data = await response.json()
+        if (data.success) {
+          setMembers(data.members)
+        }
+      } catch (error) {
+        console.error('Error fetching members:', error)
+      }
+    }
+
     fetchInvitations()
     fetchMembers()
   }, [leagueId])
 
-  const fetchInvitations = async () => {
-    try {
-      const response = await fetch(`/api/leagues/${leagueId}/invitations`, {
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-      })
-      const data = await response.json()
-      if (data.success) {
-        setInvitations(data.invitations)
-      }
-    } catch (error) {
-      console.error('Error fetching invitations:', error)
-    }
-  }
 
-  const fetchMembers = async () => {
-    try {
-      const response = await fetch(`/api/leagues/${leagueId}/members`, {
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-      })
-      const data = await response.json()
-      if (data.success) {
-        setMembers(data.members)
-      }
-    } catch (error) {
-      console.error('Error fetching members:', error)
-    }
-  }
 
   return (
     <div className="invitation-management mt-8">
@@ -93,13 +95,13 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ leagueId })
       {/* Active Invitations */}
       <InvitationsList 
         invitations={invitations}
-        onRefresh={fetchInvitations}
+        onRefresh={() => window.location.reload()}
       />
 
       {/* League Members */}
       <MembersList 
         members={members}
-        onRefresh={fetchMembers}
+        onRefresh={() => window.location.reload()}
       />
 
       {/* Create Invitation Modal */}
@@ -109,7 +111,7 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ leagueId })
           onClose={() => setShowCreateInvite(false)}
           onSuccess={() => {
             setShowCreateInvite(false)
-            fetchInvitations()
+            window.location.reload()
           }}
         />
       )}

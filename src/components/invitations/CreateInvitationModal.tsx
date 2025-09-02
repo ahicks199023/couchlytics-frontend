@@ -55,14 +55,14 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
       } else {
         setError(data.error || 'Failed to create invitation')
       }
-    } catch (error) {
+    } catch {
       setError('Failed to create invitation')
     } finally {
       setLoading(false)
     }
   }
 
-  const showInvitationCreated = (invitation: any) => {
+  const showInvitationCreated = (invitation: { invitation_code: string }) => {
     const inviteUrl = `${window.location.origin}/join-league/${invitation.invitation_code}`
     
     // Show modal with invitation details

@@ -13,28 +13,35 @@ const LeagueSettingsWithInvitations: React.FC<LeagueSettingsWithInvitationsProps
   isCommissioner 
 }) => {
   const [activeTab, setActiveTab] = useState('general')
-  const [leagueData, setLeagueData] = useState<any>(null)
+  const [leagueData, setLeagueData] = useState<{
+    name?: string
+    description?: string
+    season_year?: number
+    max_teams?: number
+  } | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const fetchLeagueData = async () => {
+      try {
+        const response = await fetch(`/api/leagues/${leagueId}`, {
+          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        })
+        const data = await response.json()
+        if (data.success) {
+          setLeagueData(data.league)
+        }
+      } catch (error) {
+        console.error('Error fetching league data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
     fetchLeagueData()
   }, [leagueId])
 
-  const fetchLeagueData = async () => {
-    try {
-      const response = await fetch(`/api/leagues/${leagueId}`, {
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-      })
-      const data = await response.json()
-      if (data.success) {
-        setLeagueData(data.league)
-      }
-    } catch (error) {
-      console.error('Error fetching league data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+
 
   if (loading) {
     return (

@@ -44,7 +44,7 @@ const InvitationsList: React.FC<InvitationsListProps> = ({ invitations, onRefres
         onRefresh()
         showToast('Invitation deleted successfully')
       }
-    } catch (error) {
+    } catch {
       showToast('Failed to delete invitation', 'error')
     }
   }
@@ -64,7 +64,7 @@ const InvitationsList: React.FC<InvitationsListProps> = ({ invitations, onRefres
         onRefresh()
         showToast(`Invitation ${!isActive ? 'activated' : 'deactivated'}`)
       }
-    } catch (error) {
+    } catch {
       showToast('Failed to update invitation', 'error')
     }
   }
@@ -177,7 +177,7 @@ const EditInvitationModal: React.FC<{
   invitation: Invitation
   onClose: () => void
   onSuccess: () => void
-}> = ({ invitation, onClose, onSuccess }) => {
+}> = ({ onClose }) => {
   // This would be implemented similarly to CreateInvitationModal
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

@@ -38,7 +38,7 @@ const MembersList: React.FC<MembersListProps> = ({ members, onRefresh }) => {
         onRefresh()
         showToast('Member role updated successfully')
       }
-    } catch (error) {
+    } catch {
       showToast('Failed to update member role', 'error')
     }
   }
@@ -56,7 +56,7 @@ const MembersList: React.FC<MembersListProps> = ({ members, onRefresh }) => {
         onRefresh()
         showToast('Member removed successfully')
       }
-    } catch (error) {
+    } catch {
       showToast('Failed to remove member', 'error')
     }
   }

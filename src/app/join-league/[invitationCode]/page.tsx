@@ -39,28 +39,30 @@ const JoinLeaguePage: React.FC = () => {
   const [joining, setJoining] = useState(false)
 
   useEffect(() => {
+    const validateInvitation = async () => {
+      try {
+        const response = await fetch(`/api/invitations/${invitationCode}/validate`)
+        const data = await response.json()
+        
+        if (data.success) {
+          setInvitationData(data)
+        } else {
+          setError(data.error || 'Invalid invitation')
+        }
+      } catch {
+        setError('Failed to validate invitation')
+      } finally {
+        setLoading(false)
+      }
+    }
+
     if (invitationCode) {
       validateInvitation()
       checkLoginStatus()
     }
   }, [invitationCode])
 
-  const validateInvitation = async () => {
-    try {
-      const response = await fetch(`/api/invitations/${invitationCode}/validate`)
-      const data = await response.json()
-      
-      if (data.success) {
-        setInvitationData(data)
-      } else {
-        setError(data.error || 'Invalid invitation')
-      }
-    } catch (error) {
-      setError('Failed to validate invitation')
-    } finally {
-      setLoading(false)
-    }
-  }
+
 
   const checkLoginStatus = async () => {
     // Check if user is logged in
@@ -87,7 +89,7 @@ const JoinLeaguePage: React.FC = () => {
       } else {
         setError(data.error || 'Failed to join league')
       }
-    } catch (error) {
+    } catch {
       setError('Failed to join league')
     } finally {
       setJoining(false)
@@ -134,7 +136,7 @@ const JoinLeaguePage: React.FC = () => {
         <div className="text-center mb-6">
           <div className="text-green-400 text-6xl mb-4">🎯</div>
           <h1 className="text-2xl font-bold mb-2">Join League</h1>
-          <p className="text-gray-400">You've been invited to join a league!</p>
+                     <p className="text-gray-400">You&apos;ve been invited to join a league!</p>
         </div>
 
         {invitationData && (
