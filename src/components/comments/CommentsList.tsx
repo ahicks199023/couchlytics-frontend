@@ -121,7 +121,11 @@ export default function CommentsList({
   const handleAddComment = async (content: string) => {
     try {
       setIsSubmitting(true)
-      const response = await fetch(`${API_BASE}/leagues/${leagueId}/announcements/${announcementId}/comments`, {
+      const endpoint = isGameComment 
+        ? `${API_BASE}/leagues/${leagueId}/games/${announcementId}/comments`
+        : `${API_BASE}/leagues/${leagueId}/announcements/${announcementId}/comments`
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -213,6 +217,7 @@ export default function CommentsList({
               leagueId={leagueId}
               onCommentUpdate={handleCommentUpdate}
               onCommentDelete={handleCommentDelete}
+              isGameComment={isGameComment}
             />
           ))}
         </div>

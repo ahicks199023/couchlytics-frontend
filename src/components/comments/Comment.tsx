@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserRole } from '@/types/user'
+import { API_BASE } from '@/lib/config'
 import CommentForm from './CommentForm'
 
 interface CommentUser {
@@ -33,6 +34,7 @@ interface CommentProps {
   onCommentUpdate: () => void
   onCommentDelete: (commentId: number) => void
   isReply?: boolean
+  isGameComment?: boolean
 }
 
 export default function Comment({ 
@@ -41,7 +43,8 @@ export default function Comment({
   leagueId, 
   onCommentUpdate, 
   onCommentDelete,
-  isReply = false
+  isReply = false,
+  isGameComment = false
 }: CommentProps) {
   const { user, hasRole } = useAuth()
   const [isReplying, setIsReplying] = useState(false)
@@ -62,7 +65,11 @@ export default function Comment({
   const handleReply = async (content: string) => {
     try {
       setIsSubmitting(true)
-      const response = await fetch(`/leagues/${leagueId}/announcements/${announcementId}/comments`, {
+      const endpoint = isGameComment 
+        ? `${API_BASE}/leagues/${leagueId}/games/${announcementId}/comments`
+        : `${API_BASE}/leagues/${leagueId}/announcements/${announcementId}/comments`
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -88,7 +95,11 @@ export default function Comment({
   const handleEdit = async () => {
     try {
       setIsSubmitting(true)
-      const response = await fetch(`/leagues/${leagueId}/announcements/${announcementId}/comments/${comment.id}`, {
+      const endpoint = isGameComment 
+        ? `${API_BASE}/leagues/${leagueId}/games/${announcementId}/comments/${comment.id}`
+        : `${API_BASE}/leagues/${leagueId}/announcements/${announcementId}/comments/${comment.id}`
+      
+      const response = await fetch(endpoint, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -113,7 +124,11 @@ export default function Comment({
     
     try {
       setIsSubmitting(true)
-      const response = await fetch(`/leagues/${leagueId}/announcements/${announcementId}/comments/${comment.id}`, {
+      const endpoint = isGameComment 
+        ? `${API_BASE}/leagues/${leagueId}/games/${announcementId}/comments/${comment.id}`
+        : `${API_BASE}/leagues/${leagueId}/announcements/${announcementId}/comments/${comment.id}`
+      
+      const response = await fetch(endpoint, {
         method: 'DELETE',
         credentials: 'include'
       })
@@ -270,6 +285,7 @@ export default function Comment({
                      onCommentUpdate={onCommentUpdate}
                      onCommentDelete={onCommentDelete}
                      isReply={true}
+                     isGameComment={isGameComment}
                    />
                  )
                })}
