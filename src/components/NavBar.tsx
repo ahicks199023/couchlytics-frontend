@@ -10,6 +10,8 @@ import { User } from '@/types/user'
 import { login as loginApi } from '@/features/auth/api'
 import { API_BASE_URL } from '@/lib/http'
 import { useInbox } from '@/Hooks/useInbox'
+import { NotificationBell } from './notifications/NotificationBell'
+import { NotificationPanel } from './notifications/NotificationPanel'
 import { getFirebaseUserEmail } from '@/lib/firebase'
 
 
@@ -20,6 +22,7 @@ export default function NavBar() {
   const [isLoginLoading, setIsLoginLoading] = useState<'native' | 'google' | 'discord' | null>(null)
   const [loginError, setLoginError] = useState<string | null>(null)
   const [notificationCount, setNotificationCount] = useState(0)
+  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false)
   const loginDropdownRef = useRef<HTMLDivElement>(null)
 
   const { user, authenticated, loading, logout, firebaseUser, checkAuthStatus, isAdmin } = useAuth()
@@ -208,6 +211,10 @@ export default function NavBar() {
             <Link href="/chat" className="hover:text-neon-green transition-colors">
               💬 Chat
             </Link>
+            <NotificationBell
+              onClick={() => setIsNotificationPanelOpen(true)}
+              className="hover:bg-gray-700 rounded-full"
+            />
           </div>
         )}
       </div>
@@ -275,18 +282,7 @@ export default function NavBar() {
                       </span>
                     )}
                   </Link>
-                  <Link
-                    href="/notifications"
-                    className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    🔔 Notifications
-                    {notificationCount > 0 && (
-                      <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                        {notificationCount}
-                      </span>
-                    )}
-                  </Link>
+
                   <button
                     onClick={() => {
                       handleLogout()
@@ -505,6 +501,12 @@ export default function NavBar() {
           )}
         </div>
       )}
+      
+      {/* Notification Panel */}
+      <NotificationPanel
+        isOpen={isNotificationPanelOpen}
+        onClose={() => setIsNotificationPanelOpen(false)}
+      />
     </nav>
   )
 }
