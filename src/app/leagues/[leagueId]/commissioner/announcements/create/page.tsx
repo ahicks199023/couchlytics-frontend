@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { API_BASE } from '@/lib/config';
@@ -10,11 +10,115 @@ export default function CreateAnnouncementPage() {
   const router = useRouter();
   const leagueId = params.leagueId;
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [announcement, setAnnouncement] = useState({
     title: '',
     content: '',
-    pinned: false
+    pinned: false,
+    coverPhoto: null as string | null
   });
+  const coverPhotoRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+
+  // Convert image to base64 for storage
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  // Handle cover photo upload
+  const handleCoverPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const base64 = await convertToBase64(file);
+      setAnnouncement(prev => ({ ...prev, coverPhoto: base64 }));
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Handle image paste in content
+  const handleContentPaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData.items;
+    
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        
+        const file = item.getAsFile();
+        if (!file) continue;
+
+        // Validate file size (max 2MB for inline images)
+        if (file.size > 2 * 1024 * 1024) {
+          alert('Image size must be less than 2MB');
+          continue;
+        }
+
+        try {
+          setUploadingImage(true);
+          const base64 = await convertToBase64(file);
+          
+          // Insert image into content at cursor position
+          const textarea = contentRef.current;
+          if (textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const imageMarkdown = `\n![Image](${base64})\n`;
+            
+            const newContent = 
+              announcement.content.substring(0, start) + 
+              imageMarkdown + 
+              announcement.content.substring(end);
+            
+            setAnnouncement(prev => ({ ...prev, content: newContent }));
+            
+            // Set cursor position after the image
+            setTimeout(() => {
+              textarea.focus();
+              textarea.setSelectionRange(start + imageMarkdown.length, start + imageMarkdown.length);
+            }, 0);
+          }
+        } catch (error) {
+          console.error('Error processing pasted image:', error);
+          alert('Failed to process pasted image');
+        } finally {
+          setUploadingImage(false);
+        }
+      }
+    }
+  };
+
+  // Remove cover photo
+  const removeCoverPhoto = () => {
+    setAnnouncement(prev => ({ ...prev, coverPhoto: null }));
+    if (coverPhotoRef.current) {
+      coverPhotoRef.current.value = '';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,21 +190,80 @@ export default function CreateAnnouncementPage() {
             />
           </div>
 
+          {/* Cover Photo */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Cover Photo (Optional)
+            </label>
+            <div className="space-y-3">
+              {announcement.coverPhoto ? (
+                <div className="relative">
+                  <img 
+                    src={announcement.coverPhoto} 
+                    alt="Cover preview" 
+                    className="w-full h-48 object-cover rounded-lg border border-gray-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeCoverPhoto}
+                    className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <div 
+                  className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-gray-500 transition-colors cursor-pointer"
+                  onClick={() => coverPhotoRef.current?.click()}
+                >
+                  <div className="text-gray-400 mb-2">
+                    <svg className="mx-auto h-12 w-12" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <p className="text-sm text-gray-400">
+                    Click to upload a cover photo
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    PNG, JPG, GIF up to 5MB
+                  </p>
+                </div>
+              )}
+              <input
+                ref={coverPhotoRef}
+                type="file"
+                accept="image/*"
+                onChange={handleCoverPhotoUpload}
+                className="hidden"
+              />
+              {uploadingImage && (
+                <div className="text-center">
+                  <div className="inline-flex items-center text-sm text-blue-400">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400 mr-2"></div>
+                    Uploading image...
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Content */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Announcement Content *
             </label>
             <textarea
+              ref={contentRef}
               value={announcement.content}
               onChange={(e) => setAnnouncement(prev => ({ ...prev, content: e.target.value }))}
-              placeholder="Write your announcement here..."
+              onPaste={handleContentPaste}
+              placeholder="Write your announcement here... You can paste images directly into the content!"
               rows={10}
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500 resize-vertical"
               required
             />
             <p className="text-xs text-gray-400 mt-1">
-              Tip: You can use line breaks to format your announcement. Keep it clear and concise for better engagement.
+              Tip: You can paste images directly into the content! Use line breaks to format your announcement. Keep it clear and concise for better engagement.
             </p>
           </div>
 
@@ -129,6 +292,17 @@ export default function CreateAnnouncementPage() {
             <div className="bg-gray-700 rounded-lg p-4">
               {announcement.title ? (
                 <>
+                  {/* Cover Photo */}
+                  {announcement.coverPhoto && (
+                    <div className="mb-4">
+                      <img 
+                        src={announcement.coverPhoto} 
+                        alt="Cover" 
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+                  
                   <div className="flex items-center mb-2">
                     <h4 className="text-lg font-bold text-white">{announcement.title}</h4>
                     {announcement.pinned && (
@@ -139,7 +313,22 @@ export default function CreateAnnouncementPage() {
                   </div>
                   {announcement.content ? (
                     <div className="text-gray-300 whitespace-pre-wrap">
-                      {announcement.content}
+                      {announcement.content.split('\n').map((line, index) => {
+                        // Check if line contains an image markdown
+                        const imageMatch = line.match(/!\[.*?\]\((.*?)\)/);
+                        if (imageMatch) {
+                          return (
+                            <div key={index} className="my-4">
+                              <img 
+                                src={imageMatch[1]} 
+                                alt="Content image" 
+                                className="max-w-full h-auto rounded-lg border border-gray-600"
+                              />
+                            </div>
+                          );
+                        }
+                        return <div key={index}>{line}</div>;
+                      })}
                     </div>
                   ) : (
                     <p className="text-gray-500 italic">Announcement content will appear here...</p>
@@ -182,6 +371,9 @@ export default function CreateAnnouncementPage() {
           <li>• Pin important announcements that all members should see</li>
           <li>• Consider timing - post announcements when members are most active</li>
           <li>• Include action items or deadlines when applicable</li>
+          <li>• Add cover photos to make announcements more engaging</li>
+          <li>• Paste images directly into content for visual storytelling</li>
+          <li>• Keep images under 5MB for cover photos, 2MB for inline images</li>
         </ul>
       </div>
     </div>

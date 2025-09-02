@@ -99,16 +99,18 @@ type LeagueData = {
   }[]
 }
 
-type Announcement = {
-  id: number
-  title: string
-  content: string
-  created_by?: string
-  createdBy?: string
-  created_at?: string
-  createdAt?: string
-  is_pinned: boolean
-}
+  type Announcement = {
+    id: number
+    title: string
+    content: string
+    created_by?: string
+    createdBy?: string
+    created_at?: string
+    createdAt?: string
+    is_pinned: boolean
+    cover_photo?: string
+    coverPhoto?: string
+  }
 
 export default function LeagueDetailPage() {
   const { leagueId } = useParams()
@@ -119,6 +121,26 @@ export default function LeagueDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true)
+
+  // Helper function to render content with images
+  const renderContentWithImages = (content: string) => {
+    return content.split('\n').map((line, index) => {
+      // Check if line contains an image markdown
+      const imageMatch = line.match(/!\[.*?\]\((.*?)\)/);
+      if (imageMatch) {
+        return (
+          <div key={index} className="my-4">
+            <img 
+              src={imageMatch[1]} 
+              alt="Content image" 
+              className="max-w-full h-auto rounded-lg border border-gray-600"
+            />
+          </div>
+        );
+      }
+      return <div key={index}>{line}</div>;
+    });
+  };
 
   // Check if user has permission to create announcements
   const canCreateAnnouncements = user && (
@@ -243,6 +265,17 @@ export default function LeagueDetailPage() {
               .filter(announcement => announcement.is_pinned)
               .map(announcement => (
                 <div key={announcement.id} className="bg-green-900/20 border border-green-600 rounded-lg p-4">
+                  {/* Cover Photo */}
+                  {(announcement.coverPhoto || announcement.cover_photo) && (
+                    <div className="mb-4">
+                      <img 
+                        src={announcement.coverPhoto || announcement.cover_photo} 
+                        alt="Cover" 
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+                  
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="text-green-400 text-sm font-medium">📌 PINNED</span>
@@ -260,7 +293,9 @@ export default function LeagueDetailPage() {
                       })}
                     </span>
                   </div>
-                  <p className="text-gray-300 mb-2">{announcement.content}</p>
+                  <div className="text-gray-300 mb-2 whitespace-pre-wrap">
+                    {renderContentWithImages(announcement.content)}
+                  </div>
                   <div className="text-xs text-gray-400 mb-4">
                     Posted by {announcement.createdBy || announcement.created_by}
                   </div>
@@ -279,6 +314,17 @@ export default function LeagueDetailPage() {
               .filter(announcement => !announcement.is_pinned)
               .map(announcement => (
                 <div key={announcement.id} className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                  {/* Cover Photo */}
+                  {(announcement.coverPhoto || announcement.cover_photo) && (
+                    <div className="mb-4">
+                      <img 
+                        src={announcement.coverPhoto || announcement.cover_photo} 
+                        alt="Cover" 
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+                  
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-semibold text-white">{announcement.title}</h3>
                     <span className="text-xs text-gray-400">
@@ -293,7 +339,9 @@ export default function LeagueDetailPage() {
                       })}
                     </span>
                   </div>
-                  <p className="text-gray-300 mb-2">{announcement.content}</p>
+                  <div className="text-gray-300 mb-2 whitespace-pre-wrap">
+                    {renderContentWithImages(announcement.content)}
+                  </div>
                   <div className="text-xs text-gray-400 mb-4">
                     Posted by {announcement.createdBy || announcement.created_by}
                   </div>
