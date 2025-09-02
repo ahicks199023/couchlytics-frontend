@@ -4,6 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import { API_BASE } from '@/lib/config'
 import { useAuth } from '@/contexts/AuthContext'
+import AnalysisResultsSection from './trade-analysis/AnalysisResultsSection'
+import '@/styles/enhanced-trade-analysis.css'
 
 interface Player {
   id: number
@@ -61,6 +63,105 @@ interface TradeResult {
   canAutoApprove: boolean
   suggestedTrades?: Player[]
   riskLevel?: 'Low' | 'Medium' | 'High'
+}
+
+interface EnhancedAnalysisResult {
+  success: boolean
+  tradeAssessment: {
+    verdict: string
+    team_gives: number
+    team_receives: number
+    net_gain: number
+    confidence: number
+    value_ratio: number
+  }
+  positionalGrades: {
+    current: Record<string, unknown>
+    afterTrade: Record<string, unknown>
+    improvements: Array<{
+      position: string
+      from: string
+      to: string
+      ovr_change: number
+    }>
+    downgrades: Array<{
+      position: string
+      from: string
+      to: string
+      ovr_change: number
+    }>
+  }
+  slidingScaleAdjustments: {
+    total_adjustments: number
+    total_value_increase: number
+    adjustments_applied: Array<{
+      position: string
+      player_name: string
+      grade_improvement: string
+      adjustment_percentage: number
+      base_value: number
+      adjusted_value: number
+      value_increase: number
+    }>
+  }
+  aiAnalysis: {
+    summary: string
+    rosterComposition: {
+      before: number
+      after: number
+      positions_affected: string[]
+      depth_changes: Record<string, unknown>
+    }
+    riskAnalysis: {
+      risk_level: 'Low' | 'Medium' | 'High'
+      risks: string[]
+      value_ratio: number
+      recommendations: string[]
+    }
+    counterSuggestions: Array<{
+      type: string
+      message: string
+      priority: 'low' | 'medium' | 'high'
+    }>
+    playerRecommendations: Array<{
+      position: string
+      current_grade: string
+      target_grade: string
+      message: string
+      priority: 'low' | 'medium' | 'high'
+    }>
+  }
+  itemizationBreakdown: {
+    players_out: Array<{
+      name: string
+      position: string
+      ovr: number
+      base_value: number
+      enhanced_value: number
+      adjustment: number
+      adjustment_reason: string
+      calculation_method: string
+    }>
+    players_in: Array<{
+      name: string
+      position: string
+      ovr: number
+      base_value: number
+      enhanced_value: number
+      adjustment: number
+      adjustment_reason: string
+      calculation_method: string
+    }>
+    summary: {
+      total_base_value_out: number
+      total_enhanced_value_out: number
+      total_base_value_in: number
+      total_enhanced_value_in: number
+      net_value_change: number
+    }
+  }
+  rosterConstruction: Record<string, unknown>
+  calculationTimestamp: string
 }
 
 // Always use default avatar to prevent headshot errors
@@ -145,8 +246,10 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   
   // Trade state
   const [result, setResult] = useState<TradeResult | null>(null)
+  const [enhancedResult, setEnhancedResult] = useState<EnhancedAnalysisResult | null>(null)
   const [givePlayers, setGivePlayers] = useState<Player[]>([])
   const [receivePlayers, setReceivePlayers] = useState<Player[]>([])
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
   
   // Team selection
   const [selectedTeamB, setSelectedTeamB] = useState<string>('')
@@ -451,8 +554,58 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     
     setError(null)
     setResult(null)
+    setEnhancedResult(null)
+    setIsAnalyzing(true)
 
     try {
+      // First, try the enhanced analysis API
+      const enhancedTradeData = {
+        user_team_id: userTeamId,
+        players_out: givePlayers.map(p => ({
+          id: p.id,
+          name: p.name,
+          position: p.position,
+          ovr: getPlayerOverall(p),
+          age: p.age || 25,
+          dev_trait: p.devTrait || 'Normal',
+          cap_hit: 0, // Default values for missing fields
+          contract_years_left: 3
+        })),
+        players_in: receivePlayers.map(p => ({
+          id: p.id,
+          name: p.name,
+          position: p.position,
+          ovr: getPlayerOverall(p),
+          age: p.age || 25,
+          dev_trait: p.devTrait || 'Normal',
+          cap_hit: 0, // Default values for missing fields
+          contract_years_left: 3
+        })),
+        draft_picks_out: [],
+        draft_picks_in: []
+      }
+
+      try {
+        const enhancedRes = await fetch(`${API_BASE}/leagues/${league_id}/trade-analyzer/analyze`, {
+          credentials: 'include',
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(enhancedTradeData)
+        })
+
+        if (enhancedRes.ok) {
+          const enhancedData = await enhancedRes.json() as EnhancedAnalysisResult
+          if (enhancedData.success) {
+            setEnhancedResult(enhancedData)
+            setIsAnalyzing(false)
+            return
+          }
+        }
+      } catch {
+        console.log('Enhanced analysis not available, falling back to basic analysis')
+      }
+
+      // Fallback to basic analysis
       const tradeData = {
         teamId: userTeamId,
         trade: {
@@ -478,15 +631,17 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
       setResult(data)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setIsAnalyzing(false)
     }
   }
 
   // Check if trade offer can be sent
-  const canSendOffer = result && 
+  const canSendOffer = (result || enhancedResult) && 
     givePlayers.length > 0 && 
     receivePlayers.length > 0 && 
     userTeamId && 
-    result.tradeAssessment.verdict !== 'Invalid'
+    (result?.tradeAssessment.verdict !== 'Invalid' || enhancedResult?.tradeAssessment.verdict !== 'Invalid')
 
   // Handle sending trade offer
   const handleSendOffer = async () => {
@@ -531,13 +686,13 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
         })),
         message: tradeMessage,
         trade_analysis: {
-          fairnessScore: Math.round((result.tradeAssessment.teamReceives / Math.max(result.tradeAssessment.teamGives, 1)) * 100),
-          recommendation: result.tradeAssessment.verdict,
-          netValue: result.tradeAssessment.netGain,
-          teamGives: result.tradeAssessment.teamGives,
-          teamReceives: result.tradeAssessment.teamReceives,
-          canAutoApprove: result.canAutoApprove,
-          riskLevel: result.riskLevel || 'Medium'
+          fairnessScore: Math.round(((result?.tradeAssessment.teamReceives || enhancedResult?.tradeAssessment.team_receives || 0) / Math.max(result?.tradeAssessment.teamGives || enhancedResult?.tradeAssessment.team_gives || 1, 1)) * 100),
+          recommendation: result?.tradeAssessment.verdict || enhancedResult?.tradeAssessment.verdict || 'Unknown',
+          netValue: result?.tradeAssessment.netGain || enhancedResult?.tradeAssessment.net_gain || 0,
+          teamGives: result?.tradeAssessment.teamGives || enhancedResult?.tradeAssessment.team_gives || 0,
+          teamReceives: result?.tradeAssessment.teamReceives || enhancedResult?.tradeAssessment.team_receives || 0,
+          canAutoApprove: result?.canAutoApprove || false,
+          riskLevel: result?.riskLevel || enhancedResult?.aiAnalysis?.riskAnalysis?.risk_level || 'Medium'
         },
         expires_in_hours: expirationHours
       }
@@ -568,6 +723,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
       setGivePlayers([])
       setReceivePlayers([])
       setResult(null)
+      setEnhancedResult(null)
       setTradeMessage('')
       
       // Redirect to trades page
@@ -585,6 +741,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     setGivePlayers([])
     setReceivePlayers([])
     setResult(null)
+    setEnhancedResult(null)
     setSelectedTeamB('')
     setTradeMessage('')
   }
@@ -1015,10 +1172,17 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
         <div className="mt-6 text-center">
           <button 
             onClick={handleAnalyzeTrade}
-            disabled={givePlayers.length === 0 && receivePlayers.length === 0}
+            disabled={givePlayers.length === 0 && receivePlayers.length === 0 || isAnalyzing}
             className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed mr-4"
           >
-            Analyze Trade
+            {isAnalyzing ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
+                Analyzing...
+              </>
+            ) : (
+              'Analyze Trade'
+            )}
           </button>
           
           {canSendOffer && (
@@ -1114,6 +1278,13 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
         {error && (
           <div className="mt-6 p-4 bg-red-900 border border-red-700 rounded-lg">
             <p className="text-red-200">{error}</p>
+          </div>
+        )}
+
+        {/* Enhanced Analysis Results */}
+        {enhancedResult && (
+          <div className="mt-8">
+            <AnalysisResultsSection analysisResult={enhancedResult} />
           </div>
         )}
 
