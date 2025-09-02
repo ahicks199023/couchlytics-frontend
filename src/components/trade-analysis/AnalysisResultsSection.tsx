@@ -5,6 +5,7 @@ import PositionalGradesDisplay from './PositionalGradesDisplay'
 import SlidingScaleAdjustments from './SlidingScaleAdjustments'
 import EnhancedAIAnalysis from './EnhancedAIAnalysis'
 import ItemizationBreakdown from './ItemizationBreakdown'
+import PerformanceMetrics from './PerformanceMetrics'
 
 interface TradeAssessment {
   verdict: string
@@ -17,6 +18,11 @@ interface TradeAssessment {
 
 interface AnalysisResult {
   tradeAssessment: TradeAssessment
+  performanceMetrics?: {
+    analysisTime: number
+    optimizationsUsed: string[]
+    cacheHit: boolean
+  }
   positionalGrades: {
     current: Record<string, unknown>
     afterTrade: Record<string, unknown>
@@ -116,18 +122,23 @@ const AnalysisResultsSection: React.FC<AnalysisResultsSectionProps> = ({ analysi
     positionalGrades, 
     slidingScaleAdjustments, 
     aiAnalysis, 
-    itemizationBreakdown 
+    itemizationBreakdown,
+    performanceMetrics
   } = analysisResult
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'grades', label: 'Positional Grades', icon: '📈' },
-    { id: 'breakdown', label: 'Itemization', icon: '📋' },
-    { id: 'ai', label: 'AI Analysis', icon: '🧠' }
+    { id: 'adjustments', label: 'Value Adjustments', icon: '⚖️' },
+    { id: 'ai', label: 'AI Analysis', icon: '🧠' },
+    { id: 'breakdown', label: 'Itemization', icon: '📋' }
   ]
 
   return (
     <div className="analysis-results space-y-8">
+      {/* Performance Metrics */}
+      <PerformanceMetrics metrics={performanceMetrics} />
+      
       {/* Trade Assessment Header */}
       <div className="trade-assessment-header bg-gray-800/50 p-6 rounded-lg">
         <div className="grid grid-cols-4 gap-6 text-center">
@@ -247,11 +258,12 @@ const AnalysisResultsSection: React.FC<AnalysisResultsSectionProps> = ({ analysi
           <PositionalGradesDisplay positionalGrades={positionalGrades} />
         )}
 
+        {activeTab === 'adjustments' && (
+          <SlidingScaleAdjustments slidingScaleAdjustments={slidingScaleAdjustments} />
+        )}
+
         {activeTab === 'breakdown' && (
-          <div className="space-y-6">
-            <SlidingScaleAdjustments slidingScaleAdjustments={slidingScaleAdjustments} />
-            <ItemizationBreakdown itemizationBreakdown={itemizationBreakdown} />
-          </div>
+          <ItemizationBreakdown itemizationBreakdown={itemizationBreakdown} />
         )}
 
         {activeTab === 'ai' && (
