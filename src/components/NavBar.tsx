@@ -19,6 +19,7 @@ export default function NavBar() {
   const [loginFormData, setLoginFormData] = useState({ email: '', password: '' })
   const [isLoginLoading, setIsLoginLoading] = useState<'native' | 'google' | 'discord' | null>(null)
   const [loginError, setLoginError] = useState<string | null>(null)
+  const [notificationCount, setNotificationCount] = useState(0)
   const loginDropdownRef = useRef<HTMLDivElement>(null)
 
   const { user, authenticated, loading, logout, firebaseUser, checkAuthStatus, isAdmin } = useAuth()
@@ -26,6 +27,31 @@ export default function NavBar() {
   
   const currentUser = getFirebaseUserEmail(firebaseUser) || user?.email || ''
   const { totalUnreadCount } = useInbox(currentUser)
+
+  // Fetch notification count
+  const fetchNotificationCount = async () => {
+    try {
+      const response = await fetch('/api/notifications/unread-count', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }
+      })
+      const data = await response.json()
+      if (data.success) {
+        setNotificationCount(data.unread_count)
+      }
+    } catch (error) {
+      console.error('Error fetching notification count:', error)
+    }
+  }
+
+  // Fetch notification count on component mount and when user changes
+  useEffect(() => {
+    if (authenticated && currentUser) {
+      fetchNotificationCount()
+      // Poll for new notifications every 30 seconds
+      const interval = setInterval(fetchNotificationCount, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [authenticated, currentUser])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -192,16 +218,23 @@ export default function NavBar() {
         ) : authenticated && user ? (
           <div className="flex items-center space-x-4">
             <div className="hidden md:flex items-center space-x-2">
-              <Image
-                src={getUserAvatar(user)}
-                alt="User avatar"
-                width={32}
-                height={32}
-                className="w-8 h-8 rounded-full"
-                onError={(e) => {
-                  e.currentTarget.src = '/default-avatar.png'
-                }}
-              />
+              <div className="relative">
+                <Image
+                  src={getUserAvatar(user)}
+                  alt="User avatar"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 rounded-full"
+                  onError={(e) => {
+                    e.currentTarget.src = '/default-avatar.png'
+                  }}
+                />
+                {notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                    {notificationCount > 9 ? '9+' : notificationCount}
+                  </span>
+                )}
+              </div>
               <span className="text-sm">{getUserDisplayName(user)}</span>
               {user.authProvider && (
                 <span className="text-xs bg-gray-700 px-2 py-1 rounded">
@@ -239,6 +272,18 @@ export default function NavBar() {
                     {totalUnreadCount > 0 && (
                       <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
                         {totalUnreadCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    href="/notifications"
+                    className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    🔔 Notifications
+                    {notificationCount > 0 && (
+                      <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                        {notificationCount}
                       </span>
                     )}
                   </Link>
