@@ -8,13 +8,35 @@ This guide provides the backend implementation requirements for the Couchlytics 
 
 Based on the frontend console errors, the following endpoints are missing or not working:
 
-1. **404 Not Found**: `/api/notifications/unread-count`
+1. **404 Not Found**: `/notifications/unread-count` (Note: NOT `/api/notifications/unread-count`)
 2. **500 Internal Server Error**: Server-side errors on notification endpoints
 3. **Invalid JSON Response**: Server returning HTML instead of JSON
+
+## ✅ **Frontend Status Update**
+
+**GOOD NEWS**: The frontend notification system has been fully implemented and is now working gracefully! The console errors have been resolved by:
+- Removing duplicate notification systems
+- Implementing proper error handling
+- Using correct API endpoints
+- Adding graceful fallbacks for missing backend endpoints
+
+The frontend will work perfectly even without backend implementation, but implementing these endpoints will provide full functionality.
 
 ## 🛠️ **Required Backend Endpoints**
 
 ### **Base URL**: `https://api.couchlytics.com` (or your configured API base URL)
+
+### **🔑 CRITICAL: Authentication Method**
+All endpoints must use **session-based authentication** with `credentials: 'include'`. The frontend sends cookies automatically - do NOT use Bearer tokens or API keys.
+
+### **📡 CRITICAL: Exact Endpoint URLs**
+The frontend makes requests to these EXACT endpoints (no `/api` prefix):
+- `GET /notifications/unread-count`
+- `GET /notifications`
+- `PUT /notifications/{id}/read`
+- `PUT /notifications/read-all`
+- `DELETE /notifications/{id}`
+- `PUT /user/profile/notifications`
 
 ### **1. Get Unread Notification Count**
 ```
@@ -141,6 +163,37 @@ PUT /user/profile/notifications
   }
 }
 ```
+
+## 📋 **Frontend Data Type Requirements**
+
+The frontend expects these exact field names and types:
+
+### **Notification Object:**
+```typescript
+{
+  id: number;                    // Required: Unique notification ID
+  user_id: number;              // Required: User who receives the notification
+  type: string;                 // Required: One of the supported types below
+  title: string;                // Required: Short notification title
+  message: string;              // Required: Full notification message
+  data: Record<string, unknown>; // Required: Additional data (can be empty {})
+  link?: string;                // Optional: URL to navigate to when clicked
+  is_read: boolean;             // Required: Read status
+  created_at: string;           // Required: ISO 8601 timestamp
+  read_at?: string;             // Optional: ISO 8601 timestamp when read
+  league_id?: string;           // Optional: Associated league ID
+}
+```
+
+### **Supported Notification Types:**
+- `user_joined_league` - New user joined via invitation
+- `invitation_created` - New league invitation created  
+- `trade_offer_created` - New trade offer received
+- `trade_offer_accepted` - Trade offer was accepted
+- `trade_offer_rejected` - Trade offer was rejected
+- `trade_offer_countered` - Counter offer received
+- `committee_decision` - Trade committee made decision
+- `league_announcement` - New league announcement
 
 ## 🗄️ **Database Schema Requirements**
 
@@ -448,5 +501,26 @@ curl -X PUT "https://api.couchlytics.com/notifications/1/read" \
 - **Error Handling**: Return appropriate HTTP status codes (404, 500, etc.)
 - **Performance**: The unread count endpoint will be called frequently, optimize it
 - **CORS**: Ensure CORS is properly configured for your frontend domain
+
+## 🧪 **Testing & Validation**
+
+### **Test the Implementation:**
+1. **Unread Count Test**: Visit any page - the notification bell should show a count (or 0 if no notifications)
+2. **Notification Panel Test**: Click the notification bell - should open the panel (empty if no notifications)
+3. **Console Check**: No more 404 errors in browser console
+4. **Network Tab**: Should see successful API calls to `/notifications/unread-count`
+
+### **Validation Checklist:**
+- [ ] All endpoints return proper JSON (never HTML error pages)
+- [ ] Authentication works with session cookies
+- [ ] Unread count endpoint is fast (< 200ms response time)
+- [ ] All timestamps are in ISO 8601 format
+- [ ] Error responses include proper HTTP status codes
+- [ ] CORS is configured for your frontend domain
+
+### **Performance Notes:**
+- The unread count endpoint will be called every 30 seconds
+- Consider caching unread counts for better performance
+- The notifications list endpoint supports pagination for large datasets
 
 Once these endpoints are implemented, the frontend notification system will work seamlessly with your backend! 🚀
