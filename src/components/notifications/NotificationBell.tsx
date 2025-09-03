@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Bell, BellRing } from 'lucide-react';
 import { notificationService } from '../../services/notificationService';
 
@@ -12,26 +12,32 @@ interface NotificationBellProps {
 export const NotificationBell: React.FC<NotificationBellProps> = ({ onClick, className }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const response = await notificationService.getUnreadCount();
+      setUnreadCount(response.unread_count);
+      setHasError(false);
+    } catch {
+      // Only log error once to avoid console spam
+      if (!hasError) {
+        console.warn('Notification service temporarily unavailable');
+        setHasError(true);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasError]);
 
   useEffect(() => {
     fetchUnreadCount();
     
-    // Poll for updates every 30 seconds
-    const interval = setInterval(fetchUnreadCount, 30000);
+    // Poll for updates every 30 seconds, or every 5 minutes if there's an error
+    const interval = setInterval(fetchUnreadCount, hasError ? 300000 : 30000);
     
     return () => clearInterval(interval);
-  }, []);
-
-  const fetchUnreadCount = async () => {
-    try {
-      const response = await notificationService.getUnreadCount();
-      setUnreadCount(response.unread_count);
-    } catch (error) {
-      console.error('Failed to fetch unread count:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [hasError, fetchUnreadCount]);
 
   if (isLoading) {
     return (
