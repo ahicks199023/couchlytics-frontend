@@ -21,7 +21,6 @@ export default function NavBar() {
   const [loginFormData, setLoginFormData] = useState({ email: '', password: '' })
   const [isLoginLoading, setIsLoginLoading] = useState<'native' | 'google' | 'discord' | null>(null)
   const [loginError, setLoginError] = useState<string | null>(null)
-  const [notificationCount, setNotificationCount] = useState(0)
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false)
   const loginDropdownRef = useRef<HTMLDivElement>(null)
 
@@ -31,30 +30,7 @@ export default function NavBar() {
   const currentUser = getFirebaseUserEmail(firebaseUser) || user?.email || ''
   const { totalUnreadCount } = useInbox(currentUser)
 
-  // Fetch notification count
-  const fetchNotificationCount = async () => {
-    try {
-      const response = await fetch('/api/notifications/unread-count', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` }
-      })
-      const data = await response.json()
-      if (data.success) {
-        setNotificationCount(data.unread_count)
-      }
-    } catch (error) {
-      console.error('Error fetching notification count:', error)
-    }
-  }
 
-  // Fetch notification count on component mount and when user changes
-  useEffect(() => {
-    if (authenticated && currentUser) {
-      fetchNotificationCount()
-      // Poll for new notifications every 30 seconds
-      const interval = setInterval(fetchNotificationCount, 30000)
-      return () => clearInterval(interval)
-    }
-  }, [authenticated, currentUser])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -236,11 +212,6 @@ export default function NavBar() {
                     e.currentTarget.src = '/default-avatar.png'
                   }}
                 />
-                {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                    {notificationCount > 9 ? '9+' : notificationCount}
-                  </span>
-                )}
               </div>
               <span className="text-sm">{getUserDisplayName(user)}</span>
               {user.authProvider && (
