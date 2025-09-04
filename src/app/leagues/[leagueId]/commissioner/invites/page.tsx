@@ -120,7 +120,7 @@ export default function InvitesPage() {
   };
 
   const copyInviteLink = (inviteCode: string) => {
-    const inviteUrl = `https://www.couchlytics.com/join/${inviteCode}`;
+    const inviteUrl = `https://couchlytics.com/join/${inviteCode}`;
     navigator.clipboard.writeText(inviteUrl);
     alert('Invite link copied to clipboard!');
   };

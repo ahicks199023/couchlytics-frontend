@@ -259,7 +259,7 @@ export default function Login() {
         } else if (error.response?.data?.error) {
           errorMessage = error.response.data.error;
         } else if (error.message?.includes('CORS')) {
-          errorMessage = 'Connection blocked. Please try accessing the site via www.couchlytics.com';
+          errorMessage = 'Connection blocked. Please try accessing the site via couchlytics.com';
         }
         
         console.log('🔍 Detailed error analysis:', {
