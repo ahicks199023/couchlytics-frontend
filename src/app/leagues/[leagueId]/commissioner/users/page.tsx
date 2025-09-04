@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { API_BASE } from '@/lib/config';
+import InvitationManagement from '@/components/invitations/InvitationManagement';
 
 interface User {
   id: number;
@@ -42,6 +43,28 @@ export default function CommissionerUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingUser, setUpdatingUser] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'users' | 'invitations' | 'companion'>('users');
+  const [companionAppUrl, setCompanionAppUrl] = useState<string>('');
+  const [copyMessage, setCopyMessage] = useState<string>('');
+
+  // Generate companion app URL
+  useEffect(() => {
+    if (leagueId) {
+      setCompanionAppUrl(`https://api.couchlytics.com/api/companion-hook?leagueId=${leagueId}`);
+    }
+  }, [leagueId]);
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyMessage('URL copied to clipboard!');
+      setTimeout(() => setCopyMessage(''), 3000);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+      setCopyMessage('Failed to copy URL');
+      setTimeout(() => setCopyMessage(''), 3000);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -197,11 +220,50 @@ export default function CommissionerUsersPage() {
           ← Back to Commissioner Hub
         </Link>
         <h1 className="text-2xl font-bold text-white">User Management</h1>
-        <p className="text-gray-400 mt-2">Manage league members, permissions, and user roles</p>
+        <p className="text-gray-400 mt-2">Manage league members, invitations, and companion app integration</p>
       </div>
 
-      {/* Users Table */}
-      <div className="bg-gray-800 shadow rounded-lg border border-gray-700">
+      {/* Tab Navigation */}
+      <div className="mb-6">
+        <div className="border-b border-gray-700">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'users'
+                  ? 'border-blue-500 text-blue-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              👥 League Members
+            </button>
+            <button
+              onClick={() => setActiveTab('invitations')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'invitations'
+                  ? 'border-blue-500 text-blue-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              📧 Invitations
+            </button>
+            <button
+              onClick={() => setActiveTab('companion')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'companion'
+                  ? 'border-blue-500 text-blue-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              📱 Companion App
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'users' && (
+        <div className="bg-gray-800 shadow rounded-lg border border-gray-700">
         <div className="px-4 py-5 sm:p-6">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-700">
@@ -301,7 +363,93 @@ export default function CommissionerUsersPage() {
             </div>
           )}
         </div>
-      </div>
+        </div>
+      )}
+
+      {/* Invitations Tab */}
+      {activeTab === 'invitations' && (
+        <div className="bg-gray-800 shadow rounded-lg border border-gray-700">
+          <div className="px-4 py-5 sm:p-6">
+            <InvitationManagement leagueId={leagueId as string} />
+          </div>
+        </div>
+      )}
+
+      {/* Companion App Tab */}
+      {activeTab === 'companion' && (
+        <div className="bg-gray-800 shadow rounded-lg border border-gray-700">
+          <div className="px-4 py-5 sm:p-6">
+            <h2 className="text-2xl font-bold mb-4">📱 Companion App Integration</h2>
+            
+            {copyMessage && (
+              <div className="bg-green-600 text-white px-4 py-2 rounded mb-4">
+                {copyMessage}
+              </div>
+            )}
+            
+            <div className="space-y-6">
+              <div className="companion-app-section">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Companion App Export URL:
+                </label>
+                <div className="url-input-container flex gap-3 items-center">
+                  <input 
+                    type="text" 
+                    value={companionAppUrl || 'Loading...'} 
+                    readOnly 
+                    className="url-input flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white font-mono text-sm focus:outline-none focus:border-blue-500"
+                    placeholder="https://api.couchlytics.com/api/companion-hook?leagueId=your-league-name"
+                  />
+                  <button 
+                    onClick={() => copyToClipboard(companionAppUrl)}
+                    className="copy-button bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!companionAppUrl}
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+              
+              <div className="setup-instructions bg-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-semibold mb-3">
+                  🎯 Setup Instructions
+                </h4>
+                <ol className="list-decimal ml-6 space-y-2 text-gray-300">
+                  <li>Open the Madden Companion App on your device</li>
+                  <li>Select your Franchise and navigate to League Settings</li>
+                  <li>Find the &quot;Export League Data&quot; option</li>
+                  <li>Paste the URL above into the export field</li>
+                  <li>Tap &quot;Export&quot; - your league data will sync automatically!</li>
+                </ol>
+              </div>
+
+              <div className="features-section bg-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-semibold mb-3">
+                  ✨ What Gets Synced
+                </h4>
+                <ul className="list-disc ml-6 space-y-1 text-gray-300">
+                  <li>Team rosters and player information</li>
+                  <li>League standings and statistics</li>
+                  <li>Trade history and transactions</li>
+                  <li>Draft picks and future assets</li>
+                  <li>League settings and rules</li>
+                </ul>
+              </div>
+
+              <div className="troubleshooting-section bg-gray-700 rounded-lg p-4">
+                <h4 className="text-lg font-semibold mb-3">
+                  🔧 Troubleshooting
+                </h4>
+                <div className="space-y-2 text-gray-300">
+                  <p><strong>Export not working?</strong> Make sure you&apos;re using the latest version of the Madden Companion App.</p>
+                  <p><strong>Data not syncing?</strong> Check that your league ID is correct in the URL above.</p>
+                  <p><strong>Need help?</strong> Contact support if you continue to experience issues.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="mt-6 text-xs text-gray-500 text-center">
