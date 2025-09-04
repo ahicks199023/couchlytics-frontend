@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import CreateInvitationModal from './CreateInvitationModal'
 import InvitationsList from './InvitationsList'
 import MembersList from './MembersList'
+import { API_BASE_URL } from '../../lib/http'
 
 interface Invitation {
   id: string
@@ -45,38 +46,38 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ leagueId })
 
 
   // Fetch invitations and members
+  const fetchInvitations = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/leagues/${leagueId}/invitations`, {
+        credentials: 'include'
+      })
+      const data = await response.json()
+      if (data.success) {
+        setInvitations(data.invitations)
+      }
+    } catch (error) {
+      console.error('Error fetching invitations:', error)
+    }
+  }, [leagueId])
+
+  const fetchMembers = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/leagues/${leagueId}/members`, {
+        credentials: 'include'
+      })
+      const data = await response.json()
+      if (data.success) {
+        setMembers(data.members)
+      }
+    } catch (error) {
+      console.error('Error fetching members:', error)
+    }
+  }, [leagueId])
+
   useEffect(() => {
-    const fetchInvitations = async () => {
-      try {
-        const response = await fetch(`/api/leagues/${leagueId}/invitations`, {
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        })
-        const data = await response.json()
-        if (data.success) {
-          setInvitations(data.invitations)
-        }
-      } catch (error) {
-        console.error('Error fetching invitations:', error)
-      }
-    }
-
-    const fetchMembers = async () => {
-      try {
-        const response = await fetch(`/api/leagues/${leagueId}/members`, {
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        })
-        const data = await response.json()
-        if (data.success) {
-          setMembers(data.members)
-        }
-      } catch (error) {
-        console.error('Error fetching members:', error)
-      }
-    }
-
     fetchInvitations()
     fetchMembers()
-  }, [leagueId])
+  }, [fetchInvitations, fetchMembers])
 
 
 
@@ -95,13 +96,13 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ leagueId })
       {/* Active Invitations */}
       <InvitationsList 
         invitations={invitations}
-        onRefresh={() => window.location.reload()}
+        onRefresh={fetchInvitations}
       />
 
       {/* League Members */}
       <MembersList 
         members={members}
-        onRefresh={() => window.location.reload()}
+        onRefresh={fetchMembers}
       />
 
       {/* Create Invitation Modal */}
@@ -111,7 +112,7 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ leagueId })
           onClose={() => setShowCreateInvite(false)}
           onSuccess={() => {
             setShowCreateInvite(false)
-            window.location.reload()
+            fetchInvitations()
           }}
         />
       )}
@@ -119,9 +120,5 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ leagueId })
   )
 }
 
-// Helper function to get auth token
-const getAuthToken = () => {
-  return localStorage.getItem('authToken') || ''
-}
 
 export default InvitationManagement

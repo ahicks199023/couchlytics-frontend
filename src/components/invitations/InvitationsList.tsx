@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { API_BASE_URL } from '../../lib/http'
 
 interface Invitation {
   id: string
@@ -35,9 +36,9 @@ const InvitationsList: React.FC<InvitationsListProps> = ({ invitations, onRefres
     if (!confirm('Are you sure you want to delete this invitation?')) return
 
     try {
-      const response = await fetch(`/api/leagues/${invitations[0]?.league_id}/invitations/${invitationId}`, {
+      const response = await fetch(`${API_BASE_URL}/leagues/${invitations[0]?.league_id}/invitations/${invitationId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        credentials: 'include'
       })
 
       if (response.ok) {
@@ -51,12 +52,12 @@ const InvitationsList: React.FC<InvitationsListProps> = ({ invitations, onRefres
 
   const toggleInvitationStatus = async (invitationId: string, isActive: boolean) => {
     try {
-      const response = await fetch(`/api/leagues/${invitations[0]?.league_id}/invitations/${invitationId}`, {
+      const response = await fetch(`${API_BASE_URL}/leagues/${invitations[0]?.league_id}/invitations/${invitationId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAuthToken()}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({ is_active: !isActive })
       })
 
@@ -161,10 +162,6 @@ const InvitationsList: React.FC<InvitationsListProps> = ({ invitations, onRefres
   )
 }
 
-// Helper function to get auth token
-const getAuthToken = () => {
-  return localStorage.getItem('authToken') || ''
-}
 
 // Helper function to show toast notifications
 const showToast = (message: string, type: 'success' | 'error' = 'success') => {

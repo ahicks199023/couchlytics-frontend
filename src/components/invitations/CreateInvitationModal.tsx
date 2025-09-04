@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { API_BASE_URL } from '../../lib/http'
 
 interface CreateInvitationModalProps {
   leagueId: string
@@ -37,12 +38,12 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
     setError('')
 
     try {
-      const response = await fetch(`/api/leagues/${leagueId}/invitations`, {
+      const response = await fetch(`${API_BASE_URL}/leagues/${leagueId}/invitations`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAuthToken()}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify(formData)
       })
 
@@ -166,10 +167,5 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
   )
 }
 
-// Helper function to get auth token
-const getAuthToken = () => {
-  // This should match your existing auth token retrieval logic
-  return localStorage.getItem('authToken') || ''
-}
 
 export default CreateInvitationModal

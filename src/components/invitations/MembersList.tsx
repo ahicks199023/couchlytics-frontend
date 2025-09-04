@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { API_BASE_URL } from '../../lib/http'
 
 interface Member {
   id: string
@@ -25,12 +26,12 @@ interface MembersListProps {
 const MembersList: React.FC<MembersListProps> = ({ members, onRefresh }) => {
   const updateMemberRole = async (userId: string, newRole: string) => {
     try {
-      const response = await fetch(`/api/leagues/${members[0]?.league_id}/members/${userId}/role`, {
+      const response = await fetch(`${API_BASE_URL}/leagues/${members[0]?.league_id}/members/${userId}/role`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAuthToken()}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({ role: newRole })
       })
 
@@ -47,9 +48,9 @@ const MembersList: React.FC<MembersListProps> = ({ members, onRefresh }) => {
     if (!confirm(`Are you sure you want to remove ${userName} from the league?`)) return
 
     try {
-      const response = await fetch(`/api/leagues/${members[0]?.league_id}/members/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/leagues/${members[0]?.league_id}/members/${userId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        credentials: 'include'
       })
 
       if (response.ok) {
@@ -116,10 +117,6 @@ const MembersList: React.FC<MembersListProps> = ({ members, onRefresh }) => {
   )
 }
 
-// Helper function to get auth token
-const getAuthToken = () => {
-  return localStorage.getItem('authToken') || ''
-}
 
 // Helper function to show toast notifications
 const showToast = (message: string, type: 'success' | 'error' = 'success') => {

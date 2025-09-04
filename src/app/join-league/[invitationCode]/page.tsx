@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { API_BASE_URL } from '../../../lib/http'
 
 interface InvitationData {
   invitation: {
@@ -38,47 +39,53 @@ const JoinLeaguePage: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [joining, setJoining] = useState(false)
 
-  useEffect(() => {
-    const validateInvitation = async () => {
-      try {
-        const response = await fetch(`/api/invitations/${invitationCode}/validate`)
-        const data = await response.json()
-        
-        if (data.success) {
-          setInvitationData(data)
-        } else {
-          setError(data.error || 'Invalid invitation')
-        }
-      } catch {
-        setError('Failed to validate invitation')
-      } finally {
-        setLoading(false)
+  const validateInvitation = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/invitations/${invitationCode}/validate`, {
+        credentials: 'include'
+      })
+      const data = await response.json()
+      
+      if (data.success) {
+        setInvitationData(data)
+      } else {
+        setError(data.error || 'Invalid invitation')
       }
+    } catch {
+      setError('Failed to validate invitation')
+    } finally {
+      setLoading(false)
     }
+  }, [invitationCode])
 
+  useEffect(() => {
     if (invitationCode) {
       validateInvitation()
       checkLoginStatus()
     }
-  }, [invitationCode])
+  }, [invitationCode, validateInvitation])
 
 
 
   const checkLoginStatus = async () => {
-    // Check if user is logged in
-    const token = getAuthToken()
-    setIsLoggedIn(!!token)
+    // Check if user is logged in by making a request to the backend
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        credentials: 'include'
+      })
+      setIsLoggedIn(response.ok)
+    } catch {
+      setIsLoggedIn(false)
+    }
   }
 
   const handleJoinLeague = async () => {
     setJoining(true)
     
     try {
-      const response = await fetch(`/api/invitations/${invitationCode}/join`, {
+      const response = await fetch(`${API_BASE_URL}/invitations/${invitationCode}/join`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${getAuthToken()}`
-        }
+        credentials: 'include'
       })
 
       const data = await response.json()
@@ -194,10 +201,6 @@ const JoinLeaguePage: React.FC = () => {
   )
 }
 
-// Helper function to get auth token
-const getAuthToken = () => {
-  return localStorage.getItem('authToken') || ''
-}
 
 // Helper function to show toast notifications
 const showToast = (message: string, type: 'success' | 'error' = 'success') => {
