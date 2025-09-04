@@ -207,6 +207,37 @@ export default function AICommissioner() {
     return <div className="text-center text-gray-400">League ID not found</div>
   }
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading AI Commissioner data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-400 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-white mb-2">Error Loading AI Commissioner</h2>
+          <p className="text-gray-400 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gray-900 min-h-screen p-6">
       <div className="max-w-7xl mx-auto">
@@ -295,9 +326,9 @@ export default function AICommissioner() {
               {/* Summary */}
               <div className="bg-gray-800 p-6 rounded-lg">
                 <h3 className="text-xl font-semibold text-white mb-4">📋 League Summary</h3>
-                <p className="text-gray-300 mb-4">{leagueReport.summary}</p>
+                <p className="text-gray-300 mb-4">{leagueReport?.summary || 'No summary available'}</p>
                 <div className="text-sm text-gray-400">
-                  Generated: {new Date(leagueReport.generated_at).toLocaleString()}
+                  Generated: {leagueReport?.generated_at ? new Date(leagueReport.generated_at).toLocaleString() : 'N/A'}
                 </div>
               </div>
 
@@ -305,7 +336,7 @@ export default function AICommissioner() {
               <div className="lg:col-span-2 bg-gray-800 p-6 rounded-lg">
                 <h3 className="text-xl font-semibold text-white mb-4">🎯 Priority Actions</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {leagueReport.priority_actions.map((action, index) => (
+                  {(leagueReport?.priority_actions || []).map((action, index) => (
                     <div key={index} className="p-4 bg-gray-700 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-white font-medium">{action.action}</span>
@@ -338,7 +369,7 @@ export default function AICommissioner() {
                     className="w-full bg-gray-700 text-white px-3 py-2 rounded-md mb-4"
                   />
                   <div className="space-y-2">
-                    {tradeData.team1_players.map((player, index) => (
+                    {(tradeData?.team1_players || []).map((player, index) => (
                       <div key={index} className="flex items-center justify-between p-2 bg-gray-700 rounded">
                         <span className="text-white text-sm">{player.name} ({player.position})</span>
                         <button
@@ -363,7 +394,7 @@ export default function AICommissioner() {
                     className="w-full bg-gray-700 text-white px-3 py-2 rounded-md mb-4"
                   />
                   <div className="space-y-2">
-                    {tradeData.team2_players.map((player, index) => (
+                    {(tradeData?.team2_players || []).map((player, index) => (
                       <div key={index} className="flex items-center justify-between p-2 bg-gray-700 rounded">
                         <span className="text-white text-sm">{player.name} ({player.position})</span>
                         <button
@@ -424,7 +455,7 @@ export default function AICommissioner() {
                     <div className="mt-4">
                       <p className="text-gray-400 text-sm">Recommendations</p>
                       <ul className="list-disc list-inside text-white space-y-1">
-                        {tradeEvaluation.recommendations.map((rec: string, index: number) => (
+                        {(tradeEvaluation?.recommendations || []).map((rec: string, index: number) => (
                           <li key={index}>{rec}</li>
                         ))}
                       </ul>
