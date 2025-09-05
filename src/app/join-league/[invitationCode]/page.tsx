@@ -100,8 +100,7 @@ const JoinLeaguePage: React.FC = () => {
       console.log('🔗 Attempting to join league with invitation:', invitationCode)
       console.log('🍪 Current cookies:', document.cookie)
       
-      // Try the new invitation system first
-      let response = await fetch(`${API_BASE_URL}/invitations/${invitationCode}/join`, {
+      const response = await fetch(`${API_BASE_URL}/invitations/${invitationCode}/join`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -112,25 +111,11 @@ const JoinLeaguePage: React.FC = () => {
       console.log('📡 Join league response status:', response.status)
       console.log('📡 Join league response headers:', Object.fromEntries(response.headers.entries()))
 
-      // If the new system fails with 500, try the old system as fallback
-      if (response.status === 500) {
-        console.log('🔄 New invitation system failed with 500, trying old system...')
-        response = await fetch(`${API_BASE_URL}/invites/${invitationCode}/accept`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ teamId: '1' }) // Default team ID
-        })
-        console.log('📡 Fallback response status:', response.status)
-      }
-
       if (response.ok) {
         const data = await response.json()
         console.log('✅ Join league success:', data)
         showToast('Successfully joined the league!')
-        router.push(`/leagues/${data.league_id || invitationData?.league_id}`)
+        router.push(`/leagues/${data.league_id}`)
       } else {
         const errorText = await response.text()
         console.error('❌ Join league error response:', errorText)
