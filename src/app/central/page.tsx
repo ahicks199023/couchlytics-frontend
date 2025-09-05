@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { API_BASE } from '@/lib/config'
 
 interface Announcement {
   id: number
@@ -42,24 +41,12 @@ export default function CouchlyticsCentral() {
     try {
       setLoadingData(true)
 
-      // Fetch announcements and leaderboard data
-      const [announcementsRes, leaderboardRes] = await Promise.all([
-        fetch(`${API_BASE}/central/announcements`, { credentials: 'include' }),
-        fetch(`${API_BASE}/central/leaderboard`, { credentials: 'include' })
-      ])
-
-      if (announcementsRes.ok) {
-        const announcementsData = await announcementsRes.json()
-        setAnnouncements(announcementsData.announcements || [])
-      }
-
-      if (leaderboardRes.ok) {
-        const leaderboardData = await leaderboardRes.json()
-        setLeaderboard(leaderboardData.users || [])
-      }
-    } catch (err) {
-      console.error('Error fetching central data:', err)
-      console.error('Failed to load central data')
+      // Note: Central dashboard endpoints don't exist yet on backend
+      // Using mock data for now until backend implements:
+      // - GET /central/announcements
+      // - GET /central/leaderboard
+      
+      console.log('Loading Couchlytics Central with mock data...')
       
       // Set mock data for development
       setAnnouncements([
@@ -82,13 +69,45 @@ export default function CouchlyticsCentral() {
           created_at: new Date(Date.now() - 86400000).toISOString(),
           priority: 'medium',
           category: 'update'
+        },
+        {
+          id: 3,
+          title: 'League Invitation System Now Live!',
+          content: 'Commissioners can now create invitation links to easily invite new members to their leagues. Check out the new invitation management tools in your league settings.',
+          author: 'Development Team',
+          author_role: 'Developer',
+          created_at: new Date(Date.now() - 172800000).toISOString(),
+          priority: 'high',
+          category: 'feature'
         }
       ])
       
       setLeaderboard([
         { id: 1, username: 'LeagueMaster', total_leagues: 5, commissioner_leagues: 3, total_trades: 12, reputation_score: 95 },
         { id: 2, username: 'TradeKing', total_leagues: 3, commissioner_leagues: 1, total_trades: 28, reputation_score: 88 },
-        { id: 3, username: 'DraftGuru', total_leagues: 4, commissioner_leagues: 2, total_trades: 8, reputation_score: 82 }
+        { id: 3, username: 'DraftGuru', total_leagues: 4, commissioner_leagues: 2, total_trades: 8, reputation_score: 82 },
+        { id: 4, username: 'CommissionerPro', total_leagues: 6, commissioner_leagues: 4, total_trades: 15, reputation_score: 91 },
+        { id: 5, username: 'TradeAnalyst', total_leagues: 2, commissioner_leagues: 1, total_trades: 35, reputation_score: 87 }
+      ])
+    } catch (err) {
+      console.error('Error loading central data:', err)
+      
+      // Fallback mock data
+      setAnnouncements([
+        {
+          id: 1,
+          title: 'Welcome to Couchlytics Central!',
+          content: 'This is your members-only dashboard where you can stay updated on all platform announcements, updates, and connect with other league managers.',
+          author: 'Couchlytics Team',
+          author_role: 'Developer',
+          created_at: new Date().toISOString(),
+          priority: 'high',
+          category: 'announcement'
+        }
+      ])
+      
+      setLeaderboard([
+        { id: 1, username: 'LeagueMaster', total_leagues: 5, commissioner_leagues: 3, total_trades: 12, reputation_score: 95 }
       ])
     } finally {
       setLoadingData(false)
