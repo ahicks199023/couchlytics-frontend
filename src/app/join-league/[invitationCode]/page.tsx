@@ -41,17 +41,31 @@ const JoinLeaguePage: React.FC = () => {
 
   const validateInvitation = useCallback(async () => {
     try {
+      console.log('🔍 Validating invitation:', invitationCode)
       const response = await fetch(`${API_BASE_URL}/invitations/${invitationCode}/validate`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
-      const data = await response.json()
       
-      if (data.success) {
-        setInvitationData(data)
+      console.log('📡 Validate invitation response status:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('✅ Invitation validation success:', data)
+        if (data.success) {
+          setInvitationData(data)
+        } else {
+          setError(data.error || 'Invalid invitation')
+        }
       } else {
-        setError(data.error || 'Invalid invitation')
+        const errorText = await response.text()
+        console.error('❌ Invitation validation error:', errorText)
+        setError(`Failed to validate invitation (${response.status})`)
       }
-    } catch {
+    } catch (error) {
+      console.error('❌ Invitation validation error:', error)
       setError('Failed to validate invitation')
     } finally {
       setLoading(false)
@@ -83,21 +97,39 @@ const JoinLeaguePage: React.FC = () => {
     setJoining(true)
     
     try {
+      console.log('🔗 Attempting to join league with invitation:', invitationCode)
+      console.log('🍪 Current cookies:', document.cookie)
+      
       const response = await fetch(`${API_BASE_URL}/invitations/${invitationCode}/join`, {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
 
-      const data = await response.json()
-      
-      if (data.success) {
+      console.log('📡 Join league response status:', response.status)
+      console.log('📡 Join league response headers:', Object.fromEntries(response.headers.entries()))
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('✅ Join league success:', data)
         showToast('Successfully joined the league!')
         router.push(`/leagues/${data.league_id}`)
       } else {
-        setError(data.error || 'Failed to join league')
+        const errorText = await response.text()
+        console.error('❌ Join league error response:', errorText)
+        
+        try {
+          const errorData = JSON.parse(errorText)
+          setError(errorData.error || `Failed to join league (${response.status})`)
+        } catch {
+          setError(`Failed to join league (${response.status}): ${errorText}`)
+        }
       }
-    } catch {
-      setError('Failed to join league')
+    } catch (error) {
+      console.error('❌ Join league error:', error)
+      setError('Failed to join league: ' + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setJoining(false)
     }
