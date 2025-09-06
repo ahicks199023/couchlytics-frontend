@@ -61,6 +61,7 @@ export interface SendMessageParams {
   text: string
   sender: string
   senderEmail: string
+  replyTo?: string
 }
 
 export interface UseChatReturn extends ChatState {

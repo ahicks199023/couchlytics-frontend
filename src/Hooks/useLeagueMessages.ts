@@ -104,7 +104,8 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
             moderated: data.moderated || false,
             moderatedBy: data.moderatedBy,
             moderatedAt: data.moderatedAt?.toDate(),
-            reactions: data.reactions || []
+            reactions: data.reactions || [],
+            replyTo: data.replyTo || undefined
           })
         })
 
@@ -139,7 +140,7 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
     return () => unsubscribe()
   }, [leagueId, enabled])
 
-  const sendMessage = useCallback(async ({ text, sender, senderEmail }: SendMessageParams) => {
+  const sendMessage = useCallback(async ({ text, sender, senderEmail, replyTo }: SendMessageParams) => {
     console.log('🔍 sendMessage called with:', { leagueId, text, sender, senderEmail, enabled, db: !!db })
     
     if (!leagueId || !text.trim() || !enabled || !db) {
@@ -164,7 +165,8 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
         senderEmail,
         timestamp: serverTimestamp(),
         leagueId,
-        moderated: false
+        moderated: false,
+        replyTo: replyTo || null
       })
       console.log('✅ Message sent successfully with ID:', docRef.id)
     } catch (err) {
@@ -310,7 +312,8 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
           moderated: data.moderated || false,
           moderatedBy: data.moderatedBy,
           moderatedAt: data.moderatedAt?.toDate(),
-          reactions: data.reactions || []
+          reactions: data.reactions || [],
+          replyTo: data.replyTo || undefined
         })
       })
 

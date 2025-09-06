@@ -91,8 +91,13 @@ export default function ChatMessage({
 
         {/* Reply Reference */}
         {message.replyTo && (
-          <div className="text-gray-400 text-sm mb-2 italic">
-            Replying to a message...
+          <div className="bg-gray-800 border-l-4 border-blue-500 p-2 mb-2 rounded-r-md">
+            <div className="text-blue-400 text-sm font-medium">
+              Replying to a message
+            </div>
+            <div className="text-gray-300 text-sm mt-1">
+              {message.replyTo}
+            </div>
           </div>
         )}
 

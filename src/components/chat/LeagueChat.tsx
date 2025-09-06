@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import useLeagueMessages from '@/Hooks/useLeagueMessages'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
+import EnhancedMessageInput from './EnhancedMessageInput'
 import { getFirebaseUserEmail } from '@/lib/firebase'
 
 interface LeagueChatProps {
@@ -22,8 +23,8 @@ export default function LeagueChat({
 }: LeagueChatProps) {
   const [messageText, setMessageText] = useState('')
   const [isSending, setIsSending] = useState(false)
+  const [replyTo, setReplyTo] = useState<{messageId: string, sender: string, text: string} | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const { firebaseUser, isFirebaseAuthenticated, user: couchlyticsUser } = useAuth()
 
@@ -48,6 +49,7 @@ export default function LeagueChat({
     sendMessage,
     deleteMessage,
     editMessage,
+    reactToMessage,
     loadMoreMessages
   } = useLeagueMessages(leagueId, isAuthenticated)
 
@@ -58,7 +60,7 @@ export default function LeagueChat({
 
   // Focus input on mount
   useEffect(() => {
-    inputRef.current?.focus()
+    // Focus will be handled by the EnhancedMessageInput component
   }, [])
 
   // Re-trigger chat when authentication state changes
@@ -89,7 +91,8 @@ export default function LeagueChat({
       messageText: messageText.trim(), 
       isSending, 
       currentUser,
-      currentUserName 
+      currentUserName,
+      replyTo
     })
     
     if (!messageText.trim() || isSending || !currentUser) {
@@ -107,10 +110,12 @@ export default function LeagueChat({
       await sendMessage({
         text: messageText,
         sender: currentUserName,
-        senderEmail: currentUser
+        senderEmail: currentUser,
+        replyTo: replyTo?.messageId
       })
       console.log('✅ Message sent successfully')
       setMessageText('')
+      setReplyTo(null)
     } catch (err) {
       console.error('❌ Failed to send message:', err)
     } finally {
@@ -118,10 +123,20 @@ export default function LeagueChat({
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
+  const handleReply = (messageId: string) => {
+    const message = messages.find(m => m.id === messageId)
+    if (message) {
+      setReplyTo({
+        messageId: message.id,
+        sender: message.sender,
+        text: message.text.length > 50 ? message.text.substring(0, 50) + '...' : message.text
+      })
+    }
+  }
+
+  const handleReact = async (messageId: string, emoji: string) => {
+    if (currentUser) {
+      await reactToMessage(messageId, emoji, currentUser)
     }
   }
 
@@ -233,6 +248,8 @@ export default function LeagueChat({
                     isCommissioner={isCommissioner}
                     onDelete={handleDelete}
                     onEdit={handleEdit}
+                    onReply={handleReply}
+                    onReact={handleReact}
                   />
                 ))}
               </div>
@@ -245,28 +262,15 @@ export default function LeagueChat({
 
       {/* Input Area */}
       <div className="p-4 border-t border-gray-700">
-        <div className="flex space-x-2">
-          <textarea
-            ref={inputRef}
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder={currentUser ? "Type your message..." : "Connecting to Firebase..."}
-            className="flex-1 bg-gray-800 text-white px-3 py-2 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={Math.max(1, Math.min(4, messageText.split('\n').length))}
-            disabled={isSending || !currentUser}
-          />
-          <button
-            onClick={handleSendMessage}
-            disabled={!messageText.trim() || isSending || !currentUser}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-          >
-            {isSending ? 'Sending...' : 'Send'}
-          </button>
-        </div>
-        <div className="text-xs text-gray-500 mt-1">
-          Press Enter to send, Shift+Enter for new line
-        </div>
+        <EnhancedMessageInput
+          value={messageText}
+          onChange={setMessageText}
+          onSend={handleSendMessage}
+          disabled={isSending || !currentUser}
+          placeholder={currentUser ? "Type your message..." : "Connecting to Firebase..."}
+          replyTo={replyTo || undefined}
+          onCancelReply={() => setReplyTo(null)}
+        />
       </div>
     </div>
   )
