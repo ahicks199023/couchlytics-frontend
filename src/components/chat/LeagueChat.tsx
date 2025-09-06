@@ -61,6 +61,29 @@ export default function LeagueChat({
     inputRef.current?.focus()
   }, [])
 
+  // Re-trigger chat when authentication state changes
+  useEffect(() => {
+    console.log('🔄 Authentication state changed, re-evaluating chat access:', {
+      isAuthenticated,
+      currentUser,
+      couchlyticsUser: !!couchlyticsUser,
+      firebaseUser: !!firebaseUser
+    })
+  }, [isAuthenticated, currentUser, couchlyticsUser, firebaseUser])
+
+  // Show loading state while authentication is being determined
+  if (!isAuthenticated && !currentUser) {
+    console.log('⏳ Waiting for authentication to complete...')
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Connecting to chat...</p>
+        </div>
+      </div>
+    )
+  }
+
   const handleSendMessage = async () => {
     console.log('🔍 handleSendMessage called:', { 
       messageText: messageText.trim(), 

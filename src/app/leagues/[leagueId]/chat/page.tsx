@@ -25,6 +25,32 @@ export default function LeagueChatPage() {
     couchlyticsUser: !!couchlyticsUser
   })
 
+  // Show loading state while authentication is being determined
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white p-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-white mb-2">
+              💬 League Chat
+            </h1>
+            <p className="text-gray-400">
+              Real-time messaging for league members • League: {leagueId}
+            </p>
+          </div>
+          
+          <div className="flex items-center justify-center h-[600px] bg-gray-800 border border-gray-700 rounded-lg">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-400 text-lg">Loading chat...</p>
+              <p className="text-gray-500 text-sm mt-2">Please wait while we verify your access</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
       <div className="max-w-6xl mx-auto">
