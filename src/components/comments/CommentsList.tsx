@@ -62,7 +62,7 @@ export default function CommentsList({
       setLoading(true)
       const endpoint = isGameComment 
         ? `${API_BASE}/leagues/${leagueId}/games/${announcementId}/comments?limit=${limit}&offset=${newOffset}`
-        : `${API_BASE}/leagues/${leagueId}/announcements/${announcementId}/comments?limit=${limit}&offset=${newOffset}`
+        : `${API_BASE}/backend-api/leagues/${leagueId}/announcements/${announcementId}/comments?limit=${limit}&offset=${newOffset}`
       
       const response = await fetch(endpoint, { 
         credentials: 'include',
@@ -123,7 +123,7 @@ export default function CommentsList({
       setIsSubmitting(true)
       const endpoint = isGameComment 
         ? `${API_BASE}/leagues/${leagueId}/games/${announcementId}/comments`
-        : `${API_BASE}/leagues/${leagueId}/announcements/${announcementId}/comments`
+        : `${API_BASE}/backend-api/leagues/${leagueId}/announcements/${announcementId}/comments`
       
       const response = await fetch(endpoint, {
         method: 'POST',

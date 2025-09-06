@@ -167,7 +167,7 @@ export default function LeagueDetailPage() {
     // Fetch league data and announcements in parallel
     Promise.all([
       fetchFromApi(`/leagues/${leagueId}`),
-      fetch(`${API_BASE}/leagues/${leagueId}/announcements`, {
+      fetch(`${API_BASE}/backend-api/leagues/${leagueId}/announcements`, {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       }).then(res => res.ok ? res.json() : { announcements: [] }).catch(() => ({ announcements: [] }))

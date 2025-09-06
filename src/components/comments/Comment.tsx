@@ -66,8 +66,8 @@ export default function Comment({
     try {
       setIsSubmitting(true)
       const endpoint = isGameComment 
-        ? `${API_BASE}/leagues/${leagueId}/games/${announcementId}/comments`
-        : `${API_BASE}/leagues/${leagueId}/announcements/${announcementId}/comments`
+        ? `${API_BASE}/backend-api/leagues/${leagueId}/games/${announcementId}/comments`
+        : `${API_BASE}/backend-api/leagues/${leagueId}/announcements/${announcementId}/comments`
       
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -97,7 +97,7 @@ export default function Comment({
       setIsSubmitting(true)
       const endpoint = isGameComment 
         ? `${API_BASE}/leagues/${leagueId}/games/${announcementId}/comments/${comment.id}`
-        : `${API_BASE}/leagues/${leagueId}/announcements/${announcementId}/comments/${comment.id}`
+        : `${API_BASE}/backend-api/leagues/${leagueId}/announcements/${announcementId}/comments/${comment.id}`
       
       const response = await fetch(endpoint, {
         method: 'PUT',
@@ -126,7 +126,7 @@ export default function Comment({
       setIsSubmitting(true)
       const endpoint = isGameComment 
         ? `${API_BASE}/leagues/${leagueId}/games/${announcementId}/comments/${comment.id}`
-        : `${API_BASE}/leagues/${leagueId}/announcements/${announcementId}/comments/${comment.id}`
+        : `${API_BASE}/backend-api/leagues/${leagueId}/announcements/${announcementId}/comments/${comment.id}`
       
       const response = await fetch(endpoint, {
         method: 'DELETE',
