@@ -47,13 +47,21 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
     }
 
     // Check if user is authenticated before accessing Firestore
-    if (!auth || !auth.currentUser) {
-      console.log('❌ Message loading blocked - user not authenticated:', { 
-        auth: !!auth, 
-        currentUser: !!auth?.currentUser 
+    // Note: We'll allow this to proceed even without Firebase auth since we have backend auth
+    if (!auth) {
+      console.log('❌ Message loading blocked - Firebase auth not initialized:', { 
+        auth: !!auth
       })
       setLoading(false)
       return
+    }
+    
+    // If Firebase user is not authenticated, we'll still try to proceed
+    // The Firestore rules will handle the actual permission check
+    if (!auth.currentUser) {
+      console.log('⚠️ No Firebase user - proceeding with backend auth only')
+    } else {
+      console.log('✅ Firebase user authenticated:', auth.currentUser.uid)
     }
 
     console.log('🔍 Starting to load messages for league:', leagueId)
@@ -166,7 +174,14 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
         message: (err as { message?: string })?.message,
         stack: (err as { stack?: string })?.stack
       })
-      setError('Failed to send message')
+      
+      // Check if it's a permission error
+      const errorCode = (err as { code?: string })?.code
+      if (errorCode === 'permission-denied') {
+        setError('Permission denied - you may not have access to this league chat')
+      } else {
+        setError('Failed to send message')
+      }
     }
   }, [leagueId, enabled])
 

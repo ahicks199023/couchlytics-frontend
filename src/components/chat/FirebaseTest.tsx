@@ -25,11 +25,16 @@ export default function FirebaseTest({ leagueId }: FirebaseTestProps) {
       }
       console.log('✅ Firestore database initialized')
       
-      // Test 2: Check authentication
-      if (!auth || !auth.currentUser) {
-        throw new Error('User not authenticated')
+      // Test 2: Check authentication (allow backend auth)
+      if (!auth) {
+        throw new Error('Firebase auth not initialized')
       }
-      console.log('✅ User authenticated:', auth.currentUser.uid)
+      
+      if (!auth.currentUser) {
+        console.log('⚠️ No Firebase user - testing with backend auth only')
+      } else {
+        console.log('✅ Firebase user authenticated:', auth.currentUser.uid)
+      }
       
       // Test 3: Test Firestore write permission
       console.log('🧪 Testing Firestore write permission...')
@@ -37,7 +42,7 @@ export default function FirebaseTest({ leagueId }: FirebaseTestProps) {
       const testDoc = await addDoc(testRef, {
         text: 'Firebase connection test message',
         sender: 'Test User',
-        senderEmail: auth.currentUser.email || 'test@example.com',
+        senderEmail: auth.currentUser?.email || 'test@example.com',
         timestamp: serverTimestamp(),
         leagueId,
         moderated: false,
@@ -68,8 +73,12 @@ export default function FirebaseTest({ leagueId }: FirebaseTestProps) {
     try {
       console.log('🧪 Testing Firestore security rules...')
       
-      if (!db || !auth?.currentUser) {
-        throw new Error('Firebase not properly initialized')
+      if (!db) {
+        throw new Error('Firestore database not initialized')
+      }
+      
+      if (!auth) {
+        throw new Error('Firebase auth not initialized')
       }
       
       // Try to read from the chat collection

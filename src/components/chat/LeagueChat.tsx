@@ -31,6 +31,15 @@ export default function LeagueChat({
   const currentUser = getFirebaseUserEmail(firebaseUser) || couchlyticsUser?.email || propCurrentUser || ''
   const currentUserName = firebaseUser?.displayName || getFirebaseUserEmail(firebaseUser)?.split('@')[0] || couchlyticsUser?.email?.split('@')[0] || propCurrentUserName || 'User'
 
+  // Enable chat if user is authenticated with either Firebase OR backend
+  const isAuthenticated = isFirebaseAuthenticated || !!couchlyticsUser
+  console.log('🔍 Chat authentication status:', { 
+    isFirebaseAuthenticated, 
+    couchlyticsUser: !!couchlyticsUser, 
+    isAuthenticated,
+    currentUser 
+  })
+
   const {
     messages,
     loading,
@@ -40,7 +49,7 @@ export default function LeagueChat({
     deleteMessage,
     editMessage,
     loadMoreMessages
-  } = useLeagueMessages(leagueId, isFirebaseAuthenticated)
+  } = useLeagueMessages(leagueId, isAuthenticated)
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
