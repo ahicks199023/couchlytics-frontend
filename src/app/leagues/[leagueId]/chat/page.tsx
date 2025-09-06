@@ -4,6 +4,7 @@ import React from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import LeagueChat from '@/components/chat/LeagueChat'
+import FirebaseTest from '@/components/chat/FirebaseTest'
 import { getFirebaseUserEmail } from '@/lib/firebase'
 
 export default function LeagueChatPage() {
@@ -14,6 +15,15 @@ export default function LeagueChatPage() {
 
   const currentUser = getFirebaseUserEmail(firebaseUser) || couchlyticsUser?.email || ''
   const currentUserName = firebaseUser?.displayName || getFirebaseUserEmail(firebaseUser)?.split('@')[0] || couchlyticsUser?.email?.split('@')[0] || 'User'
+
+  // Debug logging
+  console.log('🔍 LeagueChatPage rendered:', {
+    leagueId,
+    currentUser,
+    currentUserName,
+    firebaseUser: !!firebaseUser,
+    couchlyticsUser: !!couchlyticsUser
+  })
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
@@ -32,6 +42,9 @@ export default function LeagueChatPage() {
             </p>
           )}
         </div>
+
+        {/* Firebase Debug Tools */}
+        <FirebaseTest leagueId={leagueId} />
 
         {/* Chat Container */}
         <div className="bg-gray-800 border border-gray-700 rounded-lg h-[600px]">

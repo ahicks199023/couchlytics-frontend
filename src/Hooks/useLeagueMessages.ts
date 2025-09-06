@@ -28,30 +28,56 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
 
   // Load initial messages
   useEffect(() => {
+    console.log('🔍 useLeagueMessages useEffect triggered:', { 
+      leagueId, 
+      enabled, 
+      db: !!db, 
+      auth: !!auth, 
+      currentUser: !!auth?.currentUser 
+    })
+    
     if (!leagueId || !enabled || !db) {
+      console.log('❌ Message loading blocked - missing requirements:', { 
+        leagueId: !!leagueId, 
+        enabled, 
+        db: !!db 
+      })
       setLoading(false)
       return
     }
 
     // Check if user is authenticated before accessing Firestore
     if (!auth || !auth.currentUser) {
+      console.log('❌ Message loading blocked - user not authenticated:', { 
+        auth: !!auth, 
+        currentUser: !!auth?.currentUser 
+      })
       setLoading(false)
       return
     }
 
+    console.log('🔍 Starting to load messages for league:', leagueId)
     setLoading(true)
     setError(null)
 
     const messagesRef = collection(db, 'leagueChats', leagueId, 'messages')
+    console.log('🔍 Messages collection reference:', messagesRef.path)
+    
     const q = query(
       messagesRef,
       orderBy('timestamp', 'desc'),
       limit(MESSAGES_PER_PAGE)
     )
+    console.log('🔍 Firestore query created')
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
+        console.log('📨 Firestore snapshot received:', { 
+          size: snapshot.size, 
+          empty: snapshot.empty,
+          fromCache: snapshot.metadata.fromCache 
+        })
         const newMessages: LeagueChatMessage[] = []
         snapshot.forEach((doc) => {
           const data = doc.data()
@@ -84,11 +110,18 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
         setHasMore(snapshot.docs.length === MESSAGES_PER_PAGE)
       },
       (err) => {
-        console.error('Error loading league chat messages:', err)
+        console.error('❌ Error loading league chat messages:', err)
+        console.error('❌ Error details:', {
+          code: (err as { code?: string })?.code,
+          message: (err as { message?: string })?.message,
+          stack: (err as { stack?: string })?.stack
+        })
         const code = (err as { code?: string }).code || ''
         if (code === 'permission-denied') {
+          console.error('❌ Permission denied - user may not have access to this league chat')
           setError('Missing or insufficient permissions.')
         } else {
+          console.error('❌ General error loading messages')
           setError('Failed to load messages')
         }
         setLoading(false)
@@ -99,11 +132,25 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
   }, [leagueId, enabled])
 
   const sendMessage = useCallback(async ({ text, sender, senderEmail }: SendMessageParams) => {
-    if (!leagueId || !text.trim() || !enabled || !db) return
+    console.log('🔍 sendMessage called with:', { leagueId, text, sender, senderEmail, enabled, db: !!db })
+    
+    if (!leagueId || !text.trim() || !enabled || !db) {
+      console.log('❌ sendMessage blocked - missing requirements:', { 
+        leagueId: !!leagueId, 
+        text: !!text.trim(), 
+        enabled, 
+        db: !!db 
+      })
+      return
+    }
 
     try {
+      console.log('🔍 Creating message reference...')
       const messagesRef = collection(db, 'leagueChats', leagueId, 'messages')
-      await addDoc(messagesRef, {
+      console.log('🔍 Message reference created:', messagesRef.path)
+      
+      console.log('🔍 Adding document to Firestore...')
+      const docRef = await addDoc(messagesRef, {
         text: text.trim(),
         sender,
         senderEmail,
@@ -111,8 +158,14 @@ export default function useLeagueMessages(leagueId: string, enabled: boolean = t
         leagueId,
         moderated: false
       })
+      console.log('✅ Message sent successfully with ID:', docRef.id)
     } catch (err) {
-      console.error('Error sending message:', err)
+      console.error('❌ Error sending message:', err)
+      console.error('❌ Error details:', {
+        code: (err as { code?: string })?.code,
+        message: (err as { message?: string })?.message,
+        stack: (err as { stack?: string })?.stack
+      })
       setError('Failed to send message')
     }
   }, [leagueId, enabled])

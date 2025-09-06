@@ -53,8 +53,23 @@ export default function LeagueChat({
   }, [])
 
   const handleSendMessage = async () => {
-    if (!messageText.trim() || isSending || !currentUser) return
+    console.log('🔍 handleSendMessage called:', { 
+      messageText: messageText.trim(), 
+      isSending, 
+      currentUser,
+      currentUserName 
+    })
+    
+    if (!messageText.trim() || isSending || !currentUser) {
+      console.log('❌ Send message blocked:', { 
+        hasText: !!messageText.trim(), 
+        isSending, 
+        hasUser: !!currentUser 
+      })
+      return
+    }
 
+    console.log('🔍 Attempting to send message...')
     setIsSending(true)
     try {
       await sendMessage({
@@ -62,9 +77,10 @@ export default function LeagueChat({
         sender: currentUserName,
         senderEmail: currentUser
       })
+      console.log('✅ Message sent successfully')
       setMessageText('')
     } catch (err) {
-      console.error('Failed to send message:', err)
+      console.error('❌ Failed to send message:', err)
     } finally {
       setIsSending(false)
     }
