@@ -165,12 +165,23 @@ export default function LeagueDetailPage() {
     console.log('LeagueDetailPage - Fetching league data for ID:', leagueId)
     
     // Fetch league data and announcements in parallel
+    const announcementsUrl = `${API_BASE}/backend-api/leagues/${leagueId}/announcements`
+    console.log('🔍 Announcements URL:', announcementsUrl)
+    console.log('🔍 API_BASE:', API_BASE)
+    
     Promise.all([
       fetchFromApi(`/leagues/${leagueId}`),
-      fetch(`${API_BASE}/backend-api/leagues/${leagueId}/announcements`, {
+      fetch(announcementsUrl, {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-      }).then(res => res.ok ? res.json() : { announcements: [] }).catch(() => ({ announcements: [] }))
+      }).then(res => {
+        console.log('📢 Announcements response status:', res.status)
+        console.log('📢 Announcements response headers:', res.headers)
+        return res.ok ? res.json() : { announcements: [] }
+      }).catch(err => {
+        console.error('📢 Announcements fetch error:', err)
+        return { announcements: [] }
+      })
     ])
       .then(([leagueData, announcementsData]) => {
         console.log('LeagueDetailPage - Successfully fetched league data:', leagueData)
