@@ -300,7 +300,6 @@ export default function ChatDemoComponent() {
                 <GlobalChat
                   currentUser={currentUser}
                   currentUserName={currentUserName}
-                  isAdmin={isAdmin}
                 />
               )}
               {chatType === 'direct' && (

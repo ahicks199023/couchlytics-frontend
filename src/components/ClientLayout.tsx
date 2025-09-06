@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import NavBar from './NavBar'
 import EnhancedOzzieChat from './EnhancedOzzieChat'
 import TradeTool from './TradeTool'
+import ChatPopout from './ChatPopout'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext'
 
@@ -28,6 +29,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         
         {/* Trade Tool - Show on league pages */}
         {showFloatingTools && <TradeTool />}
+        
+        {/* Chat Popout - Show on all pages except login/register */}
+        {!hideNav && <ChatPopout leagueId={pathname.includes('/leagues/') ? pathname.split('/leagues/')[1]?.split('/')[0] : undefined} />}
       </FirebaseAuthProvider>
     </AuthProvider>
   )

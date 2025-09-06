@@ -28,29 +28,62 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
 
   // Load initial messages
   useEffect(() => {
+    console.log('🔍 useGlobalMessages useEffect triggered:', { 
+      enabled, 
+      db: !!db, 
+      auth: !!auth, 
+      currentUser: !!auth?.currentUser 
+    })
+    
     if (!enabled || !db) {
+      console.log('❌ Global message loading blocked - missing requirements:', { 
+        enabled, 
+        db: !!db 
+      })
       setLoading(false)
       return
     }
 
     // Check if user is authenticated before accessing Firestore
-    if (!auth || !auth.currentUser) {
+    // Note: We'll allow this to proceed even without Firebase auth since we have backend auth
+    if (!auth) {
+      console.log('❌ Global message loading blocked - Firebase auth not initialized:', { 
+        auth: !!auth
+      })
       setLoading(false)
       return
     }
+    
+    // If Firebase user is not authenticated, we'll still try to proceed
+    // The Firestore rules will handle the actual permission check
+    if (!auth.currentUser) {
+      console.log('⚠️ No Firebase user - proceeding with backend auth only')
+    } else {
+      console.log('✅ Firebase user authenticated:', auth.currentUser.uid)
+    }
+
+    console.log('🔍 Starting to load global messages')
     setLoading(true)
     setError(null)
 
-    const messagesRef = collection(db, 'globalChatMessages')
+    const messagesRef = collection(db, 'globalChats')
+    console.log('🔍 Global messages collection reference:', messagesRef.path)
+    
     const q = query(
       messagesRef,
       orderBy('timestamp', 'desc'),
       limit(MESSAGES_PER_PAGE)
     )
+    console.log('🔍 Firestore query created')
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
+        console.log('📨 Global Firestore snapshot received:', { 
+          size: snapshot.size, 
+          empty: snapshot.empty,
+          fromCache: snapshot.metadata.fromCache 
+        })
         const newMessages: ChatMessage[] = []
         snapshot.forEach((doc) => {
           const data = doc.data()
@@ -68,7 +101,8 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
             moderated: data.moderated || false,
             moderatedBy: data.moderatedBy,
             moderatedAt: data.moderatedAt?.toDate(),
-            reactions: data.reactions || []
+            reactions: data.reactions || [],
+            replyTo: data.replyTo || undefined
           })
         })
 
@@ -82,11 +116,18 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
         setHasMore(snapshot.docs.length === MESSAGES_PER_PAGE)
       },
       (err) => {
-        console.error('Error loading global chat messages:', err)
+        console.error('❌ Error loading global chat messages:', err)
+        console.error('❌ Error details:', {
+          code: (err as { code?: string })?.code,
+          message: (err as { message?: string })?.message,
+          stack: (err as { stack?: string })?.stack
+        })
         const code = (err as { code?: string }).code || ''
         if (code === 'permission-denied') {
+          console.error('❌ Permission denied - user may not have access to global chat')
           setError('Missing or insufficient permissions.')
         } else {
+          console.error('❌ General error loading global messages')
           setError('Failed to load messages')
         }
         setLoading(false)
@@ -96,62 +137,91 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
     return () => unsubscribe()
   }, [enabled])
 
-  const sendMessage = useCallback(async ({ text, sender, senderEmail }: SendMessageParams) => {
-    if (!text.trim() || !enabled || !db) return
+  const sendMessage = useCallback(async ({ text, sender, senderEmail, replyTo }: SendMessageParams) => {
+    console.log('🔍 sendGlobalMessage called with:', { text, sender, senderEmail, enabled, db: !!db })
+    
+    if (!text.trim() || !enabled || !db) {
+      console.log('❌ sendGlobalMessage blocked - missing requirements:', { 
+        text: !!text.trim(), 
+        enabled, 
+        db: !!db 
+      })
+      return
+    }
 
     try {
-      const messagesRef = collection(db, 'globalChatMessages')
-      await addDoc(messagesRef, {
+      console.log('🔍 Creating global message reference...')
+      const messagesRef = collection(db, 'globalChats')
+      console.log('🔍 Global message reference created:', messagesRef.path)
+      
+      console.log('🔍 Adding document to Firestore...')
+      const docRef = await addDoc(messagesRef, {
         text: text.trim(),
         sender,
         senderEmail,
         timestamp: serverTimestamp(),
-        moderated: false
+        moderated: false,
+        replyTo: replyTo || null
       })
+      console.log('✅ Global message sent successfully with ID:', docRef.id)
     } catch (err) {
-      console.error('Error sending message:', err)
-      setError('Failed to send message')
+      console.error('❌ Error sending global message:', err)
+      console.error('❌ Error details:', {
+        code: (err as { code?: string })?.code,
+        message: (err as { message?: string })?.message,
+        stack: (err as { stack?: string })?.stack
+      })
+      
+      // Check if it's a permission error
+      const errorCode = (err as { code?: string })?.code
+      if (errorCode === 'permission-denied') {
+        setError('Permission denied - you may not have access to global chat')
+      } else {
+        setError('Failed to send message')
+      }
     }
   }, [enabled])
 
   const deleteMessage = useCallback(async (messageId: string) => {
-    if (!db) return
+    if (!enabled || !db) return
+
     try {
-      const messageRef = doc(db, 'globalChatMessages', messageId)
+      const messageRef = doc(db, 'globalChats', messageId)
       await updateDoc(messageRef, {
         deleted: true,
         deletedAt: serverTimestamp()
       })
     } catch (err) {
-      console.error('Error deleting message:', err)
+      console.error('Error deleting global message:', err)
       setError('Failed to delete message')
     }
-  }, [])
+  }, [enabled])
 
   const editMessage = useCallback(async (messageId: string, newText: string) => {
     if (!newText.trim() || !enabled || !db) return
 
     try {
-      const messageRef = doc(db, 'globalChatMessages', messageId)
+      const messageRef = doc(db, 'globalChats', messageId)
       await updateDoc(messageRef, {
         text: newText.trim(),
         edited: true,
         editedAt: serverTimestamp()
       })
     } catch (err) {
-      console.error('Error editing message:', err)
+      console.error('Error editing global message:', err)
       setError('Failed to edit message')
     }
   }, [enabled])
 
   const reactToMessage = useCallback(async (messageId: string, emoji: string, userEmail: string) => {
-    if (!db) return
+    if (!enabled || !db) return
+
     try {
-      const messageRef = doc(db, 'globalChatMessages', messageId)
+      const messageRef = doc(db, 'globalChats', messageId)
       const messageDoc = await getDoc(messageRef)
       
       if (!messageDoc.exists()) {
-        console.error('Message not found')
+        console.error('Global message not found')
         return
       }
 
@@ -200,16 +270,16 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
         reactions: updatedReactions
       })
     } catch (err) {
-      console.error('Error reacting to message:', err)
+      console.error('Error reacting to global message:', err)
       setError('Failed to react to message')
     }
-  }, [])
+  }, [enabled])
 
   const loadMoreMessages = useCallback(async () => {
     if (!hasMore || !lastMessage || !enabled || !db) return
 
     try {
-      const messagesRef = collection(db, 'globalChatMessages')
+      const messagesRef = collection(db, 'globalChats')
       const q = query(
         messagesRef,
         orderBy('timestamp', 'desc'),
@@ -236,7 +306,8 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
           moderated: data.moderated || false,
           moderatedBy: data.moderatedBy,
           moderatedAt: data.moderatedAt?.toDate(),
-          reactions: data.reactions || []
+          reactions: data.reactions || [],
+          replyTo: data.replyTo || undefined
         })
       })
 
@@ -247,7 +318,7 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
         setLastMessage(snapshot.docs[snapshot.docs.length - 1])
       }
     } catch (err) {
-      console.error('Error loading more messages:', err)
+      console.error('Error loading more global messages:', err)
       setError('Failed to load more messages')
     }
   }, [hasMore, lastMessage, enabled])
@@ -265,4 +336,4 @@ export default function useGlobalMessages(enabled: boolean = true): UseChatRetur
     reactToMessage,
     loadMoreMessages
   }
-} 
+}

@@ -5,29 +5,39 @@ import { useAuth } from '@/contexts/AuthContext'
 import useGlobalMessages from '@/Hooks/useGlobalMessages'
 import { groupMessagesBySender } from '@/lib/chatUtils'
 import ChatMessage from './ChatMessage'
+import EnhancedMessageInput from './EnhancedMessageInput'
 import { getFirebaseUserEmail } from '@/lib/firebase'
 
 interface GlobalChatProps {
-  currentUser?: string // Now optional, will use Firebase user if not provided
-  currentUserName?: string // Now optional, will use Firebase user if not provided
-  isAdmin?: boolean
+  currentUser?: string
+  currentUserName?: string
 }
 
 export default function GlobalChat({ 
   currentUser: propCurrentUser,
-  currentUserName: propCurrentUserName,
-  isAdmin = false 
+  currentUserName: propCurrentUserName
 }: GlobalChatProps) {
   const [messageText, setMessageText] = useState('')
   const [isSending, setIsSending] = useState(false)
+  const [replyTo, setReplyTo] = useState<{messageId: string, sender: string, text: string} | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const { firebaseUser, isFirebaseAuthenticated, user: couchlyticsUser } = useAuth()
 
   // Use Firebase user if available, otherwise fall back to props
   const currentUser = getFirebaseUserEmail(firebaseUser) || couchlyticsUser?.email || propCurrentUser || ''
   const currentUserName = firebaseUser?.displayName || getFirebaseUserEmail(firebaseUser)?.split('@')[0] || couchlyticsUser?.email?.split('@')[0] || propCurrentUserName || 'User'
+
+  // Check if user is authenticated (either Firebase or backend)
+  const isAuthenticated = isFirebaseAuthenticated || !!couchlyticsUser
+
+  console.log('🔍 GlobalChat rendered:', {
+    currentUser,
+    currentUserName,
+    isFirebaseAuthenticated,
+    couchlyticsUser: !!couchlyticsUser, 
+    isAuthenticated
+  })
 
   const {
     messages,
@@ -39,7 +49,7 @@ export default function GlobalChat({
     editMessage,
     reactToMessage,
     loadMoreMessages
-  } = useGlobalMessages()
+  } = useGlobalMessages(isAuthenticated)
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -48,31 +58,81 @@ export default function GlobalChat({
 
   // Focus input on mount
   useEffect(() => {
-    inputRef.current?.focus()
+    // Focus will be handled by the EnhancedMessageInput component
   }, [])
 
-  const handleSendMessage = async () => {
-    if (!messageText.trim() || isSending || !currentUser) return
+  // Re-trigger chat when authentication state changes
+  useEffect(() => {
+    console.log('🔄 Authentication state changed, re-evaluating global chat access:', {
+      isAuthenticated,
+      currentUser 
+    })
+  }, [isAuthenticated, currentUser])
 
+  // Show loading state while authentication is being determined
+  if (!isAuthenticated && !currentUser) {
+    return (
+      <div className="flex items-center justify-center h-full bg-gray-800">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400 text-lg">Loading global chat...</p>
+          <p className="text-gray-500 text-sm mt-2">Please wait while we verify your access</p>
+        </div>
+      </div>
+    )
+  }
+
+  const handleSendMessage = async () => {
+    console.log('🔍 handleSendMessage called:', { 
+      messageText: messageText.trim(), 
+      isSending, 
+      currentUser,
+      currentUserName,
+      replyTo
+    })
+    
+    if (!messageText.trim() || isSending || !currentUser) {
+      console.log('❌ Send message blocked:', { 
+        hasText: !!messageText.trim(), 
+        isSending, 
+        hasUser: !!currentUser 
+      })
+      return
+    }
+
+    console.log('🔍 Attempting to send message...')
     setIsSending(true)
     try {
       await sendMessage({
         text: messageText,
         sender: currentUserName,
-        senderEmail: currentUser
+        senderEmail: currentUser,
+        replyTo: replyTo?.messageId
       })
+      console.log('✅ Message sent successfully')
       setMessageText('')
+      setReplyTo(null)
     } catch (err) {
-      console.error('Failed to send message:', err)
+      console.error('❌ Failed to send message:', err)
     } finally {
       setIsSending(false)
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
+  const handleReply = (messageId: string) => {
+    const message = messages.find(m => m.id === messageId)
+    if (message) {
+      setReplyTo({
+        messageId: message.id,
+        sender: message.sender,
+        text: message.text.length > 50 ? message.text.substring(0, 50) + '...' : message.text
+      })
+    }
+  }
+
+  const handleReact = async (messageId: string, emoji: string) => {
+    if (currentUser) {
+      await reactToMessage(messageId, emoji, currentUser)
     }
   }
 
@@ -80,7 +140,7 @@ export default function GlobalChat({
     try {
       await deleteMessage(messageId)
     } catch (err) {
-      console.error('Failed to delete message:', err)
+      console.error('Error deleting message:', err)
     }
   }
 
@@ -88,92 +148,77 @@ export default function GlobalChat({
     try {
       await editMessage(messageId, newText)
     } catch (err) {
-      console.error('Failed to edit message:', err)
+      console.error('Error editing message:', err)
     }
   }
 
-  const handleReact = async (messageId: string, emoji: string) => {
-    try {
-      await reactToMessage(messageId, emoji, currentUser)
-    } catch (err) {
-      console.error('Failed to react to message:', err)
-    }
-  }
-
+  // Group messages by sender for better display
   const messageGroups = groupMessagesBySender(messages)
 
-  // Show Firebase authentication error
-  if (!isFirebaseAuthenticated && !propCurrentUser) {
-    return (
-      <div className="flex flex-col h-full bg-gray-900 rounded-lg">
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <div>
-            <h3 className="text-lg font-semibold text-white">🌎 Global Chat</h3>
-            <p className="text-sm text-gray-400">All Couchlytics users</p>
-          </div>
-        </div>
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="text-gray-400">Initializing Firebase authentication...</div>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex flex-col h-full bg-gray-900 rounded-lg">
+    <div className="flex flex-col h-full bg-gray-800">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-700">
-        <div>
-          <h3 className="text-lg font-semibold text-white">🌎 Global Chat</h3>
-          <p className="text-sm text-gray-400">All Couchlytics users</p>
-          {firebaseUser && (
-            <p className="text-xs text-green-400">✅ Firebase Connected</p>
-          )}
-        </div>
-        {isAdmin && (
-          <div className="text-xs text-red-400 bg-red-900/20 px-2 py-1 rounded">
-            🔧 Admin
-          </div>
+      <div className="p-4 border-b border-gray-700 bg-gray-800">
+        <h3 className="text-lg font-semibold text-white">Global Chat</h3>
+        <p className="text-sm text-gray-400">Chat with all Couchlytics users</p>
+        {currentUser && (
+          <p className="text-xs text-green-400 mt-1">
+            ✅ Connected as: {currentUserName}
+          </p>
         )}
       </div>
 
-      {/* Messages Container */}
+      {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {loading ? (
-          <div className="flex items-center justify-center h-32">
-            <div className="text-gray-400">Loading messages...</div>
+        {loading && messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-400">Loading messages...</p>
+            </div>
           </div>
         ) : error ? (
-          <div className="flex items-center justify-center h-32">
-            <div className="text-red-400">Error: {error}</div>
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center text-red-400">
+              <p className="text-lg font-semibold">Error loading messages</p>
+              <p className="text-sm mt-2">{error}</p>
+            </div>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex items-center justify-center h-32">
-            <div className="text-gray-400">No messages yet. Start the conversation!</div>
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center text-gray-400">
+              <div className="text-4xl mb-4">🌍</div>
+              <p className="text-lg">No messages yet</p>
+              <p className="text-sm mt-2">Start the conversation!</p>
+            </div>
           </div>
         ) : (
           <>
+            {/* Load More Button */}
             {hasMore && (
-              <button
-                onClick={loadMoreMessages}
-                className="w-full py-2 text-blue-400 hover:text-blue-300 text-sm transition-colors"
-              >
-                Load more messages...
-              </button>
+              <div className="flex justify-center">
+                <button
+                  onClick={loadMoreMessages}
+                  className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
+                >
+                  Load More Messages
+                </button>
+              </div>
             )}
             
             {messageGroups.map((group, groupIndex) => (
               <div key={`${group.senderEmail}-${groupIndex}`} className="space-y-1">
                 {group.messages.map((message) => (
-                                     <ChatMessage
-                     key={message.id}
-                     message={message}
-                     currentUserEmail={currentUser || ''}
-                     isAdmin={isAdmin}
-                     onDelete={handleDelete}
-                     onEdit={handleEdit}
-                     onReact={handleReact}
-                   />
+                  <ChatMessage
+                    key={message.id}
+                    message={message}
+                    currentUserEmail={currentUser || ''}
+                    isCommissioner={false} // Global chat doesn't have commissioners
+                    onDelete={handleDelete}
+                    onEdit={handleEdit}
+                    onReply={handleReply}
+                    onReact={handleReact}
+                  />
                 ))}
               </div>
             ))}
@@ -185,40 +230,16 @@ export default function GlobalChat({
 
       {/* Input Area */}
       <div className="p-4 border-t border-gray-700">
-        <div className="flex space-x-2">
-          <button
-            onClick={() => {
-              // TODO: Implement file upload
-              alert('File upload feature coming soon! 📎')
-            }}
-            disabled={!currentUser}
-            className="px-3 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed transition-colors"
-            title="Upload files"
-          >
-            📎
-          </button>
-          <textarea
-            ref={inputRef}
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder={currentUser ? "Type your message..." : "Connecting to Firebase..."}
-            className="flex-1 bg-gray-800 text-white px-3 py-2 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={Math.max(1, Math.min(4, messageText.split('\n').length))}
-            disabled={isSending || !currentUser}
-          />
-          <button
-            onClick={handleSendMessage}
-            disabled={!messageText.trim() || isSending || !currentUser}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-          >
-            {isSending ? 'Sending...' : 'Send'}
-          </button>
-        </div>
-        <div className="text-xs text-gray-500 mt-1">
-          Press Enter to send, Shift+Enter for new line • 📎 Upload files
-        </div>
+        <EnhancedMessageInput
+          value={messageText}
+          onChange={setMessageText}
+          onSend={handleSendMessage}
+          disabled={isSending || !currentUser}
+          placeholder={currentUser ? "Type your message..." : "Connecting to Firebase..."}
+          replyTo={replyTo || undefined}
+          onCancelReply={() => setReplyTo(null)}
+        />
       </div>
     </div>
   )
-} 
+}

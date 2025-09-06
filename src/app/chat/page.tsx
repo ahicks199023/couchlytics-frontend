@@ -209,7 +209,6 @@ export default function ChatPage() {
             <GlobalChat
               currentUser={currentUser}
               currentUserName={currentUserName}
-              isAdmin={false}
             />
           )}
         </div>
