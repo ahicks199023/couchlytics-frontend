@@ -105,8 +105,18 @@ export default function LeagueManagement() {
   const [debugInfo, setDebugInfo] = useState<{
     apiEndpointUsed: string
     responseStatus: number
-    responseData: any
+    responseData: unknown
   } | null>(null)
+
+  // Helper function to safely stringify debug data
+  const safeStringify = (data: unknown, maxLength: number = 100) => {
+    try {
+      const str = JSON.stringify(data, null, 2)
+      return str.length > maxLength ? str.substring(0, maxLength) + '...' : str
+    } catch {
+      return 'Error stringifying data'
+    }
+  }
   
   // New states for editing
   const [isEditing, setIsEditing] = useState(false)
@@ -701,7 +711,7 @@ export default function LeagueManagement() {
                           {debugInfo.apiEndpointUsed.includes('commissioner') ? '✅' : '⚠️'} {debugInfo.apiEndpointUsed}
                         </div>
                         <div>Status: {debugInfo.responseStatus}</div>
-                        <div>Response Data: {JSON.stringify(debugInfo.responseData, null, 2).substring(0, 200)}...</div>
+                        <div>Response Data: {safeStringify(debugInfo.responseData, 100)}</div>
                       </>
                     ) : (
                       <div className="text-gray-400">No API call made yet</div>
