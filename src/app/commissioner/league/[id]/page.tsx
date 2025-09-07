@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { API_BASE } from '@/lib/config'
 import { 
   getLeagueSettings, 
+  getLeagueMembers,
   generateInviteLink, 
   assignTeamToUser, 
   getCompanionAppInfo,
@@ -125,21 +126,50 @@ export default function LeagueManagement() {
         setLoading(true)
         setError(null)
         
+        console.log('🔍 Loading league data for ID:', leagueId)
+        
         // TEMPORARY: Bypass authentication check for now since OAuth isn't fully set up
         // TODO: Remove this bypass once OAuth authentication is working
         setHasAccess(true)
         
         // Check commissioner access by trying to get league settings
         try {
+          console.log('🔍 Fetching league settings...')
           const leagueData: LeagueSettingsResponse = await getLeagueSettings(leagueId)
+          console.log('🔍 League settings response:', leagueData)
+          console.log('🔍 Members from settings:', leagueData.members)
+          console.log('🔍 Members count from settings:', leagueData.members?.length || 0)
+          
           setLeague(leagueData.league)
           setTeams(leagueData.teams || [])
-          setUsers(leagueData.members || [])
+          
+          // Don't set users from settings - we'll get them from dedicated endpoint
+          console.log('🔍 League settings loaded, now fetching members...')
+          
         } catch (error) {
-          console.error('Commissioner access check failed:', error)
+          console.error('❌ Commissioner access check failed:', error)
           setError('You do not have commissioner access to this league')
           setHasAccess(false)
           return
+        }
+        
+        // Fetch members from dedicated endpoint
+        try {
+          console.log('🔍 Fetching league members from dedicated endpoint...')
+          const membersData = await getLeagueMembers(leagueId)
+          console.log('🔍 Members data received:', membersData)
+          
+          if (membersData.success && membersData.members) {
+            setUsers(membersData.members)
+            console.log('✅ Members loaded successfully:', membersData.members.length)
+          } else {
+            console.error('❌ Invalid members response structure:', membersData)
+            setUsers([])
+          }
+        } catch (membersError) {
+          console.error('❌ Error fetching members:', membersError)
+          setError('Failed to load league members')
+          setUsers([])
         }
         
         // Load companion app info
@@ -165,6 +195,27 @@ export default function LeagueManagement() {
       loadData()
     }
   }, [leagueId])
+
+  // Refresh members function
+  const refreshMembers = async () => {
+    try {
+      console.log('🔍 Refreshing members...')
+      const membersData = await getLeagueMembers(leagueId)
+      
+      if (membersData.success && membersData.members) {
+        setUsers(membersData.members)
+        console.log('✅ Members refreshed:', membersData.members.length)
+        setSuccessMessage('Members refreshed successfully')
+        setTimeout(() => setSuccessMessage(null), 2000)
+      } else {
+        console.error('❌ Invalid members response:', membersData)
+        setError('Failed to refresh members')
+      }
+    } catch (error) {
+      console.error('❌ Error refreshing members:', error)
+      setError('Failed to refresh members')
+    }
+  }
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -589,7 +640,25 @@ export default function LeagueManagement() {
 
           {activeTab === 'users' && (
             <div>
-              <h2 className="text-2xl font-bold mb-4">League Members</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">League Members</h2>
+                <button
+                  onClick={refreshMembers}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  🔄 Refresh Members
+                </button>
+              </div>
+              
+              {/* Debug info - remove this after testing */}
+              <div className="mb-4 p-3 bg-gray-800 rounded-md text-sm">
+                <div className="font-semibold mb-2">Debug Info:</div>
+                <div>Users count: {users.length}</div>
+                <div>Loading: {loading ? 'Yes' : 'No'}</div>
+                <div>Error: {error || 'None'}</div>
+                <div>League ID: {leagueId}</div>
+              </div>
+              
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>

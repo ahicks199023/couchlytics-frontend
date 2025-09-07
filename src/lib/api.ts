@@ -147,6 +147,31 @@ export const getLeagueSettings = async (leagueId: string) => {
   return fetchFromApi(`/leagues/${leagueId}/settings`)
 }
 
+// Dedicated function to fetch league members
+export const getLeagueMembers = async (leagueId: string) => {
+  console.log('🔍 getLeagueMembers called for league:', leagueId)
+  
+  const response = await fetch(`${API_BASE}/leagues/${leagueId}/members`, {
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  })
+  
+  console.log('🔍 getLeagueMembers response status:', response.status)
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('❌ getLeagueMembers failed:', response.status, errorText)
+    throw new Error(`Failed to fetch league members: ${response.status}`)
+  }
+  
+  const data = await response.json()
+  console.log('🔍 getLeagueMembers response data:', data)
+  
+  return data
+}
+
 export const updateLeagueSettings = async (leagueId: string, settings: Record<string, unknown>) => {
   const response = await fetch(`${API_BASE}/leagues/${leagueId}/settings`, {
     method: 'PUT',
