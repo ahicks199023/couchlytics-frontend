@@ -151,9 +151,57 @@ export const getLeagueSettings = async (leagueId: string) => {
 export const getLeagueMembers = async (leagueId: string) => {
   console.log('🔍 getLeagueMembers called for league:', leagueId)
   
-  // Use the members endpoint directly (this returns all league members)
+  // Try the working commissioner/users endpoint first
   try {
-    console.log('🔍 Using members endpoint...')
+    console.log('🔍 Trying commissioner/users endpoint...')
+    const response = await fetch(`${API_BASE}/leagues/${leagueId}/commissioner/users`, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    
+    console.log('🔍 Commissioner/users response status:', response.status)
+    
+    if (response.ok) {
+      const data = await response.json()
+      console.log('🔍 Commissioner/users response data:', data)
+      
+      // Transform the data to match expected format
+      const transformedData = {
+        success: true,
+        members: (data.users || data.members || []).map((user: Record<string, unknown>) => ({
+          id: user.id as number,
+          email: user.email as string,
+          name: (user.display_name as string) || `${(user.first_name as string) || ''} ${(user.last_name as string) || ''}`.trim(),
+          role: (user.is_commissioner as boolean) ? 'commissioner' : 'member',
+          is_active: true,
+          team_id: (user.team as Record<string, unknown>)?.id as number,
+          joined_at: user.joined_at as string,
+          first_name: user.first_name as string,
+          last_name: user.last_name as string,
+          display_name: user.display_name as string
+        })),
+        total: data.total || (data.users ? data.users.length : 0),
+        debugInfo: {
+          apiEndpointUsed: `/leagues/${leagueId}/commissioner/users`,
+          responseStatus: response.status,
+          responseData: data
+        }
+      }
+      
+      console.log('🔍 Transformed members data:', transformedData)
+      return transformedData
+    } else {
+      console.log('⚠️ Commissioner/users endpoint failed, trying members endpoint...')
+    }
+  } catch (error) {
+    console.log('⚠️ Commissioner/users endpoint error, trying members endpoint:', error)
+  }
+  
+  // Fallback to the original members endpoint
+  try {
+    console.log('🔍 Trying members endpoint as fallback...')
     const response = await fetch(`${API_BASE}/leagues/${leagueId}/members`, {
       credentials: 'include',
       headers: {
@@ -181,7 +229,7 @@ export const getLeagueMembers = async (leagueId: string) => {
       }
     }
   } catch (error) {
-    console.error('❌ Members endpoint failed:', error)
+    console.error('❌ Both endpoints failed:', error)
     throw error
   }
 }
