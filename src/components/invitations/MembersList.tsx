@@ -24,6 +24,8 @@ interface MembersListProps {
 }
 
 const MembersList: React.FC<MembersListProps> = ({ members, onRefresh }) => {
+  console.log('🔍 MembersList received members:', members)
+  console.log('🔍 Members count:', members?.length || 0)
   const updateMemberRole = async (userId: string, newRole: string) => {
     try {
       const response = await fetch(`${API_BASE_URL}/leagues/${members[0]?.league_id}/members/${userId}/role`, {
@@ -74,8 +76,14 @@ const MembersList: React.FC<MembersListProps> = ({ members, onRefresh }) => {
     <div className="members-list mt-8">
       <h4 className="text-lg font-semibold mb-4">League Members</h4>
       
-      <div className="space-y-3">
-        {members.map((member) => (
+      {members.length === 0 ? (
+        <div className="text-gray-400 text-center py-8">
+          <p>No members found in this league.</p>
+          <p className="text-sm mt-2">If you just joined, try refreshing the page.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {members.map((member) => (
           <div key={member.id} className="member-card bg-gray-700/50 p-4 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -112,7 +120,8 @@ const MembersList: React.FC<MembersListProps> = ({ members, onRefresh }) => {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

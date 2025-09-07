@@ -62,15 +62,27 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ leagueId })
 
   const fetchMembers = useCallback(async () => {
     try {
+      console.log('🔍 Fetching members for league:', leagueId)
       const response = await fetch(`${API_BASE_URL}/leagues/${leagueId}/members`, {
         credentials: 'include'
       })
-      const data = await response.json()
-      if (data.success) {
-        setMembers(data.members)
+      console.log('🔍 Members response status:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('🔍 Members response data:', data)
+        if (data.success) {
+          setMembers(data.members)
+          console.log('✅ Members loaded:', data.members?.length || 0)
+        } else {
+          console.error('❌ Members fetch failed:', data.error)
+        }
+      } else {
+        const errorText = await response.text()
+        console.error('❌ Members fetch failed with status:', response.status, errorText)
       }
     } catch (error) {
-      console.error('Error fetching members:', error)
+      console.error('❌ Error fetching members:', error)
     }
   }, [leagueId])
 

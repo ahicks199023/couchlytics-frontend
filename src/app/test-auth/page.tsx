@@ -17,10 +17,27 @@ interface MembershipData {
   [key: string]: unknown
 }
 
+interface Member {
+  id: string
+  user_id: string
+  league_id: string
+  role: string
+  joined_at: string
+  user?: {
+    id: string
+    email: string
+    display_name?: string
+    first_name?: string
+    last_name?: string
+  }
+}
+
 export default function TestAuthPage() {
   const [authStatus, setAuthStatus] = useState<string>('Loading...')
   const [userData, setUserData] = useState<UserData | null>(null)
   const [leagueMembership, setLeagueMembership] = useState<MembershipData | null>(null)
+  const [leagueMembers, setLeagueMembers] = useState<Member[]>([])
+  const [membersError, setMembersError] = useState<string | null>(null)
 
   useEffect(() => {
     const testAuth = async () => {
@@ -56,6 +73,26 @@ export default function TestAuthPage() {
           console.error('[TestAuth] Error response:', errorText)
         }
 
+        // Test 3: Check league members
+        console.log('[TestAuth] Testing league members endpoint...')
+        const membersResponse = await authenticatedFetch(`${API_BASE}/leagues/${leagueId}/members`)
+        console.log('[TestAuth] Members response status:', membersResponse.status)
+        
+        if (membersResponse.ok) {
+          const membersData = await membersResponse.json()
+          console.log('[TestAuth] Members response data:', membersData)
+          if (membersData.success) {
+            setLeagueMembers(membersData.members || [])
+            console.log('[TestAuth] Members loaded:', membersData.members?.length || 0)
+          } else {
+            setMembersError(membersData.error || 'Unknown error')
+          }
+        } else {
+          const errorText = await membersResponse.text()
+          console.error('[TestAuth] Members check failed:', membersResponse.status, errorText)
+          setMembersError(`HTTP ${membersResponse.status}: ${errorText}`)
+        }
+
       } catch (error) {
         console.error('[TestAuth] Test failed:', error)
         setAuthStatus('❌ Test failed')
@@ -88,6 +125,31 @@ export default function TestAuthPage() {
             <pre className="text-sm overflow-auto">{JSON.stringify(leagueMembership, null, 2)}</pre>
           </div>
         )}
+
+        <div className="bg-gray-800 p-4 rounded">
+          <h2 className="text-xl font-semibold mb-2">League Members</h2>
+          {membersError ? (
+            <p className="text-red-400">Error: {membersError}</p>
+          ) : (
+            <div>
+              <p className="text-neon-green mb-2">Found {leagueMembers.length} members</p>
+              {leagueMembers.length > 0 ? (
+                <div className="space-y-2">
+                  {leagueMembers.map((member) => (
+                    <div key={member.id} className="bg-gray-700 p-2 rounded text-sm">
+                      <div><strong>Email:</strong> {member.user?.email || 'Unknown'}</div>
+                      <div><strong>Name:</strong> {member.user?.display_name || `${member.user?.first_name || ''} ${member.user?.last_name || ''}`.trim() || 'Unknown'}</div>
+                      <div><strong>Role:</strong> {member.role}</div>
+                      <div><strong>Joined:</strong> {new Date(member.joined_at).toLocaleDateString()}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400">No members found</p>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="bg-gray-800 p-4 rounded">
           <h2 className="text-xl font-semibold mb-2">API Configuration</h2>
