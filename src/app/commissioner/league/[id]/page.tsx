@@ -102,6 +102,11 @@ export default function LeagueManagement() {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [hasAccess, setHasAccess] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<{
+    apiEndpointUsed: string
+    responseStatus: number
+    responseData: any
+  } | null>(null)
   
   // New states for editing
   const [isEditing, setIsEditing] = useState(false)
@@ -161,15 +166,18 @@ export default function LeagueManagement() {
           
           if (membersData.success && membersData.members) {
             setUsers(membersData.members)
+            setDebugInfo(membersData.debugInfo || null)
             console.log('✅ Members loaded successfully:', membersData.members.length)
           } else {
             console.error('❌ Invalid members response structure:', membersData)
             setUsers([])
+            setDebugInfo(null)
           }
         } catch (membersError) {
           console.error('❌ Error fetching members:', membersError)
           setError('Failed to load league members')
           setUsers([])
+          setDebugInfo(null)
         }
         
         // Load companion app info
@@ -204,16 +212,19 @@ export default function LeagueManagement() {
       
       if (membersData.success && membersData.members) {
         setUsers(membersData.members)
+        setDebugInfo(membersData.debugInfo || null)
         console.log('✅ Members refreshed:', membersData.members.length)
         setSuccessMessage('Members refreshed successfully')
         setTimeout(() => setSuccessMessage(null), 2000)
       } else {
         console.error('❌ Invalid members response:', membersData)
         setError('Failed to refresh members')
+        setDebugInfo(null)
       }
     } catch (error) {
       console.error('❌ Error refreshing members:', error)
       setError('Failed to refresh members')
+      setDebugInfo(null)
     }
   }
 
@@ -651,12 +662,52 @@ export default function LeagueManagement() {
               </div>
               
               {/* Debug info - remove this after testing */}
-              <div className="mb-4 p-3 bg-gray-800 rounded-md text-sm">
-                <div className="font-semibold mb-2">Debug Info:</div>
-                <div>Users count: {users.length}</div>
-                <div>Loading: {loading ? 'Yes' : 'No'}</div>
-                <div>Error: {error || 'None'}</div>
-                <div>League ID: {leagueId}</div>
+              <div className="mb-4 p-4 bg-gray-800 rounded-md text-sm border border-gray-600">
+                <div className="font-semibold mb-3 text-yellow-400">🔧 Debug Information</div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="font-medium text-gray-300 mb-1">Basic Info:</div>
+                    <div>Users count: <span className="text-white">{users.length}</span></div>
+                    <div>Loading: <span className={loading ? 'text-yellow-400' : 'text-green-400'}>{loading ? 'Yes' : 'No'}</span></div>
+                    <div>Error: <span className={error ? 'text-red-400' : 'text-green-400'}>{error || 'None'}</span></div>
+                    <div>League ID: <span className="text-white">{leagueId}</span></div>
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-300 mb-1">User Details:</div>
+                    {users.length > 0 ? (
+                      <div className="space-y-1">
+                        {users.map((user, index) => (
+                          <div key={user.id || index} className="text-xs">
+                            <div>ID: {user.id}</div>
+                            <div>Email: {user.email}</div>
+                            <div>Name: {user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'N/A'}</div>
+                            <div>Role: {user.role}</div>
+                            <div>Team ID: {user.team_id || 'None'}</div>
+                            <div className="border-t border-gray-600 pt-1 mt-1"></div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-red-400">No users found</div>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-600">
+                  <div className="font-medium text-gray-300 mb-2">API Endpoint Used:</div>
+                  <div className="text-xs space-y-1">
+                    {debugInfo ? (
+                      <>
+                        <div className={debugInfo.apiEndpointUsed.includes('commissioner') ? 'text-green-400' : 'text-yellow-400'}>
+                          {debugInfo.apiEndpointUsed.includes('commissioner') ? '✅' : '⚠️'} {debugInfo.apiEndpointUsed}
+                        </div>
+                        <div>Status: {debugInfo.responseStatus}</div>
+                        <div>Response Data: {JSON.stringify(debugInfo.responseData, null, 2).substring(0, 200)}...</div>
+                      </>
+                    ) : (
+                      <div className="text-gray-400">No API call made yet</div>
+                    )}
+                  </div>
+                </div>
               </div>
               
               <div className="overflow-x-auto">

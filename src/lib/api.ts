@@ -171,7 +171,12 @@ export const getLeagueMembers = async (leagueId: string) => {
       const transformedData = {
         success: true,
         members: data.users || data.members || [],
-        total: data.total || (data.users ? data.users.length : 0)
+        total: data.total || (data.users ? data.users.length : 0),
+        debugInfo: {
+          apiEndpointUsed: `/leagues/${leagueId}/commissioner/users`,
+          responseStatus: response.status,
+          responseData: data
+        }
       }
       
       console.log('🔍 Transformed members data:', transformedData)
@@ -204,7 +209,14 @@ export const getLeagueMembers = async (leagueId: string) => {
     const data = await response.json()
     console.log('🔍 Members response data:', data)
     
-    return data
+    return {
+      ...data,
+      debugInfo: {
+        apiEndpointUsed: `/leagues/${leagueId}/members`,
+        responseStatus: response.status,
+        responseData: data
+      }
+    }
   } catch (error) {
     console.error('❌ Both endpoints failed:', error)
     throw error
