@@ -5,7 +5,12 @@ import { getLeagueMembers } from '@/lib/api'
 
 export default function TestLeagueMembers() {
   const [leagueId, setLeagueId] = useState('12335716')
-  const [results, setResults] = useState<any>(null)
+  const [results, setResults] = useState<{
+    getLeagueMembers?: Record<string, unknown>
+    commissioner?: { status: number; data: unknown }
+    members?: { status: number; data: unknown }
+    timestamp: string
+  } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
