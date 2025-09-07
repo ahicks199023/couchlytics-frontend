@@ -151,25 +151,64 @@ export const getLeagueSettings = async (leagueId: string) => {
 export const getLeagueMembers = async (leagueId: string) => {
   console.log('🔍 getLeagueMembers called for league:', leagueId)
   
-  const response = await fetch(`${API_BASE}/leagues/${leagueId}/members`, {
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
+  // Try the working commissioner/users endpoint first
+  try {
+    console.log('🔍 Trying commissioner/users endpoint...')
+    const response = await fetch(`${API_BASE}/leagues/${leagueId}/commissioner/users`, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    
+    console.log('🔍 Commissioner/users response status:', response.status)
+    
+    if (response.ok) {
+      const data = await response.json()
+      console.log('🔍 Commissioner/users response data:', data)
+      
+      // Transform the data to match expected format
+      const transformedData = {
+        success: true,
+        members: data.users || data.members || [],
+        total: data.total || (data.users ? data.users.length : 0)
+      }
+      
+      console.log('🔍 Transformed members data:', transformedData)
+      return transformedData
+    } else {
+      console.log('⚠️ Commissioner/users endpoint failed, trying members endpoint...')
     }
-  })
-  
-  console.log('🔍 getLeagueMembers response status:', response.status)
-  
-  if (!response.ok) {
-    const errorText = await response.text()
-    console.error('❌ getLeagueMembers failed:', response.status, errorText)
-    throw new Error(`Failed to fetch league members: ${response.status}`)
+  } catch (error) {
+    console.log('⚠️ Commissioner/users endpoint error, trying members endpoint:', error)
   }
   
-  const data = await response.json()
-  console.log('🔍 getLeagueMembers response data:', data)
-  
-  return data
+  // Fallback to the original members endpoint
+  try {
+    console.log('🔍 Trying members endpoint as fallback...')
+    const response = await fetch(`${API_BASE}/leagues/${leagueId}/members`, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    
+    console.log('🔍 Members response status:', response.status)
+    
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('❌ getLeagueMembers failed:', response.status, errorText)
+      throw new Error(`Failed to fetch league members: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    console.log('🔍 Members response data:', data)
+    
+    return data
+  } catch (error) {
+    console.error('❌ Both endpoints failed:', error)
+    throw error
+  }
 }
 
 export const updateLeagueSettings = async (leagueId: string, settings: Record<string, unknown>) => {
