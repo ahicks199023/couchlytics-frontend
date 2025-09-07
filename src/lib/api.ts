@@ -151,46 +151,9 @@ export const getLeagueSettings = async (leagueId: string) => {
 export const getLeagueMembers = async (leagueId: string) => {
   console.log('🔍 getLeagueMembers called for league:', leagueId)
   
-  // Try the working commissioner/users endpoint first
+  // Use the members endpoint directly (this returns all league members)
   try {
-    console.log('🔍 Trying commissioner/users endpoint...')
-    const response = await fetch(`${API_BASE}/leagues/${leagueId}/commissioner/users`, {
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    })
-    
-    console.log('🔍 Commissioner/users response status:', response.status)
-    
-    if (response.ok) {
-      const data = await response.json()
-      console.log('🔍 Commissioner/users response data:', data)
-      
-      // Transform the data to match expected format
-      const transformedData = {
-        success: true,
-        members: data.users || data.members || [],
-        total: data.total || (data.users ? data.users.length : 0),
-        debugInfo: {
-          apiEndpointUsed: `/leagues/${leagueId}/commissioner/users`,
-          responseStatus: response.status,
-          responseData: data
-        }
-      }
-      
-      console.log('🔍 Transformed members data:', transformedData)
-      return transformedData
-    } else {
-      console.log('⚠️ Commissioner/users endpoint failed, trying members endpoint...')
-    }
-  } catch (error) {
-    console.log('⚠️ Commissioner/users endpoint error, trying members endpoint:', error)
-  }
-  
-  // Fallback to the original members endpoint
-  try {
-    console.log('🔍 Trying members endpoint as fallback...')
+    console.log('🔍 Using members endpoint...')
     const response = await fetch(`${API_BASE}/leagues/${leagueId}/members`, {
       credentials: 'include',
       headers: {
@@ -218,7 +181,7 @@ export const getLeagueMembers = async (leagueId: string) => {
       }
     }
   } catch (error) {
-    console.error('❌ Both endpoints failed:', error)
+    console.error('❌ Members endpoint failed:', error)
     throw error
   }
 }
