@@ -13,7 +13,8 @@ interface User {
   last_name: string;
   email: string;
   name: string;
-  role: string;
+  role?: string; // Optional - might be in league_role
+  league_role?: string; // The actual role field from backend
   joined_at: string;
   team_id?: number | null; // Optional since it might be in team object
   team?: {
@@ -84,6 +85,11 @@ export default function CommissionerUsersPage() {
     return user.team_id || user.team?.id || null;
   };
 
+  // Helper function to get role from user data
+  const getUserRole = (user: User): string => {
+    return user.league_role || user.role || 'user';
+  };
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -126,6 +132,7 @@ export default function CommissionerUsersPage() {
           team_id: user.team_id,
           name: user.name,
           role: user.role,
+          league_role: user.league_role,
           joined_at: user.joined_at,
           is_active: user.is_active
         })), null, 2));
@@ -191,10 +198,14 @@ export default function CommissionerUsersPage() {
         throw new Error(`Failed to update role: ${response.status}`);
       }
 
-      // Update local state
+      // Update local state - update both role and league_role fields
       setUsers(prevUsers => 
         prevUsers.map(user => 
-          user.id === userId ? { ...user, role: newRole } : user
+          user.id === userId ? { 
+            ...user, 
+            role: newRole,
+            league_role: newRole 
+          } : user
         )
       );
 
@@ -422,8 +433,11 @@ export default function CommissionerUsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-xs text-gray-400 mb-1">
+                        Debug: role={getUserRole(user)}, league_role={user.league_role}
+                      </div>
                       <select
-                        value={user.role}
+                        value={getUserRole(user)}
                         onChange={(e) => handleRoleChange(user.id, e.target.value)}
                         disabled={updatingUser === user.id}
                         className="bg-gray-700 border border-gray-600 text-white text-sm rounded px-2 py-1 focus:outline-none focus:border-blue-500 disabled:opacity-50"
