@@ -48,15 +48,27 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ leagueId })
   // Fetch invitations and members
   const fetchInvitations = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/leagues/${leagueId}/invitations`, {
+      console.log('🔍 Fetching invitations for league:', leagueId)
+      const response = await fetch(`${API_BASE_URL}/leagues/${leagueId}/invites`, {
         credentials: 'include'
       })
-      const data = await response.json()
-      if (data.success) {
-        setInvitations(data.invitations)
+      console.log('🔍 Invitations response status:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('🔍 Invitations response data:', data)
+        if (data.success) {
+          setInvitations(data.invites || data.invitations || [])
+          console.log('✅ Invitations loaded:', (data.invites || data.invitations || []).length)
+        } else {
+          console.error('❌ Invitations fetch failed:', data.error)
+        }
+      } else {
+        const errorText = await response.text()
+        console.error('❌ Invitations fetch error:', response.status, errorText)
       }
     } catch (error) {
-      console.error('Error fetching invitations:', error)
+      console.error('❌ Error fetching invitations:', error)
     }
   }, [leagueId])
 
