@@ -43,18 +43,24 @@ const JoinLeaguePage = ({ params }: JoinLeaguePageProps) => {
 
   const fetchInvitationData = useCallback(async (invitationCode: string) => {
     try {
+      console.log('🔍 FETCHING INVITATION DATA for code:', invitationCode)
+      console.log('🔍 API URL:', `${API_BASE_URL}/invitations/${invitationCode}/pre-register`)
+      
       const response = await fetch(`${API_BASE_URL}/invitations/${invitationCode}/pre-register`)
       const data = await response.json()
       
-      console.log('Pre-register response:', data)
-      console.log('Pre-register status:', response.status)
+      console.log('📋 Pre-register response:', data)
+      console.log('📋 Pre-register status:', response.status)
       
       if (data.success) {
+        console.log('✅ Invitation data loaded successfully')
         setInvitationData(data)
       } else {
+        console.log('❌ Invitation validation failed:', data.error)
         setError(data.error || 'Invalid invitation')
       }
-    } catch {
+    } catch (error) {
+      console.log('💥 Error fetching invitation data:', error)
       setError('Failed to validate invitation')
     } finally {
       setLoading(false)
@@ -63,9 +69,12 @@ const JoinLeaguePage = ({ params }: JoinLeaguePageProps) => {
 
   useEffect(() => {
     const loadData = async () => {
+      console.log('🚀 JOIN LEAGUE PAGE LOADED')
       const resolvedParams = await params
+      console.log('📝 Resolved params:', resolvedParams)
       setInvitationCode(resolvedParams.invitationCode)
       if (resolvedParams.invitationCode) {
+        console.log('🎯 Starting invitation data fetch...')
         await fetchInvitationData(resolvedParams.invitationCode)
       }
     }
@@ -197,6 +206,10 @@ const RegisterAndJoin = ({ invitationCode, invitationData }: { invitationCode: s
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('📝 REGISTRATION FORM SUBMITTED')
+    console.log('📝 Form data:', formData)
+    console.log('📝 Invitation code:', invitationCode)
+    
     setLoading(true)
     setError('')
 
@@ -208,32 +221,40 @@ const RegisterAndJoin = ({ invitationCode, invitationData }: { invitationCode: s
     }
 
     try {
+      const requestData = {
+        ...formData,
+        invitation_code: invitationCode
+      }
+      
+      console.log('📤 Sending registration request:', requestData)
+      console.log('📤 API URL:', `${API_BASE_URL}/register-with-invitation`)
+      
       const response = await fetch(`${API_BASE_URL}/register-with-invitation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          ...formData,
-          invitation_code: invitationCode
-        })
+        body: JSON.stringify(requestData)
       })
 
       const data = await response.json()
       
-      console.log('Registration response:', data)
-      console.log('Response status:', response.status)
+      console.log('📋 Registration response:', data)
+      console.log('📋 Response status:', response.status)
       
       if (data.success) {
+        console.log('✅ Registration successful!')
         // Show success message
         alert(`Welcome! You've joined ${data.league_name || invitationData?.league.name} successfully!`)
         
         // Redirect to the league
         router.push(data.redirect_url || `/leagues/${invitationData?.league.id}`)
       } else {
+        console.log('❌ Registration failed:', data.error)
         setError(data.error || 'Failed to create account')
       }
-    } catch {
+    } catch (error) {
+      console.log('💥 Registration error:', error)
       setError('Failed to create account')
     } finally {
       setLoading(false)
