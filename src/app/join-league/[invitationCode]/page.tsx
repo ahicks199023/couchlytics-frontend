@@ -1,18 +1,16 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { API_BASE_URL } from '../../../lib/http'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface InvitationData {
   invitation: {
-    id: string
+    id: number
     invitation_code: string
     max_uses: number
     current_uses: number
     expires_at: string
-    is_active: boolean
-    is_valid: boolean
     role: string
     invited_email?: string
     metadata?: {
@@ -20,132 +18,56 @@ interface InvitationData {
     }
   }
   league: {
-    id: string
+    id: number
     name: string
-    description?: string
+    description: string
     season_year: number
     max_teams: number
   }
 }
 
-const JoinLeaguePage: React.FC = () => {
-  const params = useParams()
+interface JoinLeaguePageProps {
+  params: {
+    invitationCode: string
+  }
+}
+
+const JoinLeaguePage = ({ params }: JoinLeaguePageProps) => {
   const router = useRouter()
-  const invitationCode = params.invitationCode as string
-  
+  const { user, isAuthenticated } = useAuth()
   const [invitationData, setInvitationData] = useState<InvitationData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [joining, setJoining] = useState(false)
 
-  const validateInvitation = useCallback(async () => {
+  useEffect(() => {
+    if (params.invitationCode) {
+      fetchInvitationData()
+    }
+  }, [params.invitationCode])
+
+  const fetchInvitationData = async () => {
     try {
-      console.log('🔍 Validating invitation:', invitationCode)
-      const response = await fetch(`${API_BASE_URL}/invitations/${invitationCode}/validate`, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invitations/${params.invitationCode}/pre-register`)
+      const data = await response.json()
       
-      console.log('📡 Validate invitation response status:', response.status)
-      
-      if (response.ok) {
-        const data = await response.json()
-        console.log('✅ Invitation validation success:', data)
-        if (data.success) {
-          setInvitationData(data)
-        } else {
-          setError(data.error || 'Invalid invitation')
-        }
+      if (data.success) {
+        setInvitationData(data)
       } else {
-        const errorText = await response.text()
-        console.error('❌ Invitation validation error:', errorText)
-        setError(`Failed to validate invitation (${response.status})`)
+        setError(data.error || 'Invalid invitation')
       }
     } catch (error) {
-      console.error('❌ Invitation validation error:', error)
       setError('Failed to validate invitation')
     } finally {
       setLoading(false)
     }
-  }, [invitationCode])
-
-  useEffect(() => {
-    if (invitationCode) {
-      validateInvitation()
-      checkLoginStatus()
-    }
-  }, [invitationCode, validateInvitation])
-
-
-
-  const checkLoginStatus = async () => {
-    // Check if user is logged in by making a request to the backend
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        credentials: 'include'
-      })
-      setIsLoggedIn(response.ok)
-    } catch {
-      setIsLoggedIn(false)
-    }
-  }
-
-  const handleJoinLeague = async () => {
-    setJoining(true)
-    
-    try {
-      console.log('🔗 Attempting to join league with invitation:', invitationCode)
-      console.log('🍪 Current cookies:', document.cookie)
-      
-      const response = await fetch(`${API_BASE_URL}/invitations/${invitationCode}/join`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      console.log('📡 Join league response status:', response.status)
-      console.log('📡 Join league response headers:', Object.fromEntries(response.headers.entries()))
-
-      if (response.ok) {
-        const data = await response.json()
-        console.log('✅ Join league success:', data)
-        showToast('Successfully joined the league!')
-        router.push(`/leagues/${data.league_id}`)
-      } else {
-        const errorText = await response.text()
-        console.error('❌ Join league error response:', errorText)
-        
-        try {
-          const errorData = JSON.parse(errorText)
-          setError(errorData.error || `Failed to join league (${response.status})`)
-        } catch {
-          setError(`Failed to join league (${response.status}): ${errorText}`)
-        }
-      }
-    } catch (error) {
-      console.error('❌ Join league error:', error)
-      setError('Failed to join league: ' + (error instanceof Error ? error.message : 'Unknown error'))
-    } finally {
-      setJoining(false)
-    }
-  }
-
-  const handleRegisterAndJoin = () => {
-    // Redirect to registration page with invitation code
-    router.push(`/register?invitation=${invitationCode}`)
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex justify-center items-center min-h-screen bg-gray-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Validating invitation...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading invitation...</p>
         </div>
       </div>
     )
@@ -153,14 +75,14 @@ const JoinLeaguePage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
         <div className="text-center">
-          <div className="text-red-400 text-6xl mb-4">❌</div>
-          <h1 className="text-2xl font-bold mb-2">Invalid Invitation</h1>
-          <p className="text-gray-400 mb-6">{error}</p>
-          <button
+          <div className="text-red-500 text-6xl mb-4">❌</div>
+          <h1 className="text-2xl font-bold text-white mb-2">Invalid Invitation</h1>
+          <p className="text-gray-400 mb-4">{error}</p>
+          <button 
             onClick={() => router.push('/')}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded"
           >
             Go Home
           </button>
@@ -169,75 +91,248 @@ const JoinLeaguePage: React.FC = () => {
     )
   }
 
+  if (isAuthenticated && user) {
+    return <JoinAsExistingUser invitationCode={params.invitationCode} invitationData={invitationData} />
+  } else {
+    return <RegisterAndJoin invitationCode={params.invitationCode} invitationData={invitationData} />
+  }
+}
+
+const JoinAsExistingUser = ({ invitationCode, invitationData }: { invitationCode: string, invitationData: InvitationData | null }) => {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleJoin = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invitations/${invitationCode}/join`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        // Redirect to the league
+        router.push(data.redirect_url || `/leagues/${invitationData?.league.id}`)
+      } else {
+        setError(data.error || 'Failed to join league')
+      }
+    } catch (error) {
+      setError('Failed to join league')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900">
-      <div className="bg-gray-800 p-8 rounded-lg w-full max-w-md">
-        <div className="text-center mb-6">
-          <div className="text-green-400 text-6xl mb-4">🎯</div>
-          <h1 className="text-2xl font-bold mb-2">Join League</h1>
-                     <p className="text-gray-400">You&apos;ve been invited to join a league!</p>
+      <div className="max-w-md w-full bg-gray-800 rounded-lg p-8">
+        <div className="text-center mb-8">
+          <div className="text-green-500 text-6xl mb-4">🏈</div>
+          <h1 className="text-2xl font-bold text-white mb-2">
+            Join {invitationData?.league?.name}
+          </h1>
+          <p className="text-gray-400">
+            You're already logged in! Click below to join this league.
+          </p>
         </div>
 
-        {invitationData && (
-          <div className="bg-gray-700/50 p-4 rounded-lg mb-6">
-            <h3 className="font-semibold mb-2">{invitationData.league.name}</h3>
-            <p className="text-sm text-gray-400 mb-3">{invitationData.league.description}</p>
-            
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-400">Season:</span>
-                <span className="ml-2">{invitationData.league.season_year}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Max Teams:</span>
-                <span className="ml-2">{invitationData.league.max_teams}</span>
-              </div>
-            </div>
-            
-            {invitationData.invitation.metadata?.custom_message && (
-              <div className="mt-3 p-3 bg-blue-900/20 border border-blue-500 rounded">
-                <p className="text-sm text-blue-300">
-                  {invitationData.invitation.metadata.custom_message}
-                </p>
-              </div>
-            )}
+        {error && (
+          <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-4">
+            {error}
           </div>
         )}
 
-        {isLoggedIn ? (
-          <button
-            onClick={handleJoinLeague}
-            disabled={joining}
-            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white py-3 rounded-lg font-medium"
-          >
-            {joining ? 'Joining...' : 'Join League'}
-          </button>
-        ) : (
-          <div className="space-y-3">
-            <button
-              onClick={handleRegisterAndJoin}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium"
-            >
-              Create Account & Join League
-            </button>
-            <button
-              onClick={() => router.push('/login')}
-              className="w-full bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg font-medium"
-            >
-              I Already Have an Account
-            </button>
-          </div>
-        )}
+        <button
+          onClick={handleJoin}
+          disabled={loading}
+          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-bold py-3 px-4 rounded"
+        >
+          {loading ? 'Joining...' : 'Join League'}
+        </button>
       </div>
     </div>
   )
 }
 
+const RegisterAndJoin = ({ invitationCode, invitationData }: { invitationCode: string, invitationData: InvitationData | null }) => {
+  const router = useRouter()
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    first_name: '',
+    last_name: '',
+    display_name: ''
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-// Helper function to show toast notifications
-const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-  // This should match your existing toast notification system
-  console.log(`${type.toUpperCase()}: ${message}`)
+  useEffect(() => {
+    // Pre-fill email if specified in invitation
+    if (invitationData?.invitation?.invited_email) {
+      setFormData(prev => ({ 
+        ...prev, 
+        email: invitationData.invitation.invited_email 
+      }))
+    }
+  }, [invitationData])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      setLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/register-with-invitation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...formData,
+          invitation_code: invitationCode
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        // Show success message
+        alert(`Welcome! You've joined ${data.league_name} successfully!`)
+        
+        // Redirect to the league
+        router.push(data.redirect_url || `/leagues/${invitationData?.league.id}`)
+      } else {
+        setError(data.error || 'Failed to create account')
+      }
+    } catch (error) {
+      setError('Failed to create account')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="max-w-md w-full bg-gray-800 rounded-lg p-8">
+        <div className="text-center mb-8">
+          <div className="text-blue-500 text-6xl mb-4">🏈</div>
+          <h1 className="text-2xl font-bold text-white mb-2">
+            Join {invitationData?.league?.name}
+          </h1>
+          <p className="text-gray-400">
+            Create your account to join this league
+          </p>
+        </div>
+
+        {error && (
+          <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              required
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              First Name
+            </label>
+            <input
+              type="text"
+              value={formData.first_name}
+              onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
+              required
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Last Name
+            </label>
+            <input
+              type="text"
+              value={formData.last_name}
+              onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
+              required
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Display Name
+            </label>
+            <input
+              type="text"
+              value={formData.display_name}
+              onChange={(e) => setFormData(prev => ({ ...prev, display_name: e.target.value }))}
+              placeholder="Optional"
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+              required
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+              required
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-bold py-3 px-4 rounded"
+          >
+            {loading ? 'Creating Account...' : 'Create Account & Join League'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
 }
 
 export default JoinLeaguePage
