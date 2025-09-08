@@ -15,7 +15,14 @@ interface User {
   name: string;
   role: string;
   joined_at: string;
-  team_id: number | null;
+  team_id?: number | null; // Optional since it might be in team object
+  team?: {
+    id: number;
+    name: string;
+    display_name: string;
+    city?: string;
+    abbreviation?: string;
+  };
   is_active: boolean;
 }
 
@@ -70,6 +77,11 @@ export default function CommissionerUsersPage() {
       setCopyMessage('Failed to copy URL');
       setTimeout(() => setCopyMessage(''), 3000);
     }
+  };
+
+  // Helper function to get team ID from user data
+  const getUserTeamId = (user: User): number | null => {
+    return user.team_id || user.team?.id || null;
   };
 
 
@@ -214,7 +226,7 @@ export default function CommissionerUsersPage() {
 
       // Get the current user to find their old team
       const currentUser = users.find(user => user.id === userId);
-      const oldTeamId = currentUser?.team_id;
+      const oldTeamId = getUserTeamId(currentUser!);
 
       // Update users state
       setUsers(prevUsers => 
@@ -433,12 +445,12 @@ export default function CommissionerUsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-xs text-gray-400 mb-1">
-                        Debug: team_id={user.team_id}, available={availableTeams.length}
+                        Debug: team_id={getUserTeamId(user)}, available={availableTeams.length}
                       </div>
                       <select
-                        value={user.team_id || ''}
+                        value={getUserTeamId(user) || ''}
                         onChange={(e) => {
-                          console.log(`🔄 Team change for user ${user.id}: ${user.team_id} -> ${e.target.value}`);
+                          console.log(`🔄 Team change for user ${user.id}: ${getUserTeamId(user)} -> ${e.target.value}`);
                           handleTeamChange(user.id, e.target.value ? parseInt(e.target.value) : null);
                         }}
                         disabled={updatingUser === user.id}
@@ -451,9 +463,9 @@ export default function CommissionerUsersPage() {
                           </option>
                         ))}
                         {/* Also show currently assigned team for this user */}
-                        {user.team_id && !availableTeams.find(t => t.id === user.team_id) && (
-                          <option value={user.team_id} disabled>
-                            {teams.find(t => t.id === user.team_id)?.city} {teams.find(t => t.id === user.team_id)?.name} (Current)
+                        {getUserTeamId(user) && !availableTeams.find(t => t.id === getUserTeamId(user)) && (
+                          <option value={getUserTeamId(user)!} disabled>
+                            {user.team?.display_name || teams.find(t => t.id === getUserTeamId(user))?.name} (Current)
                           </option>
                         )}
                       </select>
