@@ -108,7 +108,7 @@ export default function CommissionerUsersPage() {
         
         console.log('🔍 Users response data:', usersData);
         console.log('🔍 Teams response data:', teamsData);
-        console.log('🔍 Individual users with team data:', usersData.users?.map((user: User) => ({
+        console.log('🔍 Individual users with team data:', JSON.stringify(usersData.users?.map((user: User) => ({
           id: user.id,
           email: user.email,
           team_id: user.team_id,
@@ -116,8 +116,8 @@ export default function CommissionerUsersPage() {
           role: user.role,
           joined_at: user.joined_at,
           is_active: user.is_active
-        })));
-        console.log('🔍 Full users array:', usersData.users);
+        })), null, 2));
+        console.log('🔍 Full users array:', JSON.stringify(usersData.users, null, 2));
         
         setUsers(usersData.users);
         
@@ -132,8 +132,8 @@ export default function CommissionerUsersPage() {
           assigned: teamsData.assigned_teams.length,
           total: teamsData.teams?.length || 0
         });
-        console.log('🔍 Available teams sample:', teamsData.available_teams.slice(0, 3));
-        console.log('🔍 Assigned teams:', teamsData.assigned_teams);
+        console.log('🔍 Available teams sample:', JSON.stringify(teamsData.available_teams.slice(0, 3), null, 2));
+        console.log('🔍 Assigned teams:', JSON.stringify(teamsData.assigned_teams, null, 2));
         } else {
           // Fallback to old structure - filter teams manually
           const allTeams = teamsData.teams || [];
