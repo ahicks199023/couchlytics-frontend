@@ -433,9 +433,6 @@ export default function CommissionerUsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-xs text-gray-400 mb-1">
-                        Debug: role={getUserRole(user)}, league_role={user.league_role}
-                      </div>
                       <select
                         value={getUserRole(user)}
                         onChange={(e) => handleRoleChange(user.id, e.target.value)}
@@ -458,9 +455,6 @@ export default function CommissionerUsersPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-xs text-gray-400 mb-1">
-                        Debug: team_id={getUserTeamId(user)}, available={availableTeams.length}
-                      </div>
                       <select
                         value={getUserTeamId(user) || ''}
                         onChange={(e) => {
