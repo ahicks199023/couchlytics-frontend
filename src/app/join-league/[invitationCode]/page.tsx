@@ -193,6 +193,7 @@ const RegisterAndJoin = ({ invitationCode, invitationData }: { invitationCode: s
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showLoginOption, setShowLoginOption] = useState(false)
 
   useEffect(() => {
     // Pre-fill email if specified in invitation
@@ -251,7 +252,15 @@ const RegisterAndJoin = ({ invitationCode, invitationData }: { invitationCode: s
         router.push(data.redirect_url || `/leagues/${invitationData?.league.id}`)
       } else {
         console.log('❌ Registration failed:', data.error)
-        setError(data.error || 'Failed to create account')
+        
+        // Handle specific error cases
+        if (data.error === 'User with this email already exists') {
+          setError('An account with this email already exists. Please log in to join the league.')
+          setShowLoginOption(true)
+          return
+        } else {
+          setError(data.error || 'Failed to create account')
+        }
       }
     } catch (error) {
       console.log('💥 Registration error:', error)
@@ -277,6 +286,18 @@ const RegisterAndJoin = ({ invitationCode, invitationData }: { invitationCode: s
         {error && (
           <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-4">
             {error}
+            {showLoginOption && (
+              <div className="mt-3">
+                <button
+                  onClick={() => {
+                    window.location.href = `/login?invite=${invitationCode}&email=${encodeURIComponent(formData.email)}`
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
+                >
+                  Login Instead
+                </button>
+              </div>
+            )}
           </div>
         )}
 
