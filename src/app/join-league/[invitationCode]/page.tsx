@@ -46,6 +46,9 @@ const JoinLeaguePage = ({ params }: JoinLeaguePageProps) => {
       const response = await fetch(`${API_BASE_URL}/invitations/${invitationCode}/pre-register`)
       const data = await response.json()
       
+      console.log('Pre-register response:', data)
+      console.log('Pre-register status:', response.status)
+      
       if (data.success) {
         setInvitationData(data)
       } else {
@@ -121,6 +124,9 @@ const JoinAsExistingUser = ({ invitationCode, invitationData }: { invitationCode
       })
       
       const data = await response.json()
+      
+      console.log('Join response:', data)
+      console.log('Join response status:', response.status)
       
       if (data.success) {
         // Redirect to the league
@@ -215,9 +221,12 @@ const RegisterAndJoin = ({ invitationCode, invitationData }: { invitationCode: s
 
       const data = await response.json()
       
+      console.log('Registration response:', data)
+      console.log('Response status:', response.status)
+      
       if (data.success) {
         // Show success message
-        alert(`Welcome! You've joined ${data.league_name} successfully!`)
+        alert(`Welcome! You've joined ${data.league_name || invitationData?.league.name} successfully!`)
         
         // Redirect to the league
         router.push(data.redirect_url || `/leagues/${invitationData?.league.id}`)
