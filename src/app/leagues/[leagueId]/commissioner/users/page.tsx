@@ -26,6 +26,10 @@ interface Team {
   city: string;
   conference: string;
   division: string;
+  is_assigned?: boolean;
+  user_id?: number;
+  user_name?: string;
+  user_email?: string;
 }
 
 const ROLE_OPTIONS = [
@@ -40,6 +44,8 @@ export default function CommissionerUsersPage() {
   const leagueId = params.leagueId;
   const [users, setUsers] = useState<User[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
+  const [availableTeams, setAvailableTeams] = useState<Team[]>([]);
+  const [assignedTeams, setAssignedTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingUser, setUpdatingUser] = useState<number | null>(null);
@@ -103,7 +109,33 @@ export default function CommissionerUsersPage() {
         console.log('🔍 Teams response data:', teamsData);
         
         setUsers(usersData.users);
-        setTeams(teamsData.teams);
+        
+        // Handle both old and new API response structures
+        if (teamsData.available_teams && teamsData.assigned_teams) {
+          // New API structure with separated arrays
+          setAvailableTeams(teamsData.available_teams);
+          setAssignedTeams(teamsData.assigned_teams);
+          setTeams(teamsData.teams || []);
+          console.log('✅ Using new API structure:', {
+            available: teamsData.available_teams.length,
+            assigned: teamsData.assigned_teams.length,
+            total: teamsData.teams?.length || 0
+          });
+        } else {
+          // Fallback to old structure - filter teams manually
+          const allTeams = teamsData.teams || [];
+          const available = allTeams.filter((team: Team) => !team.is_assigned);
+          const assigned = allTeams.filter((team: Team) => team.is_assigned);
+          
+          setAvailableTeams(available);
+          setAssignedTeams(assigned);
+          setTeams(allTeams);
+          console.log('⚠️ Using fallback filtering:', {
+            available: available.length,
+            assigned: assigned.length,
+            total: allTeams.length
+          });
+        }
       } catch (err) {
         console.error('🔍 Fetch error:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch data');
@@ -167,14 +199,62 @@ export default function CommissionerUsersPage() {
         throw new Error(`Failed to update team: ${response.status}`);
       }
 
-      // Update local state
+      // Get the current user to find their old team
+      const currentUser = users.find(user => user.id === userId);
+      const oldTeamId = currentUser?.team_id;
+
+      // Update users state
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user.id === userId ? { ...user, team_id: newTeamId } : user
         )
       );
 
+      // Update available teams - add old team back, remove new team
+      setAvailableTeams(prevAvailable => {
+        let updated = [...prevAvailable];
+        
+        // Add old team back to available if it exists
+        if (oldTeamId) {
+          const oldTeam = teams.find(team => team.id === oldTeamId);
+          if (oldTeam && !updated.find(t => t.id === oldTeamId)) {
+            updated.push({ ...oldTeam, is_assigned: false });
+          }
+        }
+        
+        // Remove new team from available
+        if (newTeamId) {
+          updated = updated.filter(team => team.id !== newTeamId);
+        }
+        
+        return updated;
+      });
+
+      // Update assigned teams
+      setAssignedTeams(prevAssigned => {
+        let updated = [...prevAssigned];
+        
+        // Remove old team from assigned
+        if (oldTeamId) {
+          updated = updated.filter(team => team.id !== oldTeamId);
+        }
+        
+        // Add new team to assigned
+        if (newTeamId) {
+          const newTeam = teams.find(team => team.id === newTeamId);
+          if (newTeam) {
+            updated.push({ ...newTeam, is_assigned: true });
+          }
+        }
+        
+        return updated;
+      });
+
       console.log(`✅ Team updated successfully for user ${userId} to team ${newTeamId}`);
+      console.log('📊 Updated team counts:', {
+        available: availableTeams.length - (newTeamId ? 1 : 0) + (oldTeamId ? 1 : 0),
+        assigned: assignedTeams.length + (newTeamId ? 1 : 0) - (oldTeamId ? 1 : 0)
+      });
     } catch (err) {
       console.error('❌ Error updating team:', err);
       setError(err instanceof Error ? err.message : 'Failed to update team');
@@ -265,6 +345,25 @@ export default function CommissionerUsersPage() {
       {activeTab === 'users' && (
         <div className="bg-gray-800 shadow rounded-lg border border-gray-700">
         <div className="px-4 py-5 sm:p-6">
+          
+          {/* Debug Information */}
+          <div className="mb-4 p-3 bg-gray-700 rounded-md text-sm">
+            <div className="font-semibold mb-2 text-yellow-400">🔧 Team Assignment Debug</div>
+            <div className="grid grid-cols-3 gap-4 text-xs">
+              <div>
+                <span className="text-gray-400">Available Teams:</span>
+                <span className="text-green-400 ml-2 font-bold">{availableTeams.length}</span>
+              </div>
+              <div>
+                <span className="text-gray-400">Assigned Teams:</span>
+                <span className="text-blue-400 ml-2 font-bold">{assignedTeams.length}</span>
+              </div>
+              <div>
+                <span className="text-gray-400">Total Teams:</span>
+                <span className="text-white ml-2 font-bold">{teams.length}</span>
+              </div>
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-700">
               <thead className="bg-gray-700">
@@ -327,11 +426,17 @@ export default function CommissionerUsersPage() {
                         className="bg-gray-700 border border-gray-600 text-white text-sm rounded px-2 py-1 focus:outline-none focus:border-blue-500 disabled:opacity-50 min-w-[150px]"
                       >
                         <option value="">Unassigned</option>
-                        {teams.map(team => (
+                        {availableTeams.map(team => (
                           <option key={team.id} value={team.id}>
                             {team.city} {team.name}
                           </option>
                         ))}
+                        {/* Also show currently assigned team for this user */}
+                        {user.team_id && !availableTeams.find(t => t.id === user.team_id) && (
+                          <option value={user.team_id} disabled>
+                            {teams.find(t => t.id === user.team_id)?.city} {teams.find(t => t.id === user.team_id)?.name} (Current)
+                          </option>
+                        )}
                       </select>
                       {updatingUser === user.id && (
                         <div className="mt-1">
