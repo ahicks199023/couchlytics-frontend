@@ -72,6 +72,7 @@ export default function CommissionerUsersPage() {
     }
   };
 
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -107,6 +108,12 @@ export default function CommissionerUsersPage() {
         
         console.log('🔍 Users response data:', usersData);
         console.log('🔍 Teams response data:', teamsData);
+        console.log('🔍 Individual users with team data:', usersData.users?.map((user: User) => ({
+          id: user.id,
+          email: user.email,
+          team_id: user.team_id,
+          name: user.name
+        })));
         
         setUsers(usersData.users);
         
@@ -419,9 +426,15 @@ export default function CommissionerUsersPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-xs text-gray-400 mb-1">
+                        Debug: team_id={user.team_id}, available={availableTeams.length}
+                      </div>
                       <select
                         value={user.team_id || ''}
-                        onChange={(e) => handleTeamChange(user.id, e.target.value ? parseInt(e.target.value) : null)}
+                        onChange={(e) => {
+                          console.log(`🔄 Team change for user ${user.id}: ${user.team_id} -> ${e.target.value}`);
+                          handleTeamChange(user.id, e.target.value ? parseInt(e.target.value) : null);
+                        }}
                         disabled={updatingUser === user.id}
                         className="bg-gray-700 border border-gray-600 text-white text-sm rounded px-2 py-1 focus:outline-none focus:border-blue-500 disabled:opacity-50 min-w-[150px]"
                       >
