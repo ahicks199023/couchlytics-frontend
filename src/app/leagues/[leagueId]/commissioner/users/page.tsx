@@ -112,8 +112,12 @@ export default function CommissionerUsersPage() {
           id: user.id,
           email: user.email,
           team_id: user.team_id,
-          name: user.name
+          name: user.name,
+          role: user.role,
+          joined_at: user.joined_at,
+          is_active: user.is_active
         })));
+        console.log('🔍 Full users array:', usersData.users);
         
         setUsers(usersData.users);
         
@@ -123,11 +127,13 @@ export default function CommissionerUsersPage() {
           setAvailableTeams(teamsData.available_teams);
           setAssignedTeams(teamsData.assigned_teams);
           setTeams(teamsData.teams || []);
-          console.log('✅ Using new API structure:', {
-            available: teamsData.available_teams.length,
-            assigned: teamsData.assigned_teams.length,
-            total: teamsData.teams?.length || 0
-          });
+        console.log('✅ Using new API structure:', {
+          available: teamsData.available_teams.length,
+          assigned: teamsData.assigned_teams.length,
+          total: teamsData.teams?.length || 0
+        });
+        console.log('🔍 Available teams sample:', teamsData.available_teams.slice(0, 3));
+        console.log('🔍 Assigned teams:', teamsData.assigned_teams);
         } else {
           // Fallback to old structure - filter teams manually
           const allTeams = teamsData.teams || [];
