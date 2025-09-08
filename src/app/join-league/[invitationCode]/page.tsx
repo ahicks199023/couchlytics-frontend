@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -43,9 +43,9 @@ const JoinLeaguePage = ({ params }: JoinLeaguePageProps) => {
     if (params.invitationCode) {
       fetchInvitationData()
     }
-  }, [params.invitationCode])
+  }, [params.invitationCode, fetchInvitationData])
 
-  const fetchInvitationData = async () => {
+  const fetchInvitationData = useCallback(async () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invitations/${params.invitationCode}/pre-register`)
       const data = await response.json()
@@ -55,12 +55,12 @@ const JoinLeaguePage = ({ params }: JoinLeaguePageProps) => {
       } else {
         setError(data.error || 'Invalid invitation')
       }
-    } catch (error) {
+    } catch (err) {
       setError('Failed to validate invitation')
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.invitationCode])
 
   if (loading) {
     return (
@@ -121,7 +121,7 @@ const JoinAsExistingUser = ({ invitationCode, invitationData }: { invitationCode
       } else {
         setError(data.error || 'Failed to join league')
       }
-    } catch (error) {
+    } catch (err) {
       setError('Failed to join league')
     } finally {
       setLoading(false)
@@ -137,7 +137,7 @@ const JoinAsExistingUser = ({ invitationCode, invitationData }: { invitationCode
             Join {invitationData?.league?.name}
           </h1>
           <p className="text-gray-400">
-            You're already logged in! Click below to join this league.
+            You&apos;re already logged in! Click below to join this league.
           </p>
         </div>
 
@@ -217,7 +217,7 @@ const RegisterAndJoin = ({ invitationCode, invitationData }: { invitationCode: s
       } else {
         setError(data.error || 'Failed to create account')
       }
-    } catch (error) {
+    } catch (err) {
       setError('Failed to create account')
     } finally {
       setLoading(false)
