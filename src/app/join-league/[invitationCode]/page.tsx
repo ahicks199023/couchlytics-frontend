@@ -27,27 +27,22 @@ interface InvitationData {
 }
 
 interface JoinLeaguePageProps {
-  params: {
+  params: Promise<{
     invitationCode: string
-  }
+  }>
 }
 
 const JoinLeaguePage = ({ params }: JoinLeaguePageProps) => {
   const router = useRouter()
-  const { user, isAuthenticated } = useAuth()
+  const { user, authenticated } = useAuth()
   const [invitationData, setInvitationData] = useState<InvitationData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [invitationCode, setInvitationCode] = useState<string>('')
 
-  useEffect(() => {
-    if (params.invitationCode) {
-      fetchInvitationData()
-    }
-  }, [params.invitationCode, fetchInvitationData])
-
-  const fetchInvitationData = useCallback(async () => {
+  const fetchInvitationData = useCallback(async (invitationCode: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invitations/${params.invitationCode}/pre-register`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invitations/${invitationCode}/pre-register`)
       const data = await response.json()
       
       if (data.success) {
@@ -55,12 +50,23 @@ const JoinLeaguePage = ({ params }: JoinLeaguePageProps) => {
       } else {
         setError(data.error || 'Invalid invitation')
       }
-    } catch (err) {
+    } catch {
       setError('Failed to validate invitation')
     } finally {
       setLoading(false)
     }
-  }, [params.invitationCode])
+  }, [])
+
+  useEffect(() => {
+    const loadData = async () => {
+      const resolvedParams = await params
+      setInvitationCode(resolvedParams.invitationCode)
+      if (resolvedParams.invitationCode) {
+        await fetchInvitationData(resolvedParams.invitationCode)
+      }
+    }
+    loadData()
+  }, [params, fetchInvitationData])
 
   if (loading) {
     return (
@@ -91,10 +97,10 @@ const JoinLeaguePage = ({ params }: JoinLeaguePageProps) => {
     )
   }
 
-  if (isAuthenticated && user) {
-    return <JoinAsExistingUser invitationCode={params.invitationCode} invitationData={invitationData} />
+  if (authenticated && user) {
+    return <JoinAsExistingUser invitationCode={invitationCode} invitationData={invitationData} />
   } else {
-    return <RegisterAndJoin invitationCode={params.invitationCode} invitationData={invitationData} />
+    return <RegisterAndJoin invitationCode={invitationCode} invitationData={invitationData} />
   }
 }
 
@@ -121,7 +127,7 @@ const JoinAsExistingUser = ({ invitationCode, invitationData }: { invitationCode
       } else {
         setError(data.error || 'Failed to join league')
       }
-    } catch (err) {
+    } catch {
       setError('Failed to join league')
     } finally {
       setLoading(false)
@@ -175,9 +181,9 @@ const RegisterAndJoin = ({ invitationCode, invitationData }: { invitationCode: s
   useEffect(() => {
     // Pre-fill email if specified in invitation
     if (invitationData?.invitation?.invited_email) {
-      setFormData(prev => ({ 
-        ...prev, 
-        email: invitationData.invitation.invited_email 
+      setFormData(prev => ({
+        ...prev,
+        email: invitationData.invitation.invited_email || ''
       }))
     }
   }, [invitationData])
@@ -217,7 +223,7 @@ const RegisterAndJoin = ({ invitationCode, invitationData }: { invitationCode: s
       } else {
         setError(data.error || 'Failed to create account')
       }
-    } catch (err) {
+    } catch {
       setError('Failed to create account')
     } finally {
       setLoading(false)
