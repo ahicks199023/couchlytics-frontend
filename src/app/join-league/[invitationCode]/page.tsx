@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { API_BASE_URL } from '@/lib/http'
 
 interface InvitationData {
   invitation: {
@@ -42,7 +43,7 @@ const JoinLeaguePage = ({ params }: JoinLeaguePageProps) => {
 
   const fetchInvitationData = useCallback(async (invitationCode: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invitations/${invitationCode}/pre-register`)
+      const response = await fetch(`${API_BASE_URL}/invitations/${invitationCode}/pre-register`)
       const data = await response.json()
       
       if (data.success) {
@@ -114,7 +115,7 @@ const JoinAsExistingUser = ({ invitationCode, invitationData }: { invitationCode
     setError('')
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/invitations/${invitationCode}/join`, {
+      const response = await fetch(`${API_BASE_URL}/invitations/${invitationCode}/join`, {
         method: 'POST',
         credentials: 'include'
       })
@@ -201,7 +202,7 @@ const RegisterAndJoin = ({ invitationCode, invitationData }: { invitationCode: s
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/register-with-invitation`, {
+      const response = await fetch(`${API_BASE_URL}/register-with-invitation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
