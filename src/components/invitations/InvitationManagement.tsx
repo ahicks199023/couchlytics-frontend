@@ -49,7 +49,7 @@ const InvitationManagement: React.FC<InvitationManagementProps> = ({ leagueId })
   const fetchInvitations = useCallback(async () => {
     try {
       console.log('🔍 Fetching invitations for league:', leagueId)
-      const response = await fetch(`${API_BASE_URL}/leagues/${leagueId}/invites`, {
+      const response = await fetch(`${API_BASE_URL}/leagues/${leagueId}/invitations`, {
         credentials: 'include'
       })
       console.log('🔍 Invitations response status:', response.status)

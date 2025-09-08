@@ -36,7 +36,7 @@ const InvitationsList: React.FC<InvitationsListProps> = ({ invitations, onRefres
     if (!confirm('Are you sure you want to delete this invitation?')) return
 
     try {
-      const response = await fetch(`${API_BASE_URL}/leagues/${invitations[0]?.league_id}/invites/${invitationId}`, {
+      const response = await fetch(`${API_BASE_URL}/leagues/${invitations[0]?.league_id}/invitations/${invitationId}`, {
         method: 'DELETE',
         credentials: 'include'
       })
@@ -52,7 +52,7 @@ const InvitationsList: React.FC<InvitationsListProps> = ({ invitations, onRefres
 
   const toggleInvitationStatus = async (invitationId: string, isActive: boolean) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/leagues/${invitations[0]?.league_id}/invites/${invitationId}`, {
+      const response = await fetch(`${API_BASE_URL}/leagues/${invitations[0]?.league_id}/invitations/${invitationId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

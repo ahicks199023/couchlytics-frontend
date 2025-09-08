@@ -38,7 +38,7 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
     setError('')
 
     try {
-      const response = await fetch(`${API_BASE_URL}/leagues/${leagueId}/invites`, {
+      const response = await fetch(`${API_BASE_URL}/leagues/${leagueId}/invitations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
