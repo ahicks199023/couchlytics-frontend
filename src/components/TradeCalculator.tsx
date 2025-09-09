@@ -235,6 +235,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   const { user } = useAuth()
   const [players, setPlayers] = useState<Player[]>([])
   const [teams, setTeams] = useState<Team[]>([])
+  const [userTeam, setUserTeam] = useState<Team | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
@@ -274,11 +275,6 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   const [tradeMessage, setTradeMessage] = useState('')
   const [expirationHours, setExpirationHours] = useState(168) // Default 1 week
 
-  // Determine user's team by matching team.user_id to user.id
-  const userTeam = useMemo(() => 
-    teams.find(team => String(team.user_id) === String(user?.id)), 
-    [teams, user?.id]
-  )
   const userTeamId = userTeam?.id
 
   // Debug logging for team detection
@@ -287,8 +283,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
       console.log('🔍 Team Detection Debug:', {
         userId: user.id,
         teamsCount: teams.length,
-        teams: teams.map(t => ({ id: t.id, name: t.name, user_id: t.user_id })),
-        userTeam: userTeam ? { id: userTeam.id, name: userTeam.name } : null,
+        userTeam: userTeam ? { id: userTeam.id, name: userTeam.name, city: userTeam.city } : null,
         userTeamId
       })
     }
@@ -311,6 +306,41 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
       })
     }
   }, [players, userTeamId])
+
+  // Load user's team assignment
+  useEffect(() => {
+    const loadUserTeam = async () => {
+      try {
+        console.log('🔍 Loading user team assignment for league:', league_id)
+        const userTeamRes = await fetch(`${API_BASE}/leagues/${league_id}/user-team?include_financials=true`, { 
+          credentials: 'include' 
+        })
+        
+        if (userTeamRes.ok) {
+          const userTeamData = await userTeamRes.json()
+          console.log('🔍 User team response:', userTeamData)
+          
+          if (userTeamData.success && userTeamData.team) {
+            setUserTeam(userTeamData.team)
+            console.log('✅ User team assigned:', userTeamData.team)
+          } else {
+            console.log('⚠️ User not assigned to a team')
+            setUserTeam(null)
+          }
+        } else {
+          console.log('⚠️ Failed to load user team, status:', userTeamRes.status)
+          setUserTeam(null)
+        }
+      } catch (err) {
+        console.error('❌ Failed to load user team:', err)
+        setUserTeam(null)
+      }
+    }
+    
+    if (league_id) {
+      loadUserTeam()
+    }
+  }, [league_id])
 
   // Load user and data
   useEffect(() => {
