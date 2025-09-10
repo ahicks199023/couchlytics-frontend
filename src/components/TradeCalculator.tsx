@@ -885,7 +885,6 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
               <div>Team ID: {userTeam?.id || 'N/A'}</div>
               <div>Team Name: {userTeam?.name || 'N/A'}</div>
               <div>City: {userTeam?.city || 'N/A'}</div>
-              <div>Abbreviation: {userTeam?.abbreviation || 'N/A'}</div>
               <div>User ID: {user?.id || 'N/A'}</div>
               <div>League ID: {league_id}</div>
             </div>
