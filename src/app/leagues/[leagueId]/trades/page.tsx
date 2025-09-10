@@ -75,8 +75,17 @@ function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOff
   }
 
   const formatTimeRemaining = (expiresAt: string) => {
+    if (!expiresAt) return 'No expiration date'
+    
     const now = new Date()
     const expires = new Date(expiresAt)
+    
+    // Check if date is valid
+    if (isNaN(expires.getTime())) {
+      console.log('🔍 Invalid expiresAt date:', expiresAt)
+      return 'Invalid date'
+    }
+    
     const diff = expires.getTime() - now.getTime()
     
     if (diff <= 0) return 'Expired'
@@ -110,7 +119,7 @@ function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOff
                 }
               </h3>
               <p className="text-sm text-gray-400">
-                {new Date(trade.createdAt).toLocaleDateString()} • {formatTimeRemaining(trade.expiresAt)}
+                {trade.createdAt ? new Date(trade.createdAt).toLocaleDateString() : 'Unknown date'} • {formatTimeRemaining(trade.expiresAt)}
               </p>
             </div>
           </div>
