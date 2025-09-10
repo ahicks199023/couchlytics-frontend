@@ -6,6 +6,7 @@ import NavBar from './NavBar'
 import EnhancedOzzieChat from './EnhancedOzzieChat'
 import TradeTool from './TradeTool'
 import ChatPopout from './ChatPopout'
+import InvitationProcessor from './InvitationProcessor'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { FirebaseAuthProvider } from '@/contexts/FirebaseAuthContext'
 
@@ -19,6 +20,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   return (
     <AuthProvider>
       <FirebaseAuthProvider>
+        {/* Invitation Processor - Handles invitation links for authenticated users */}
+        <InvitationProcessor />
+        
         {!hideNav && <NavBar />}
         <main className="min-h-screen p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
           {children}
