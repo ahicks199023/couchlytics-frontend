@@ -16,8 +16,11 @@ interface UserTeam {
 interface TradeOffer {
   id: number
   status: string
-  fromTeam: { id: number; name: string }
-  toTeam: { id: number; name: string }
+  from_team?: { id: number; name: string; abbreviation?: string; city?: string }
+  to_team?: { id: number; name: string; abbreviation?: string; city?: string }
+  // Legacy support for old API format
+  fromTeam?: { id: number; name: string }
+  toTeam?: { id: number; name: string }
   fromPlayers: Array<{ id: number; playerName: string; position: string }>
   toPlayers: Array<{ id: number; playerName: string; position: string }>
   createdAt: string
@@ -39,8 +42,21 @@ interface TradeOfferCardProps {
   onCounter?: () => void
 }
 
+// Helper functions for safe team access
+const getTeamName = (team: { id: number; name: string; abbreviation?: string; city?: string } | undefined) => {
+  if (!team) return 'Unknown Team'
+  return team.name || team.abbreviation || 'Unknown Team'
+}
+
 function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOfferCardProps) {
   const [showDetails, setShowDetails] = useState(false)
+
+  // Debug logging for trade offer data
+  useEffect(() => {
+    console.log('🔍 Trade offer data:', trade)
+    console.log('🔍 From team:', trade.from_team || trade.fromTeam)
+    console.log('🔍 To team:', trade.to_team || trade.toTeam)
+  }, [trade])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -84,7 +100,10 @@ function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOff
             
             <div>
               <h3 className="font-semibold text-white">
-                {type === 'received' ? `From: ${trade.fromTeam.name}` : `To: ${trade.toTeam.name}`}
+                {type === 'received' 
+                  ? `From: ${getTeamName(trade.from_team || trade.fromTeam)}` 
+                  : `To: ${getTeamName(trade.to_team || trade.toTeam)}`
+                }
               </h3>
               <p className="text-sm text-gray-400">
                 {new Date(trade.createdAt).toLocaleDateString()} • {formatTimeRemaining(trade.expiresAt)}
