@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import TradesHistory from '@/components/trades/TradesHistory'
 import EnhancedTradeSubmissionForm from '@/components/trades/EnhancedTradeSubmissionForm'
 import { API_BASE } from '@/lib/config'
+import PlayerDetailsPopup from '@/components/PlayerDetailsPopup'
 
 interface UserTeam {
   id: number
@@ -116,6 +117,7 @@ interface TradeOfferCardProps {
   onAccept?: () => void
   onReject?: () => void
   onCounter?: () => void
+  onViewPlayer?: (player: TradePlayer) => void
 }
 
 // Helper functions for safe team access
@@ -124,7 +126,7 @@ const getTeamName = (team: { id: number; name: string; abbreviation?: string; ci
   return team.name || team.abbreviation || 'Unknown Team'
 }
 
-function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOfferCardProps) {
+function TradeOfferCard({ trade, type, onAccept, onReject, onCounter, onViewPlayer }: TradeOfferCardProps) {
   const [showDetails, setShowDetails] = useState(false)
 
   // Trade offer data loaded successfully
@@ -244,16 +246,12 @@ function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOff
                         </div>
                       </div>
                     </div>
-                    {player.player_card_url && (
-                      <a 
-                        href={player.player_card_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:text-blue-300 text-xs"
-                      >
-                        View Card
-                      </a>
-                    )}
+                    <button
+                      onClick={() => onViewPlayer?.(player)}
+                      className="text-blue-400 hover:text-blue-300 text-xs"
+                    >
+                      View Card
+                    </button>
                   </div>
                   
                   {/* Player Details */}
@@ -325,16 +323,12 @@ function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOff
                         </div>
                       </div>
                     </div>
-                    {player.player_card_url && (
-                      <a 
-                        href={player.player_card_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:text-blue-300 text-xs"
-                      >
-                        View Card
-                      </a>
-                    )}
+                    <button
+                      onClick={() => onViewPlayer?.(player)}
+                      className="text-blue-400 hover:text-blue-300 text-xs"
+                    >
+                      View Card
+                    </button>
                   </div>
                   
                   {/* Player Details */}
@@ -449,11 +443,23 @@ export default function TradesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'received' | 'sent' | 'history' | 'submit'>('received')
+  const [selectedPlayer, setSelectedPlayer] = useState<TradePlayer | null>(null)
+  const [showPlayerDetails, setShowPlayerDetails] = useState(false)
   const [trades, setTrades] = useState({
     sent: [],
     received: [],
     committee: []
   })
+
+  const openPlayerDetails = (player: TradePlayer) => {
+    setSelectedPlayer(player)
+    setShowPlayerDetails(true)
+  }
+
+  const closePlayerDetails = () => {
+    setShowPlayerDetails(false)
+    setSelectedPlayer(null)
+  }
 
   // Load user's team assignment
   useEffect(() => {
@@ -655,6 +661,7 @@ export default function TradesPage() {
                 onAccept={() => handleTradeAction(trade.id, 'accept')}
                 onReject={() => handleTradeAction(trade.id, 'reject')}
                 onCounter={() => handleTradeAction(trade.id, 'counter')}
+                onViewPlayer={openPlayerDetails}
               />
             ))
           )}
@@ -679,6 +686,7 @@ export default function TradesPage() {
                 key={trade.id}
                 trade={trade}
                 type="sent"
+                onViewPlayer={openPlayerDetails}
               />
             ))
           )}
@@ -711,6 +719,13 @@ export default function TradesPage() {
           )}
         </div>
       )}
+
+      {/* Player Details Popup */}
+      <PlayerDetailsPopup
+        player={selectedPlayer}
+        isOpen={showPlayerDetails}
+        onClose={closePlayerDetails}
+      />
     </div>
   )
 }
