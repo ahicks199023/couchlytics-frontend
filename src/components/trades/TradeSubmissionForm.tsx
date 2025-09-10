@@ -227,7 +227,8 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
       }
     } catch (error) {
       console.error('Failed to submit trade:', error)
-      alert('Failed to submit trade. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit trade. Please try again.'
+      setError(errorMessage)
     } finally {
       setSubmitting(false)
     }
@@ -247,13 +248,23 @@ const TradeSubmissionForm: React.FC<TradeSubmissionFormProps> = ({
   if (error) {
     return (
       <div className="text-center p-8">
-        <p className="text-red-500 mb-4">{error}</p>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Retry
-        </button>
+        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-4">
+          <p className="text-red-400 text-sm">{error}</p>
+        </div>
+        <div className="flex gap-2 justify-center">
+          <button 
+            onClick={() => setError(null)} 
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+          >
+            Reload Page
+          </button>
+        </div>
       </div>
     )
   }

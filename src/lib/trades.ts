@@ -52,9 +52,30 @@ export const submitTradeProposal = async (tradeData: {
     body: JSON.stringify(tradeData)
   })
   
+  // Handle different HTTP status codes with specific error messages
+  if (response.status === 500) {
+    throw new Error('Server error occurred while creating trade offer. Please try again in a few moments. If the problem persists, contact support.')
+  }
+  
+  if (response.status === 400) {
+    throw new Error('Invalid trade data. Please check your selections and try again.')
+  }
+  
+  if (response.status === 401) {
+    throw new Error('You are not authorized to create trade offers. Please log in again.')
+  }
+  
+  if (response.status === 403) {
+    throw new Error('You do not have permission to create trade offers in this league.')
+  }
+  
   if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error || 'Failed to submit trade proposal')
+    try {
+      const error = await response.json()
+      throw new Error(error.error || `Failed to submit trade proposal (${response.status})`)
+    } catch {
+      throw new Error(`Failed to submit trade proposal (${response.status}). Please try again.`)
+    }
   }
   
   return response.json()
@@ -124,9 +145,30 @@ export const submitTrade = async (tradeData: {
     body: JSON.stringify(tradeData)
   })
   
+  // Handle different HTTP status codes with specific error messages
+  if (response.status === 500) {
+    throw new Error('Server error occurred while creating trade offer. Please try again in a few moments. If the problem persists, contact support.')
+  }
+  
+  if (response.status === 400) {
+    throw new Error('Invalid trade data. Please check your selections and try again.')
+  }
+  
+  if (response.status === 401) {
+    throw new Error('You are not authorized to create trade offers. Please log in again.')
+  }
+  
+  if (response.status === 403) {
+    throw new Error('You do not have permission to create trade offers in this league.')
+  }
+  
   if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error || 'Failed to submit trade')
+    try {
+      const error = await response.json()
+      throw new Error(error.error || `Failed to submit trade (${response.status})`)
+    } catch {
+      throw new Error(`Failed to submit trade (${response.status}). Please try again.`)
+    }
   }
   
   return response.json()
