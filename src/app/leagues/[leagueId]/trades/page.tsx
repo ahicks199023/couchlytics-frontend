@@ -21,8 +21,8 @@ interface TradeOffer {
   // Legacy support for old API format
   fromTeam?: { id: number; name: string }
   toTeam?: { id: number; name: string }
-  fromPlayers: Array<{ id: number; playerName: string; position: string }>
-  toPlayers: Array<{ id: number; playerName: string; position: string }>
+  fromPlayers?: Array<{ id: number; playerName: string; position: string }>
+  toPlayers?: Array<{ id: number; playerName: string; position: string }>
   createdAt: string
   expiresAt: string
   message?: string
@@ -56,6 +56,10 @@ function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOff
     console.log('🔍 Trade offer data:', trade)
     console.log('🔍 From team:', trade.from_team || trade.fromTeam)
     console.log('🔍 To team:', trade.to_team || trade.toTeam)
+    console.log('🔍 From players:', trade.fromPlayers)
+    console.log('🔍 To players:', trade.toPlayers)
+    console.log('🔍 From players type:', typeof trade.fromPlayers, Array.isArray(trade.fromPlayers))
+    console.log('🔍 To players type:', typeof trade.toPlayers, Array.isArray(trade.toPlayers))
   }, [trade])
 
   const getStatusColor = (status: string) => {
@@ -136,12 +140,14 @@ function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOff
               {type === 'received' ? 'You Receive' : 'You Send'}
             </h4>
             <div className="space-y-1">
-              {(type === 'received' ? trade.fromPlayers : trade.toPlayers).map(player => (
+              {(type === 'received' ? trade.fromPlayers : trade.toPlayers)?.map(player => (
                 <div key={player.id} className="flex justify-between text-sm">
                   <span className="text-gray-300">{player.playerName}</span>
                   <span className="text-gray-500">{player.position}</span>
                 </div>
-              ))}
+              )) || (
+                <div className="text-gray-500 text-sm">No players</div>
+              )}
             </div>
           </div>
           
@@ -150,12 +156,14 @@ function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOff
               {type === 'received' ? 'You Send' : 'You Receive'}
             </h4>
             <div className="space-y-1">
-              {(type === 'received' ? trade.toPlayers : trade.fromPlayers).map(player => (
+              {(type === 'received' ? trade.toPlayers : trade.fromPlayers)?.map(player => (
                 <div key={player.id} className="flex justify-between text-sm">
                   <span className="text-gray-300">{player.playerName}</span>
                   <span className="text-gray-500">{player.position}</span>
                 </div>
-              ))}
+              )) || (
+                <div className="text-gray-500 text-sm">No players</div>
+              )}
             </div>
           </div>
         </div>
