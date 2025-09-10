@@ -323,12 +323,21 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
           if (userTeamData.success && userTeamData.team) {
             setUserTeam(userTeamData.team)
             console.log('✅ User team assigned:', userTeamData.team)
+            console.log('🔍 Team details:', {
+              id: userTeamData.team.id,
+              name: userTeamData.team.name,
+              city: userTeamData.team.city,
+              abbreviation: userTeamData.team.abbreviation
+            })
           } else {
             console.log('⚠️ User not assigned to a team')
+            console.log('🔍 Response details:', userTeamData)
             setUserTeam(null)
           }
         } else {
           console.log('⚠️ Failed to load user team, status:', userTeamRes.status)
+          const errorText = await userTeamRes.text()
+          console.log('🔍 Error response:', errorText)
           setUserTeam(null)
         }
       } catch (err) {
@@ -829,7 +838,19 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   if (!userTeam) {
     return (
       <div className="text-center p-8">
-        <p className="text-gray-400">You need to be assigned to a team to make trades.</p>
+        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-6 mb-4">
+          <h3 className="text-lg font-semibold text-yellow-400 mb-2">Team Assignment Required</h3>
+          <p className="text-yellow-300 mb-4">
+            You need to be assigned to a team to make trades. Please contact your league commissioner.
+          </p>
+          <div className="text-sm text-gray-400">
+            <p>Debug Info:</p>
+            <p>• User ID: {user?.id || 'Unknown'}</p>
+            <p>• League ID: {league_id}</p>
+            <p>• Loading: {loading ? 'Yes' : 'No'}</p>
+            <p>• Error: {error || 'None'}</p>
+          </div>
+        </div>
       </div>
     )
   }
@@ -855,6 +876,22 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
             <label className="text-sm text-gray-300">
               Team Need Calculations Active - Player values include team-specific multipliers based on your roster needs
             </label>
+          </div>
+          
+          {/* Debug Info Panel */}
+          <div className="mt-4 p-3 bg-gray-800/50 rounded text-xs">
+            <div className="font-semibold text-gray-300 mb-2">🔧 Debug Info:</div>
+            <div className="grid grid-cols-2 gap-2 text-gray-400">
+              <div>Team ID: {userTeam?.id || 'N/A'}</div>
+              <div>Team Name: {userTeam?.name || 'N/A'}</div>
+              <div>City: {userTeam?.city || 'N/A'}</div>
+              <div>Abbreviation: {userTeam?.abbreviation || 'N/A'}</div>
+              <div>User ID: {user?.id || 'N/A'}</div>
+              <div>League ID: {league_id}</div>
+            </div>
+            <div className="mt-2 text-yellow-400">
+              ⚠️ If this shows the wrong team, check User Management vs this display
+            </div>
           </div>
         </div>
 
