@@ -51,21 +51,7 @@ const getTeamName = (team: { id: number; name: string; abbreviation?: string; ci
 function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOfferCardProps) {
   const [showDetails, setShowDetails] = useState(false)
 
-  // Debug logging for trade offer data (can be removed once confirmed working)
-  useEffect(() => {
-    console.log('🔍 Trade offer data:', trade)
-    console.log('🔍 From team:', trade.from_team || trade.fromTeam)
-    console.log('🔍 To team:', trade.to_team || trade.toTeam)
-    console.log('🔍 From players:', trade.fromPlayers)
-    console.log('🔍 To players:', trade.toPlayers)
-    
-    // Success logging when data is complete
-    if (trade.from_team && trade.to_team && trade.fromPlayers && trade.toPlayers) {
-      console.log('✅ Trade offer data is complete!')
-    } else {
-      console.log('⚠️ Trade offer data is incomplete - check backend')
-    }
-  }, [trade])
+  // Trade offer data loaded successfully
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -213,16 +199,6 @@ function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOff
           </div>
         )}
 
-        {/* Data Status Indicator */}
-        {trade.from_team && trade.to_team && trade.fromPlayers && trade.toPlayers ? (
-          <div className="bg-green-600/20 rounded-lg p-2 mb-4">
-            <p className="text-xs text-green-400">✅ Trade data loaded successfully</p>
-          </div>
-        ) : (
-          <div className="bg-yellow-600/20 rounded-lg p-2 mb-4">
-            <p className="text-xs text-yellow-400">⚠️ Trade data incomplete - some details may be missing</p>
-          </div>
-        )}
 
         {/* Action Buttons */}
         {type === 'received' && trade.status === 'pending' && (
