@@ -13,6 +13,82 @@ interface UserTeam {
   abbreviation: string
 }
 
+interface PlayerRatings {
+  speed?: number
+  acceleration?: number
+  agility?: number
+  awareness?: number
+  strength?: number
+  jumping?: number
+  stamina?: number
+  injury?: number
+  toughness?: number
+  // QB specific
+  throw_power?: number
+  throw_accuracy_short?: number
+  throw_accuracy_medium?: number
+  throw_accuracy_deep?: number
+  throw_on_run?: number
+  throw_under_pressure?: number
+  play_action?: number
+  play_recognition?: number
+  // RB specific
+  carrying?: number
+  break_tackle?: number
+  trucking?: number
+  juke_move?: number
+  spin_move?: number
+  stiff_arm?: number
+  ball_carrier_vision?: number
+  // WR specific
+  catching?: number
+  catch_in_traffic?: number
+  spectacular_catch?: number
+  route_running?: number
+  release?: number
+  // Defense specific
+  tackle?: number
+  hit_power?: number
+  pursuit?: number
+  block_shedding?: number
+  power_moves?: number
+  finesse_moves?: number
+  man_coverage?: number
+  zone_coverage?: number
+  press?: number
+  change_of_direction?: number
+  // Special teams
+  kick_power?: number
+  kick_accuracy?: number
+  kick_return?: number
+}
+
+interface TradePlayer {
+  id: number
+  playerName: string
+  position: string
+  team?: string
+  overall_rating?: number
+  age?: number
+  height?: number
+  weight?: number
+  college?: string
+  jersey_number?: number
+  dev_trait?: string
+  years_pro?: number
+  contract_years_left?: number
+  contract_salary?: number
+  contract_bonus?: number
+  cap_hit?: number
+  headshot_url?: string
+  player_card_url?: string
+  player_profile_url?: string
+  ratings?: PlayerRatings
+  player_value?: number
+  position_rank?: number
+  overall_rank?: number
+}
+
 interface TradeOffer {
   id: number
   status: string
@@ -21,8 +97,8 @@ interface TradeOffer {
   // Legacy support for old API format
   fromTeam?: { id: number; name: string }
   toTeam?: { id: number; name: string }
-  fromPlayers?: Array<{ id: number; playerName: string; position: string }>
-  toPlayers?: Array<{ id: number; playerName: string; position: string }>
+  fromPlayers?: TradePlayer[]
+  toPlayers?: TradePlayer[]
   createdAt: string
   expiresAt: string
   message?: string
@@ -139,11 +215,76 @@ function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOff
             <h4 className="font-medium text-gray-200 mb-2">
               {type === 'received' ? 'You Receive' : 'You Send'}
             </h4>
-            <div className="space-y-1">
+            <div className="space-y-2">
               {(type === 'received' ? trade.fromPlayers : trade.toPlayers)?.map(player => (
-                <div key={player.id} className="flex justify-between text-sm">
-                  <span className="text-gray-300">{player.playerName}</span>
-                  <span className="text-gray-500">{player.position}</span>
+                <div key={player.id} className="bg-gray-700/30 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {player.headshot_url && (
+                        <img 
+                          src={player.headshot_url} 
+                          alt={player.playerName}
+                          className="w-8 h-8 rounded-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                      )}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-medium">{player.playerName}</span>
+                          {player.overall_rating && (
+                            <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                              OVR {player.overall_rating}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-gray-400 text-xs">
+                          {player.position} • {player.team} • #{player.jersey_number}
+                        </div>
+                      </div>
+                    </div>
+                    {player.player_card_url && (
+                      <a 
+                        href={player.player_card_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300 text-xs"
+                      >
+                        View Card
+                      </a>
+                    )}
+                  </div>
+                  
+                  {/* Player Details */}
+                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-400">
+                    {player.age && <div>Age: {player.age}</div>}
+                    {player.years_pro && <div>Years Pro: {player.years_pro}</div>}
+                    {player.dev_trait && <div>Dev: {player.dev_trait}</div>}
+                    {player.player_value && <div>Value: {player.player_value}</div>}
+                  </div>
+                  
+                  {/* Contract Info */}
+                  {player.contract_years_left && (
+                    <div className="mt-2 text-xs text-gray-400">
+                      Contract: {player.contract_years_left} years • ${player.contract_salary?.toLocaleString()}/year
+                    </div>
+                  )}
+                  
+                  {/* Key Ratings */}
+                  {player.ratings && (
+                    <div className="mt-2 grid grid-cols-3 gap-1 text-xs">
+                      {player.ratings.speed && (
+                        <div className="text-gray-400">SPD: {player.ratings.speed}</div>
+                      )}
+                      {player.ratings.awareness && (
+                        <div className="text-gray-400">AWR: {player.ratings.awareness}</div>
+                      )}
+                      {player.ratings.strength && (
+                        <div className="text-gray-400">STR: {player.ratings.strength}</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )) || (
                 <div className="text-gray-500 text-sm">No players</div>
@@ -155,11 +296,76 @@ function TradeOfferCard({ trade, type, onAccept, onReject, onCounter }: TradeOff
             <h4 className="font-medium text-gray-200 mb-2">
               {type === 'received' ? 'You Send' : 'You Receive'}
             </h4>
-            <div className="space-y-1">
+            <div className="space-y-2">
               {(type === 'received' ? trade.toPlayers : trade.fromPlayers)?.map(player => (
-                <div key={player.id} className="flex justify-between text-sm">
-                  <span className="text-gray-300">{player.playerName}</span>
-                  <span className="text-gray-500">{player.position}</span>
+                <div key={player.id} className="bg-gray-700/30 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {player.headshot_url && (
+                        <img 
+                          src={player.headshot_url} 
+                          alt={player.playerName}
+                          className="w-8 h-8 rounded-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                      )}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-medium">{player.playerName}</span>
+                          {player.overall_rating && (
+                            <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                              OVR {player.overall_rating}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-gray-400 text-xs">
+                          {player.position} • {player.team} • #{player.jersey_number}
+                        </div>
+                      </div>
+                    </div>
+                    {player.player_card_url && (
+                      <a 
+                        href={player.player_card_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300 text-xs"
+                      >
+                        View Card
+                      </a>
+                    )}
+                  </div>
+                  
+                  {/* Player Details */}
+                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-400">
+                    {player.age && <div>Age: {player.age}</div>}
+                    {player.years_pro && <div>Years Pro: {player.years_pro}</div>}
+                    {player.dev_trait && <div>Dev: {player.dev_trait}</div>}
+                    {player.player_value && <div>Value: {player.player_value}</div>}
+                  </div>
+                  
+                  {/* Contract Info */}
+                  {player.contract_years_left && (
+                    <div className="mt-2 text-xs text-gray-400">
+                      Contract: {player.contract_years_left} years • ${player.contract_salary?.toLocaleString()}/year
+                    </div>
+                  )}
+                  
+                  {/* Key Ratings */}
+                  {player.ratings && (
+                    <div className="mt-2 grid grid-cols-3 gap-1 text-xs">
+                      {player.ratings.speed && (
+                        <div className="text-gray-400">SPD: {player.ratings.speed}</div>
+                      )}
+                      {player.ratings.awareness && (
+                        <div className="text-gray-400">AWR: {player.ratings.awareness}</div>
+                      )}
+                      {player.ratings.strength && (
+                        <div className="text-gray-400">STR: {player.ratings.strength}</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )) || (
                 <div className="text-gray-500 text-sm">No players</div>
