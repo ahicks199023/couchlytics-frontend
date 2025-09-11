@@ -43,8 +43,9 @@ interface Team {
 const ROLE_OPTIONS = [
   'commissioner',
   'co-commissioner',
-  'trade_committee_member',
-  'user'
+  'owner',
+  'member',
+  'viewer'
 ];
 
 export default function CommissionerUsersPage() {
