@@ -71,12 +71,22 @@ const commissionerLinks: Array<{
   subItems?: Array<{ label: string; path: string }>
 }> = []
 
+// Trade Committee links
+const tradeCommitteeLinks: Array<{
+  label: string
+  path: string
+  subItems?: Array<{ label: string; path: string }>
+}> = [
+  { label: '🏛️ Committee Review', path: 'committee/review' }
+]
+
 export default function LeagueSidebar() {
   const { leagueId } = useParams()
   const pathname = usePathname()
   const [expandedItems, setExpandedItems] = useState<string[]>([])
   const [hasCommissionerAccess, setHasCommissionerAccess] = useState(false)
   const [isGlobalCommissioner, setIsGlobalCommissioner] = useState(false)
+  const [hasTradeCommitteeAccess, setHasTradeCommitteeAccess] = useState(false)
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -103,6 +113,7 @@ export default function LeagueSidebar() {
             console.log('User is developer - granting universal access')
             setIsGlobalCommissioner(true)
             setHasCommissionerAccess(true)
+            setHasTradeCommitteeAccess(true)
           } else {
             // Check league-specific commissioner status
             try {
@@ -116,26 +127,32 @@ export default function LeagueSidebar() {
                 console.log('League member data:', memberData)
                 
                 const isLeagueComm = memberData.role === 'commissioner' || memberData.role === 'admin'
+                const isTradeCommittee = memberData.role === 'trade_committee_member' || isLeagueComm
                 console.log('Is league commissioner:', isLeagueComm)
+                console.log('Is trade committee member:', isTradeCommittee)
                 
                 setIsGlobalCommissioner(false)
                 setHasCommissionerAccess(isLeagueComm)
+                setHasTradeCommitteeAccess(isTradeCommittee)
               } else if (leagueRes.status === 404) {
                 // User is not a member of this league
                 console.log('User is not a member of this league')
                 setIsGlobalCommissioner(false)
                 setHasCommissionerAccess(false)
+                setHasTradeCommitteeAccess(false)
               } else {
                 console.log('Failed to fetch league membership, status:', leagueRes.status)
                 // Fallback to global commissioner status for backward compatibility
                 setIsGlobalCommissioner(userData.isCommissioner || false)
                 setHasCommissionerAccess(userData.isCommissioner || false)
+                setHasTradeCommitteeAccess(userData.isCommissioner || false)
               }
             } catch (leagueError) {
               console.error('Error checking league membership:', leagueError)
               // Fallback to global commissioner status for backward compatibility
               setIsGlobalCommissioner(userData.isCommissioner || false)
               setHasCommissionerAccess(userData.isCommissioner || false)
+              setHasTradeCommitteeAccess(userData.isCommissioner || false)
             }
           }
           
@@ -305,7 +322,7 @@ export default function LeagueSidebar() {
               href={`/leagues/${leagueId}/commissioner`}
               className={clsx(
                 'block px-2 py-1 rounded hover:bg-gray-700 text-sm font-medium',
-                pathname.includes('/commissioner') && !pathname.includes('/ai-commissioner') && 'bg-blue-600 text-white'
+                pathname.includes('/commissioner') && !pathname.includes('/ai-commissioner') && !pathname.includes('/committee') && 'bg-blue-600 text-white'
               )}
             >
               🎯 Commissioner&apos;s Hub
@@ -319,6 +336,28 @@ export default function LeagueSidebar() {
             >
               🤖 AI Commissioner
             </Link>
+          </div>
+        )}
+
+        {/* Trade Committee Section */}
+        {hasTradeCommitteeAccess && leagueId && typeof leagueId === 'string' && (
+          <div className="pt-2 border-t border-gray-700">
+            <div className="text-xs text-gray-400 mb-2 px-2">Trade Committee</div>
+            {tradeCommitteeLinks.map(({ label, path }) => {
+              const active = pathname.includes(`/committee/review`)
+              return (
+                <Link
+                  key={path}
+                  href={`/leagues/${leagueId}/${path}`}
+                  className={clsx(
+                    'block px-2 py-1 rounded hover:bg-gray-700 text-sm font-medium',
+                    active && 'bg-blue-600 text-white'
+                  )}
+                >
+                  {label}
+                </Link>
+              )
+            })}
           </div>
         )}
       </nav>
