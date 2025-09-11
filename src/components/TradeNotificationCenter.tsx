@@ -37,6 +37,10 @@ export default function TradeNotificationCenter() {
       if (response.ok) {
         const data = await response.json();
         setNotifications(data.notifications || []);
+      } else if (response.status === 404) {
+        // Backend notification system not implemented yet
+        setNotifications([]);
+        setError('Notification system not yet implemented on backend');
       } else {
         setError('Failed to load trade notifications');
       }
@@ -57,6 +61,9 @@ export default function TradeNotificationCenter() {
       if (response.ok) {
         const data = await response.json();
         setUnreadCount(data.unread_count || 0);
+      } else if (response.status === 404) {
+        // Backend notification system not implemented yet
+        setUnreadCount(0);
       }
     } catch (error) {
       console.error('Error fetching unread count:', error);
@@ -195,10 +202,13 @@ export default function TradeNotificationCenter() {
       {notifications.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-500 text-lg">
-            No trade notifications yet
+            {error?.includes('not yet implemented') ? 'Notification system coming soon' : 'No trade notifications yet'}
           </div>
           <div className="text-gray-400 text-sm mt-2">
-            You&apos;ll receive notifications when trade offers are created, accepted, or require committee review.
+            {error?.includes('not yet implemented') 
+              ? 'The notification system is being implemented by the backend team. You&apos;ll receive notifications when trade offers are created, accepted, or require committee review.'
+              : 'You&apos;ll receive notifications when trade offers are created, accepted, or require committee review.'
+            }
           </div>
         </div>
       ) : (

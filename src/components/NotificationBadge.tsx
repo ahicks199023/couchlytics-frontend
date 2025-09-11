@@ -25,9 +25,14 @@ export default function NotificationBadge({ className = '' }: NotificationBadgeP
       if (response.ok) {
         const data = await response.json();
         setUnreadCount(data.unread_count || 0);
+      } else if (response.status === 404) {
+        // Backend notification system not implemented yet
+        setUnreadCount(0);
+        console.log('📧 Notification system not yet implemented on backend');
       }
     } catch (error) {
       console.error('Error fetching unread count:', error);
+      setUnreadCount(0);
     } finally {
       setLoading(false);
     }
@@ -37,8 +42,8 @@ export default function NotificationBadge({ className = '' }: NotificationBadgeP
     if (leagueId) {
       fetchUnreadCount();
       
-      // Poll for updates every 30 seconds
-      const interval = setInterval(fetchUnreadCount, 30000);
+      // Poll for updates every 2 minutes (less aggressive since backend not ready)
+      const interval = setInterval(fetchUnreadCount, 120000);
       return () => clearInterval(interval);
     }
   }, [leagueId, fetchUnreadCount]);
