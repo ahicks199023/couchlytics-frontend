@@ -7,6 +7,7 @@ import { useParams, usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 import { API_BASE } from '@/lib/config'
+import NotificationBadge from './NotificationBadge'
 
 
 
@@ -61,7 +62,8 @@ const links = [
   { label: 'Stats', path: 'stats', prefetch: false },
   { label: 'Stats Leaders', path: 'stats-leaders', prefetch: false },
   { label: 'Players', path: 'players', prefetch: false },
-  { label: '💬 Chat', path: 'chat', prefetch: false }
+  { label: '💬 Chat', path: 'chat', prefetch: false },
+  { label: '🔔 Notifications', path: 'notifications', prefetch: false }
 ]
 
 // Commissioner-only links - Removed duplicate Commissioner Hub entry
@@ -221,11 +223,12 @@ export default function LeagueSidebar() {
                   prefetch={prefetch !== false}
                   onClick={hasSubItems ? (e) => { e.preventDefault(); toggleExpanded(path) } : undefined}
                   className={clsx(
-                    'px-2 py-1 rounded hover:bg-gray-700 flex-1 text-left',
+                    'px-2 py-1 rounded hover:bg-gray-700 flex-1 text-left flex items-center justify-between',
                     active && 'bg-blue-600 text-white'
                   )}
                 >
-                  {label}
+                  <span>{label}</span>
+                  {label === 'Trades' && <NotificationBadge className="ml-2" />}
                 </Link>
                 {hasSubItems && (
                   <button
