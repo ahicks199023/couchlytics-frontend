@@ -83,13 +83,6 @@ export default function TradeCommitteeReviewPage() {
   const [voting, setVoting] = useState(false);
   const [voteReasoning, setVoteReasoning] = useState('');
 
-  // Fetch pending trades
-  useEffect(() => {
-    if (leagueId) {
-      fetchPendingTrades();
-    }
-  }, [leagueId, fetchPendingTrades]);
-
   const fetchPendingTrades = useCallback(async () => {
     try {
       setLoading(true);
@@ -120,6 +113,13 @@ export default function TradeCommitteeReviewPage() {
       setLoading(false);
     }
   }, [leagueId]);
+
+  // Fetch pending trades on component mount
+  useEffect(() => {
+    if (leagueId) {
+      fetchPendingTrades();
+    }
+  }, [leagueId, fetchPendingTrades]);
 
   const submitVote = async (tradeId: number, vote: 'approve' | 'reject') => {
     try {
