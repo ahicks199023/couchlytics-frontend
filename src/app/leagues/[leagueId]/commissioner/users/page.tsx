@@ -43,6 +43,7 @@ interface Team {
 const ROLE_OPTIONS = [
   'commissioner',
   'co-commissioner',
+  'trade_committee_member',
   'owner',
   'member',
   'viewer'

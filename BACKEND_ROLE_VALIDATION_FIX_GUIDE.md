@@ -196,4 +196,4 @@ If you encounter issues after implementing this fix:
 3. Test with different role combinations
 4. Ensure database constraints are updated
 
-**Status**: Frontend fix applied ✅ | Backend fix pending ⏳
+**Status**: Frontend fix applied ✅ | Backend fix applied ✅ | Trade Committee Member role restored ✅
