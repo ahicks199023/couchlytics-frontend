@@ -221,13 +221,13 @@ export default function TradeCommitteeReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-white mb-2">
             🏛️ Trade Committee Review
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-400">
             Review and vote on pending trades requiring committee approval
           </p>
         </div>
@@ -246,7 +246,7 @@ export default function TradeCommitteeReviewPage() {
             {pendingTrades.map((trade) => (
               <div
                 key={trade.id}
-                className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                className="bg-gray-800 rounded-lg border border-gray-700 p-6 hover:border-gray-600 transition-colors cursor-pointer"
                 onClick={() => setSelectedTrade(trade)}
               >
                 {/* Trade Header with Team Logos */}
@@ -262,9 +262,13 @@ export default function TradeCommitteeReviewPage() {
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
                       )}
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-white">
                         {trade.from_team?.city && trade.from_team?.name 
                           ? `${trade.from_team.city} ${trade.from_team.name}` 
+                          : trade.from_team?.name 
+                          ? trade.from_team.name
+                          : trade.from_team?.city
+                          ? trade.from_team.city
                           : 'Team TBD'
                         }
                       </span>
@@ -283,9 +287,13 @@ export default function TradeCommitteeReviewPage() {
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
                       )}
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-white">
                         {trade.to_team?.city && trade.to_team?.name 
                           ? `${trade.to_team.city} ${trade.to_team.name}` 
+                          : trade.to_team?.name 
+                          ? trade.to_team.name
+                          : trade.to_team?.city
+                          ? trade.to_team.city
                           : 'Team TBD'
                         }
                       </span>
@@ -294,7 +302,7 @@ export default function TradeCommitteeReviewPage() {
                   
                   {/* Trade ID and Status */}
                   <div className="text-right">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-white">
                       Trade #{trade.id}
                     </h3>
                     <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getFairnessColor(trade.fairness_score)}`}>
@@ -307,30 +315,37 @@ export default function TradeCommitteeReviewPage() {
                 <div className="grid grid-cols-2 gap-6 mb-6">
                   {/* From Team Players */}
                   <div>
-                    <h4 className="font-medium text-gray-800 mb-3 flex items-center">
+                    <h4 className="font-medium text-white mb-3 flex items-center">
                       <ArrowRight className="w-4 h-4 mr-2 text-gray-400" />
-                      {trade.from_team?.city} {trade.from_team?.name} Sends
+                      {trade.from_team?.city && trade.from_team?.name 
+                        ? `${trade.from_team.city} ${trade.from_team.name}` 
+                        : trade.from_team?.name 
+                        ? trade.from_team.name
+                        : trade.from_team?.city
+                        ? trade.from_team.city
+                        : 'Team TBD'
+                      } Sends
                     </h4>
                     <div className="space-y-2">
                       {trade.fromPlayers.length > 0 ? (
                         trade.fromPlayers.map((player) => (
-                          <div key={player.id} className="border rounded-lg p-3 bg-gray-50">
+                          <div key={player.id} className="border border-gray-600 rounded-lg p-3 bg-gray-700">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-2">
-                                <span className="font-medium text-gray-900">{player.playerName}</span>
-                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                <span className="font-medium text-white">{player.playerName}</span>
+                                <span className="text-xs bg-blue-900 text-blue-200 px-2 py-1 rounded">
                                   {player.position}
                                 </span>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <span className="text-sm font-semibold text-gray-900">
+                                <span className="text-sm font-semibold text-white">
                                   OVR {player.overall_rating}
                                 </span>
                                 {player.devTrait && player.devTrait !== 'Normal' && (
                                   <span className={`text-xs px-2 py-1 rounded ${
-                                    player.devTrait === 'Star' ? 'bg-yellow-100 text-yellow-800' :
-                                    player.devTrait === 'Superstar' ? 'bg-purple-100 text-purple-800' :
-                                    'bg-gray-100 text-gray-800'
+                                    player.devTrait === 'Star' ? 'bg-yellow-900 text-yellow-200' :
+                                    player.devTrait === 'Superstar' ? 'bg-purple-900 text-purple-200' :
+                                    'bg-gray-600 text-gray-200'
                                   }`}>
                                     {player.devTrait}
                                   </span>
@@ -338,7 +353,7 @@ export default function TradeCommitteeReviewPage() {
                               </div>
                             </div>
                             {player.player_value && (
-                              <div className="text-xs text-blue-600 mt-1">
+                              <div className="text-xs text-blue-400 mt-1">
                                 Value: {player.player_value.toFixed(1)}
                               </div>
                             )}
@@ -352,30 +367,37 @@ export default function TradeCommitteeReviewPage() {
                   
                   {/* To Team Players */}
                   <div>
-                    <h4 className="font-medium text-gray-800 mb-3 flex items-center">
+                    <h4 className="font-medium text-white mb-3 flex items-center">
                       <ArrowLeft className="w-4 h-4 mr-2 text-gray-400" />
-                      {trade.to_team?.city} {trade.to_team?.name} Sends
+                      {trade.to_team?.city && trade.to_team?.name 
+                        ? `${trade.to_team.city} ${trade.to_team.name}` 
+                        : trade.to_team?.name 
+                        ? trade.to_team.name
+                        : trade.to_team?.city
+                        ? trade.to_team.city
+                        : 'Team TBD'
+                      } Sends
                     </h4>
                     <div className="space-y-2">
                       {trade.toPlayers.length > 0 ? (
                         trade.toPlayers.map((player) => (
-                          <div key={player.id} className="border rounded-lg p-3 bg-gray-50">
+                          <div key={player.id} className="border border-gray-600 rounded-lg p-3 bg-gray-700">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-2">
-                                <span className="font-medium text-gray-900">{player.playerName}</span>
-                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                <span className="font-medium text-white">{player.playerName}</span>
+                                <span className="text-xs bg-blue-900 text-blue-200 px-2 py-1 rounded">
                                   {player.position}
                                 </span>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <span className="text-sm font-semibold text-gray-900">
+                                <span className="text-sm font-semibold text-white">
                                   OVR {player.overall_rating}
                                 </span>
                                 {player.devTrait && player.devTrait !== 'Normal' && (
                                   <span className={`text-xs px-2 py-1 rounded ${
-                                    player.devTrait === 'Star' ? 'bg-yellow-100 text-yellow-800' :
-                                    player.devTrait === 'Superstar' ? 'bg-purple-100 text-purple-800' :
-                                    'bg-gray-100 text-gray-800'
+                                    player.devTrait === 'Star' ? 'bg-yellow-900 text-yellow-200' :
+                                    player.devTrait === 'Superstar' ? 'bg-purple-900 text-purple-200' :
+                                    'bg-gray-600 text-gray-200'
                                   }`}>
                                     {player.devTrait}
                                   </span>
@@ -383,7 +405,7 @@ export default function TradeCommitteeReviewPage() {
                               </div>
                             </div>
                             {player.player_value && (
-                              <div className="text-xs text-blue-600 mt-1">
+                              <div className="text-xs text-blue-400 mt-1">
                                 Value: {player.player_value.toFixed(1)}
                               </div>
                             )}
@@ -398,15 +420,15 @@ export default function TradeCommitteeReviewPage() {
 
                 {/* Trade Message */}
                 {trade.message && (
-                  <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-blue-800 italic">
+                  <div className="mb-4 p-3 bg-blue-900 rounded-lg">
+                    <p className="text-sm text-blue-200 italic">
                       &ldquo;{trade.message}&rdquo;
                     </p>
                   </div>
                 )}
 
                 {/* Voting Section */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-600">
                   <div className="flex space-x-4">
                     <button
                       onClick={(e) => {
@@ -436,7 +458,7 @@ export default function TradeCommitteeReviewPage() {
                     </button>
                   </div>
                   
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-400">
                     {trade.votes_summary?.total_votes || 0}/{trade.votes_summary?.votes_needed || 0} votes needed
                   </div>
                 </div>
