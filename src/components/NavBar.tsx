@@ -473,7 +473,7 @@ export default function NavBar() {
         </div>
       )}
       
-      {/* Notification Panel */}
+      {/* Global Notification Panel */}
       <NotificationPanel
         isOpen={isNotificationPanelOpen}
         onClose={() => setIsNotificationPanelOpen(false)}

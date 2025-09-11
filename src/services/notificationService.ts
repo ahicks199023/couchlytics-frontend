@@ -80,7 +80,7 @@ class NotificationService {
       if (!response.ok) {
         // If endpoint doesn't exist (404) or server error (500), return default
         if (response.status === 404 || response.status === 500) {
-          console.warn('Notification endpoint not available, returning default count');
+          console.warn('Global notification endpoint not available, returning default count');
           return { success: true, unread_count: 0 };
         }
         throw new Error(`Failed to fetch unread count: ${response.statusText}`);
@@ -89,7 +89,7 @@ class NotificationService {
       return response.json();
     } catch (error) {
       // If network error or JSON parsing error, return default
-      console.warn('Notification service unavailable, returning default count:', error);
+      console.warn('Global notification service unavailable, returning default count:', error);
       return { success: true, unread_count: 0 };
     }
   }
