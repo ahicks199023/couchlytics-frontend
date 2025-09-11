@@ -127,7 +127,8 @@ export default function LeagueSidebar() {
                 console.log('League member data:', memberData)
                 
                 const isLeagueComm = memberData.role === 'commissioner' || memberData.role === 'admin'
-                const isTradeCommittee = memberData.role === 'trade_committee_member' || isLeagueComm
+                const isCoComm = memberData.role === 'co-commissioner'
+                const isTradeCommittee = memberData.role === 'trade_committee_member' || isLeagueComm || isCoComm
                 console.log('Is league commissioner:', isLeagueComm)
                 console.log('Is trade committee member:', isTradeCommittee)
                 

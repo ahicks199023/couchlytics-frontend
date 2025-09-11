@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import TradeDetailModal from '@/components/TradeDetailModal';
@@ -88,9 +88,9 @@ export default function TradeCommitteeReviewPage() {
     if (leagueId) {
       fetchPendingTrades();
     }
-  }, [leagueId]);
+  }, [leagueId, fetchPendingTrades]);
 
-  const fetchPendingTrades = async () => {
+  const fetchPendingTrades = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -108,7 +108,7 @@ export default function TradeCommitteeReviewPage() {
         console.log('🔍 Pending trades data:', data);
         setPendingTrades(data.trades || []);
       } else if (response.status === 403) {
-        setError('You do not have permission to access the trade committee review. Only trade committee members can view this page.');
+        setError('You do not have permission to access the trade committee review. Only commissioners, co-commissioners, and trade committee members can view this page.');
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to fetch pending trades');
@@ -119,7 +119,7 @@ export default function TradeCommitteeReviewPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [leagueId]);
 
   const submitVote = async (tradeId: number, vote: 'approve' | 'reject') => {
     try {
