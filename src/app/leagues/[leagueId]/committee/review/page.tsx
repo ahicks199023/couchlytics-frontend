@@ -4,6 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import TradeDetailModal from '@/components/TradeDetailModal';
+import { 
+  ArrowRightLeft, 
+  ArrowRight, 
+  ArrowLeft, 
+  Check, 
+  X 
+} from 'lucide-react';
 
 interface PendingTrade {
   id: number;
@@ -35,6 +42,7 @@ interface PendingTrade {
     position: string;
     overall_rating: number;
     player_value: number;
+    devTrait?: string;
   }>;
   toPlayers: Array<{
     id: number;
@@ -42,6 +50,7 @@ interface PendingTrade {
     position: string;
     overall_rating: number;
     player_value: number;
+    devTrait?: string;
   }>;
   trade_analysis: {
     fairness_score: number;
@@ -169,29 +178,19 @@ export default function TradeCommitteeReviewPage() {
   };
 
   const getFairnessColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 95) return 'text-green-600 bg-green-50';
+    if (score >= 85) return 'text-blue-600 bg-blue-50';
+    if (score >= 75) return 'text-yellow-600 bg-yellow-50';
+    return 'text-red-600 bg-red-50';
   };
 
   const getFairnessLabel = (score: number) => {
-    if (score >= 80) return 'Very Fair';
-    if (score >= 60) return 'Fair';
-    if (score >= 40) return 'Unfair';
-    return 'Very Unfair';
+    if (score >= 95) return 'Very Fair';
+    if (score >= 85) return 'Fair';
+    if (score >= 75) return 'Questionable';
+    return 'Unfair';
   };
 
-  const getFairnessBgColor = (score: number) => {
-    if (score >= 80) return 'bg-green-100';
-    if (score >= 60) return 'bg-yellow-100';
-    return 'bg-red-100';
-  };
-
-  // Check if user has already voted on a trade
-  const hasUserVoted = (trade: PendingTrade) => {
-    if (!user) return false;
-    return trade.committee_votes.some(vote => vote.user_id === user.id);
-  };
 
   if (loading) {
     return (
@@ -222,13 +221,13 @@ export default function TradeCommitteeReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             🏛️ Trade Committee Review
           </h1>
-          <p className="text-gray-400">
+          <p className="text-gray-600">
             Review and vote on pending trades requiring committee approval
           </p>
         </div>
@@ -247,41 +246,102 @@ export default function TradeCommitteeReviewPage() {
             {pendingTrades.map((trade) => (
               <div
                 key={trade.id}
-                className="bg-gray-800 rounded-lg border border-gray-700 p-6 hover:border-gray-600 transition-colors cursor-pointer"
+                className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => setSelectedTrade(trade)}
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold text-white mb-1">
+                {/* Trade Header with Team Logos */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-4">
+                    {/* From Team */}
+                    <div className="flex items-center space-x-2">
+                      {trade.from_team?.name && (
+                        <img 
+                          src={`/assets/team-logos/${trade.from_team.name.toLowerCase().replace(/\s+/g, '-')}.png`}
+                          alt={trade.from_team.name}
+                          className="w-8 h-8 rounded-full"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      )}
+                      <span className="font-medium text-gray-900">
+                        {trade.from_team?.city && trade.from_team?.name 
+                          ? `${trade.from_team.city} ${trade.from_team.name}` 
+                          : 'Team TBD'
+                        }
+                      </span>
+                    </div>
+                    
+                    {/* Trade Arrow */}
+                    <ArrowRightLeft className="w-5 h-5 text-gray-400" />
+                    
+                    {/* To Team */}
+                    <div className="flex items-center space-x-2">
+                      {trade.to_team?.name && (
+                        <img 
+                          src={`/assets/team-logos/${trade.to_team.name.toLowerCase().replace(/\s+/g, '-')}.png`}
+                          alt={trade.to_team.name}
+                          className="w-8 h-8 rounded-full"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      )}
+                      <span className="font-medium text-gray-900">
+                        {trade.to_team?.city && trade.to_team?.name 
+                          ? `${trade.to_team.city} ${trade.to_team.name}` 
+                          : 'Team TBD'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Trade ID and Status */}
+                  <div className="text-right">
+                    <h3 className="text-lg font-semibold text-gray-900">
                       Trade #{trade.id}
                     </h3>
-                    <p className="text-gray-400">
-                      {trade.from_team.city} {trade.from_team.name} ↔ {trade.to_team.city} {trade.to_team.name}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Created: {new Date(trade.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className={`text-2xl font-bold ${getFairnessColor(trade.fairness_score)}`}>
-                      {trade.fairness_score}%
-                    </div>
-                    <div className={`text-sm px-2 py-1 rounded ${getFairnessBgColor(trade.fairness_score)} ${getFairnessColor(trade.fairness_score)}`}>
-                      {getFairnessLabel(trade.fairness_score)}
+                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getFairnessColor(trade.fairness_score)}`}>
+                      {trade.fairness_score}% {getFairnessLabel(trade.fairness_score)}
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {/* Trade Details */}
+                <div className="grid grid-cols-2 gap-6 mb-6">
+                  {/* From Team Players */}
                   <div>
-                    <h4 className="font-medium text-white mb-2">
-                      {trade.from_team.city} {trade.from_team.name} Sends:
+                    <h4 className="font-medium text-gray-800 mb-3 flex items-center">
+                      <ArrowRight className="w-4 h-4 mr-2 text-gray-400" />
+                      {trade.from_team?.city} {trade.from_team?.name} Sends
                     </h4>
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {trade.fromPlayers.length > 0 ? (
                         trade.fromPlayers.map((player) => (
-                          <div key={player.id} className="text-sm text-gray-300">
-                            {player.playerName} ({player.position}) - OVR {player.overall_rating}
+                          <div key={player.id} className="border rounded-lg p-3 bg-gray-50">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <span className="font-medium text-gray-900">{player.playerName}</span>
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                  {player.position}
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm font-semibold text-gray-900">
+                                  OVR {player.overall_rating}
+                                </span>
+                                {player.devTrait && player.devTrait !== 'Normal' && (
+                                  <span className={`text-xs px-2 py-1 rounded ${
+                                    player.devTrait === 'Star' ? 'bg-yellow-100 text-yellow-800' :
+                                    player.devTrait === 'Superstar' ? 'bg-purple-100 text-purple-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {player.devTrait}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {player.player_value && (
+                              <div className="text-xs text-blue-600 mt-1">
+                                Value: {player.player_value.toFixed(1)}
+                              </div>
+                            )}
                           </div>
                         ))
                       ) : (
@@ -289,15 +349,44 @@ export default function TradeCommitteeReviewPage() {
                       )}
                     </div>
                   </div>
+                  
+                  {/* To Team Players */}
                   <div>
-                    <h4 className="font-medium text-white mb-2">
-                      {trade.to_team.city} {trade.to_team.name} Sends:
+                    <h4 className="font-medium text-gray-800 mb-3 flex items-center">
+                      <ArrowLeft className="w-4 h-4 mr-2 text-gray-400" />
+                      {trade.to_team?.city} {trade.to_team?.name} Sends
                     </h4>
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {trade.toPlayers.length > 0 ? (
                         trade.toPlayers.map((player) => (
-                          <div key={player.id} className="text-sm text-gray-300">
-                            {player.playerName} ({player.position}) - OVR {player.overall_rating}
+                          <div key={player.id} className="border rounded-lg p-3 bg-gray-50">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <span className="font-medium text-gray-900">{player.playerName}</span>
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                  {player.position}
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm font-semibold text-gray-900">
+                                  OVR {player.overall_rating}
+                                </span>
+                                {player.devTrait && player.devTrait !== 'Normal' && (
+                                  <span className={`text-xs px-2 py-1 rounded ${
+                                    player.devTrait === 'Star' ? 'bg-yellow-100 text-yellow-800' :
+                                    player.devTrait === 'Superstar' ? 'bg-purple-100 text-purple-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {player.devTrait}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {player.player_value && (
+                              <div className="text-xs text-blue-600 mt-1">
+                                Value: {player.player_value.toFixed(1)}
+                              </div>
+                            )}
                           </div>
                         ))
                       ) : (
@@ -307,34 +396,48 @@ export default function TradeCommitteeReviewPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-gray-400">
-                    {trade.message && (
-                      <div className="mb-2">
-                        <span className="font-medium">Message:</span> {trade.message}
-                      </div>
-                    )}
-                    {trade.expires_at && (
-                      <div>
-                        <span className="font-medium">Expires:</span> {new Date(trade.expires_at).toLocaleDateString()}
-                      </div>
-                    )}
+                {/* Trade Message */}
+                {trade.message && (
+                  <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800 italic">
+                      &ldquo;{trade.message}&rdquo;
+                    </p>
                   </div>
-                  <div className="flex space-x-2">
-                    <span className="px-3 py-1 bg-green-900 text-green-200 text-xs rounded-full">
-                      {trade.votes_summary.approve_count} Approve
-                    </span>
-                    <span className="px-3 py-1 bg-red-900 text-red-200 text-xs rounded-full">
-                      {trade.votes_summary.reject_count} Reject
-                    </span>
-                    <span className="px-3 py-1 bg-blue-900 text-blue-200 text-xs rounded-full">
-                      {trade.votes_summary.total_votes}/{trade.votes_summary.votes_needed} Votes
-                    </span>
-                    {hasUserVoted(trade) && (
-                      <span className="px-3 py-1 bg-gray-700 text-gray-300 text-xs rounded-full">
-                        You Voted
+                )}
+
+                {/* Voting Section */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                  <div className="flex space-x-4">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        submitVote(trade.id, 'approve');
+                      }}
+                      className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Approve</span>
+                      <span className="bg-green-700 px-2 py-1 rounded text-xs">
+                        {trade.votes_summary?.approve_count || 0}
                       </span>
-                    )}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        submitVote(trade.id, 'reject');
+                      }}
+                      className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                      <span>Reject</span>
+                      <span className="bg-red-700 px-2 py-1 rounded text-xs">
+                        {trade.votes_summary?.reject_count || 0}
+                      </span>
+                    </button>
+                  </div>
+                  
+                  <div className="text-sm text-gray-600">
+                    {trade.votes_summary?.total_votes || 0}/{trade.votes_summary?.votes_needed || 0} votes needed
                   </div>
                 </div>
               </div>
