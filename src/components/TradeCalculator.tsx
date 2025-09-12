@@ -843,13 +843,6 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
           <p className="text-yellow-300 mb-4">
             You need to be assigned to a team to make trades. Please contact your league commissioner.
           </p>
-          <div className="text-sm text-gray-400">
-            <p>Debug Info:</p>
-            <p>• User ID: {user?.id || 'Unknown'}</p>
-            <p>• League ID: {league_id}</p>
-            <p>• Loading: {loading ? 'Yes' : 'No'}</p>
-            <p>• Error: {error || 'None'}</p>
-          </div>
         </div>
       </div>
     )
@@ -876,21 +869,6 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
             <label className="text-sm text-gray-300">
               Team Need Calculations Active - Player values include team-specific multipliers based on your roster needs
             </label>
-          </div>
-          
-          {/* Debug Info Panel */}
-          <div className="mt-4 p-3 bg-gray-800/50 rounded text-xs">
-            <div className="font-semibold text-gray-300 mb-2">🔧 Debug Info:</div>
-            <div className="grid grid-cols-2 gap-2 text-gray-400">
-              <div>Team ID: {userTeam?.id || 'N/A'}</div>
-              <div>Team Name: {userTeam?.name || 'N/A'}</div>
-              <div>City: {userTeam?.city || 'N/A'}</div>
-              <div>User ID: {user?.id || 'N/A'}</div>
-              <div>League ID: {league_id}</div>
-            </div>
-            <div className="mt-2 text-yellow-400">
-              ⚠️ If this shows the wrong team, check User Management vs this display
-            </div>
           </div>
         </div>
 
