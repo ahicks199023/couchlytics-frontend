@@ -263,8 +263,11 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   // Filters
   const [selectedPosition, setSelectedPosition] = useState('All')
   const [selectedReceivePosition, setSelectedReceivePosition] = useState('All')
-  const [itemsPerPage, setItemsPerPage] = useState(25)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [sortOrder, setSortOrder] = useState<'highest' | 'lowest'>('highest')
+  const [receiveSortOrder, setReceiveSortOrder] = useState<'highest' | 'lowest'>('highest')
+  
+  // Fixed pagination
+  const itemsPerPage = 25
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -398,41 +401,36 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
       // Handle both teamId (camelCase) and team_id (snake_case) from backend
       const playerTeamId = getPlayerTeamId(p)
       return playerTeamId === userTeamId &&
-        (selectedPosition === 'All' || p.position === selectedPosition) &&
-        (searchQuery === '' || p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    }).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
+        (selectedPosition === 'All' || p.position === selectedPosition)
+    })
     
-    // Debug logging for player filtering
-    if (players.length > 0 && userTeamId) {
-      console.log('🔍 Player Filtering Debug:', {
-        totalPlayers: players.length,
-        userTeamId,
-        playersWithTeamId: players.filter(p => getPlayerTeamId(p)).length,
-        playersWithoutTeamId: players.filter(p => !getPlayerTeamId(p)).length,
-        filteredCount: filtered.length,
-        sampleFiltered: filtered.slice(0, 2).map(p => ({ 
-          id: p.id, 
-          name: p.name, 
-          teamId: getPlayerTeamId(p)
-        }))
-      })
-    }
-    
-    return filtered
-  }, [players, userTeamId, selectedPosition, searchQuery])
+    // Sort by value based on selected order
+    return filtered.sort((a, b) => {
+      const aValue = calculatePlayerValue(a)
+      const bValue = calculatePlayerValue(b)
+      return sortOrder === 'highest' ? bValue - aValue : aValue - bValue
+    })
+  }, [players, userTeamId, selectedPosition, sortOrder])
 
   const filteredTeamBPlayers = useMemo(() => {
     if (!selectedTeamB) return []
     const teamB = teams.find(t => t.name === selectedTeamB)
     if (!teamB) return []
     
-    return players.filter(p => {
+    const filtered = players.filter(p => {
       // Handle both teamId (camelCase) and team_id (snake_case) from backend
       const playerTeamId = getPlayerTeamId(p)
       return playerTeamId === teamB.id &&
         (selectedReceivePosition === 'All' || p.position === selectedReceivePosition)
-    }).sort((a, b) => calculatePlayerValue(b) - calculatePlayerValue(a))
-  }, [players, teams, selectedTeamB, selectedReceivePosition])
+    })
+    
+    // Sort by value based on selected order
+    return filtered.sort((a, b) => {
+      const aValue = calculatePlayerValue(a)
+      const bValue = calculatePlayerValue(b)
+      return receiveSortOrder === 'highest' ? bValue - aValue : aValue - bValue
+    })
+  }, [players, teams, selectedTeamB, selectedReceivePosition, receiveSortOrder])
 
   const positionOptions = useMemo(() => {
     // Define the proper order for positions (offense first, then defense, then special teams)
@@ -878,7 +876,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
             <h3 className="text-lg font-semibold text-neon-green mb-4">Your Team</h3>
             
             {/* Filters */}
-            <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="grid grid-cols-2 gap-2 mb-4">
               <select 
                 value={selectedPosition} 
                 onChange={e => setSelectedPosition(e.target.value)} 
@@ -888,26 +886,14 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                   <option key={pos} value={pos}>{pos}</option>
                 ))}
               </select>
-              <input
-                type="number"
-                value={itemsPerPage}
-                onChange={e => setItemsPerPage(Number(e.target.value))}
+              <select 
+                value={sortOrder} 
+                onChange={e => setSortOrder(e.target.value as 'highest' | 'lowest')} 
                 className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
-                min="1"
-                max="100"
-              />
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
-                  className="w-full bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm pr-8"
-                />
-                <select className="absolute right-0 top-0 h-full bg-gray-900 text-white border border-gray-600 rounded-r px-2 py-2 text-xs">
-                  <option>Name</option>
-                </select>
-              </div>
+              >
+                <option value="highest">Highest to Lowest Value</option>
+                <option value="lowest">Lowest to Highest Value</option>
+              </select>
             </div>
 
                          {/* Player Selection Instructions */}
@@ -1036,14 +1022,14 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                   <option key={pos} value={pos}>{pos}</option>
                 ))}
               </select>
-              <input
-                type="number"
-                value={itemsPerPage}
-                onChange={e => setItemsPerPage(Number(e.target.value))}
+              <select 
+                value={receiveSortOrder} 
+                onChange={e => setReceiveSortOrder(e.target.value as 'highest' | 'lowest')} 
                 className="bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm"
-                min="1"
-                max="100"
-              />
+              >
+                <option value="highest">Highest to Lowest Value</option>
+                <option value="lowest">Lowest to Highest Value</option>
+              </select>
             </div>
 
                          {/* Player Selection Instructions */}
