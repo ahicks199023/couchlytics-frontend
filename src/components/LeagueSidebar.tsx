@@ -32,7 +32,6 @@ interface LeagueMember {
 
 const links = [
   { label: 'Home', path: '' },
-  { label: 'Analytics', path: 'analytics' },
   { label: 'Schedule', path: 'schedule' },
   { 
     label: 'Standings', 
@@ -49,14 +48,6 @@ const links = [
       { label: 'Trade History', path: 'trades' },
       { label: 'Trade Block', path: 'trade-block' },
       { label: 'Trade Analyzer', path: 'trade-tool' }
-    ]
-  },
-  { 
-    label: '💬 Message Boards', 
-    path: 'message-boards',
-    subItems: [
-      { label: 'General Boards', path: 'message-boards' },
-      { label: 'Game Threads', path: 'game-threads' }
     ]
   },
   { label: 'Stats', path: 'stats', prefetch: false },
