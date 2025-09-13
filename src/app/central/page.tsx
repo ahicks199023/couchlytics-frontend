@@ -41,10 +41,11 @@ export default function CouchlyticsCentral() {
     try {
       setLoadingData(true)
 
-      // Fetch system announcements from backend
-      const announcementsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/central/announcements`, {
-        credentials: 'include'
-      })
+        // Fetch system announcements from backend
+        const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'
+        const announcementsResponse = await fetch(`${API_BASE}/central/announcements`, {
+          credentials: 'include'
+        })
       
       if (announcementsResponse.ok) {
         const announcementsData = await announcementsResponse.json()
@@ -61,10 +62,10 @@ export default function CouchlyticsCentral() {
         setAnnouncements(getFallbackAnnouncements())
       }
 
-      // Fetch leaderboard data from backend
-      const leaderboardResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/central/leaderboard`, {
-        credentials: 'include'
-      })
+        // Fetch leaderboard data from backend
+        const leaderboardResponse = await fetch(`${API_BASE}/central/leaderboard`, {
+          credentials: 'include'
+        })
       
       if (leaderboardResponse.ok) {
         const leaderboardData = await leaderboardResponse.json()

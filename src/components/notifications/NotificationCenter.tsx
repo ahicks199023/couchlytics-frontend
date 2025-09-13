@@ -20,6 +20,8 @@ const NotificationCenter: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
+  
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'
 
   useEffect(() => {
     fetchNotifications()
@@ -35,8 +37,8 @@ const NotificationCenter: React.FC = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch('/api/notifications?per_page=10', {
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+      const response = await fetch(`${API_BASE}/notifications?per_page=10`, {
+        credentials: 'include'
       })
       const data = await response.json()
       if (data.success) {
@@ -49,8 +51,8 @@ const NotificationCenter: React.FC = () => {
 
   const fetchUnreadCount = async () => {
     try {
-      const response = await fetch('/api/notifications/unread-count', {
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+      const response = await fetch(`${API_BASE}/notifications/unread-count`, {
+        credentials: 'include'
       })
       const data = await response.json()
       if (data.success) {
@@ -63,9 +65,9 @@ const NotificationCenter: React.FC = () => {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await fetch(`/api/notifications/${notificationId}/read`, {
+      await fetch(`${API_BASE}/notifications/${notificationId}/read`, {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        credentials: 'include'
       })
       
       // Update local state
@@ -80,9 +82,9 @@ const NotificationCenter: React.FC = () => {
 
   const markAllAsRead = async () => {
     try {
-      await fetch('/api/notifications/read-all', {
+      await fetch(`${API_BASE}/notifications/read-all`, {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        credentials: 'include'
       })
       
       setNotifications(prev => prev.map(n => ({...n, is_read: true})))
@@ -193,9 +195,5 @@ const NotificationCenter: React.FC = () => {
   )
 }
 
-// Helper function to get auth token
-const getAuthToken = () => {
-  return localStorage.getItem('authToken') || ''
-}
 
 export default NotificationCenter
