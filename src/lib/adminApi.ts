@@ -244,7 +244,11 @@ export class AdminApiService {
         }
       }
 
-      return data
+      // The backend returns data directly, so we need to wrap it in the ApiResponse format
+      return {
+        success: true,
+        ...data
+      } as ApiResponse<T>
     } catch (error) {
       console.error(`Admin API Error (${endpoint}):`, error)
       return {
@@ -257,7 +261,15 @@ export class AdminApiService {
   // Dashboard endpoints
   async getDashboard(): Promise<AdminDashboard | null> {
     const response = await this.makeRequest<AdminDashboard>('/dashboard')
-    return response.success ? response.dashboard_data || null : null
+    console.log('🔍 getDashboard response:', response)
+    
+    if (response.success && response.data) {
+      console.log('✅ Dashboard data found')
+      return response.data
+    }
+    
+    console.warn('⚠️ No dashboard data in response or success=false')
+    return null
   }
 
   // User Management endpoints
@@ -276,7 +288,22 @@ export class AdminApiService {
     const response = await this.makeRequest<{ users: User[]; total: number; page: number; per_page: number }>(
       `/users?${queryParams.toString()}`
     )
-    return response.success ? response.data || null : null
+    
+    // The makeRequest method now wraps the data in ApiResponse format
+    console.log('🔍 getUsers response:', response)
+    
+    if (response.success && response.data?.users) {
+      console.log('✅ Users data found:', response.data.users.length, 'users')
+      return {
+        users: response.data.users,
+        total: response.data.total,
+        page: response.data.page,
+        per_page: response.data.per_page
+      }
+    }
+    
+    console.warn('⚠️ No users data in response or success=false')
+    return null
   }
 
   async resetUserPassword(userId: number, newPassword: string): Promise<boolean> {
@@ -317,7 +344,22 @@ export class AdminApiService {
     const response = await this.makeRequest<{ leagues: League[]; total: number; page: number; per_page: number }>(
       `/leagues?${queryParams.toString()}`
     )
-    return response.success ? response.data || null : null
+    
+    // The makeRequest method now wraps the data in ApiResponse format
+    console.log('🔍 getLeagues response:', response)
+    
+    if (response.success && response.data?.leagues) {
+      console.log('✅ Leagues data found:', response.data.leagues.length, 'leagues')
+      return {
+        leagues: response.data.leagues,
+        total: response.data.total,
+        page: response.data.page,
+        per_page: response.data.per_page
+      }
+    }
+    
+    console.warn('⚠️ No leagues data in response or success=false')
+    return null
   }
 
   async assignUserToLeague(
