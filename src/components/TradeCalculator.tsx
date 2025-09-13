@@ -5,49 +5,61 @@ import Image from 'next/image'
 import { API_BASE } from '@/lib/config'
 import { useAuth } from '@/contexts/AuthContext'
 import AnalysisResultsSection from './trade-analysis/AnalysisResultsSection'
+import { tradeCalculatorApi, type Player, type Team } from '@/lib/tradeCalculatorApi'
 import '@/styles/enhanced-trade-analysis.css'
 
-interface Player {
+// Extended Player interface for backward compatibility
+interface ExtendedPlayer {
   id: number
   name: string
-  team: string
   position: string
   ovr: number
-  teamId?: number
-  team_id?: number  // Add support for backend snake_case field
+  age?: number
+  value?: number
+  team?: string  // Legacy field
+  teamId?: number  // Legacy field
+  team_id?: number  // Backend snake_case field (optional for compatibility)
+  team_name?: string  // Backend returns 'team_name' instead of 'team'
+  team_abbreviation?: string  // Backend returns 'team_abbreviation'
   user?: string
   devTrait?: string
-  age?: number
   yearsPro?: number
+  league_id?: string  // Backend returns 'league_id'
   
   // Backend field mappings
   overall?: number  // Backend returns 'overall' instead of 'ovr'
-  team_name?: string  // Backend returns 'team_name' instead of 'team'
-  team_abbreviation?: string  // Backend returns 'team_abbreviation'
-  league_id?: string  // Backend returns 'league_id'
+  
+  // Enhanced data from unified API
+  enhanced_data?: {
+    valueBreakdown: {
+      finalValue: number
+      baseValue: number
+      teamNeedMultiplier: number
+    }
+  }
+  team_need_multiplier?: number
+}
+
+// Extended Team interface for backward compatibility
+interface ExtendedTeam extends Team {
+  city?: string
+  user?: string
+  user_id?: number
 }
 
 // Helper function to get team ID from either field
-const getPlayerTeamId = (player: Player): number | undefined => {
+const getPlayerTeamId = (player: ExtendedPlayer): number | undefined => {
   return player.teamId || player.team_id
 }
 
 // Helper function to get overall rating from either field
-const getPlayerOverall = (player: Player): number => {
+const getPlayerOverall = (player: ExtendedPlayer): number => {
   return player.ovr || player.overall || 75
 }
 
 // Helper function to get team name from either field
-const getPlayerTeamName = (player: Player): string => {
+const getPlayerTeamName = (player: ExtendedPlayer): string => {
   return player.team || player.team_name || 'Unknown Team'
-}
-
-interface Team {
-  id: number
-  name: string
-  city: string
-  user: string
-  user_id?: number
 }
 
 
@@ -173,7 +185,7 @@ interface EnhancedAnalysisResult {
 const getHeadshotUrl = () => '/default-avatar.png'
 
 // Enhanced player value calculation
-const calculatePlayerValue = (player: Player): number => {
+const calculatePlayerValue = (player: ExtendedPlayer): number => {
   const baseValue = getPlayerOverall(player)
   
   // Position multipliers
@@ -233,9 +245,9 @@ interface TradeCalculatorProps {
 
 export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   const { user } = useAuth()
-  const [players, setPlayers] = useState<Player[]>([])
-  const [teams, setTeams] = useState<Team[]>([])
-  const [userTeam, setUserTeam] = useState<Team | null>(null)
+  const [players, setPlayers] = useState<ExtendedPlayer[]>([])
+  const [teams, setTeams] = useState<ExtendedTeam[]>([])
+  const [userTeam, setUserTeam] = useState<ExtendedTeam | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
@@ -253,8 +265,8 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   // Trade state
   const [result, setResult] = useState<TradeResult | null>(null)
   const [enhancedResult, setEnhancedResult] = useState<EnhancedAnalysisResult | null>(null)
-  const [givePlayers, setGivePlayers] = useState<Player[]>([])
-  const [receivePlayers, setReceivePlayers] = useState<Player[]>([])
+  const [givePlayers, setGivePlayers] = useState<ExtendedPlayer[]>([])
+  const [receivePlayers, setReceivePlayers] = useState<ExtendedPlayer[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   
   // Team selection
@@ -300,7 +312,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
         samplePlayers: players.slice(0, 3).map(p => ({ 
           id: p.id, 
           name: p.name, 
-          team: p.team, 
+          team: getPlayerTeamName(p), 
           teamId: p.teamId,
           team_id: p.team_id,  // Show both field values for debugging
           resolvedTeamId: getPlayerTeamId(p)  // Show the resolved team ID
@@ -360,26 +372,46 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
       try {
         setLoading(true)
         
-        // Load league players
-        const playersRes = await fetch(`${API_BASE}/leagues/${league_id}/players?page=1&pageSize=5000`, { credentials: 'include' })
-        if (playersRes.ok) {
-          const playersData = await playersRes.json()
-          console.log('📊 Players loaded:', playersData)
+        // Load league players using unified trade calculator API
+        try {
+          const playersData = await tradeCalculatorApi.getPlayers(league_id, {
+            page: 1,
+            per_page: 100,
+            fast_mode: false
+          })
+          console.log('📊 Players loaded via unified API:', playersData)
           setPlayers(playersData.players || [])
-        } else {
-          console.error('Failed to load players:', playersRes.status)
-          const errorText = await playersRes.text()
-          console.error('Players error response:', errorText)
+        } catch (error) {
+          console.error('❌ Failed to load players via unified API:', error)
+          // Fallback to old API
+          const playersRes = await fetch(`${API_BASE}/leagues/${league_id}/players?page=1&pageSize=5000`, { credentials: 'include' })
+          if (playersRes.ok) {
+            const playersData = await playersRes.json()
+            console.log('📊 Players loaded via fallback API:', playersData)
+            setPlayers(playersData.players || [])
+          } else {
+            console.error('Failed to load players:', playersRes.status)
+            const errorText = await playersRes.text()
+            console.error('Players error response:', errorText)
+          }
         }
         
-        // Load teams
-        const teamsRes = await fetch(`${API_BASE}/leagues/${league_id}/teams`, { credentials: 'include' })
-        if (teamsRes.ok) {
-          const teamsData = await teamsRes.json()
-          console.log('📊 Teams loaded:', teamsData)
+        // Load teams using unified trade calculator API
+        try {
+          const teamsData = await tradeCalculatorApi.getTeams(league_id)
+          console.log('🏈 Teams loaded via unified API:', teamsData)
           setTeams(teamsData.teams || [])
-        } else {
-          console.error('Failed to load teams:', teamsRes.status)
+        } catch (error) {
+          console.error('❌ Failed to load teams via unified API:', error)
+          // Fallback to old API
+          const teamsRes = await fetch(`${API_BASE}/leagues/${league_id}/teams`, { credentials: 'include' })
+          if (teamsRes.ok) {
+            const teamsData = await teamsRes.json()
+            console.log('🏈 Teams loaded via fallback API:', teamsData)
+            setTeams(teamsData.teams || [])
+          } else {
+            console.error('Failed to load teams:', teamsRes.status)
+          }
         }
         
       } catch (err) {
@@ -480,7 +512,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   }, [netValue])
 
   // Player management functions
-  const addGivePlayer = (player: Player) => {
+  const addGivePlayer = (player: ExtendedPlayer) => {
     if (!givePlayers.find(p => p.id === player.id)) {
       setGivePlayers([...givePlayers, player])
     }
@@ -490,7 +522,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     setGivePlayers(givePlayers.filter(p => p.id !== id))
   }
 
-  const addReceivePlayer = (player: Player) => {
+  const addReceivePlayer = (player: ExtendedPlayer) => {
     if (!receivePlayers.find(p => p.id === player.id)) {
       setReceivePlayers([...receivePlayers, player])
     }
@@ -501,10 +533,10 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   }
 
   // Player info popup state
-  const [selectedPlayerInfo, setSelectedPlayerInfo] = useState<Player | null>(null)
+  const [selectedPlayerInfo, setSelectedPlayerInfo] = useState<ExtendedPlayer | null>(null)
   const [showPlayerInfo, setShowPlayerInfo] = useState(false)
 
-  const openPlayerInfo = (player: Player) => {
+  const openPlayerInfo = (player: ExtendedPlayer) => {
     setSelectedPlayerInfo(player)
     setShowPlayerInfo(true)
   }
@@ -515,7 +547,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   }
 
   // Get position-based key attributes
-  const getKeyAttributes = (player: Player) => {
+  const getKeyAttributes = (player: ExtendedPlayer) => {
     const attributes: Record<string, number> = {}
     const overall = getPlayerOverall(player)
     
@@ -550,7 +582,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   }
 
   // Get player value breakdown
-  const getPlayerValueBreakdown = (player: Player) => {
+  const getPlayerValueBreakdown = (player: ExtendedPlayer) => {
     const baseValue = getPlayerOverall(player)
     const positionMultipliers: Record<string, number> = {
       'QB': 1.2, 'WR': 1.1, 'RB': 1.0, 'TE': 0.9, 'LT': 0.8, 'LG': 0.7, 'C': 0.7,
@@ -600,61 +632,102 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     setIsAnalyzing(true)
 
     try {
-      // First, try the enhanced analysis API
-      const enhancedTradeData = {
-        user_team_id: userTeamId,
-        players_out: givePlayers.map(p => ({
-          id: p.id,
-          name: p.name,
-          position: p.position,
-          ovr: getPlayerOverall(p),
-          age: p.age || 25,
-          dev_trait: p.devTrait || 'Normal',
-          cap_hit: 0, // Default values for missing fields
-          contract_years_left: 3
-        })),
-        players_in: receivePlayers.map(p => ({
-          id: p.id,
-          name: p.name,
-          position: p.position,
-          ovr: getPlayerOverall(p),
-          age: p.age || 25,
-          dev_trait: p.devTrait || 'Normal',
-          cap_hit: 0, // Default values for missing fields
-          contract_years_left: 3
-        })),
-        draft_picks_out: [],
-        draft_picks_in: []
-      }
+      // Use unified trade calculator API for comprehensive analysis
+      const analysisResult = await tradeCalculatorApi.analyzeTradeComprehensive(
+        league_id,
+        userTeamId,
+        givePlayers.map(p => p.id),
+        receivePlayers.map(p => p.id)
+      )
 
-      try {
-        // Use the optimized fast analysis endpoint for 70% better performance
-        const enhancedRes = await fetch(`${API_BASE}/leagues/${league_id}/trade-analyzer/analyze-fast`, {
-          credentials: 'include',
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(enhancedTradeData)
-        })
-
-        if (enhancedRes.ok) {
-          const enhancedData = await enhancedRes.json() as EnhancedAnalysisResult
-          if (enhancedData.success) {
-            setEnhancedResult(enhancedData)
-            setIsAnalyzing(false)
-            
-            // Log performance metrics
-            if (enhancedData.performanceMetrics) {
-              console.log(`⚡ Analysis completed in ${enhancedData.performanceMetrics.analysisTime}s`)
-              console.log(`🎯 Optimizations used: ${enhancedData.performanceMetrics.optimizationsUsed?.join(', ') || 'Standard optimizations'}`)
+      if (analysisResult.success) {
+        // Convert unified response to enhanced result format
+        const enhancedData: EnhancedAnalysisResult = {
+          success: true,
+          tradeAssessment: {
+            verdict: analysisResult.trade_analysis.verdict,
+            team_gives: analysisResult.trade_analysis.total_value_out,
+            team_receives: analysisResult.trade_analysis.total_value_in,
+            net_gain: analysisResult.trade_analysis.net_value,
+            confidence: analysisResult.trade_analysis.confidence,
+            value_ratio: analysisResult.trade_analysis.total_value_in / analysisResult.trade_analysis.total_value_out
+          },
+          performanceMetrics: {
+            analysisTime: 0.5, // Estimated time for unified API
+            optimizationsUsed: ['unified_calculator', 'enhanced_values'],
+            cacheHit: false
+          },
+          positionalGrades: {
+            current: {},
+            afterTrade: {},
+            improvements: [],
+            downgrades: []
+          },
+          slidingScaleAdjustments: {
+            total_adjustments: 0,
+            total_value_increase: 0,
+            adjustments_applied: []
+          },
+          aiAnalysis: {
+            summary: analysisResult.detailed_analysis?.trade_recommendation || 'Trade analysis completed',
+            rosterComposition: {
+              before: 0,
+              after: 0,
+              positions_affected: Object.keys(analysisResult.detailed_analysis?.positional_impact || {}),
+              depth_changes: {}
+            },
+            riskAnalysis: {
+              risk_level: analysisResult.trade_analysis.confidence > 80 ? 'Low' : analysisResult.trade_analysis.confidence > 60 ? 'Medium' : 'High',
+              risks: [],
+              value_ratio: analysisResult.trade_analysis.total_value_in / analysisResult.trade_analysis.total_value_out,
+              recommendations: analysisResult.detailed_analysis?.team_needs_analysis?.recommendations || []
+            },
+            counterSuggestions: [],
+            playerRecommendations: []
+          },
+          itemizationBreakdown: {
+            players_out: analysisResult.players_out.map(p => ({
+              name: p.name,
+              position: p.position,
+              ovr: p.ovr,
+              base_value: p.enhanced_data.valueBreakdown.baseValue,
+              enhanced_value: p.enhanced_data.valueBreakdown.finalValue,
+              adjustment: p.enhanced_data.valueBreakdown.finalValue - p.enhanced_data.valueBreakdown.baseValue,
+              adjustment_reason: `Team need multiplier: ${p.team_need_multiplier}`,
+              calculation_method: 'unified_calculator'
+            })),
+            players_in: analysisResult.players_in.map(p => ({
+              name: p.name,
+              position: p.position,
+              ovr: p.ovr,
+              base_value: p.enhanced_data.valueBreakdown.baseValue,
+              enhanced_value: p.enhanced_data.valueBreakdown.finalValue,
+              adjustment: p.enhanced_data.valueBreakdown.finalValue - p.enhanced_data.valueBreakdown.baseValue,
+              adjustment_reason: `Team need multiplier: ${p.team_need_multiplier}`,
+              calculation_method: 'unified_calculator'
+            })),
+            summary: {
+              total_base_value_out: analysisResult.players_out.reduce((sum, p) => sum + p.enhanced_data.valueBreakdown.baseValue, 0),
+              total_enhanced_value_out: analysisResult.players_out.reduce((sum, p) => sum + p.enhanced_data.valueBreakdown.finalValue, 0),
+              total_base_value_in: analysisResult.players_in.reduce((sum, p) => sum + p.enhanced_data.valueBreakdown.baseValue, 0),
+              total_enhanced_value_in: analysisResult.players_in.reduce((sum, p) => sum + p.enhanced_data.valueBreakdown.finalValue, 0),
+              net_value_change: analysisResult.trade_analysis.net_value
             }
-            return
-          }
+          },
+          rosterConstruction: {},
+          calculationTimestamp: new Date().toISOString()
         }
-      } catch {
-        console.log('Optimized analysis not available, falling back to basic analysis')
-      }
 
-      // Fallback to basic analysis
+        setEnhancedResult(enhancedData)
+        console.log('✅ Trade analysis completed via unified API:', analysisResult)
+        return
+      }
+    } catch (error) {
+      console.error('❌ Unified API analysis failed, falling back to legacy API:', error)
+    }
+
+    // Fallback to legacy analysis
+    try {
       const tradeData = {
         teamId: userTeamId,
         trade: {
@@ -723,14 +796,14 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
           player_id: p.id,
           player_name: p.name,
           position: p.position,
-          team: p.team,
+          team: getPlayerTeamName(p),
           ovr: p.ovr
         })),
         to_players: receivePlayers.map(p => ({
           player_id: p.id,
           player_name: p.name,
           position: p.position,
-          team: p.team,
+          team: getPlayerTeamName(p),
           ovr: p.ovr
         })),
         message: tradeMessage,
