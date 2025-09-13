@@ -36,6 +36,14 @@ export default function SystemMonitoringPage() {
       setLoading(true)
       setError(null)
       
+      // Check authentication first
+      const isAuthenticated = await adminApi.checkAuthStatus()
+      if (!isAuthenticated) {
+        setError('Authentication required. Please log in again.')
+        router.push('/login')
+        return
+      }
+      
       const [costStatsData, recommendationsData, logsData] = await Promise.all([
         adminApi.getCostStats(),
         adminApi.getCostRecommendations(),
@@ -46,7 +54,13 @@ export default function SystemMonitoringPage() {
       setRecommendations(recommendationsData)
       setSystemLogs(logsData?.logs || [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      console.error('Error fetching system data:', err)
+      if (err instanceof Error && err.message.includes('Authentication')) {
+        setError('Authentication required. Please log in again.')
+        router.push('/login')
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to load system data')
+      }
     } finally {
       setLoading(false)
     }

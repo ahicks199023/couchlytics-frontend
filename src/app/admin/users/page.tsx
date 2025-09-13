@@ -25,6 +25,15 @@ export default function UserManagementPage() {
     try {
       setLoading(true)
       setError(null)
+      
+      // Check authentication first
+      const isAuthenticated = await adminApi.checkAuthStatus()
+      if (!isAuthenticated) {
+        setError('Authentication required. Please log in again.')
+        router.push('/login')
+        return
+      }
+      
       const data = await adminApi.getUsers({
         page: currentPage,
         per_page: 20,
@@ -37,14 +46,20 @@ export default function UserManagementPage() {
         setTotalPages(Math.ceil(data.total / data.per_page))
         setTotalUsers(data.total)
       } else {
-        setError('Failed to load users')
+        setError('Failed to load users. Please check your authentication.')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      console.error('Error fetching users:', err)
+      if (err instanceof Error && err.message.includes('Authentication')) {
+        setError('Authentication required. Please log in again.')
+        router.push('/login')
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to load users')
+      }
     } finally {
       setLoading(false)
     }
-  }, [currentPage, searchQuery, activeFilter])
+  }, [currentPage, searchQuery, activeFilter, router])
 
   useEffect(() => {
     if (!authLoading && !user) {

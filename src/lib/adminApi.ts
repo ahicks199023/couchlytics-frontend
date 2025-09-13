@@ -158,6 +158,23 @@ export class AdminApiService {
     this.baseUrl = `${API_BASE}/admin`
   }
 
+  // Helper method to check authentication status
+  async checkAuthStatus(): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/dashboard`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      })
+      return response.ok
+    } catch (error) {
+      console.error('Auth check failed:', error)
+      return false
+    }
+  }
+
   private async makeRequest<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -167,15 +184,37 @@ export class AdminApiService {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
           ...options.headers,
         },
         ...options,
       })
 
+      // Handle authentication errors specifically
+      if (response.status === 401) {
+        console.error('Admin API Authentication Error: Session expired or not authenticated')
+        // Redirect to login page
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
+        return {
+          success: false,
+          error: 'Authentication required. Please log in again.',
+        }
+      }
+
+      if (response.status === 403) {
+        console.error('Admin API Authorization Error: Insufficient permissions')
+        return {
+          success: false,
+          error: 'Access denied. Admin privileges required.',
+        }
+      }
+
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || `HTTP ${response.status}`)
+        throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`)
       }
 
       return data
@@ -317,26 +356,92 @@ export class AdminApiService {
 
   // Cost Monitoring endpoints
   async getCostStats(): Promise<Record<string, unknown>> {
-    const response = await fetch(`${API_BASE}/api/cost/stats`, {
-      credentials: 'include',
-    })
-    return response.json()
+    try {
+      const response = await fetch(`${API_BASE}/api/cost/stats`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      })
+
+      if (response.status === 401) {
+        console.error('Cost Stats Authentication Error: Session expired or not authenticated')
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
+        return {}
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Cost Stats API Error:', error)
+      return {}
+    }
   }
 
   async getCostRecommendations(): Promise<Record<string, unknown>> {
-    const response = await fetch(`${API_BASE}/api/cost/recommendations`, {
-      credentials: 'include',
-    })
-    return response.json()
+    try {
+      const response = await fetch(`${API_BASE}/api/cost/recommendations`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      })
+
+      if (response.status === 401) {
+        console.error('Cost Recommendations Authentication Error: Session expired or not authenticated')
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
+        return {}
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('Cost Recommendations API Error:', error)
+      return {}
+    }
   }
 
   async optimizeCosts(): Promise<boolean> {
-    const response = await fetch(`${API_BASE}/api/cost/optimize`, {
-      method: 'POST',
-      credentials: 'include',
-    })
-    const data = await response.json()
-    return data.success
+    try {
+      const response = await fetch(`${API_BASE}/api/cost/optimize`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      })
+
+      if (response.status === 401) {
+        console.error('Cost Optimization Authentication Error: Session expired or not authenticated')
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
+        return false
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      return data.success || false
+    } catch (error) {
+      console.error('Cost Optimization API Error:', error)
+      return false
+    }
   }
 }
 

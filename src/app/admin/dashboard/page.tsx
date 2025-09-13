@@ -32,14 +32,29 @@ export default function AdminDashboardPage() {
     try {
       setLoading(true)
       setError(null)
+      
+      // Check authentication first
+      const isAuthenticated = await adminApi.checkAuthStatus()
+      if (!isAuthenticated) {
+        setError('Authentication required. Please log in again.')
+        router.push('/login')
+        return
+      }
+      
       const data = await adminApi.getDashboard()
       if (data) {
         setDashboard(data)
       } else {
-        setError('Failed to load dashboard data')
+        setError('Failed to load dashboard data. Please check your authentication.')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      console.error('Error fetching dashboard:', err)
+      if (err instanceof Error && err.message.includes('Authentication')) {
+        setError('Authentication required. Please log in again.')
+        router.push('/login')
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
+      }
     } finally {
       setLoading(false)
     }
