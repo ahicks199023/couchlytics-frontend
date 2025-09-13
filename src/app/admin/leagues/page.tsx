@@ -53,6 +53,8 @@ export default function LeagueManagementPage() {
         router.push('/login')
       } else if (err instanceof Error && err.message.includes('Endpoint not found')) {
         setError('Leagues endpoint not implemented on backend. Please contact administrator.')
+      } else if (err instanceof Error && err.message.includes('returned null data')) {
+        setError('Leagues endpoint is not fully implemented on backend. Please contact administrator.')
       } else {
         setError(err instanceof Error ? err.message : 'Failed to load leagues')
       }

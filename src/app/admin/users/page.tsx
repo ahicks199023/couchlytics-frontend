@@ -53,6 +53,8 @@ export default function UserManagementPage() {
         router.push('/login')
       } else if (err instanceof Error && err.message.includes('Endpoint not found')) {
         setError('Users endpoint not implemented on backend. Please contact administrator.')
+      } else if (err instanceof Error && err.message.includes('returned null data')) {
+        setError('Users endpoint is not fully implemented on backend. Please contact administrator.')
       } else {
         setError(err instanceof Error ? err.message : 'Failed to load users')
       }

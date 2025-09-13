@@ -235,6 +235,15 @@ export class AdminApiService {
         throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`)
       }
 
+      // Handle case where backend returns null instead of expected data structure
+      if (data === null || data === undefined) {
+        console.warn(`⚠️ Backend returned null for ${endpoint} - endpoint may not be fully implemented`)
+        return {
+          success: false,
+          error: `Backend endpoint ${endpoint} returned null data. The endpoint may not be fully implemented.`,
+        }
+      }
+
       return data
     } catch (error) {
       console.error(`Admin API Error (${endpoint}):`, error)
