@@ -11,6 +11,7 @@ import {
   Check, 
   X 
 } from 'lucide-react';
+import { getTeamLogoUrl } from '@/services/teamLogoService';
 
 interface PendingTrade {
   id: number;
@@ -256,7 +257,7 @@ export default function TradeCommitteeReviewPage() {
                     <div className="flex items-center space-x-2">
                       {trade.from_team?.name && (
                         <img 
-                          src={`/team-logos/${trade.from_team.name.toLowerCase().replace(/\s+/g, '-')}.png`}
+                          src={getTeamLogoUrl(trade.from_team.name)}
                           alt={trade.from_team.name}
                           className="w-8 h-8 rounded-full"
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
@@ -281,7 +282,7 @@ export default function TradeCommitteeReviewPage() {
                     <div className="flex items-center space-x-2">
                       {trade.to_team?.name && (
                         <img 
-                          src={`/team-logos/${trade.to_team.name.toLowerCase().replace(/\s+/g, '-')}.png`}
+                          src={getTeamLogoUrl(trade.to_team.name)}
                           alt={trade.to_team.name}
                           className="w-8 h-8 rounded-full"
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}

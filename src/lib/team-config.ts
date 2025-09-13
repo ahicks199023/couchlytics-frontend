@@ -1,6 +1,8 @@
 // Team Configuration System
 // This file provides universal team logos, colors, and metadata across all leagues
 
+import { getTeamLogoUrl } from '@/services/teamLogoService'
+
 export interface TeamConfig {
   id: number
   name: string
@@ -42,7 +44,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/nyg.png',
+      url: getTeamLogoUrl('Giants'),
       alt: 'New York Giants Logo'
     },
     helmet: {
@@ -65,7 +67,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/dal.png',
+      url: getTeamLogoUrl('Cowboys'),
       alt: 'Dallas Cowboys Logo'
     },
     helmet: {
@@ -88,7 +90,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/phi.png',
+      url: getTeamLogoUrl('Eagles'),
       alt: 'Philadelphia Eagles Logo'
     },
     helmet: {
@@ -111,7 +113,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/was.png',
+      url: getTeamLogoUrl('Commanders'),
       alt: 'Washington Commanders Logo'
     },
     helmet: {
@@ -134,7 +136,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/nyj.png',
+      url: getTeamLogoUrl('Jets'),
       alt: 'New York Jets Logo'
     },
     helmet: {
@@ -157,7 +159,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/buf.png',
+      url: getTeamLogoUrl('Bills'),
       alt: 'Buffalo Bills Logo'
     },
     helmet: {
@@ -180,7 +182,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/ne.png',
+      url: getTeamLogoUrl('Patriots'),
       alt: 'New England Patriots Logo'
     },
     helmet: {
@@ -203,7 +205,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/mia.png',
+      url: getTeamLogoUrl('Dolphins'),
       alt: 'Miami Dolphins Logo'
     },
     helmet: {
@@ -226,7 +228,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/bal.png',
+      url: getTeamLogoUrl('Ravens'),
       alt: 'Baltimore Ravens Logo'
     },
     helmet: {
@@ -249,7 +251,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/cin.png',
+      url: getTeamLogoUrl('Bengals'),
       alt: 'Cincinnati Bengals Logo'
     },
     helmet: {
@@ -272,7 +274,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/cle.png',
+      url: getTeamLogoUrl('Browns'),
       alt: 'Cleveland Browns Logo'
     },
     helmet: {
@@ -295,7 +297,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/pit.png',
+      url: getTeamLogoUrl('Steelers'),
       alt: 'Pittsburgh Steelers Logo'
     },
     helmet: {
@@ -318,7 +320,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/hou.png',
+      url: getTeamLogoUrl('Texans'),
       alt: 'Houston Texans Logo'
     },
     helmet: {
@@ -341,7 +343,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/ind.png',
+      url: getTeamLogoUrl('Colts'),
       alt: 'Indianapolis Colts Logo'
     },
     helmet: {
@@ -364,7 +366,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/jax.png',
+      url: getTeamLogoUrl('Jaguars'),
       alt: 'Jacksonville Jaguars Logo'
     },
     helmet: {
@@ -387,7 +389,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/ten.png',
+      url: getTeamLogoUrl('Titans'),
       alt: 'Tennessee Titans Logo'
     },
     helmet: {
@@ -410,7 +412,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/den.png',
+      url: getTeamLogoUrl('Broncos'),
       alt: 'Denver Broncos Logo'
     },
     helmet: {
@@ -433,7 +435,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/kc.png',
+      url: getTeamLogoUrl('Chiefs'),
       alt: 'Kansas City Chiefs Logo'
     },
     helmet: {
@@ -456,7 +458,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/lv.png',
+      url: getTeamLogoUrl('Raiders'),
       alt: 'Las Vegas Raiders Logo'
     },
     helmet: {
@@ -479,7 +481,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/lac.png',
+      url: getTeamLogoUrl('Chargers'),
       alt: 'Los Angeles Chargers Logo'
     },
     helmet: {
@@ -502,7 +504,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/ari.png',
+      url: getTeamLogoUrl('Cardinals'),
       alt: 'Arizona Cardinals Logo'
     },
     helmet: {
@@ -525,7 +527,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/lar.png',
+      url: getTeamLogoUrl('Rams'),
       alt: 'Los Angeles Rams Logo'
     },
     helmet: {
@@ -548,7 +550,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/sf.png',
+      url: getTeamLogoUrl('49ers'),
       alt: 'San Francisco 49ers Logo'
     },
     helmet: {
@@ -571,7 +573,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/sea.png',
+      url: getTeamLogoUrl('Seahawks'),
       alt: 'Seattle Seahawks Logo'
     },
     helmet: {
@@ -594,7 +596,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/atl.png',
+      url: getTeamLogoUrl('Falcons'),
       alt: 'Atlanta Falcons Logo'
     },
     helmet: {
@@ -617,7 +619,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/car.png',
+      url: getTeamLogoUrl('Panthers'),
       alt: 'Carolina Panthers Logo'
     },
     helmet: {
@@ -640,7 +642,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#000000'
     },
     logo: {
-      url: '/team-logos/no.png',
+      url: getTeamLogoUrl('Saints'),
       alt: 'New Orleans Saints Logo'
     },
     helmet: {
@@ -663,7 +665,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/tb.png',
+      url: getTeamLogoUrl('Buccaneers'),
       alt: 'Tampa Bay Buccaneers Logo'
     },
     helmet: {
@@ -686,7 +688,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/chi.png',
+      url: getTeamLogoUrl('Bears'),
       alt: 'Chicago Bears Logo'
     },
     helmet: {
@@ -709,7 +711,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/det.png',
+      url: getTeamLogoUrl('Lions'),
       alt: 'Detroit Lions Logo'
     },
     helmet: {
@@ -732,7 +734,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/gb.png',
+      url: getTeamLogoUrl('Packers'),
       alt: 'Green Bay Packers Logo'
     },
     helmet: {
@@ -755,7 +757,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       text: '#FFFFFF'
     },
     logo: {
-      url: '/team-logos/min.png',
+      url: getTeamLogoUrl('Vikings'),
       alt: 'Minnesota Vikings Logo'
     },
     helmet: {
