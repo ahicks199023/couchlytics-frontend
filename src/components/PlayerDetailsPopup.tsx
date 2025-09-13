@@ -130,6 +130,20 @@ const PlayerDetailsPopup: React.FC<PlayerDetailsPopupProps> = ({ player, isOpen,
   }
 
   const getPlayerValueBreakdown = (player: PlayerDetails) => {
+    // Prioritize backend player_value if available
+    if (player.player_value !== undefined && player.player_value !== null) {
+      console.log(`🎯 Using backend player_value for ${player.playerName}: ${player.player_value}`)
+      return {
+        baseValue: player.overall_rating || 75,
+        positionMultiplier: 1.0,
+        ageFactor: player.age ? (player.age < 25 ? 1.2 : player.age > 30 ? 0.8 : 1.0) : 1.0,
+        devFactor: player.dev_trait === 'Superstar' ? 1.3 : player.dev_trait === 'Star' ? 1.1 : 1.0,
+        finalValue: player.player_value
+      }
+    }
+    
+    // Fallback to frontend calculation only if no backend value
+    console.warn(`⚠️ No backend player_value for ${player.playerName}, using frontend calculation`)
     const baseValue = player.overall_rating || 75
     const positionMultiplier = 1.0 // Could be calculated based on position
     const ageFactor = player.age ? (player.age < 25 ? 1.2 : player.age > 30 ? 0.8 : 1.0) : 1.0
