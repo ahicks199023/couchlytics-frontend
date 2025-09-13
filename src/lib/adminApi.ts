@@ -183,7 +183,7 @@ export class AdminApiService {
   private async makeRequest<T>(
     endpoint: string,
     options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
+  ): Promise<T & { success: boolean } | ApiResponse<T>> {
     try {
       const url = `${this.baseUrl}${endpoint}`
       console.log(`🔍 Admin API Request: ${options.method || 'GET'} ${url}`)
@@ -244,11 +244,8 @@ export class AdminApiService {
         }
       }
 
-      // The backend returns data directly, so we need to wrap it in the ApiResponse format
-      return {
-        success: true,
-        ...data
-      } as ApiResponse<T>
+      // The backend returns data directly, so we return it as-is
+      return data as T & { success: true }
     } catch (error) {
       console.error(`Admin API Error (${endpoint}):`, error)
       return {
@@ -263,9 +260,9 @@ export class AdminApiService {
     const response = await this.makeRequest<AdminDashboard>('/dashboard')
     console.log('🔍 getDashboard response:', response)
     
-    if (response.success && response.data) {
+    if (response.success) {
       console.log('✅ Dashboard data found')
-      return response.data
+      return response as unknown as AdminDashboard
     }
     
     console.warn('⚠️ No dashboard data in response or success=false')
@@ -289,16 +286,16 @@ export class AdminApiService {
       `/users?${queryParams.toString()}`
     )
     
-    // The makeRequest method now wraps the data in ApiResponse format
+    // The backend returns data directly in the response, not nested under 'data'
     console.log('🔍 getUsers response:', response)
     
-    if (response.success && response.data?.users) {
-      console.log('✅ Users data found:', response.data.users.length, 'users')
+    if (response.success && 'users' in response) {
+      console.log('✅ Users data found:', response.users.length, 'users')
       return {
-        users: response.data.users,
-        total: response.data.total,
-        page: response.data.page,
-        per_page: response.data.per_page
+        users: response.users,
+        total: response.total,
+        page: response.page,
+        per_page: response.per_page
       }
     }
     
@@ -345,16 +342,16 @@ export class AdminApiService {
       `/leagues?${queryParams.toString()}`
     )
     
-    // The makeRequest method now wraps the data in ApiResponse format
+    // The backend returns data directly in the response, not nested under 'data'
     console.log('🔍 getLeagues response:', response)
     
-    if (response.success && response.data?.leagues) {
-      console.log('✅ Leagues data found:', response.data.leagues.length, 'leagues')
+    if (response.success && 'leagues' in response) {
+      console.log('✅ Leagues data found:', response.leagues.length, 'leagues')
       return {
-        leagues: response.data.leagues,
-        total: response.data.total,
-        page: response.data.page,
-        per_page: response.data.per_page
+        leagues: response.leagues,
+        total: response.total,
+        page: response.page,
+        per_page: response.per_page
       }
     }
     
@@ -391,7 +388,17 @@ export class AdminApiService {
     const response = await this.makeRequest<{ members: Record<string, unknown>[]; total: number; page: number; per_page: number }>(
       `/leagues/${leagueId}/members?${queryParams.toString()}`
     )
-    return response.success ? response.data || null : null
+    
+    if (response.success && 'members' in response) {
+      return {
+        members: response.members,
+        total: response.total,
+        page: response.page,
+        per_page: response.per_page
+      }
+    }
+    
+    return null
   }
 
   // System Management endpoints
@@ -399,7 +406,7 @@ export class AdminApiService {
     const response = await this.makeRequest<{ backup_id: string }>('/system/backup', {
       method: 'POST',
     })
-    return response.success ? response.data || null : null
+    return response.success && 'backup_id' in response ? response : null
   }
 
   async clearSystemCache(): Promise<boolean> {
@@ -420,7 +427,7 @@ export class AdminApiService {
     const response = await this.makeRequest<{ logs: Record<string, unknown>[] }>(
       `/system/logs?${queryParams.toString()}`
     )
-    return response.success ? response.data || null : null
+    return response.success && 'logs' in response ? response : null
   }
 
   // Cost Monitoring endpoints
@@ -520,7 +527,7 @@ export const adminApi = new AdminApiService()
 // Helper function to handle API responses
 export const handleApiResponse = <T>(response: ApiResponse<T>): T => {
   if (response.success) {
-    return response.data || response.dashboard_data as T
+    return response as T
   } else {
     throw new Error(response.error || 'Unknown error')
   }
