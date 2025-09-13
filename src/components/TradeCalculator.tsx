@@ -184,8 +184,32 @@ interface EnhancedAnalysisResult {
 // Always use default avatar to prevent headshot errors
 const getHeadshotUrl = () => '/default-avatar.png'
 
-// Enhanced player value calculation
-const calculatePlayerValue = (player: ExtendedPlayer): number => {
+// Get player value from backend data (prioritize backend values over frontend calculations)
+const getPlayerValue = (player: ExtendedPlayer): number => {
+  // Priority order: backend enhanced data > backend value > legacy value > fallback calculation
+  
+  // 1. Try backend enhanced data first (most accurate)
+  if (player.enhanced_data?.valueBreakdown?.finalValue) {
+    return player.enhanced_data.valueBreakdown.finalValue
+  }
+  
+  // 2. Try backend value field
+  if (player.value !== undefined && player.value !== null) {
+    return player.value
+  }
+  
+  // 3. Try legacy value field
+  if (player.value !== undefined && player.value !== null) {
+    return player.value
+  }
+  
+  // 4. Fallback to frontend calculation only if no backend data
+  console.warn(`⚠️ Using fallback calculation for player ${player.name} - backend value not available`)
+  return getPlayerValueFallback(player)
+}
+
+// Fallback calculation (only used when backend data is unavailable)
+const getPlayerValueFallback = (player: ExtendedPlayer): number => {
   const baseValue = getPlayerOverall(player)
   
   // Position multipliers
@@ -366,11 +390,54 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     }
   }, [league_id])
 
+  // Clear caches function
+  const clearPlayerValueCache = () => {
+    console.log('🧹 Clearing player value caches...')
+    // Clear localStorage
+    localStorage.removeItem('playerValues')
+    localStorage.removeItem('tradeAnalyzerCache')
+    localStorage.removeItem('playerCache')
+    localStorage.removeItem('tradeCalculatorCache')
+    
+    // Clear sessionStorage
+    sessionStorage.clear()
+    
+    // Clear any component state
+    setPlayers([])
+    setResult(null)
+    setEnhancedResult(null)
+    
+    console.log('✅ Player value caches cleared')
+  }
+
+  // Debug player values function
+  const debugPlayerValues = (playerName?: string) => {
+    console.log('=== PLAYER VALUE DEBUG ===')
+    const targetPlayer = playerName 
+      ? players.find(p => p.name.toLowerCase().includes(playerName.toLowerCase()))
+      : players.find(p => p.name === 'James Riddick')
+    
+    if (targetPlayer) {
+      console.log('Player:', targetPlayer.name)
+      console.log('Backend Value (value):', targetPlayer.value)
+      console.log('Enhanced Final Value:', targetPlayer.enhanced_data?.valueBreakdown?.finalValue)
+      console.log('Display Value (getPlayerValue):', getPlayerValue(targetPlayer))
+      console.log('Full Player Data:', targetPlayer)
+    } else {
+      console.log('Player not found:', playerName || 'James Riddick')
+      console.log('Available players:', players.slice(0, 5).map(p => p.name))
+    }
+    console.log('========================')
+  }
+
   // Load user and data
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true)
+        
+        // Clear caches to ensure fresh data
+        clearPlayerValueCache()
         
         // Load league players using unified trade calculator API
         try {
@@ -381,6 +448,11 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
           })
           console.log('📊 Players loaded via unified API:', playersData)
           setPlayers(playersData.players || [])
+          
+          // Debug player values after loading
+          setTimeout(() => {
+            debugPlayerValues('James Riddick')
+          }, 100)
         } catch (error) {
           console.error('❌ Failed to load players via unified API:', error)
           // Fallback to old API
@@ -389,6 +461,11 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
             const playersData = await playersRes.json()
             console.log('📊 Players loaded via fallback API:', playersData)
             setPlayers(playersData.players || [])
+            
+            // Debug player values after loading
+            setTimeout(() => {
+              debugPlayerValues('James Riddick')
+            }, 100)
           } else {
             console.error('Failed to load players:', playersRes.status)
             const errorText = await playersRes.text()
@@ -438,8 +515,8 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     
     // Sort by value based on selected order
     return filtered.sort((a, b) => {
-      const aValue = calculatePlayerValue(a)
-      const bValue = calculatePlayerValue(b)
+      const aValue = getPlayerValue(a)
+      const bValue = getPlayerValue(b)
       return sortOrder === 'highest' ? bValue - aValue : aValue - bValue
     })
   }, [players, userTeamId, selectedPosition, sortOrder])
@@ -458,8 +535,8 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     
     // Sort by value based on selected order
     return filtered.sort((a, b) => {
-      const aValue = calculatePlayerValue(a)
-      const bValue = calculatePlayerValue(b)
+      const aValue = getPlayerValue(a)
+      const bValue = getPlayerValue(b)
       return receiveSortOrder === 'highest' ? bValue - aValue : aValue - bValue
     })
   }, [players, teams, selectedTeamB, selectedReceivePosition, receiveSortOrder])
@@ -494,12 +571,12 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   }, [teams, userTeamId])
 
   const giveValue = useMemo(() => 
-    givePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0), 
+    givePlayers.reduce((sum, p) => sum + getPlayerValue(p), 0), 
     [givePlayers]
   )
 
   const receiveValue = useMemo(() => 
-    receivePlayers.reduce((sum, p) => sum + calculatePlayerValue(p), 0), 
+    receivePlayers.reduce((sum, p) => sum + getPlayerValue(p), 0), 
     [receivePlayers]
   )
 
@@ -1037,7 +1114,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                      </button>
                        <div className="text-right">
                          <div className="text-sm font-bold text-green-400">OVR: {getPlayerOverall(p)}</div>
-                         <div className="text-xs text-blue-400 font-medium">Value: {calculatePlayerValue(p)}</div>
+                         <div className="text-xs text-blue-400 font-medium">Value: {getPlayerValue(p)}</div>
                        </div>
                    </div>
                  </div>
@@ -1178,7 +1255,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                        </button>
                        <div className="text-right">
                          <div className="text-sm font-bold text-green-400">OVR: {getPlayerOverall(p)}</div>
-                         <div className="text-xs text-blue-400 font-medium">Value: {calculatePlayerValue(p)}</div>
+                         <div className="text-xs text-blue-400 font-medium">Value: {getPlayerValue(p)}</div>
                        </div>
                      </div>
                    </div>
@@ -1220,7 +1297,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                 {givePlayers.map(p => (
                   <div key={p.id} className="flex items-center justify-between bg-gray-600 p-2 rounded">
                     <span className="text-sm">{p.name} ({p.position})</span>
-                    <span className="text-sm text-gray-400">{calculatePlayerValue(p)} pts</span>
+                    <span className="text-sm text-gray-400">{getPlayerValue(p)} pts</span>
                   </div>
                 ))}
               </div>
@@ -1236,7 +1313,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                 {receivePlayers.map(p => (
                   <div key={p.id} className="flex items-center justify-between bg-gray-600 p-2 rounded">
                     <span className="text-sm">{p.name} ({p.position})</span>
-                    <span className="text-sm text-gray-400">{calculatePlayerValue(p)} pts</span>
+                    <span className="text-sm text-gray-400">{getPlayerValue(p)} pts</span>
                   </div>
                 ))}
               </div>

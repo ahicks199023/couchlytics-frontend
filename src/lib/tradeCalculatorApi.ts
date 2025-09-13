@@ -95,13 +95,19 @@ export interface TeamsResponse {
 
 class TradeCalculatorApi {
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${API_BASE}${endpoint}`
+    // Add cache-busting parameter to ensure fresh data
+    const timestamp = Date.now()
+    const separator = endpoint.includes('?') ? '&' : '?'
+    const url = `${API_BASE}${endpoint}${separator}_t=${timestamp}`
     
     const response = await fetch(url, {
       ...options,
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
         ...options.headers,
       },
     })
