@@ -180,8 +180,8 @@ export default function NavBar() {
               🏠 Couchlytics Central
             </Link>
             {isAdmin() && (
-              <Link href="/dashboard" className="hover:text-neon-green transition-colors">
-                Dashboard
+              <Link href="/admin/dashboard" className="hover:text-neon-green transition-colors">
+                Admin
               </Link>
             )}
             <Link href="/chat" className="hover:text-neon-green transition-colors">
@@ -436,11 +436,11 @@ export default function NavBar() {
                 </Link>
                 {isAdmin() && (
                   <Link
-                    href="/dashboard"
+                    href="/admin/dashboard"
                     className="block py-2 text-gray-300 hover:text-white"
                     onClick={() => setIsOpen(false)}
                 >
-                    Dashboard
+                    Admin
                   </Link>
                 )}
                 

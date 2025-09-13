@@ -172,8 +172,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [hasRole])
 
   const isAdmin = useCallback((): boolean => {
+    // Check for specific developer email
+    if (user?.email === 'antoinehickssales@gmail.com') {
+      return true
+    }
     return hasRole(UserRole.ADMIN) || hasRole(UserRole.SUPER_ADMIN)
-  }, [hasRole])
+  }, [hasRole, user?.email])
 
   const logout = useCallback(async () => {
     // Set logging out flag to prevent auth checks
