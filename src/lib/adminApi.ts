@@ -161,13 +161,18 @@ export class AdminApiService {
   // Helper method to check authentication status
   async checkAuthStatus(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/dashboard`, {
+      const url = `${this.baseUrl}/dashboard`
+      console.log(`🔐 Checking auth status: GET ${url}`)
+      
+      const response = await fetch(url, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
       })
+      
+      console.log(`🔐 Auth status response: ${response.status} ${response.statusText}`)
       return response.ok
     } catch (error) {
       console.error('Auth check failed:', error)
@@ -180,7 +185,10 @@ export class AdminApiService {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const url = `${this.baseUrl}${endpoint}`
+      console.log(`🔍 Admin API Request: ${options.method || 'GET'} ${url}`)
+      
+      const response = await fetch(url, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -189,6 +197,8 @@ export class AdminApiService {
         },
         ...options,
       })
+
+      console.log(`📡 Admin API Response: ${response.status} ${response.statusText} for ${endpoint}`)
 
       // Handle authentication errors specifically
       if (response.status === 401) {
@@ -208,6 +218,14 @@ export class AdminApiService {
         return {
           success: false,
           error: 'Access denied. Admin privileges required.',
+        }
+      }
+
+      if (response.status === 404) {
+        console.error(`Admin API Not Found Error: ${endpoint} - Endpoint may not be implemented`)
+        return {
+          success: false,
+          error: `Endpoint not found: ${endpoint}. Please check if the backend endpoint is implemented.`,
         }
       }
 

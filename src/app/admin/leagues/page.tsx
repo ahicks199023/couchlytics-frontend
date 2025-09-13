@@ -26,13 +26,7 @@ export default function LeagueManagementPage() {
       setLoading(true)
       setError(null)
       
-      // Check authentication first
-      const isAuthenticated = await adminApi.checkAuthStatus()
-      if (!isAuthenticated) {
-        setError('Authentication required. Please log in again.')
-        router.push('/login')
-        return
-      }
+      console.log('🔄 Fetching leagues...')
       
       const data = await adminApi.getLeagues({
         page: currentPage,
@@ -41,18 +35,24 @@ export default function LeagueManagementPage() {
         active: activeFilter,
       })
       
+      console.log('📊 Leagues data received:', data)
+      
       if (data) {
         setLeagues(data.leagues)
         setTotalPages(Math.ceil(data.total / data.per_page))
         setTotalLeagues(data.total)
+        console.log('✅ Leagues loaded successfully:', data.leagues.length, 'leagues')
       } else {
+        console.error('❌ No leagues data received')
         setError('Failed to load leagues. Please check your authentication.')
       }
     } catch (err) {
-      console.error('Error fetching leagues:', err)
+      console.error('❌ Error fetching leagues:', err)
       if (err instanceof Error && err.message.includes('Authentication')) {
         setError('Authentication required. Please log in again.')
         router.push('/login')
+      } else if (err instanceof Error && err.message.includes('Endpoint not found')) {
+        setError('Leagues endpoint not implemented on backend. Please contact administrator.')
       } else {
         setError(err instanceof Error ? err.message : 'Failed to load leagues')
       }

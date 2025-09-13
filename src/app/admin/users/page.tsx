@@ -26,13 +26,7 @@ export default function UserManagementPage() {
       setLoading(true)
       setError(null)
       
-      // Check authentication first
-      const isAuthenticated = await adminApi.checkAuthStatus()
-      if (!isAuthenticated) {
-        setError('Authentication required. Please log in again.')
-        router.push('/login')
-        return
-      }
+      console.log('🔄 Fetching users...')
       
       const data = await adminApi.getUsers({
         page: currentPage,
@@ -41,18 +35,24 @@ export default function UserManagementPage() {
         active: activeFilter,
       })
       
+      console.log('📊 Users data received:', data)
+      
       if (data) {
         setUsers(data.users)
         setTotalPages(Math.ceil(data.total / data.per_page))
         setTotalUsers(data.total)
+        console.log('✅ Users loaded successfully:', data.users.length, 'users')
       } else {
+        console.error('❌ No users data received')
         setError('Failed to load users. Please check your authentication.')
       }
     } catch (err) {
-      console.error('Error fetching users:', err)
+      console.error('❌ Error fetching users:', err)
       if (err instanceof Error && err.message.includes('Authentication')) {
         setError('Authentication required. Please log in again.')
         router.push('/login')
+      } else if (err instanceof Error && err.message.includes('Endpoint not found')) {
+        setError('Users endpoint not implemented on backend. Please contact administrator.')
       } else {
         setError(err instanceof Error ? err.message : 'Failed to load users')
       }
