@@ -257,12 +257,12 @@ export class AdminApiService {
 
   // Dashboard endpoints
   async getDashboard(): Promise<AdminDashboard | null> {
-    const response = await this.makeRequest<AdminDashboard>('/dashboard')
+    const response = await this.makeRequest<{ dashboard_data: AdminDashboard }>('/dashboard')
     console.log('🔍 getDashboard response:', response)
     
-    if (response.success) {
+    if (response.success && 'dashboard_data' in response && response.dashboard_data) {
       console.log('✅ Dashboard data found')
-      return response as unknown as AdminDashboard
+      return response.dashboard_data as AdminDashboard
     }
     
     console.warn('⚠️ No dashboard data in response or success=false')
