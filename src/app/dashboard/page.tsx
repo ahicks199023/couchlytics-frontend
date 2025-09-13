@@ -33,7 +33,19 @@ export default function DashboardPage() {
         }
 
         const data = await res.json()
-        setLeagues(data)
+        console.log('🔍 Main Dashboard leagues response:', data)
+        
+        // Handle different response formats
+        if (Array.isArray(data)) {
+          setLeagues(data)
+        } else if (data.leagues && Array.isArray(data.leagues)) {
+          setLeagues(data.leagues)
+        } else if (data.data && Array.isArray(data.data)) {
+          setLeagues(data.data)
+        } else {
+          console.warn('⚠️ Unexpected leagues response format:', data)
+          setLeagues([])
+        }
         setLoading(false)
       } catch (err) {
         console.error('Failed to fetch leagues:', err)
@@ -74,7 +86,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-black text-white p-6">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
       
-      {leagues.length === 0 ? (
+      {!Array.isArray(leagues) || leagues.length === 0 ? (
         <div className="bg-gray-900 rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4">Welcome to Couchlytics!</h2>
           <p className="text-gray-400 mb-4">
@@ -99,7 +111,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
           <h2 className="text-xl font-semibold">Your Leagues</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {leagues.map((league) => (
+            {Array.isArray(leagues) && leagues.map((league) => (
               <Link
                 key={league.leagueId}
                 href={`/leagues/${league.leagueId}`}
