@@ -85,6 +85,7 @@ export default function SystemAnnouncementsPage() {
     }
   }
 
+
   const handleTogglePublish = async (id: number, currentStatus: boolean) => {
     try {
       await adminApi.updateSystemAnnouncementStatus(id, !currentStatus)
@@ -211,6 +212,17 @@ export default function SystemAnnouncementsPage() {
                           </div>
                         </div>
                       </div>
+                      
+                      {announcement.cover_photo && (
+                        <div className="mb-4">
+                          <img
+                            src={announcement.cover_photo}
+                            alt={announcement.title}
+                            className="w-full max-w-md h-48 object-cover rounded-lg border border-gray-700"
+                          />
+                        </div>
+                      )}
+                      
                       <p className="text-gray-300 leading-relaxed mb-4">
                         {announcement.content.length > 200 
                           ? `${announcement.content.substring(0, 200)}...` 
@@ -294,6 +306,44 @@ function AnnouncementForm({
     is_published: announcement?.is_published || false
   })
   const [loading, setLoading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(announcement?.cover_photo || null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+      
+      // Create preview URL
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleImageUpload = async (): Promise<string | null> => {
+    if (!selectedFile) return announcement?.cover_photo || null
+
+    try {
+      setUploadingImage(true)
+      const imageUrl = await adminApi.uploadAnnouncementImage(selectedFile)
+      return imageUrl
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      alert('Failed to upload image')
+      return announcement?.cover_photo || null
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
+  const clearImage = () => {
+    setSelectedFile(null)
+    setImagePreview(null)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -302,11 +352,20 @@ function AnnouncementForm({
     try {
       setLoading(true)
       
+      // Upload image if a new one was selected
+      const coverPhoto = await handleImageUpload()
+      
+      // Create announcement data with cover photo
+      const announcementData = {
+        ...formData,
+        cover_photo: coverPhoto || undefined
+      }
+      
       let savedAnnouncement: SystemAnnouncement
       if (announcement) {
-        savedAnnouncement = await adminApi.updateSystemAnnouncement(announcement.id, formData)
+        savedAnnouncement = await adminApi.updateSystemAnnouncement(announcement.id, announcementData)
       } else {
-        savedAnnouncement = await adminApi.createSystemAnnouncement(formData)
+        savedAnnouncement = await adminApi.createSystemAnnouncement(announcementData)
       }
       
       onSave(savedAnnouncement)
@@ -385,6 +444,44 @@ function AnnouncementForm({
                 <option value="maintenance">Maintenance</option>
                 <option value="feature">Feature</option>
               </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Cover Photo (Optional)
+            </label>
+            <div className="space-y-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-neon-green focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-neon-green file:text-black hover:file:bg-green-400"
+              />
+              
+              {imagePreview && (
+                <div className="relative">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full max-w-md h-48 object-cover rounded-lg border border-gray-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={clearImage}
+                    className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              
+              {uploadingImage && (
+                <div className="flex items-center space-x-2 text-neon-green">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neon-green"></div>
+                  <span className="text-sm">Uploading image...</span>
+                </div>
+              )}
             </div>
           </div>
 

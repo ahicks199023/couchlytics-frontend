@@ -171,6 +171,7 @@ export interface CreateAnnouncementData {
   priority: 'low' | 'medium' | 'high'
   category: 'announcement' | 'update' | 'maintenance' | 'feature'
   is_published: boolean
+  cover_photo?: string
 }
 
 // API Service Class
@@ -628,17 +629,71 @@ export class AdminApiService {
         method: 'DELETE'
       })
       console.log('🔍 deleteSystemAnnouncement response:', response)
-      
+
       if (response.success) {
         console.log('✅ System announcement deleted successfully')
         return true
       }
-      
+
       throw new Error('Failed to delete system announcement')
     } catch (error) {
       console.error('Error deleting system announcement:', error)
       throw error
     }
+  }
+
+  // Image Upload Methods
+  async uploadAnnouncementImage(file: File): Promise<string> {
+    try {
+      // Validate file
+      if (!this.validateImageFile(file)) {
+        throw new Error('Invalid file type or size')
+      }
+
+      const formData = new FormData()
+      formData.append('image', file)
+
+      const response = await fetch(`${this.baseUrl}/admin/announcements/upload-image`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Image upload failed')
+      }
+
+      const result = await response.json()
+      console.log('🔍 uploadAnnouncementImage response:', result)
+
+      if (result.success && result.image_url) {
+        console.log('✅ Image uploaded successfully:', result.image_url)
+        return result.image_url
+      }
+
+      throw new Error('Failed to upload image')
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      throw error
+    }
+  }
+
+  private validateImageFile(file: File): boolean {
+    const maxFileSize = 5 * 1024 * 1024 // 5MB
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
+
+    // Check file type
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('Please select a valid image file (PNG, JPG, JPEG, GIF, or WebP)')
+    }
+
+    // Check file size
+    if (file.size > maxFileSize) {
+      throw new Error('File size must be less than 5MB')
+    }
+
+    return true
   }
 }
 
