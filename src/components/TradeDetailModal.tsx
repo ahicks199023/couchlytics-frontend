@@ -6,7 +6,7 @@ import {
   ArrowRight, 
   ArrowLeft
 } from 'lucide-react';
-import { getTeamLogoUrl } from '@/services/teamLogoService';
+import TeamLogo from '@/components/TeamLogo';
 
 interface PendingTrade {
   id: number;
@@ -144,11 +144,11 @@ export default function TradeDetailModal({
               {/* From Team */}
               <div className="flex items-center space-x-2">
                 {trade.from_team?.name && (
-                  <img 
-                    src={getTeamLogoUrl(trade.from_team.name)}
-                    alt={trade.from_team.name}
-                    className="w-8 h-8 rounded-full"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  <TeamLogo 
+                    teamName={trade.from_team.name}
+                    size="md"
+                    variant="helmet"
+                    className="rounded-full"
                   />
                 )}
                 <span className="font-medium text-gray-900">
@@ -165,11 +165,11 @@ export default function TradeDetailModal({
               {/* To Team */}
               <div className="flex items-center space-x-2">
                 {trade.to_team?.name && (
-                  <img 
-                    src={getTeamLogoUrl(trade.to_team.name)}
-                    alt={trade.to_team.name}
-                    className="w-8 h-8 rounded-full"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  <TeamLogo 
+                    teamName={trade.to_team.name}
+                    size="md"
+                    variant="helmet"
+                    className="rounded-full"
                   />
                 )}
                 <span className="font-medium text-gray-900">

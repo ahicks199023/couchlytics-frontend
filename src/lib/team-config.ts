@@ -1,7 +1,7 @@
 // Team Configuration System
 // This file provides universal team logos, colors, and metadata across all leagues
 
-import { getTeamLogoUrl } from '@/services/teamLogoService'
+import { getTeamLogoUrl, getTeamHelmetUrl } from '@/services/teamLogoService'
 
 export interface TeamConfig {
   id: number
@@ -48,7 +48,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'New York Giants Logo'
     },
     helmet: {
-      url: '/team-helmets/nyg.png',
+      url: getTeamHelmetUrl('Giants'),
       alt: 'New York Giants Helmet'
     }
   },
@@ -71,7 +71,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Dallas Cowboys Logo'
     },
     helmet: {
-      url: '/team-helmets/dal.png',
+      url: getTeamHelmetUrl('Cowboys'),
       alt: 'Dallas Cowboys Helmet'
     }
   },
@@ -94,7 +94,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Philadelphia Eagles Logo'
     },
     helmet: {
-      url: '/team-helmets/phi.png',
+      url: getTeamHelmetUrl('Eagles'),
       alt: 'Philadelphia Eagles Helmet'
     }
   },
@@ -117,7 +117,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Washington Commanders Logo'
     },
     helmet: {
-      url: '/team-helmets/was.png',
+      url: getTeamHelmetUrl('Commanders'),
       alt: 'Washington Commanders Helmet'
     }
   },
@@ -140,7 +140,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'New York Jets Logo'
     },
     helmet: {
-      url: '/team-helmets/nyj.png',
+      url: getTeamHelmetUrl('Jets'),
       alt: 'New York Jets Helmet'
     }
   },
@@ -163,7 +163,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Buffalo Bills Logo'
     },
     helmet: {
-      url: '/team-helmets/buf.png',
+      url: getTeamHelmetUrl('Bills'),
       alt: 'Buffalo Bills Helmet'
     }
   },
@@ -186,7 +186,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'New England Patriots Logo'
     },
     helmet: {
-      url: '/team-helmets/ne.png',
+      url: getTeamHelmetUrl('Patriots'),
       alt: 'New England Patriots Helmet'
     }
   },
@@ -209,7 +209,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Miami Dolphins Logo'
     },
     helmet: {
-      url: '/team-helmets/mia.png',
+      url: getTeamHelmetUrl('Dolphins'),
       alt: 'Miami Dolphins Helmet'
     }
   },
@@ -232,7 +232,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Baltimore Ravens Logo'
     },
     helmet: {
-      url: '/team-helmets/bal.png',
+      url: getTeamHelmetUrl('Ravens'),
       alt: 'Baltimore Ravens Helmet'
     }
   },
@@ -255,7 +255,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Cincinnati Bengals Logo'
     },
     helmet: {
-      url: '/team-helmets/cin.png',
+      url: getTeamHelmetUrl('Bengals'),
       alt: 'Cincinnati Bengals Helmet'
     }
   },
@@ -278,7 +278,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Cleveland Browns Logo'
     },
     helmet: {
-      url: '/team-helmets/cle.png',
+      url: getTeamHelmetUrl('Browns'),
       alt: 'Cleveland Browns Helmet'
     }
   },
@@ -301,7 +301,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Pittsburgh Steelers Logo'
     },
     helmet: {
-      url: '/team-helmets/pit.png',
+      url: getTeamHelmetUrl('Steelers'),
       alt: 'Pittsburgh Steelers Helmet'
     }
   },
@@ -324,7 +324,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Houston Texans Logo'
     },
     helmet: {
-      url: '/team-helmets/hou.png',
+      url: getTeamHelmetUrl('Texans'),
       alt: 'Houston Texans Helmet'
     }
   },
@@ -347,7 +347,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Indianapolis Colts Logo'
     },
     helmet: {
-      url: '/team-helmets/ind.png',
+      url: getTeamHelmetUrl('Colts'),
       alt: 'Indianapolis Colts Helmet'
     }
   },
@@ -370,7 +370,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Jacksonville Jaguars Logo'
     },
     helmet: {
-      url: '/team-helmets/jax.png',
+      url: getTeamHelmetUrl('Jaguars'),
       alt: 'Jacksonville Jaguars Helmet'
     }
   },
@@ -393,7 +393,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Tennessee Titans Logo'
     },
     helmet: {
-      url: '/team-helmets/ten.png',
+      url: getTeamHelmetUrl('Titans'),
       alt: 'Tennessee Titans Helmet'
     }
   },
@@ -416,7 +416,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Denver Broncos Logo'
     },
     helmet: {
-      url: '/team-helmets/den.png',
+      url: getTeamHelmetUrl('Broncos'),
       alt: 'Denver Broncos Helmet'
     }
   },
@@ -439,7 +439,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Kansas City Chiefs Logo'
     },
     helmet: {
-      url: '/team-helmets/kc.png',
+      url: getTeamHelmetUrl('Chiefs'),
       alt: 'Kansas City Chiefs Helmet'
     }
   },
@@ -462,7 +462,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Las Vegas Raiders Logo'
     },
     helmet: {
-      url: '/team-helmets/lv.png',
+      url: getTeamHelmetUrl('Raiders'),
       alt: 'Las Vegas Raiders Helmet'
     }
   },
@@ -485,7 +485,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Los Angeles Chargers Logo'
     },
     helmet: {
-      url: '/team-helmets/lac.png',
+      url: getTeamHelmetUrl('Chargers'),
       alt: 'Los Angeles Chargers Helmet'
     }
   },
@@ -508,7 +508,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Arizona Cardinals Logo'
     },
     helmet: {
-      url: '/team-helmets/ari.png',
+      url: getTeamHelmetUrl('Cardinals'),
       alt: 'Arizona Cardinals Helmet'
     }
   },
@@ -531,7 +531,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Los Angeles Rams Logo'
     },
     helmet: {
-      url: '/team-helmets/lar.png',
+      url: getTeamHelmetUrl('Rams'),
       alt: 'Los Angeles Rams Helmet'
     }
   },
@@ -554,7 +554,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'San Francisco 49ers Logo'
     },
     helmet: {
-      url: '/team-helmets/sf.png',
+      url: getTeamHelmetUrl('49ers'),
       alt: 'San Francisco 49ers Helmet'
     }
   },
@@ -577,7 +577,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Seattle Seahawks Logo'
     },
     helmet: {
-      url: '/team-helmets/sea.png',
+      url: getTeamHelmetUrl('Seahawks'),
       alt: 'Seattle Seahawks Helmet'
     }
   },
@@ -600,7 +600,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Atlanta Falcons Logo'
     },
     helmet: {
-      url: '/team-helmets/atl.png',
+      url: getTeamHelmetUrl('Falcons'),
       alt: 'Atlanta Falcons Helmet'
     }
   },
@@ -623,7 +623,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Carolina Panthers Logo'
     },
     helmet: {
-      url: '/team-helmets/car.png',
+      url: getTeamHelmetUrl('Panthers'),
       alt: 'Carolina Panthers Helmet'
     }
   },
@@ -646,7 +646,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'New Orleans Saints Logo'
     },
     helmet: {
-      url: '/team-helmets/no.png',
+      url: getTeamHelmetUrl('Saints'),
       alt: 'New Orleans Saints Helmet'
     }
   },
@@ -669,7 +669,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Tampa Bay Buccaneers Logo'
     },
     helmet: {
-      url: '/team-helmets/tb.png',
+      url: getTeamHelmetUrl('Buccaneers'),
       alt: 'Tampa Bay Buccaneers Helmet'
     }
   },
@@ -692,7 +692,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Chicago Bears Logo'
     },
     helmet: {
-      url: '/team-helmets/chi.png',
+      url: getTeamHelmetUrl('Bears'),
       alt: 'Chicago Bears Helmet'
     }
   },
@@ -715,7 +715,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Detroit Lions Logo'
     },
     helmet: {
-      url: '/team-helmets/det.png',
+      url: getTeamHelmetUrl('Lions'),
       alt: 'Detroit Lions Helmet'
     }
   },
@@ -738,7 +738,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Green Bay Packers Logo'
     },
     helmet: {
-      url: '/team-helmets/gb.png',
+      url: getTeamHelmetUrl('Packers'),
       alt: 'Green Bay Packers Helmet'
     }
   },
@@ -761,7 +761,7 @@ export const NFL_TEAMS: TeamConfig[] = [
       alt: 'Minnesota Vikings Logo'
     },
     helmet: {
-      url: '/team-helmets/min.png',
+      url: getTeamHelmetUrl('Vikings'),
       alt: 'Minnesota Vikings Helmet'
     }
   }

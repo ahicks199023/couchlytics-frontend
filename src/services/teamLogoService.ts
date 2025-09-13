@@ -24,11 +24,36 @@ export const getTeamLogoUrl = (teamName: string): string => {
 }
 
 /**
+ * Get the correct team helmet URL from the backend API
+ * @param teamName - The team name (e.g., "Colts", "Browns")
+ * @returns The full URL to the team helmet
+ */
+export const getTeamHelmetUrl = (teamName: string): string => {
+  if (!teamName) {
+    return getFallbackHelmetUrl()
+  }
+  
+  // Normalize team name: lowercase, replace spaces with hyphens
+  const normalizedName = teamName.toLowerCase().replace(/\s+/g, '-')
+  
+  // Use the backend API domain for team helmets
+  return `${API_BASE_URL}/assets/team-helmets/${normalizedName}.png`
+}
+
+/**
  * Get fallback logo URL for missing or invalid team names
  * @returns A fallback logo URL
  */
 export const getFallbackLogoUrl = (): string => {
   return `${API_BASE_URL}/assets/team-logos/default.png`
+}
+
+/**
+ * Get fallback helmet URL for missing or invalid team names
+ * @returns A fallback helmet URL
+ */
+export const getFallbackHelmetUrl = (): string => {
+  return `${API_BASE_URL}/assets/team-helmets/default.png`
 }
 
 /**
