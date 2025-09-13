@@ -68,8 +68,7 @@ export default function AdminDashboardPage() {
           router.push('/admin/users')
           break
         case 'create_announcement':
-          // TODO: Create announcements page
-          alert('Announcements feature coming soon!')
+          router.push('/admin/announcements')
           break
         case 'assign_user_to_league':
           router.push('/admin/leagues')

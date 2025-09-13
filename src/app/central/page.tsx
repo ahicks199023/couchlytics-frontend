@@ -41,78 +41,96 @@ export default function CouchlyticsCentral() {
     try {
       setLoadingData(true)
 
-      // Note: Central dashboard endpoints don't exist yet on backend
-      // Using mock data for now until backend implements:
-      // - GET /central/announcements
-      // - GET /central/leaderboard
+      // Fetch system announcements from backend
+      const announcementsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/central/announcements`, {
+        credentials: 'include'
+      })
       
-      console.log('Loading Couchlytics Central with mock data...')
-      
-      // Set mock data for development
-      setAnnouncements([
-        {
-          id: 1,
-          title: 'Welcome to Couchlytics Central!',
-          content: 'This is your members-only dashboard where you can stay updated on all platform announcements, updates, and connect with other league managers.',
-          author: 'Couchlytics Team',
-          author_role: 'Developer',
-          created_at: new Date().toISOString(),
-          priority: 'high',
-          category: 'announcement'
-        },
-        {
-          id: 2,
-          title: 'New Trade System Features Coming Soon',
-          content: 'We\'re working on enhanced committee voting, auto-approval logic, and improved trade analytics. Stay tuned for updates!',
-          author: 'Development Team',
-          author_role: 'Developer',
-          created_at: new Date(Date.now() - 86400000).toISOString(),
-          priority: 'medium',
-          category: 'update'
-        },
-        {
-          id: 3,
-          title: 'League Invitation System Now Live!',
-          content: 'Commissioners can now create invitation links to easily invite new members to their leagues. Check out the new invitation management tools in your league settings.',
-          author: 'Development Team',
-          author_role: 'Developer',
-          created_at: new Date(Date.now() - 172800000).toISOString(),
-          priority: 'high',
-          category: 'feature'
+      if (announcementsResponse.ok) {
+        const announcementsData = await announcementsResponse.json()
+        console.log('🔍 Central announcements response:', announcementsData)
+        
+        if (announcementsData.success && Array.isArray(announcementsData.announcements)) {
+          setAnnouncements(announcementsData.announcements)
+        } else {
+          console.warn('⚠️ No announcements data in response, using fallback')
+          setAnnouncements(getFallbackAnnouncements())
         }
-      ])
+      } else {
+        console.warn('⚠️ Failed to fetch announcements, using fallback data')
+        setAnnouncements(getFallbackAnnouncements())
+      }
+
+      // Fetch leaderboard data from backend
+      const leaderboardResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/central/leaderboard`, {
+        credentials: 'include'
+      })
       
-      setLeaderboard([
-        { id: 1, username: 'LeagueMaster', total_leagues: 5, commissioner_leagues: 3, total_trades: 12, reputation_score: 95 },
-        { id: 2, username: 'TradeKing', total_leagues: 3, commissioner_leagues: 1, total_trades: 28, reputation_score: 88 },
-        { id: 3, username: 'DraftGuru', total_leagues: 4, commissioner_leagues: 2, total_trades: 8, reputation_score: 82 },
-        { id: 4, username: 'CommissionerPro', total_leagues: 6, commissioner_leagues: 4, total_trades: 15, reputation_score: 91 },
-        { id: 5, username: 'TradeAnalyst', total_leagues: 2, commissioner_leagues: 1, total_trades: 35, reputation_score: 87 }
-      ])
+      if (leaderboardResponse.ok) {
+        const leaderboardData = await leaderboardResponse.json()
+        console.log('🔍 Central leaderboard response:', leaderboardData)
+        
+        if (leaderboardData.success && Array.isArray(leaderboardData.leaderboard)) {
+          setLeaderboard(leaderboardData.leaderboard)
+        } else {
+          console.warn('⚠️ No leaderboard data in response, using fallback')
+          setLeaderboard(getFallbackLeaderboard())
+        }
+      } else {
+        console.warn('⚠️ Failed to fetch leaderboard, using fallback data')
+        setLeaderboard(getFallbackLeaderboard())
+      }
     } catch (err) {
       console.error('Error loading central data:', err)
       
-      // Fallback mock data
-      setAnnouncements([
-        {
-          id: 1,
-          title: 'Welcome to Couchlytics Central!',
-          content: 'This is your members-only dashboard where you can stay updated on all platform announcements, updates, and connect with other league managers.',
-          author: 'Couchlytics Team',
-          author_role: 'Developer',
-          created_at: new Date().toISOString(),
-          priority: 'high',
-          category: 'announcement'
-        }
-      ])
-      
-      setLeaderboard([
-        { id: 1, username: 'LeagueMaster', total_leagues: 5, commissioner_leagues: 3, total_trades: 12, reputation_score: 95 }
-      ])
+      // Fallback to mock data
+      setAnnouncements(getFallbackAnnouncements())
+      setLeaderboard(getFallbackLeaderboard())
     } finally {
       setLoadingData(false)
     }
   }
+
+  const getFallbackAnnouncements = () => [
+    {
+      id: 1,
+      title: 'Welcome to Couchlytics Central!',
+      content: 'This is your members-only dashboard where you can stay updated on all platform announcements, updates, and connect with other league managers.',
+      author: 'Couchlytics Team',
+      author_role: 'Developer',
+      created_at: new Date().toISOString(),
+      priority: 'high' as const,
+      category: 'announcement' as const
+    },
+    {
+      id: 2,
+      title: 'New Trade System Features Coming Soon',
+      content: 'We\'re working on enhanced committee voting, auto-approval logic, and improved trade analytics. Stay tuned for updates!',
+      author: 'Development Team',
+      author_role: 'Developer',
+      created_at: new Date(Date.now() - 86400000).toISOString(),
+      priority: 'medium' as const,
+      category: 'update' as const
+    },
+    {
+      id: 3,
+      title: 'League Invitation System Now Live!',
+      content: 'Commissioners can now create invitation links to easily invite new members to their leagues. Check out the new invitation management tools in your league settings.',
+      author: 'Development Team',
+      author_role: 'Developer',
+      created_at: new Date(Date.now() - 172800000).toISOString(),
+      priority: 'high' as const,
+      category: 'feature' as const
+    }
+  ]
+
+  const getFallbackLeaderboard = () => [
+    { id: 1, username: 'LeagueMaster', total_leagues: 5, commissioner_leagues: 3, total_trades: 12, reputation_score: 95 },
+    { id: 2, username: 'TradeKing', total_leagues: 3, commissioner_leagues: 1, total_trades: 28, reputation_score: 88 },
+    { id: 3, username: 'DraftGuru', total_leagues: 4, commissioner_leagues: 2, total_trades: 8, reputation_score: 82 },
+    { id: 4, username: 'CommissionerPro', total_leagues: 6, commissioner_leagues: 4, total_trades: 15, reputation_score: 91 },
+    { id: 5, username: 'TradeAnalyst', total_leagues: 2, commissioner_leagues: 1, total_trades: 35, reputation_score: 87 }
+  ]
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {

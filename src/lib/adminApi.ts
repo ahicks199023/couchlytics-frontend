@@ -150,6 +150,29 @@ export interface ApiResponse<T> {
   dashboard_data?: T
 }
 
+// System Announcements Types
+export interface SystemAnnouncement {
+  id: number
+  title: string
+  content: string
+  author: string
+  author_role: string
+  created_at: string
+  updated_at: string
+  priority: 'low' | 'medium' | 'high'
+  category: 'announcement' | 'update' | 'maintenance' | 'feature'
+  is_published: boolean
+  cover_photo?: string
+}
+
+export interface CreateAnnouncementData {
+  title: string
+  content: string
+  priority: 'low' | 'medium' | 'high'
+  category: 'announcement' | 'update' | 'maintenance' | 'feature'
+  is_published: boolean
+}
+
 // API Service Class
 export class AdminApiService {
   private baseUrl: string
@@ -517,6 +540,104 @@ export class AdminApiService {
     } catch (error) {
       console.error('Cost Optimization API Error:', error)
       return false
+    }
+  }
+
+  // System Announcements Methods
+  async getSystemAnnouncements(): Promise<SystemAnnouncement[]> {
+    try {
+      const response = await this.makeRequest<SystemAnnouncement[]>('/announcements')
+      console.log('🔍 getSystemAnnouncements response:', response)
+      
+      if (response.success && Array.isArray(response)) {
+        console.log('✅ System announcements data found:', response.length, 'announcements')
+        return response
+      }
+      
+      console.warn('⚠️ No system announcements data in response or success=false')
+      return []
+    } catch (error) {
+      console.error('Error fetching system announcements:', error)
+      return []
+    }
+  }
+
+  async createSystemAnnouncement(data: CreateAnnouncementData): Promise<SystemAnnouncement> {
+    try {
+      const response = await this.makeRequest<SystemAnnouncement>('/announcements', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      })
+      console.log('🔍 createSystemAnnouncement response:', response)
+      
+      if (response.success && 'id' in response) {
+        console.log('✅ System announcement created successfully')
+        return response as SystemAnnouncement
+      }
+      
+      throw new Error('Failed to create system announcement')
+    } catch (error) {
+      console.error('Error creating system announcement:', error)
+      throw error
+    }
+  }
+
+  async updateSystemAnnouncement(id: number, data: CreateAnnouncementData): Promise<SystemAnnouncement> {
+    try {
+      const response = await this.makeRequest<SystemAnnouncement>(`/announcements/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      })
+      console.log('🔍 updateSystemAnnouncement response:', response)
+      
+      if (response.success && 'id' in response) {
+        console.log('✅ System announcement updated successfully')
+        return response as SystemAnnouncement
+      }
+      
+      throw new Error('Failed to update system announcement')
+    } catch (error) {
+      console.error('Error updating system announcement:', error)
+      throw error
+    }
+  }
+
+  async updateSystemAnnouncementStatus(id: number, isPublished: boolean): Promise<boolean> {
+    try {
+      const response = await this.makeRequest<{ success: boolean }>(`/announcements/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ is_published: isPublished })
+      })
+      console.log('🔍 updateSystemAnnouncementStatus response:', response)
+      
+      if (response.success) {
+        console.log('✅ System announcement status updated successfully')
+        return true
+      }
+      
+      throw new Error('Failed to update system announcement status')
+    } catch (error) {
+      console.error('Error updating system announcement status:', error)
+      throw error
+    }
+  }
+
+  async deleteSystemAnnouncement(id: number): Promise<boolean> {
+    try {
+      const response = await this.makeRequest<{ success: boolean }>(`/announcements/${id}`, {
+        method: 'DELETE'
+      })
+      console.log('🔍 deleteSystemAnnouncement response:', response)
+      
+      if (response.success) {
+        console.log('✅ System announcement deleted successfully')
+        return true
+      }
+      
+      throw new Error('Failed to delete system announcement')
+    } catch (error) {
+      console.error('Error deleting system announcement:', error)
+      throw error
     }
   }
 }
