@@ -547,12 +547,12 @@ export class AdminApiService {
   // System Announcements Methods
   async getSystemAnnouncements(): Promise<SystemAnnouncement[]> {
     try {
-      const response = await this.makeRequest<SystemAnnouncement[]>('/announcements')
+      const response = await this.makeRequest<{ announcements: SystemAnnouncement[] }>('/announcements')
       console.log('🔍 getSystemAnnouncements response:', response)
       
-      if (response.success && Array.isArray(response)) {
-        console.log('✅ System announcements data found:', response.length, 'announcements')
-        return response
+      if (response.success && 'announcements' in response && Array.isArray(response.announcements)) {
+        console.log('✅ System announcements data found:', response.announcements.length, 'announcements')
+        return response.announcements
       }
       
       console.warn('⚠️ No system announcements data in response or success=false')
