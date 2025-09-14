@@ -270,6 +270,7 @@ interface TradeCalculatorProps {
 export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
   const { user } = useAuth()
   const [players, setPlayers] = useState<ExtendedPlayer[]>([])
+  const [teamBPlayers, setTeamBPlayers] = useState<ExtendedPlayer[]>([])
   const [teams, setTeams] = useState<ExtendedTeam[]>([])
   const [userTeam, setUserTeam] = useState<ExtendedTeam | null>(null)
   const [loading, setLoading] = useState(true)
@@ -404,10 +405,29 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     
     // Clear any component state
     setPlayers([])
+    setTeamBPlayers([])
     setResult(null)
     setEnhancedResult(null)
     
     console.log('✅ Player value caches cleared')
+  }
+
+  // Load Team B players function
+  const loadTeamBPlayers = async (teamBId: number) => {
+    try {
+      console.log(`🔍 Loading Team B players for team ID: ${teamBId}`)
+      const playersData = await tradeCalculatorApi.getPlayers(league_id, {
+        team_id: teamBId,
+        page: 1,
+        per_page: 1000, // Load more players for full team roster
+        fast_mode: false
+      })
+      console.log('📊 Team B players loaded via unified API:', playersData)
+      setTeamBPlayers(playersData.players || [])
+    } catch (error) {
+      console.error('❌ Failed to load Team B players via unified API:', error)
+      setTeamBPlayers([])
+    }
   }
 
   // Debug player values function
@@ -439,15 +459,48 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
         // Clear caches to ensure fresh data
         clearPlayerValueCache()
         
-        // Load league players using unified trade calculator API
-        try {
-          const playersData = await tradeCalculatorApi.getPlayers(league_id, {
-            page: 1,
-            per_page: 100,
-            fast_mode: false
-          })
-          console.log('📊 Players loaded via unified API:', playersData)
-          setPlayers(playersData.players || [])
+        // Load user's team players using unified trade calculator API
+        if (userTeamId) {
+          try {
+            const playersData = await tradeCalculatorApi.getPlayers(league_id, {
+              team_id: userTeamId,
+              page: 1,
+              per_page: 1000, // Load more players for full team roster
+              fast_mode: false
+            })
+            console.log('📊 Team players loaded via unified API:', playersData)
+            setPlayers(playersData.players || [])
+          } catch (error) {
+            console.error('❌ Failed to load team players via unified API:', error)
+            // Fallback to league-wide players
+            try {
+              const playersData = await tradeCalculatorApi.getPlayers(league_id, {
+                page: 1,
+                per_page: 100,
+                fast_mode: false
+              })
+              console.log('📊 League players loaded via unified API (fallback):', playersData)
+              setPlayers(playersData.players || [])
+            } catch (fallbackError) {
+              console.error('❌ Failed to load league players via unified API:', fallbackError)
+              throw fallbackError
+            }
+          }
+        } else {
+          // Load league players if no team ID available
+          try {
+            const playersData = await tradeCalculatorApi.getPlayers(league_id, {
+              page: 1,
+              per_page: 100,
+              fast_mode: false
+            })
+            console.log('📊 League players loaded via unified API:', playersData)
+            setPlayers(playersData.players || [])
+          } catch (error) {
+            console.error('❌ Failed to load league players via unified API:', error)
+            throw error
+          }
+        }
           
           // Debug player values after loading
           setTimeout(() => {
@@ -499,10 +552,22 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
       }
     }
     
-    if (user) {
+    if (user && userTeamId) {
       loadData()
     }
-  }, [league_id, user])
+  }, [league_id, user, userTeamId])
+
+  // Load Team B players when team is selected
+  useEffect(() => {
+    if (selectedTeamB) {
+      const teamB = teams.find(t => t.name === selectedTeamB)
+      if (teamB) {
+        loadTeamBPlayers(teamB.id)
+      }
+    } else {
+      setTeamBPlayers([])
+    }
+  }, [selectedTeamB, teams])
 
   // Computed values
   const filteredUserPlayers = useMemo(() => {
@@ -523,14 +588,9 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
 
   const filteredTeamBPlayers = useMemo(() => {
     if (!selectedTeamB) return []
-    const teamB = teams.find(t => t.name === selectedTeamB)
-    if (!teamB) return []
     
-    const filtered = players.filter(p => {
-      // Handle both teamId (camelCase) and team_id (snake_case) from backend
-      const playerTeamId = getPlayerTeamId(p)
-      return playerTeamId === teamB.id &&
-        (selectedReceivePosition === 'All' || p.position === selectedReceivePosition)
+    const filtered = teamBPlayers.filter(p => {
+      return selectedReceivePosition === 'All' || p.position === selectedReceivePosition
     })
     
     // Sort by value based on selected order
@@ -539,7 +599,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
       const bValue = getPlayerValue(b)
       return receiveSortOrder === 'highest' ? bValue - aValue : aValue - bValue
     })
-  }, [players, teams, selectedTeamB, selectedReceivePosition, receiveSortOrder])
+  }, [teamBPlayers, selectedTeamB, selectedReceivePosition, receiveSortOrder])
 
   const positionOptions = useMemo(() => {
     // Define the proper order for positions (offense first, then defense, then special teams)
@@ -942,6 +1002,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     setResult(null)
     setEnhancedResult(null)
     setSelectedTeamB('')
+    setTeamBPlayers([])
     setTradeMessage('')
   }
 
