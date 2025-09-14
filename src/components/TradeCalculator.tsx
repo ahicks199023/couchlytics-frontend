@@ -501,30 +501,11 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
             throw error
           }
         }
-          
-          // Debug player values after loading
-          setTimeout(() => {
-            debugPlayerValues('James Riddick')
-          }, 500) // Increased timeout to ensure state is updated
-        } catch (error) {
-          console.error('❌ Failed to load players via unified API:', error)
-          // Fallback to old API
-          const playersRes = await fetch(`${API_BASE}/leagues/${league_id}/players?page=1&pageSize=5000`, { credentials: 'include' })
-          if (playersRes.ok) {
-            const playersData = await playersRes.json()
-            console.log('📊 Players loaded via fallback API:', playersData)
-            setPlayers(playersData.players || [])
-            
-            // Debug player values after loading
-            setTimeout(() => {
-              debugPlayerValues('James Riddick')
-            }, 500) // Increased timeout to ensure state is updated
-          } else {
-            console.error('Failed to load players:', playersRes.status)
-            const errorText = await playersRes.text()
-            console.error('Players error response:', errorText)
-          }
-        }
+        
+        // Debug player values after loading
+        setTimeout(() => {
+          debugPlayerValues('James Riddick')
+        }, 500) // Increased timeout to ensure state is updated
         
         // Load teams using unified trade calculator API
         try {
