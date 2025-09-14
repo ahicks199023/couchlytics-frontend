@@ -3,11 +3,77 @@
  * Centralized service for managing team logo URLs
  */
 
-// API Base URL configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.couchlytics.com'
+// Team name to abbreviation mapping for local assets
+const TEAM_NAME_TO_ABBREVIATION: Record<string, string> = {
+  'Arizona Cardinals': 'ari',
+  'Atlanta Falcons': 'atl',
+  'Baltimore Ravens': 'bal',
+  'Buffalo Bills': 'buf',
+  'Carolina Panthers': 'car',
+  'Chicago Bears': 'chi',
+  'Cincinnati Bengals': 'cin',
+  'Cleveland Browns': 'cle',
+  'Dallas Cowboys': 'dal',
+  'Denver Broncos': 'den',
+  'Detroit Lions': 'det',
+  'Green Bay Packers': 'gb',
+  'Houston Texans': 'hou',
+  'Indianapolis Colts': 'ind',
+  'Jacksonville Jaguars': 'jax',
+  'Kansas City Chiefs': 'kc',
+  'Los Angeles Chargers': 'lac',
+  'Los Angeles Rams': 'lar',
+  'Las Vegas Raiders': 'lv',
+  'Miami Dolphins': 'mia',
+  'Minnesota Vikings': 'min',
+  'New England Patriots': 'ne',
+  'New Orleans Saints': 'no',
+  'New York Giants': 'nyg',
+  'New York Jets': 'nyj',
+  'Philadelphia Eagles': 'phi',
+  'Pittsburgh Steelers': 'pit',
+  'Seattle Seahawks': 'sea',
+  'San Francisco 49ers': 'sf',
+  'Tampa Bay Buccaneers': 'tb',
+  'Tennessee Titans': 'ten',
+  'Washington Commanders': 'was',
+  // Handle individual team names as well
+  'Cardinals': 'ari',
+  'Falcons': 'atl',
+  'Ravens': 'bal',
+  'Bills': 'buf',
+  'Panthers': 'car',
+  'Bears': 'chi',
+  'Bengals': 'cin',
+  'Browns': 'cle',
+  'Cowboys': 'dal',
+  'Broncos': 'den',
+  'Lions': 'det',
+  'Packers': 'gb',
+  'Texans': 'hou',
+  'Colts': 'ind',
+  'Jaguars': 'jax',
+  'Chiefs': 'kc',
+  'Chargers': 'lac',
+  'Rams': 'lar',
+  'Raiders': 'lv',
+  'Dolphins': 'mia',
+  'Vikings': 'min',
+  'Patriots': 'ne',
+  'Saints': 'no',
+  'Giants': 'nyg',
+  'Jets': 'nyj',
+  'Eagles': 'phi',
+  'Steelers': 'pit',
+  'Seahawks': 'sea',
+  '49ers': 'sf',
+  'Buccaneers': 'tb',
+  'Titans': 'ten',
+  'Commanders': 'was'
+}
 
 /**
- * Get the correct team logo URL from the backend API
+ * Get the correct team logo URL from local public assets
  * @param teamName - The team name (e.g., "Colts", "Browns")
  * @returns The full URL to the team logo
  */
@@ -16,15 +82,20 @@ export const getTeamLogoUrl = (teamName: string): string => {
     return getFallbackLogoUrl()
   }
   
-  // Normalize team name: lowercase, replace spaces with hyphens
-  const normalizedName = teamName.toLowerCase().replace(/\s+/g, '-')
+  // Get abbreviation for the team name
+  const abbreviation = TEAM_NAME_TO_ABBREVIATION[teamName] || TEAM_NAME_TO_ABBREVIATION[teamName.toLowerCase()]
   
-  // Use the backend API domain for team logos
-  return `${API_BASE_URL}/assets/team-logos/${normalizedName}.png`
+  if (!abbreviation) {
+    console.warn(`No abbreviation found for team: ${teamName}`)
+    return getFallbackLogoUrl()
+  }
+  
+  // Use local public assets
+  return `/team-logos/${abbreviation}.png`
 }
 
 /**
- * Get the correct team helmet URL from the backend API
+ * Get the correct team helmet URL from local public assets
  * @param teamName - The team name (e.g., "Colts", "Browns")
  * @returns The full URL to the team helmet
  */
@@ -33,11 +104,16 @@ export const getTeamHelmetUrl = (teamName: string): string => {
     return getFallbackHelmetUrl()
   }
   
-  // Normalize team name: lowercase, replace spaces with hyphens
-  const normalizedName = teamName.toLowerCase().replace(/\s+/g, '-')
+  // Get abbreviation for the team name
+  const abbreviation = TEAM_NAME_TO_ABBREVIATION[teamName] || TEAM_NAME_TO_ABBREVIATION[teamName.toLowerCase()]
   
-  // Use the backend API domain for team helmets
-  return `${API_BASE_URL}/assets/team-helmets/${normalizedName}.png`
+  if (!abbreviation) {
+    console.warn(`No abbreviation found for team: ${teamName}`)
+    return getFallbackHelmetUrl()
+  }
+  
+  // Use local public assets
+  return `/team-helmets/${abbreviation}.png`
 }
 
 /**
@@ -45,7 +121,7 @@ export const getTeamHelmetUrl = (teamName: string): string => {
  * @returns A fallback logo URL
  */
 export const getFallbackLogoUrl = (): string => {
-  return `${API_BASE_URL}/assets/team-logos/default.png`
+  return '/team-logos/ari.png' // Use Cardinals as default fallback
 }
 
 /**
@@ -53,7 +129,7 @@ export const getFallbackLogoUrl = (): string => {
  * @returns A fallback helmet URL
  */
 export const getFallbackHelmetUrl = (): string => {
-  return `${API_BASE_URL}/assets/team-helmets/default.png`
+  return '/team-helmets/ari.png' // Use Cardinals as default fallback
 }
 
 /**
