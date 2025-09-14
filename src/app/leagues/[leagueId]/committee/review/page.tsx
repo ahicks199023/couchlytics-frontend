@@ -258,7 +258,7 @@ export default function TradeCommitteeReviewPage() {
                       {trade.from_team?.name && (
                         <TeamLogo 
                           teamName={trade.from_team.name}
-                          size="md"
+                          size="lg"
                           variant="helmet"
                           className="rounded-full"
                         />
@@ -283,7 +283,7 @@ export default function TradeCommitteeReviewPage() {
                       {trade.to_team?.name && (
                         <TeamLogo 
                           teamName={trade.to_team.name}
-                          size="md"
+                          size="lg"
                           variant="helmet"
                           className="rounded-full"
                         />
