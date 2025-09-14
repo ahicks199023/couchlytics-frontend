@@ -46,6 +46,11 @@ export default function TeamLogo({
   className = '',
   showName = false
 }: TeamLogoProps) {
+  // Debug team name being passed
+  if (teamName) {
+    console.log('🔍 TeamLogo received teamName:', teamName);
+  }
+  
   // Find team configuration
   let team: TeamConfig | undefined
   
@@ -55,6 +60,15 @@ export default function TeamLogo({
     team = getTeamByAbbreviation(teamAbbr)
   } else if (teamName) {
     team = getTeamByName(teamName) || getTeamByPartialName(teamName)
+  }
+  
+  // Debug team lookup result
+  if (teamName) {
+    console.log('🔍 TeamLogo lookup result:', {
+      teamName,
+      teamFound: !!team,
+      teamConfig: team ? { name: team.name, fullName: team.fullName, abbreviation: team.abbreviation } : null
+    });
   }
 
   const sizeClass = sizeClasses[size]

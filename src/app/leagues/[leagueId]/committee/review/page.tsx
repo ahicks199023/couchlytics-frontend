@@ -109,6 +109,15 @@ export default function TradeCommitteeReviewPage() {
       if (response.ok) {
         const data = await response.json();
         console.log('🔍 Pending trades data:', data);
+        
+        // Debug team data structure
+        if (data.trades && data.trades.length > 0) {
+          console.log('🔍 First trade team data:', {
+            from_team: data.trades[0].from_team,
+            to_team: data.trades[0].to_team
+          });
+        }
+        
         setPendingTrades(data.trades || []);
       } else if (response.status === 403) {
         setError('You do not have permission to access the trade committee review. Only commissioners, co-commissioners, and trade committee members can view this page.');
