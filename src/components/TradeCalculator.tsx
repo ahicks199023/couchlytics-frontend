@@ -452,7 +452,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
           // Debug player values after loading
           setTimeout(() => {
             debugPlayerValues('James Riddick')
-          }, 100)
+          }, 500) // Increased timeout to ensure state is updated
         } catch (error) {
           console.error('❌ Failed to load players via unified API:', error)
           // Fallback to old API
@@ -465,7 +465,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
             // Debug player values after loading
             setTimeout(() => {
               debugPlayerValues('James Riddick')
-            }, 100)
+            }, 500) // Increased timeout to ensure state is updated
           } else {
             console.error('Failed to load players:', playersRes.status)
             const errorText = await playersRes.text()
