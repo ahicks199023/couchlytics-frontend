@@ -701,6 +701,47 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
 
   // Get player value breakdown
   const getPlayerValueBreakdown = (player: ExtendedPlayer) => {
+    // Prioritize backend player_value if available
+    if (player.value !== undefined && player.value !== null) {
+      console.log(`🎯 Using backend player_value for ${player.name}: ${player.value}`)
+      const baseValue = getPlayerOverall(player)
+      const positionMultipliers: Record<string, number> = {
+        'QB': 1.2, 'WR': 1.1, 'RB': 1.0, 'TE': 0.9, 'LT': 0.8, 'LG': 0.7, 'C': 0.7,
+        'RG': 0.7, 'RT': 0.8, 'LE': 0.9, 'RE': 0.9, 'DT': 0.8, 'LOLB': 0.9, 'MLB': 0.9,
+        'ROLB': 0.9, 'CB': 1.0, 'FS': 0.9, 'SS': 0.9, 'K': 0.5, 'P': 0.4
+      }
+      
+      let ageFactor = 1.0
+      if (player.age) {
+        if (player.age <= 23) ageFactor = 1.2
+        else if (player.age <= 26) ageFactor = 1.1
+        else if (player.age <= 29) ageFactor = 1.0
+        else if (player.age <= 32) ageFactor = 0.9
+        else ageFactor = 0.7
+      }
+      
+      let devFactor = 1.0
+      if (player.devTrait) {
+        switch (player.devTrait.toLowerCase()) {
+          case 'superstar': devFactor = 1.3
+          case 'star': devFactor = 1.2
+          case 'normal': devFactor = 1.0
+          case 'slow': devFactor = 0.8
+          default: devFactor = 1.0
+        }
+      }
+      
+      return {
+        baseValue,
+        positionMultiplier: positionMultipliers[player.position] || 1.0,
+        ageFactor,
+        devFactor,
+        finalValue: player.value // Use backend value directly
+      }
+    }
+    
+    // Fallback to frontend calculation only if no backend value
+    console.warn(`⚠️ No backend player_value for ${player.name}, using frontend calculation`)
     const baseValue = getPlayerOverall(player)
     const positionMultipliers: Record<string, number> = {
       'QB': 1.2, 'WR': 1.1, 'RB': 1.0, 'TE': 0.9, 'LT': 0.8, 'LG': 0.7, 'C': 0.7,
