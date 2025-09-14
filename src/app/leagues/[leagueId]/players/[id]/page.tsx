@@ -354,10 +354,10 @@ export default function PlayerDetailPage() {
             </div>
             
             <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
-              <TeamLogo teamName={player.teamName} size="md" />
+                          <div className="flex items-center space-x-4 mb-4">
+              <TeamLogo teamName={player.teamName} size="4xl" />
               {player.tradeBlocked && (
-                <div className="w-4 h-4 bg-red-500 rounded-sm"></div>
+                <div className="w-6 h-6 bg-red-500 rounded-sm"></div>
               )}
             </div>
               
