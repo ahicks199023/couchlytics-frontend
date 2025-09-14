@@ -664,36 +664,27 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
     setSelectedPlayerInfo(null)
   }
 
-  // Get position-based key attributes
+  // Get position-based key attributes (using only real data available)
   const getKeyAttributes = (player: ExtendedPlayer) => {
     const attributes: Record<string, number> = {}
     const overall = getPlayerOverall(player)
     
-    switch (player.position) {
-      case 'QB':
-        attributes['Throwing Power'] = overall
-        attributes['Accuracy'] = overall + Math.floor(Math.random() * 10)
-        attributes['Speed'] = overall - Math.floor(Math.random() * 10)
-        break
-      case 'RB':
-        attributes['Speed'] = overall
-        attributes['Strength'] = overall + Math.floor(Math.random() * 10)
-        attributes['Agility'] = overall - Math.floor(Math.random() * 10)
-        break
-      case 'WR':
-        attributes['Catching'] = overall
-        attributes['Speed'] = overall + Math.floor(Math.random() * 10)
-        attributes['Route Running'] = overall - Math.floor(Math.random() * 10)
-        break
-      case 'TE':
-        attributes['Catching'] = overall
-        attributes['Blocking'] = overall + Math.floor(Math.random() * 10)
-        attributes['Speed'] = overall - Math.floor(Math.random() * 10)
-        break
-      default:
-        attributes['Overall'] = overall
-        attributes['Primary Skill'] = overall + Math.floor(Math.random() * 10)
-        attributes['Secondary Skill'] = overall - Math.floor(Math.random() * 10)
+    // Only show real data we have, not fake calculated values
+    attributes['Overall Rating'] = overall
+    
+    // Show age if available
+    if (player.age) {
+      attributes['Age'] = player.age
+    }
+    
+    // Show years pro if available
+    if (player.yearsPro) {
+      attributes['Years Pro'] = player.yearsPro
+    }
+    
+    // Show player value if available
+    if (player.value !== undefined && player.value !== null) {
+      attributes['Trade Value'] = player.value
     }
     
     return attributes
@@ -1180,7 +1171,15 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                        className="rounded-full bg-white"
                      />
                      <div className="flex-1">
-                       <div className="text-sm font-medium">{p.name}</div>
+                       <div className="text-sm font-medium">
+                         <a 
+                           href={`/players/${p.id}`}
+                           className="text-blue-400 hover:text-blue-300 hover:underline"
+                           onClick={(e) => e.stopPropagation()}
+                         >
+                           {p.name}
+                         </a>
+                       </div>
                        <div className="text-xs text-gray-400">{p.position}, {userTeam.name}, Age {p.age || 'N/A'}</div>
                      </div>
                    </div>
@@ -1321,7 +1320,15 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                          className="rounded-full bg-white"
                        />
                        <div className="flex-1">
-                         <div className="text-sm font-medium">{p.name}</div>
+                         <div className="text-sm font-medium">
+                           <a 
+                             href={`/players/${p.id}`}
+                             className="text-blue-400 hover:text-blue-300 hover:underline"
+                             onClick={(e) => e.stopPropagation()}
+                           >
+                             {p.name}
+                           </a>
+                         </div>
                          <div className="text-xs text-gray-400">{p.position}, {p.team}, Age {p.age || 'N/A'}</div>
                        </div>
                      </div>
@@ -1632,6 +1639,11 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
              {/* Key Attributes */}
              <div className="mb-6">
                <h5 className="text-lg font-semibold text-white mb-3">Key Attributes</h5>
+               <div className="mb-2">
+                 <p className="text-xs text-gray-400">
+                   📊 Detailed ratings (speed, acceleration, etc.) available on player detail page
+                 </p>
+               </div>
                <div className="space-y-2">
                  {Object.entries(getKeyAttributes(selectedPlayerInfo)).map(([attr, value]) => (
                    <div key={attr} className="flex justify-between items-center bg-gray-700 p-2 rounded">
