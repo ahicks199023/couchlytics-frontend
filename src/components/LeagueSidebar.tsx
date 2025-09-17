@@ -281,13 +281,7 @@ export default function LeagueSidebar() {
       <h2 className="text-lg font-bold mb-2">League Menu</h2>
       
       {/* User's Team Link */}
-      {userTeam && leagueId && typeof leagueId === 'string' && (() => {
-        const teamConfig = getTeamByName(userTeam.name)
-        const primaryColor = teamConfig?.colors?.primary || '#00FF00'
-        
-        // Team panel rendering - team name now in white
-        
-        return (
+      {userTeam && leagueId && typeof leagueId === 'string' && (
           <div className="mb-4 p-2 bg-gray-800 rounded-lg border border-gray-700">
             <Link 
               href={`/leagues/${leagueId}/teams/${userTeam.id}`}
@@ -322,8 +316,7 @@ export default function LeagueSidebar() {
               </div>
             </Link>
           </div>
-        )
-      })()}
+      )}
       
       {/* Loading state for team */}
       {teamLoading && (
