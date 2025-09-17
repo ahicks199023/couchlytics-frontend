@@ -225,6 +225,23 @@ export class AdminApiService {
         'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin')
       })
       
+      // Check if CORS headers are properly set
+      const allowMethods = response.headers.get('Access-Control-Allow-Methods')
+      const allowHeaders = response.headers.get('Access-Control-Allow-Headers')
+      const allowOrigin = response.headers.get('Access-Control-Allow-Origin')
+      
+      // If any CORS headers are missing or null, consider it a CORS failure
+      if (!allowMethods || !allowHeaders || !allowOrigin) {
+        console.warn('⚠️ CORS headers missing or null - treating as CORS failure')
+        return false
+      }
+      
+      // Check if the requested method is allowed
+      if (!allowMethods.includes(method)) {
+        console.warn(`⚠️ Method ${method} not allowed in CORS headers: ${allowMethods}`)
+        return false
+      }
+      
       return response.ok
     } catch (error) {
       console.error('❌ CORS Preflight failed:', error)
@@ -662,7 +679,7 @@ export class AdminApiService {
       const corsOk = await this.checkCORS(url, 'PATCH')
       
       if (!corsOk) {
-        console.warn('⚠️ CORS preflight failed - trying alternative approach')
+        console.warn('⚠️ CORS preflight failed - trying PUT method as fallback')
         // Try with PUT method as fallback
         return await this.updateSystemAnnouncementStatusPUT(id, isPublished)
       }
@@ -687,13 +704,14 @@ export class AdminApiService {
     } catch (error) {
       console.error('❌ Error updating system announcement status:', error)
       
-      // If PATCH fails with CORS error, try PUT method
-      if (error instanceof Error && error.message.includes('CORS')) {
-        console.log('🔄 CORS error detected, trying PUT method as fallback')
+      // If PATCH fails with any error, try PUT method as fallback
+      console.log('🔄 PATCH failed, trying PUT method as fallback')
+      try {
         return await this.updateSystemAnnouncementStatusPUT(id, isPublished)
+      } catch (putError) {
+        console.error('❌ PUT method also failed:', putError)
+        throw new Error(`Both PATCH and PUT methods failed. PATCH error: ${error instanceof Error ? error.message : 'Unknown'}, PUT error: ${putError instanceof Error ? putError.message : 'Unknown'}`)
       }
-      
-      throw error
     }
   }
 
