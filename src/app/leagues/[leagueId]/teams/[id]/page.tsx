@@ -84,6 +84,16 @@ export default function TeamDetailPage() {
               index === 0 || game.week >= data.schedule[index - 1].week
             )
             console.log('Schedule is sorted:', isSorted)
+            
+            // Check for week 0 (should not exist)
+            const hasWeekZero = data.schedule.some((game: ScheduleItem) => game.week === 0)
+            console.log('Has Week 0 (should be false):', hasWeekZero)
+            
+            // Check for bye weeks
+            const maxWeek = Math.max(...data.schedule.map((game: ScheduleItem) => game.week))
+            const allWeeks = Array.from({ length: maxWeek }, (_, i) => i + 1)
+            const byeWeeks = allWeeks.filter(week => !data.schedule.some((game: ScheduleItem) => game.week === week))
+            console.log('Bye weeks detected:', byeWeeks)
           }
           
           // Debug logging for cap and contract data
@@ -143,16 +153,61 @@ export default function TeamDetailPage() {
     return rosterSortDirection === 'asc' ? ' ↑' : ' ↓'
   }
 
-  // Schedule sorting helper function
-  const sortSchedule = (schedule: ScheduleItem[], order: 'chronological' | 'reverse' = 'chronological'): ScheduleItem[] => {
-    return [...schedule].sort((a, b) => {
+  // Get week label with playoff information
+  const getWeekLabel = (week: number): string => {
+    if (week >= 19) {
+      switch (week) {
+        case 19: return '19 (Wildcard)'
+        case 20: return '20 (Divisional)'
+        case 21: return '21 (Conference)'
+        case 22: return '22 (Super Bowl)'
+        default: return `${week} (Playoff)`
+      }
+    }
+    return week.toString()
+  }
+
+
+  // Generate complete schedule with bye weeks
+  const generateCompleteSchedule = (schedule: ScheduleItem[], order: 'chronological' | 'reverse' = 'chronological') => {
+    const sortedSchedule = [...schedule].sort((a, b) => {
       if (order === 'chronological') {
         return a.week - b.week
       } else {
         return b.week - a.week
       }
     })
+
+    // Find the range of weeks (1 to max week)
+    const maxWeek = Math.max(...schedule.map(game => game.week))
+    
+    // Generate all weeks from 1 to max week
+    const allWeeks = Array.from({ length: maxWeek }, (_, i) => i + 1)
+    
+    // Create complete schedule with bye weeks
+    const completeSchedule = allWeeks.map(week => {
+      const game = sortedSchedule.find(g => g.week === week)
+      if (game) {
+        return game
+      } else {
+        // This is a bye week
+        return {
+          week,
+          home: '',
+          away: '',
+          opponent: 'Bye Week',
+          isHome: false,
+          score: null,
+          result: null,
+          gameId: -week, // Negative ID to indicate bye week
+          isByeWeek: true
+        } as ScheduleItem & { isByeWeek: boolean }
+      }
+    })
+
+    return completeSchedule
   }
+
 
   // Toggle schedule sort order
   const toggleScheduleSort = () => {
@@ -349,7 +404,7 @@ export default function TeamDetailPage() {
       }
       case 'schedule': {
         const rawSchedule: ScheduleItem[] = (teamData as unknown as { schedule?: ScheduleItem[] }).schedule ?? []
-        const schedule = sortSchedule(rawSchedule, scheduleSortOrder)
+        const schedule = generateCompleteSchedule(rawSchedule, scheduleSortOrder)
         
         return (
           <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg border-4 overflow-x-auto" style={{ borderColor: teamColor }}>
@@ -385,34 +440,67 @@ export default function TeamDetailPage() {
                     </td>
                   </tr>
                 ) : (
-                  schedule.map((g) => (
+                  schedule.map((g) => {
+                    const isByeWeek = (g as ScheduleItem & { isByeWeek?: boolean }).isByeWeek || g.opponent === 'Bye Week'
+                    return (
                     <tr key={g.gameId} className="border-b border-gray-200 dark:border-gray-800">
-                      <td className="py-2 px-2 font-medium">{g.week ?? 0}</td>
-                      <td className="py-2 px-2">{g.opponent}</td>
-                      <td className="py-2 px-2">{g.isHome ? 'Home' : 'Away'}</td>
+                        <td className="py-2 px-2 font-medium">{getWeekLabel(g.week ?? 0)}</td>
                       <td className="py-2 px-2">
-                        <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                          g.result === 'W' ? 'bg-green-500 text-white' :
-                          g.result === 'L' ? 'bg-red-500 text-white' :
-                          g.result === 'T' ? 'bg-yellow-500 text-black' :
-                          'bg-gray-500 text-white'
-                        }`}>
-                          {g.result ?? '-'}
-                        </span>
-                      </td>
-                      <td className="py-2 px-2">{g.score ?? '-'}</td>
-                      <td className="py-2 px-2">
+                          {isByeWeek ? (
+                            <span className="text-gray-500 italic">Bye Week</span>
+                          ) : (
+                            g.opponent
+                          )}
+                        </td>
+                        <td className="py-2 px-2">
+                          {isByeWeek ? (
+                            <span className="text-gray-500">-</span>
+                          ) : (
+                            g.isHome ? 'Home' : 'Away'
+                          )}
+                        </td>
+                        <td className="py-2 px-2">
+                          {isByeWeek ? (
+                            <span className="text-gray-500">-</span>
+                          ) : (
+                            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                              g.result === 'W' ? 'bg-green-500 text-white' :
+                              g.result === 'L' ? 'bg-red-500 text-white' :
+                              g.result === 'T' ? 'bg-yellow-500 text-black' :
+                              'bg-gray-500 text-white'
+                            }`}>
+                              {g.result ?? '-'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 px-2">
+                          {isByeWeek ? (
+                            <span className="text-gray-500">-</span>
+                          ) : (
+                            g.score ?? '-'
+                          )}
+                        </td>
+                        <td className="py-2 px-2">
+                          {isByeWeek ? (
+                            <span className="text-gray-500">-</span>
+                          ) : (
                         <Link className="text-blue-600 dark:text-blue-400 hover:text-neon-green" href={`/leagues/${leagueIdString}/games/${g.gameId}/comments`}>
                           💬
                         </Link>
+                          )}
                       </td>
                       <td className="py-2 px-2">
+                          {isByeWeek ? (
+                            <span className="text-gray-500">-</span>
+                          ) : (
                         <Link className="text-blue-600 dark:text-blue-400 hover:text-neon-green" href={`/leagues/${leagueIdString}/schedule/box-score/${g.gameId}`}>
                           View
                         </Link>
+                          )}
                       </td>
                     </tr>
-                  ))
+                    )
+                  })
                 )}
               </tbody>
             </table>
