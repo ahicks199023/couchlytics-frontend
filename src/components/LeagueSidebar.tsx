@@ -209,8 +209,20 @@ export default function LeagueSidebar() {
           userTeamData = teamData
         }
         
+        // Ensure we have the required fields for display
+        if (userTeamData) {
+          // Create a fullName if it doesn't exist
+          if (!userTeamData.fullName && userTeamData.city && userTeamData.name) {
+            userTeamData.fullName = `${userTeamData.city} ${userTeamData.name}`
+          }
+          
+          console.log('Processed user team data:', userTeamData)
+          console.log('Team name for display:', userTeamData.name)
+          console.log('Team fullName for display:', userTeamData.fullName)
+          console.log('Team record for display:', userTeamData.record)
+        }
+        
         setUserTeam(userTeamData)
-        console.log('Processed user team data:', userTeamData)
       } catch (error) {
         console.error('Error fetching user team:', error)
         setUserTeam(null)
@@ -253,6 +265,14 @@ export default function LeagueSidebar() {
         const teamConfig = getTeamByName(userTeam.name)
         const primaryColor = teamConfig?.colors?.primary || '#00FF00'
         
+        console.log('Rendering team panel:', {
+          userTeam,
+          teamConfig,
+          primaryColor,
+          hasFullName: !!userTeam.fullName,
+          hasRecord: !!userTeam.record
+        })
+        
         return (
           <div className="mb-4 p-2 bg-gray-800 rounded-lg border border-gray-700">
             <Link 
@@ -281,13 +301,17 @@ export default function LeagueSidebar() {
                   className="text-sm font-bold truncate"
                   style={{ color: primaryColor }}
                 >
-                  {userTeam.fullName}
+                  {userTeam.fullName || `${userTeam.city} ${userTeam.name}`}
                 </div>
                 {userTeam.record && (
                   <div className="text-xs text-gray-400 font-medium">
                     Record: {userTeam.record}
                   </div>
                 )}
+                {/* Debug info - remove after testing */}
+                <div className="text-xs text-red-400">
+                  Debug: {userTeam.name} - {userTeam.record || 'No record'}
+                </div>
               </div>
             </Link>
           </div>
