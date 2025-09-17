@@ -8,6 +8,8 @@ import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 import { API_BASE } from '@/lib/config'
 import NotificationBadge from './NotificationBadge'
+import TeamLogo from './TeamLogo'
+import { getUserTeam } from '@/lib/api'
 
 
 
@@ -28,6 +30,28 @@ interface LeagueMember {
   permissions?: Record<string, boolean>
   created_at: string
   updated_at: string
+}
+
+interface UserTeam {
+  id: number
+  name: string
+  abbreviation: string
+  city: string
+  fullName: string
+  record?: string
+  overall?: number
+  rank?: number
+  division?: string
+  conference?: string
+  member?: string
+  coach?: string
+  offenseScheme?: string
+  defenseScheme?: string
+  rosterCount?: number
+  injuryCount?: number
+  capRoom?: number
+  spent?: number
+  available?: number
 }
 
 const links = [
@@ -80,6 +104,8 @@ export default function LeagueSidebar() {
   const [hasCommissionerAccess, setHasCommissionerAccess] = useState(false)
   const [isGlobalCommissioner, setIsGlobalCommissioner] = useState(false)
   const [hasTradeCommitteeAccess, setHasTradeCommitteeAccess] = useState(false)
+  const [userTeam, setUserTeam] = useState<UserTeam | null>(null)
+  const [teamLoading, setTeamLoading] = useState(false)
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -160,6 +186,29 @@ export default function LeagueSidebar() {
     checkAccess()
   }, [leagueId, hasCommissionerAccess])
 
+  // Fetch user's team data
+  useEffect(() => {
+    const fetchUserTeam = async () => {
+      if (!leagueId || typeof leagueId !== 'string') {
+        return
+      }
+
+      try {
+        setTeamLoading(true)
+        const teamData = await getUserTeam(leagueId)
+        setUserTeam(teamData)
+        console.log('User team data loaded:', teamData)
+      } catch (error) {
+        console.error('Error fetching user team:', error)
+        setUserTeam(null)
+      } finally {
+        setTeamLoading(false)
+      }
+    }
+
+    fetchUserTeam()
+  }, [leagueId])
+
   const toggleExpanded = (path: string) => {
     setExpandedItems(prev => 
       prev.includes(path) 
@@ -185,6 +234,47 @@ export default function LeagueSidebar() {
   return (
     <aside className="w-full h-full bg-gray-900 text-white p-4 flex flex-col">
       <h2 className="text-lg font-bold mb-2">League Menu</h2>
+      
+      {/* User's Team Link */}
+      {userTeam && leagueId && typeof leagueId === 'string' && (
+        <div className="mb-4 p-2 bg-gray-800 rounded-lg border border-gray-700">
+          <Link 
+            href={`/leagues/${leagueId}/teams/${userTeam.id}`}
+            className="flex items-center gap-3 hover:bg-gray-700 p-2 rounded transition-colors"
+            title={`View ${userTeam.fullName} details`}
+          >
+            <TeamLogo 
+              teamName={userTeam.name}
+              size="lg"
+              variant="helmet"
+              showName={false}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-white truncate">
+                {userTeam.fullName}
+              </div>
+              {userTeam.record && (
+                <div className="text-xs text-gray-400">
+                  {userTeam.record}
+                </div>
+              )}
+            </div>
+          </Link>
+        </div>
+      )}
+      
+      {/* Loading state for team */}
+      {teamLoading && (
+        <div className="mb-4 p-2 bg-gray-800 rounded-lg border border-gray-700">
+          <div className="flex items-center gap-3 p-2">
+            <div className="w-8 h-8 bg-gray-700 rounded-full animate-pulse"></div>
+            <div className="flex-1">
+              <div className="h-4 bg-gray-700 rounded animate-pulse mb-1"></div>
+              <div className="h-3 bg-gray-700 rounded animate-pulse w-1/2"></div>
+            </div>
+          </div>
+        </div>
+      )}
       
              {/* Debug Info - Remove this after testing */}
        {process.env.NODE_ENV === 'development' && (
