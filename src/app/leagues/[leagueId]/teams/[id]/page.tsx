@@ -29,6 +29,10 @@ export default function TeamDetailPage() {
   const leagueIdString = leagueId as string
   const teamIdString = teamId as string
   
+  // Debug logging for URL parameters
+  console.log('TeamDetailPage - URL params:', { leagueId, teamId })
+  console.log('TeamDetailPage - Processed strings:', { leagueIdString, teamIdString })
+  
   // State for team data
   const [teamData, setTeamData] = useState<TeamDetailResponse | null>(null)
   

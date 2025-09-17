@@ -260,7 +260,8 @@ export default function LeagueSidebar() {
                 teamId: userTeam.id,
                 teamName: userTeam.name,
                 fullName: userTeam.fullName,
-                url: `/leagues/${leagueId}/teams/${userTeam.id}`
+                url: `/leagues/${leagueId}/teams/${userTeam.id}`,
+                userTeamData: userTeam
               })
             }}
           >
