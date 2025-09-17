@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { adminApi } from '@/lib/adminApi'
 import useAuth from '@/Hooks/useAuth'
+import { getAnnouncementImageUrl, handleImageError } from '@/lib/imageUtils'
 
 interface SystemAnnouncement {
   id: number
@@ -232,9 +233,10 @@ export default function SystemAnnouncementsPage() {
                       {announcement.cover_photo && (
                         <div className="mb-4">
                           <img
-                            src={announcement.cover_photo}
+                            src={getAnnouncementImageUrl(announcement.cover_photo) || ''}
                             alt={announcement.title}
                             className="w-full max-w-md h-48 object-cover rounded-lg border border-gray-700"
+                            onError={handleImageError}
                           />
                         </div>
                       )}

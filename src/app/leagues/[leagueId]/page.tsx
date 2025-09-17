@@ -10,6 +10,7 @@ import { API_BASE } from '@/lib/config'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserRole } from '@/types/user'
 import { CommentsList } from '@/components/comments'
+import { getAnnouncementImageUrl, handleImageError } from '@/lib/imageUtils'
 
 // Helper function to get team configuration
 const getTeamConfig = (teamName: string) => {
@@ -280,9 +281,10 @@ export default function LeagueDetailPage() {
                   {(announcement.coverPhoto || announcement.cover_photo) && (
                     <div className="mb-4">
                       <img 
-                        src={announcement.coverPhoto || announcement.cover_photo} 
+                        src={getAnnouncementImageUrl(announcement.coverPhoto || announcement.cover_photo) || ''} 
                         alt="Cover" 
                         className="w-full h-48 object-cover rounded-lg"
+                        onError={handleImageError}
                       />
                     </div>
                   )}
@@ -329,9 +331,10 @@ export default function LeagueDetailPage() {
                   {(announcement.coverPhoto || announcement.cover_photo) && (
                     <div className="mb-4">
                       <img 
-                        src={announcement.coverPhoto || announcement.cover_photo} 
+                        src={getAnnouncementImageUrl(announcement.coverPhoto || announcement.cover_photo) || ''} 
                         alt="Cover" 
                         className="w-full h-48 object-cover rounded-lg"
+                        onError={handleImageError}
                       />
                     </div>
                   )}
