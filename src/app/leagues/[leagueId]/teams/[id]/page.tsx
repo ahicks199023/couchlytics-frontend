@@ -94,6 +94,19 @@ export default function TeamDetailPage() {
             const allWeeks = Array.from({ length: maxWeek }, (_, i) => i + 1)
             const byeWeeks = allWeeks.filter(week => !data.schedule.some((game: ScheduleItem) => game.week === week))
             console.log('Bye weeks detected:', byeWeeks)
+            
+            // Debug Week 1 specifically
+            const week1Game = data.schedule.find((game: ScheduleItem) => game.week === 1)
+            console.log('Week 1 game details:', week1Game)
+            
+            // Debug all games with their opponents
+            console.log('All games with opponents:', data.schedule.map((game: ScheduleItem) => ({
+              week: game.week,
+              opponent: game.opponent,
+              home: game.home,
+              away: game.away,
+              isHome: game.isHome
+            })))
           }
           
           // Debug logging for cap and contract data
