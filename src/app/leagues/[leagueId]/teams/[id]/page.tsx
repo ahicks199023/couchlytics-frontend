@@ -8,6 +8,18 @@ import { TeamDetailResponse } from '@/types/analytics'
 import { getTeamByName, getTeamByPartialName } from '@/lib/team-config'
 import TeamLogo from '@/components/TeamLogo'
 
+// Schedule item interface
+interface ScheduleItem {
+  week: number
+  home: string
+  away: string
+  opponent: string
+  isHome: boolean
+  score?: string | null
+  result?: 'W' | 'L' | 'T' | null
+  gameId: number
+}
+
 // Helper function to format currency values (values are already in millions)
 const formatCurrencyValue = (value: number | null | undefined): string => {
   if (value === null || value === undefined) return '$0.00M'
@@ -40,6 +52,9 @@ export default function TeamDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'home' | 'schedule' | 'statistics' | 'roster' | 'depth-chart' | 'transactions' | 'contracts' | 'customization'>('home')
+  
+  // Schedule sorting state
+  const [scheduleSortOrder, setScheduleSortOrder] = useState<'chronological' | 'reverse'>('chronological')
 
   // Roster sorting state
   const [rosterSortField, setRosterSortField] = useState<keyof TeamDetailResponse['roster'][0]>('overall')
@@ -51,13 +66,25 @@ export default function TeamDetailPage() {
         setLoading(true)
         setError(null)
 
-        // Fetch team detail information from the new single endpoint
-        const detailResponse = await authenticatedFetch(`${API_BASE}/leagues/${leagueIdString}/teams/${teamIdString}/detail`)
+        // Fetch team detail information from the new single endpoint with cache busting
+        const timestamp = new Date().getTime()
+        const detailResponse = await authenticatedFetch(`${API_BASE}/leagues/${leagueIdString}/teams/${teamIdString}/detail?t=${timestamp}`)
         
         if (detailResponse.ok) {
           const data = await detailResponse.json()
           setTeamData(data)
           console.log('[TeamDetail] Team data loaded:', data)
+          
+          // Debug logging for schedule data
+          if (data.schedule) {
+            console.log('=== SCHEDULE DATA DEBUG ===')
+            console.log('Schedule data received:', data.schedule)
+            console.log('Weeks in order:', data.schedule.map((game: ScheduleItem) => game.week))
+            const isSorted = data.schedule.every((game: ScheduleItem, index: number) => 
+              index === 0 || game.week >= data.schedule[index - 1].week
+            )
+            console.log('Schedule is sorted:', isSorted)
+          }
           
           // Debug logging for cap and contract data
           console.log('=== CAP DATA DEBUG ===')
@@ -114,6 +141,22 @@ export default function TeamDetailPage() {
   const getSortIndicator = (field: keyof TeamDetailResponse['roster'][0]) => {
     if (rosterSortField !== field) return ''
     return rosterSortDirection === 'asc' ? ' ↑' : ' ↓'
+  }
+
+  // Schedule sorting helper function
+  const sortSchedule = (schedule: ScheduleItem[], order: 'chronological' | 'reverse' = 'chronological'): ScheduleItem[] => {
+    return [...schedule].sort((a, b) => {
+      if (order === 'chronological') {
+        return a.week - b.week
+      } else {
+        return b.week - a.week
+      }
+    })
+  }
+
+  // Toggle schedule sort order
+  const toggleScheduleSort = () => {
+    setScheduleSortOrder(prev => prev === 'chronological' ? 'reverse' : 'chronological')
   }
 
   if (loading) {
@@ -305,19 +348,23 @@ export default function TeamDetailPage() {
         )
       }
       case 'schedule': {
-        type ScheduleItem = {
-          week: number
-          home: string
-          away: string
-          opponent: string
-          isHome: boolean
-          score?: string | null
-          result?: 'W' | 'L' | 'T' | null
-          gameId: number
-        }
-        const schedule: ScheduleItem[] = (teamData as unknown as { schedule?: ScheduleItem[] }).schedule ?? []
+        const rawSchedule: ScheduleItem[] = (teamData as unknown as { schedule?: ScheduleItem[] }).schedule ?? []
+        const schedule = sortSchedule(rawSchedule, scheduleSortOrder)
+        
         return (
           <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg border-4 overflow-x-auto" style={{ borderColor: teamColor }}>
+            {/* Schedule Header with Sort Toggle */}
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-green-600 dark:text-neon-green">Schedule</h3>
+              <button 
+                onClick={toggleScheduleSort}
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+                title={`Sort ${scheduleSortOrder === 'chronological' ? 'reverse' : 'chronological'}`}
+              >
+                {scheduleSortOrder === 'chronological' ? '↓ Week' : '↑ Week'}
+              </button>
+            </div>
+            
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-300 dark:border-gray-700 text-left">
@@ -340,10 +387,19 @@ export default function TeamDetailPage() {
                 ) : (
                   schedule.map((g) => (
                     <tr key={g.gameId} className="border-b border-gray-200 dark:border-gray-800">
-                      <td className="py-2 px-2">{(g.week ?? 0) + 1}</td>
+                      <td className="py-2 px-2 font-medium">{g.week ?? 0}</td>
                       <td className="py-2 px-2">{g.opponent}</td>
                       <td className="py-2 px-2">{g.isHome ? 'Home' : 'Away'}</td>
-                      <td className="py-2 px-2">{g.result ?? '-'}</td>
+                      <td className="py-2 px-2">
+                        <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                          g.result === 'W' ? 'bg-green-500 text-white' :
+                          g.result === 'L' ? 'bg-red-500 text-white' :
+                          g.result === 'T' ? 'bg-yellow-500 text-black' :
+                          'bg-gray-500 text-white'
+                        }`}>
+                          {g.result ?? '-'}
+                        </span>
+                      </td>
                       <td className="py-2 px-2">{g.score ?? '-'}</td>
                       <td className="py-2 px-2">
                         <Link className="text-blue-600 dark:text-blue-400 hover:text-neon-green" href={`/leagues/${leagueIdString}/games/${g.gameId}/comments`}>
