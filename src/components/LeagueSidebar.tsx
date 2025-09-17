@@ -216,6 +216,29 @@ export default function LeagueSidebar() {
             userTeamData.fullName = `${userTeamData.city} ${userTeamData.name}`
           }
           
+          // Try to get record from league teams data
+          try {
+            const leagueResponse = await fetch(`${API_BASE}/leagues/${leagueId}`, {
+              credentials: 'include'
+            })
+            if (leagueResponse.ok) {
+              const leagueData = await leagueResponse.json()
+              if (leagueData.teams && Array.isArray(leagueData.teams)) {
+                const teamWithRecord = leagueData.teams.find(team => 
+                  team.id === userTeamData.id || 
+                  team.name === userTeamData.name ||
+                  team.abbreviation === userTeamData.abbreviation
+                )
+                if (teamWithRecord && teamWithRecord.record) {
+                  userTeamData.record = teamWithRecord.record
+                  console.log('Found record from league data:', teamWithRecord.record)
+                }
+              }
+            }
+          } catch (recordError) {
+            console.log('Could not fetch record from league data:', recordError)
+          }
+          
           console.log('Processed user team data:', userTeamData)
         }
         
