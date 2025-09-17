@@ -10,7 +10,6 @@ import { API_BASE } from '@/lib/config'
 import NotificationBadge from './NotificationBadge'
 import TeamLogo from './TeamLogo'
 import { getUserTeam } from '@/lib/api'
-import { getTeamByName } from '@/lib/team-config'
 
 
 
