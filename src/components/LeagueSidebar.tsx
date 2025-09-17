@@ -196,8 +196,20 @@ export default function LeagueSidebar() {
       try {
         setTeamLoading(true)
         const teamData = await getUserTeam(leagueId)
-        setUserTeam(teamData)
-        console.log('User team data loaded:', teamData)
+        console.log('Raw team data from API:', teamData)
+        
+        // Handle different response structures
+        let userTeamData = null
+        if (teamData && teamData.success && teamData.team) {
+          // API returns { success: true, team: {...} }
+          userTeamData = teamData.team
+        } else if (teamData && teamData.id) {
+          // API returns team data directly
+          userTeamData = teamData
+        }
+        
+        setUserTeam(userTeamData)
+        console.log('Processed user team data:', userTeamData)
       } catch (error) {
         console.error('Error fetching user team:', error)
         setUserTeam(null)
@@ -242,6 +254,15 @@ export default function LeagueSidebar() {
             href={`/leagues/${leagueId}/teams/${userTeam.id}`}
             className="flex items-center gap-3 hover:bg-gray-700 p-2 rounded transition-colors"
             title={`View ${userTeam.fullName} details`}
+            onClick={() => {
+              console.log('Team link clicked:', {
+                leagueId,
+                teamId: userTeam.id,
+                teamName: userTeam.name,
+                fullName: userTeam.fullName,
+                url: `/leagues/${leagueId}/teams/${userTeam.id}`
+              })
+            }}
           >
             <TeamLogo 
               teamName={userTeam.name}
