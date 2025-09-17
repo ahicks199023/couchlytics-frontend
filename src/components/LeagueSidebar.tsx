@@ -217,9 +217,6 @@ export default function LeagueSidebar() {
           }
           
           console.log('Processed user team data:', userTeamData)
-          console.log('Team name for display:', userTeamData.name)
-          console.log('Team fullName for display:', userTeamData.fullName)
-          console.log('Team record for display:', userTeamData.record)
         }
         
         setUserTeam(userTeamData)
@@ -265,13 +262,7 @@ export default function LeagueSidebar() {
         const teamConfig = getTeamByName(userTeam.name)
         const primaryColor = teamConfig?.colors?.primary || '#00FF00'
         
-        console.log('Rendering team panel:', {
-          userTeam,
-          teamConfig,
-          primaryColor,
-          hasFullName: !!userTeam.fullName,
-          hasRecord: !!userTeam.record
-        })
+        // Team panel rendering - team name now in white
         
         return (
           <div className="mb-4 p-2 bg-gray-800 rounded-lg border border-gray-700">
@@ -297,10 +288,7 @@ export default function LeagueSidebar() {
                 showName={false}
               />
               <div className="flex-1 min-w-0">
-                <div 
-                  className="text-sm font-bold truncate"
-                  style={{ color: primaryColor }}
-                >
+                <div className="text-sm font-bold text-white truncate">
                   {userTeam.fullName || `${userTeam.city} ${userTeam.name}`}
                 </div>
                 {userTeam.record && (
@@ -308,10 +296,6 @@ export default function LeagueSidebar() {
                     Record: {userTeam.record}
                   </div>
                 )}
-                {/* Debug info - remove after testing */}
-                <div className="text-xs text-red-400">
-                  Debug: {userTeam.name} - {userTeam.record || 'No record'}
-                </div>
               </div>
             </Link>
           </div>
