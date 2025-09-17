@@ -10,6 +10,7 @@ import { API_BASE } from '@/lib/config'
 import NotificationBadge from './NotificationBadge'
 import TeamLogo from './TeamLogo'
 import { getUserTeam } from '@/lib/api'
+import { getTeamByName } from '@/lib/team-config'
 
 
 
@@ -248,42 +249,50 @@ export default function LeagueSidebar() {
       <h2 className="text-lg font-bold mb-2">League Menu</h2>
       
       {/* User's Team Link */}
-      {userTeam && leagueId && typeof leagueId === 'string' && (
-        <div className="mb-4 p-2 bg-gray-800 rounded-lg border border-gray-700">
-          <Link 
-            href={`/leagues/${leagueId}/teams/${userTeam.id}`}
-            className="flex items-center gap-3 hover:bg-gray-700 p-2 rounded transition-colors"
-            title={`View ${userTeam.fullName} details`}
-            onClick={() => {
-              console.log('Team link clicked:', {
-                leagueId,
-                teamId: userTeam.id,
-                teamName: userTeam.name,
-                fullName: userTeam.fullName,
-                url: `/leagues/${leagueId}/teams/${userTeam.id}`,
-                userTeamData: userTeam
-              })
-            }}
-          >
-            <TeamLogo 
-              teamName={userTeam.name}
-              size="lg"
-              variant="helmet"
-              showName={false}
-            />
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-white truncate">
-                {userTeam.fullName}
-              </div>
-              {userTeam.record && (
-                <div className="text-xs text-gray-400">
-                  {userTeam.record}
+      {userTeam && leagueId && typeof leagueId === 'string' && (() => {
+        const teamConfig = getTeamByName(userTeam.name)
+        const primaryColor = teamConfig?.colors?.primary || '#00FF00'
+        
+        return (
+          <div className="mb-4 p-2 bg-gray-800 rounded-lg border border-gray-700">
+            <Link 
+              href={`/leagues/${leagueId}/teams/${userTeam.id}`}
+              className="flex items-center gap-3 hover:bg-gray-700 p-2 rounded transition-colors"
+              title={`View ${userTeam.fullName} details`}
+              onClick={() => {
+                console.log('Team link clicked:', {
+                  leagueId,
+                  teamId: userTeam.id,
+                  teamName: userTeam.name,
+                  fullName: userTeam.fullName,
+                  url: `/leagues/${leagueId}/teams/${userTeam.id}`,
+                  userTeamData: userTeam
+                })
+              }}
+            >
+              <TeamLogo 
+                teamName={userTeam.name}
+                size="lg"
+                variant="helmet"
+                showName={false}
+              />
+              <div className="flex-1 min-w-0">
+                <div 
+                  className="text-sm font-bold truncate"
+                  style={{ color: primaryColor }}
+                >
+                  {userTeam.fullName}
                 </div>
-              )}
-            </div>
-          </Link>
-        </div>
-      )}
+                {userTeam.record && (
+                  <div className="text-xs text-gray-400 font-medium">
+                    Record: {userTeam.record}
+                  </div>
+                )}
+              </div>
+            </Link>
+          </div>
+        )
+      })()}
       
       {/* Loading state for team */}
       {teamLoading && (
