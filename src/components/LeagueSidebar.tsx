@@ -223,6 +223,7 @@ export default function LeagueSidebar() {
             if (leagueResponse.ok) {
               const leagueData = await leagueResponse.json()
               if (leagueData.teams && Array.isArray(leagueData.teams)) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const teamWithRecord = leagueData.teams.find((team: any) => 
                   team.id === userTeamData.id || 
                   team.name === userTeamData.name ||
