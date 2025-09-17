@@ -653,7 +653,7 @@ export class AdminApiService {
       const formData = new FormData()
       formData.append('image', file)
 
-      const response = await fetch(`${this.baseUrl}/admin/announcements/upload-image`, {
+      const response = await fetch(`${this.baseUrl}/announcements/upload-image`, {
         method: 'POST',
         credentials: 'include',
         body: formData
