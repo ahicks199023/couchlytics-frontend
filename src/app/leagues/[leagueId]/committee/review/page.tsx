@@ -264,7 +264,7 @@ export default function TradeCommitteeReviewPage() {
                   <div className="flex items-center space-x-4">
                     {/* From Team */}
                     <div className="flex items-center space-x-2">
-                      {trade.from_team?.name && (
+                      {trade.from_team?.name && trade.from_team.name !== 'Unknown Team' && (
                         <TeamLogo 
                           teamName={trade.from_team.name}
                           size="lg"
@@ -273,9 +273,9 @@ export default function TradeCommitteeReviewPage() {
                         />
                       )}
                       <span className="font-medium text-white">
-                        {trade.from_team?.city && trade.from_team?.name 
+                        {trade.from_team?.city && trade.from_team?.name && trade.from_team.name !== 'Unknown Team'
                           ? `${trade.from_team.city} ${trade.from_team.name}` 
-                          : trade.from_team?.name 
+                          : trade.from_team?.name && trade.from_team.name !== 'Unknown Team'
                           ? trade.from_team.name
                           : trade.from_team?.city
                           ? trade.from_team.city
@@ -289,7 +289,7 @@ export default function TradeCommitteeReviewPage() {
                     
                     {/* To Team */}
                     <div className="flex items-center space-x-2">
-                      {trade.to_team?.name && (
+                      {trade.to_team?.name && trade.to_team.name !== 'Unknown Team' && (
                         <TeamLogo 
                           teamName={trade.to_team.name}
                           size="lg"
@@ -298,9 +298,9 @@ export default function TradeCommitteeReviewPage() {
                         />
                       )}
                       <span className="font-medium text-white">
-                        {trade.to_team?.city && trade.to_team?.name 
+                        {trade.to_team?.city && trade.to_team?.name && trade.to_team.name !== 'Unknown Team'
                           ? `${trade.to_team.city} ${trade.to_team.name}` 
-                          : trade.to_team?.name 
+                          : trade.to_team?.name && trade.to_team.name !== 'Unknown Team'
                           ? trade.to_team.name
                           : trade.to_team?.city
                           ? trade.to_team.city
@@ -327,9 +327,9 @@ export default function TradeCommitteeReviewPage() {
                   <div>
                     <h4 className="font-medium text-white mb-3 flex items-center">
                       <ArrowRight className="w-4 h-4 mr-2 text-gray-400" />
-                      {trade.from_team?.city && trade.from_team?.name 
+                      {trade.from_team?.city && trade.from_team?.name && trade.from_team.name !== 'Unknown Team'
                         ? `${trade.from_team.city} ${trade.from_team.name}` 
-                        : trade.from_team?.name 
+                        : trade.from_team?.name && trade.from_team.name !== 'Unknown Team'
                         ? trade.from_team.name
                         : trade.from_team?.city
                         ? trade.from_team.city
@@ -379,9 +379,9 @@ export default function TradeCommitteeReviewPage() {
                   <div>
                     <h4 className="font-medium text-white mb-3 flex items-center">
                       <ArrowLeft className="w-4 h-4 mr-2 text-gray-400" />
-                      {trade.to_team?.city && trade.to_team?.name 
+                      {trade.to_team?.city && trade.to_team?.name && trade.to_team.name !== 'Unknown Team'
                         ? `${trade.to_team.city} ${trade.to_team.name}` 
-                        : trade.to_team?.name 
+                        : trade.to_team?.name && trade.to_team.name !== 'Unknown Team'
                         ? trade.to_team.name
                         : trade.to_team?.city
                         ? trade.to_team.city

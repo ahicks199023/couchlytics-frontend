@@ -204,6 +204,34 @@ export class AdminApiService {
     }
   }
 
+  // CORS preflight check function
+  private async checkCORS(url: string, method: string = 'PATCH'): Promise<boolean> {
+    try {
+      console.log(`🔍 Checking CORS preflight for ${method} ${url}`)
+      
+      const response = await fetch(url, {
+        method: 'OPTIONS',
+        headers: {
+          'Access-Control-Request-Method': method,
+          'Access-Control-Request-Headers': 'Content-Type, Authorization, X-Requested-With',
+          'Origin': typeof window !== 'undefined' ? window.location.origin : '',
+        },
+      })
+      
+      console.log(`🔍 CORS Preflight Response: ${response.status}`)
+      console.log(`🔍 CORS Headers:`, {
+        'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+        'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+        'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin')
+      })
+      
+      return response.ok
+    } catch (error) {
+      console.error('❌ CORS Preflight failed:', error)
+      return false
+    }
+  }
+
   private async makeRequest<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -217,12 +245,34 @@ export class AdminApiService {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest', // Add this for CORS
           ...options.headers,
         },
         ...options,
       })
 
       console.log(`📡 Admin API Response: ${response.status} ${response.statusText} for ${endpoint}`)
+
+      // Handle CORS errors specifically
+      if (response.status === 0 || (response.status >= 400 && response.status < 500)) {
+        const corsError = response.status === 0 || 
+          (response.statusText.includes('CORS') || 
+           response.statusText.includes('blocked') ||
+           response.statusText.includes('preflight'))
+        
+        if (corsError) {
+          console.error('❌ CORS Error detected:', {
+            status: response.status,
+            statusText: response.statusText,
+            endpoint: endpoint,
+            method: options.method || 'GET'
+          })
+          return {
+            success: false,
+            error: `CORS Error: ${response.statusText}. Please refresh the page and try again.`,
+          }
+        }
+      }
 
       // Handle authentication errors specifically
       if (response.status === 401) {
@@ -605,8 +655,25 @@ export class AdminApiService {
 
   async updateSystemAnnouncementStatus(id: number, isPublished: boolean): Promise<boolean> {
     try {
+      const url = `${this.baseUrl}/announcements/${id}/status`
+      console.log(`🔍 Attempting to update announcement status: ${id} to ${isPublished}`)
+      
+      // Check CORS preflight first
+      const corsOk = await this.checkCORS(url, 'PATCH')
+      
+      if (!corsOk) {
+        console.warn('⚠️ CORS preflight failed - trying alternative approach')
+        // Try with PUT method as fallback
+        return await this.updateSystemAnnouncementStatusPUT(id, isPublished)
+      }
+      
       const response = await this.makeRequest<{ success: boolean }>(`/announcements/${id}/status`, {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ is_published: isPublished })
       })
       console.log('🔍 updateSystemAnnouncementStatus response:', response)
@@ -618,7 +685,41 @@ export class AdminApiService {
       
       throw new Error('Failed to update system announcement status')
     } catch (error) {
-      console.error('Error updating system announcement status:', error)
+      console.error('❌ Error updating system announcement status:', error)
+      
+      // If PATCH fails with CORS error, try PUT method
+      if (error instanceof Error && error.message.includes('CORS')) {
+        console.log('🔄 CORS error detected, trying PUT method as fallback')
+        return await this.updateSystemAnnouncementStatusPUT(id, isPublished)
+      }
+      
+      throw error
+    }
+  }
+
+  // Fallback method using PUT instead of PATCH
+  private async updateSystemAnnouncementStatusPUT(id: number, isPublished: boolean): Promise<boolean> {
+    try {
+      console.log(`🔄 Trying PUT method for announcement status update: ${id}`)
+      
+      const response = await this.makeRequest<{ success: boolean }>(`/announcements/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ is_published: isPublished })
+      })
+      
+      if (response.success) {
+        console.log('✅ System announcement status updated successfully via PUT')
+        return true
+      }
+      
+      throw new Error('Failed to update system announcement status via PUT')
+    } catch (error) {
+      console.error('❌ Error updating system announcement status via PUT:', error)
       throw error
     }
   }
@@ -639,6 +740,55 @@ export class AdminApiService {
     } catch (error) {
       console.error('Error deleting system announcement:', error)
       throw error
+    }
+  }
+
+  // Debug and utility methods
+  async debugCORS(announcementId: number): Promise<void> {
+    const url = `${this.baseUrl}/announcements/${announcementId}/status`
+    console.log('🔍 CORS Debug Information:')
+    console.log('URL:', url)
+    console.log('Origin:', typeof window !== 'undefined' ? window.location.origin : 'N/A')
+    
+    // Test OPTIONS request
+    try {
+      const optionsResponse = await fetch(url, {
+        method: 'OPTIONS',
+        headers: {
+          'Access-Control-Request-Method': 'PATCH',
+          'Access-Control-Request-Headers': 'Content-Type, Authorization, X-Requested-With',
+          'Origin': typeof window !== 'undefined' ? window.location.origin : '',
+        },
+      })
+      
+      console.log('OPTIONS Response Status:', optionsResponse.status)
+      console.log('CORS Headers:', {
+        'Access-Control-Allow-Methods': optionsResponse.headers.get('Access-Control-Allow-Methods'),
+        'Access-Control-Allow-Headers': optionsResponse.headers.get('Access-Control-Allow-Headers'),
+        'Access-Control-Allow-Origin': optionsResponse.headers.get('Access-Control-Allow-Origin'),
+        'Access-Control-Allow-Credentials': optionsResponse.headers.get('Access-Control-Allow-Credentials')
+      })
+    } catch (error) {
+      console.error('OPTIONS request failed:', error)
+    }
+    
+    // Test PATCH request
+    try {
+      const patchResponse = await fetch(url, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ is_published: true })
+      })
+      
+      console.log('PATCH Response Status:', patchResponse.status)
+      console.log('PATCH Response Status Text:', patchResponse.statusText)
+    } catch (error) {
+      console.error('PATCH request failed:', error)
     }
   }
 

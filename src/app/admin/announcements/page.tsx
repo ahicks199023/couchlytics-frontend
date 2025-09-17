@@ -88,13 +88,29 @@ export default function SystemAnnouncementsPage() {
 
   const handleTogglePublish = async (id: number, currentStatus: boolean) => {
     try {
+      console.log(`🔍 Attempting to publish announcement: ${id} to ${!currentStatus}`)
+      
+      // Debug CORS if needed
+      if (process.env.NODE_ENV === 'development') {
+        await adminApi.debugCORS(id)
+      }
+      
       await adminApi.updateSystemAnnouncementStatus(id, !currentStatus)
       setAnnouncements(prev => 
         prev.map(a => a.id === id ? { ...a, is_published: !currentStatus } : a)
       )
+      
+      console.log('✅ Announcement status updated successfully')
     } catch (err) {
-      console.error('Error updating announcement status:', err)
-      alert('Failed to update announcement status')
+      console.error('❌ Error updating announcement status:', err)
+      
+      // Check if it's a CORS error
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      if (errorMessage.includes('CORS') || errorMessage.includes('blocked')) {
+        alert('CORS Error: Please refresh the page and try again. If the issue persists, check your browser cache.')
+      } else {
+        alert(`Failed to update announcement status: ${errorMessage}`)
+      }
     }
   }
 

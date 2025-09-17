@@ -26,6 +26,7 @@ export interface Player {
   ovr: number
   age: number
   value: number
+  maddenId?: string  // Backend returns 'maddenId' for player detail page links
   enhanced_data: {
     valueBreakdown: {
       finalValue: number

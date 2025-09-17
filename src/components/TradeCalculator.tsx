@@ -25,6 +25,7 @@ interface ExtendedPlayer {
   devTrait?: string
   yearsPro?: number
   league_id?: string  // Backend returns 'league_id'
+  maddenId?: string  // Backend returns 'maddenId' for player detail page links
   
   // Backend field mappings
   overall?: number  // Backend returns 'overall' instead of 'ovr'
@@ -1173,7 +1174,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                      <div className="flex-1">
                        <div className="text-sm font-medium">
                          <a 
-                           href={`/players/${p.id}`}
+                           href={`/players/${p.maddenId || p.id}`}
                            className="text-blue-400 hover:text-blue-300 hover:underline"
                            onClick={(e) => e.stopPropagation()}
                          >
@@ -1322,7 +1323,7 @@ export default function TradeCalculator({ league_id }: TradeCalculatorProps) {
                        <div className="flex-1">
                          <div className="text-sm font-medium">
                            <a 
-                             href={`/players/${p.id}`}
+                             href={`/players/${p.maddenId || p.id}`}
                              className="text-blue-400 hover:text-blue-300 hover:underline"
                              onClick={(e) => e.stopPropagation()}
                            >
