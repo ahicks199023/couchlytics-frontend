@@ -17,9 +17,16 @@ export function getAnnouncementImageUrl(imagePath: string | null | undefined): s
     return imagePath
   }
   
-  // If it's a full path starting with /uploads/, construct the full URL
+  // If it's a full path starting with /uploads/announcements/, construct the full URL
   if (imagePath.startsWith('/uploads/announcements/')) {
     return `${API_BASE}${imagePath}`
+  }
+  
+  // If it's a full path starting with /static/uploads/announcements/, convert to API path
+  if (imagePath.startsWith('/static/uploads/announcements/')) {
+    // Convert /static/uploads/announcements/filename to /uploads/announcements/filename
+    const filename = imagePath.replace('/static/uploads/announcements/', '')
+    return `${API_BASE}/uploads/announcements/${filename}`
   }
   
   // If it's just a filename, construct the full URL
