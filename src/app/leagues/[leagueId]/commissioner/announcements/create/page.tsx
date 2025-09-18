@@ -50,11 +50,33 @@ export default function CreateAnnouncementPage() {
 
     try {
       setUploadingImage(true);
-      const base64 = await convertToBase64(file);
-      setAnnouncement(prev => ({ ...prev, coverPhoto: base64 }));
+      
+      // Upload image to server
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await fetch(`${API_BASE}/admin/announcements/upload-image`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && data.image_url) {
+        // Store the server-provided image URL
+        setAnnouncement(prev => ({ ...prev, coverPhoto: data.image_url }));
+        console.log('✅ Cover photo uploaded successfully:', data.image_url);
+      } else {
+        throw new Error(data.error || 'Failed to upload image');
+      }
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Failed to upload image');
+      alert('Failed to upload image: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setUploadingImage(false);
     }
@@ -315,24 +337,36 @@ export default function CreateAnnouncementPage() {
                     )}
                   </div>
                   {announcement.content ? (
-                    <div className="text-gray-300 whitespace-pre-wrap">
-                      {announcement.content.split('\n').map((line, index) => {
-                        // Check if line contains an image markdown
-                        const imageMatch = line.match(/!\[.*?\]\((.*?)\)/);
-                        if (imageMatch) {
-                          return (
-                            <div key={index} className="my-4">
-                              <img 
-                                src={getAnnouncementImageUrl(imageMatch[1]) || imageMatch[1]} 
-                                alt="Content image" 
-                                className="max-w-full h-auto rounded-lg border border-gray-600"
-                                onError={handleImageError}
-                              />
-                            </div>
-                          );
-                        }
-                        return <div key={index}>{line}</div>;
-                      })}
+                    <div className="text-gray-300">
+                      {announcement.content.split(/\n\s*\n/).map((paragraph, paragraphIndex) => (
+                        <div key={paragraphIndex} className="mb-4">
+                          {paragraph.split('\n').map((line, lineIndex) => {
+                            // Check if line contains an image markdown
+                            const imageMatch = line.match(/!\[.*?\]\((.*?)\)/);
+                            if (imageMatch) {
+                              return (
+                                <div key={lineIndex} className="my-4">
+                                  <img 
+                                    src={getAnnouncementImageUrl(imageMatch[1]) || imageMatch[1]} 
+                                    alt="Content image" 
+                                    className="max-w-full h-auto rounded-lg border border-gray-600"
+                                    onError={handleImageError}
+                                  />
+                                </div>
+                              );
+                            }
+                            // If line is not empty, render it as a paragraph line
+                            if (line.trim()) {
+                              return (
+                                <p key={lineIndex} className="mb-2 leading-relaxed">
+                                  {line}
+                                </p>
+                              );
+                            }
+                            return null;
+                          })}
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <p className="text-gray-500 italic">Announcement content will appear here...</p>

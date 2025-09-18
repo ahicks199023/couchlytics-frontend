@@ -123,24 +123,44 @@ export default function LeagueDetailPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true)
 
-  // Helper function to render content with images
+  // Helper function to render content with images and proper paragraph formatting
   const renderContentWithImages = (content: string) => {
-    return content.split('\n').map((line, index) => {
-      // Check if line contains an image markdown
-      const imageMatch = line.match(/!\[.*?\]\((.*?)\)/);
-      if (imageMatch) {
-        return (
-          <div key={index} className="my-4">
-            <img 
-              src={getAnnouncementImageUrl(imageMatch[1]) || imageMatch[1]} 
-              alt="Content image" 
-              className="max-w-full h-auto rounded-lg border border-gray-600"
-              onError={handleImageError}
-            />
-          </div>
-        );
-      }
-      return <div key={index}>{line}</div>;
+    // Split content into paragraphs (double line breaks)
+    const paragraphs = content.split(/\n\s*\n/);
+    
+    return paragraphs.map((paragraph, paragraphIndex) => {
+      // Split each paragraph into lines for image processing
+      const lines = paragraph.split('\n');
+      
+      return (
+        <div key={paragraphIndex} className="mb-4">
+          {lines.map((line, lineIndex) => {
+            // Check if line contains an image markdown
+            const imageMatch = line.match(/!\[.*?\]\((.*?)\)/);
+            if (imageMatch) {
+              return (
+                <div key={lineIndex} className="my-4">
+                  <img 
+                    src={getAnnouncementImageUrl(imageMatch[1]) || imageMatch[1]} 
+                    alt="Content image" 
+                    className="max-w-full h-auto rounded-lg border border-gray-600"
+                    onError={handleImageError}
+                  />
+                </div>
+              );
+            }
+            // If line is not empty, render it as a paragraph line
+            if (line.trim()) {
+              return (
+                <p key={lineIndex} className="mb-2 leading-relaxed">
+                  {line}
+                </p>
+              );
+            }
+            return null;
+          })}
+        </div>
+      );
     });
   };
 
