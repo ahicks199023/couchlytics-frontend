@@ -132,9 +132,10 @@ export default function LeagueDetailPage() {
         return (
           <div key={index} className="my-4">
             <img 
-              src={imageMatch[1]} 
+              src={getAnnouncementImageUrl(imageMatch[1]) || imageMatch[1]} 
               alt="Content image" 
               className="max-w-full h-auto rounded-lg border border-gray-600"
+              onError={handleImageError}
             />
           </div>
         );

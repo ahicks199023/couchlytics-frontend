@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { API_BASE } from '@/lib/config';
+import { getAnnouncementImageUrl, handleImageError } from '@/lib/imageUtils';
 
 export default function CreateAnnouncementPage() {
   const params = useParams();
@@ -199,9 +200,10 @@ export default function CreateAnnouncementPage() {
               {announcement.coverPhoto ? (
                 <div className="relative">
                   <img 
-                    src={announcement.coverPhoto} 
+                    src={getAnnouncementImageUrl(announcement.coverPhoto) || announcement.coverPhoto} 
                     alt="Cover preview" 
                     className="w-full h-48 object-cover rounded-lg border border-gray-600"
+                    onError={handleImageError}
                   />
                   <button
                     type="button"
@@ -296,9 +298,10 @@ export default function CreateAnnouncementPage() {
                   {announcement.coverPhoto && (
                     <div className="mb-4">
                       <img 
-                        src={announcement.coverPhoto} 
+                        src={getAnnouncementImageUrl(announcement.coverPhoto) || announcement.coverPhoto} 
                         alt="Cover" 
                         className="w-full h-48 object-cover rounded-lg"
+                        onError={handleImageError}
                       />
                     </div>
                   )}
@@ -320,9 +323,10 @@ export default function CreateAnnouncementPage() {
                           return (
                             <div key={index} className="my-4">
                               <img 
-                                src={imageMatch[1]} 
+                                src={getAnnouncementImageUrl(imageMatch[1]) || imageMatch[1]} 
                                 alt="Content image" 
                                 className="max-w-full h-auto rounded-lg border border-gray-600"
+                                onError={handleImageError}
                               />
                             </div>
                           );
