@@ -74,6 +74,9 @@ export default function TeamDetailPage() {
     }
   }
 
+  // Debug: Log when component renders
+  console.log('TeamDetailPage rendering with teamData:', !!teamData)
+
   useEffect(() => {
     const fetchTeamData = async () => {
       try {
@@ -821,10 +824,11 @@ export default function TeamDetailPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={clearCache}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg border-2 border-red-500"
               title="Clear cache and refresh data"
+              style={{ zIndex: 1000 }}
             >
-              🔄 Clear Cache
+              🔄 CLEAR CACHE
             </button>
             <div className="text-right">
               <div className="text-2xl font-bold">{teamData.team.record}</div>
