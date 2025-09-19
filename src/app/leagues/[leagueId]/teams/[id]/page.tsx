@@ -76,6 +76,8 @@ export default function TeamDetailPage() {
 
   // Debug: Log when component renders
   console.log('TeamDetailPage rendering with teamData:', !!teamData)
+  console.log('TeamDetailPage teamData.team:', teamData?.team)
+  console.log('Clear Cache button should be visible:', !!teamData)
 
   useEffect(() => {
     const fetchTeamData = async () => {
@@ -831,7 +833,7 @@ export default function TeamDetailPage() {
               🔄 CLEAR CACHE
             </button>
             <div className="text-right">
-              <div className="text-2xl font-bold">{teamData.team.record}</div>
+              <div className="text-2xl font-bold">{teamData?.team?.record || 'Loading...'}</div>
             </div>
           </div>
         </div>
