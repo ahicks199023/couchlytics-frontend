@@ -60,6 +60,20 @@ export default function TeamDetailPage() {
   const [rosterSortField, setRosterSortField] = useState<keyof TeamDetailResponse['roster'][0]>('overall')
   const [rosterSortDirection, setRosterSortDirection] = useState<'asc' | 'desc'>('desc')
 
+  // Simple cache clearing function
+  const clearCache = () => {
+    console.log('=== CLEARING CACHE ===')
+    try {
+      localStorage.clear()
+      sessionStorage.clear()
+      console.log('Cache cleared successfully')
+      // Force page reload
+      window.location.reload()
+    } catch (e) {
+      console.log('Cache clear failed:', e)
+    }
+  }
+
   useEffect(() => {
     const fetchTeamData = async () => {
       try {
@@ -804,8 +818,17 @@ export default function TeamDetailPage() {
             </Link>
             <h1 className="text-2xl font-bold">{teamData.team.name}</h1>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold">{teamData.team.record}</div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={clearCache}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
+              title="Clear cache and refresh data"
+            >
+              🔄 Clear Cache
+            </button>
+            <div className="text-right">
+              <div className="text-2xl font-bold">{teamData.team.record}</div>
+            </div>
           </div>
         </div>
       </div>
