@@ -60,85 +60,26 @@ export default function TeamDetailPage() {
   const [rosterSortField, setRosterSortField] = useState<keyof TeamDetailResponse['roster'][0]>('overall')
   const [rosterSortDirection, setRosterSortDirection] = useState<'asc' | 'desc'>('desc')
 
-  // Cache clearing state
-  const [cacheKey, setCacheKey] = useState(Date.now())
-  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
-
-  // Cache clearing function
-  const clearAllCaches = () => {
-    console.log('=== CLEARING ALL CACHES ===')
-    
-    // Clear local storage
-    try {
-      localStorage.removeItem('teamData')
-      localStorage.removeItem('scheduleData')
-      localStorage.removeItem('cachedTeamDetail')
-      console.log('Local storage cleared')
-    } catch (e) {
-      console.log('Local storage clear failed:', e)
-    }
-    
-    // Clear session storage
-    try {
-      sessionStorage.clear()
-      console.log('Session storage cleared')
-    } catch (e) {
-      console.log('Session storage clear failed:', e)
-    }
-    
-    // Clear service worker cache
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        registrations.forEach(registration => {
-          registration.unregister()
-          console.log('Service worker unregistered')
-        })
-      })
-    }
-    
-    // Force component re-render
-    setCacheKey(Date.now())
-    console.log('Cache key updated:', cacheKey)
-  }
-
   useEffect(() => {
     const fetchTeamData = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // Fetch team detail information from the new single endpoint with enhanced cache busting
+        // Fetch team detail information from the new single endpoint with cache busting
         const timestamp = new Date().getTime()
-        const randomId = Math.random().toString(36).substring(7)
-        const cacheBustingUrl = `${API_BASE}/leagues/${leagueIdString}/teams/${teamIdString}/detail?t=${timestamp}&r=${randomId}&_cb=${Date.now()}`
-        
-        console.log('=== CACHE BUSTING DEBUG ===')
-        console.log('Timestamp:', timestamp)
-        console.log('Random ID:', randomId)
-        console.log('Cache busting URL:', cacheBustingUrl)
-        
-        const detailResponse = await authenticatedFetch(cacheBustingUrl, {
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        })
+        const detailResponse = await authenticatedFetch(`${API_BASE}/leagues/${leagueIdString}/teams/${teamIdString}/detail?t=${timestamp}`)
         
         if (detailResponse.ok) {
           const data = await detailResponse.json()
           setTeamData(data)
-          setLastRefresh(new Date())
           console.log('[TeamDetail] Team data loaded:', data)
           
-          // Enhanced debug logging for schedule data
+          // Debug logging for schedule data
           if (data.schedule) {
-            console.log('=== FRONTEND CACHE DEBUG ===')
-            console.log('Raw API response received at:', new Date().toISOString())
+            console.log('=== SCHEDULE DATA DEBUG ===')
             console.log('Schedule data received:', data.schedule)
-            console.log('Schedule length:', data.schedule.length)
             console.log('Weeks in order:', data.schedule.map((game: ScheduleItem) => game.week))
-            
             const isSorted = data.schedule.every((game: ScheduleItem, index: number) => 
               index === 0 || game.week >= data.schedule[index - 1].week
             )
@@ -157,7 +98,6 @@ export default function TeamDetailPage() {
             // Debug Week 1 specifically
             const week1Game = data.schedule.find((game: ScheduleItem) => game.week === 1)
             console.log('Week 1 game details:', week1Game)
-            console.log('Week 1 opponent (should be Commanders):', week1Game?.opponent)
             
             // Debug all games with their opponents
             console.log('All games with opponents:', data.schedule.map((game: ScheduleItem) => ({
@@ -167,13 +107,6 @@ export default function TeamDetailPage() {
               away: game.away,
               isHome: game.isHome
             })))
-            
-            // Check for Week 0 games specifically
-            const week0Games = data.schedule.filter((game: ScheduleItem) => game.week === 0)
-            console.log('Week 0 games found:', week0Games.length)
-            if (week0Games.length > 0) {
-              console.log('Week 0 games details:', week0Games)
-            }
           }
           
           // Debug logging for cap and contract data
@@ -197,7 +130,7 @@ export default function TeamDetailPage() {
     }
 
     fetchTeamData()
-  }, [leagueIdString, teamIdString, cacheKey])
+  }, [leagueIdString, teamIdString])
 
   // Sort roster data
   const sortedRoster = teamData?.roster ? [...teamData.roster].sort((a, b) => {
@@ -858,7 +791,7 @@ export default function TeamDetailPage() {
   }
 
   return (
-    <div key={`team-${teamIdString}-${cacheKey}`} className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
+    <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
              {/* Header */}
        <div className="bg-gray-100 dark:bg-gray-900 p-6">
         <div className="flex items-center justify-between">
@@ -871,22 +804,8 @@ export default function TeamDetailPage() {
             </Link>
             <h1 className="text-2xl font-bold">{teamData.team.name}</h1>
           </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={clearAllCaches}
-              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
-              title="Clear all caches and refresh data"
-            >
-              🔄 Clear Cache
-            </button>
-            {lastRefresh && (
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                Last refreshed: {lastRefresh.toLocaleTimeString()}
-              </div>
-            )}
-            <div className="text-right">
-              <div className="text-2xl font-bold">{teamData.team.record}</div>
-            </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold">{teamData.team.record}</div>
           </div>
         </div>
       </div>

@@ -16,10 +16,6 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
     NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
   },
-  // Add cache busting for development
-  generateBuildId: async () => {
-    return `build-${Date.now()}`;
-  },
 };
 
 export default nextConfig;
