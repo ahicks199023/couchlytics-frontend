@@ -95,6 +95,9 @@ export default function TeamDetailPage() {
           const data = await detailResponse.json()
           setTeamData(data)
           console.log('[TeamDetail] Team data loaded:', data)
+          console.log('[TeamDetail] Full team object:', data.team)
+          console.log('[TeamDetail] Team record field:', data.team?.record)
+          console.log('[TeamDetail] Team wins/losses:', data.team?.wins, data.team?.losses, data.team?.ties)
           
           // Debug logging for schedule data
           if (data.schedule) {
@@ -121,6 +124,8 @@ export default function TeamDetailPage() {
             console.log('Week 1 game details:', week1Game)
             console.log('Week 1 result:', week1Game?.result)
             console.log('Week 1 score:', week1Game?.score)
+            console.log('Week 1 game object keys:', week1Game ? Object.keys(week1Game) : 'No game found')
+            console.log('All game fields available:', data.schedule[0] ? Object.keys(data.schedule[0]) : 'No games')
             
             // Debug all games with their opponents
             console.log('All games with opponents:', data.schedule.map((game: ScheduleItem) => ({
