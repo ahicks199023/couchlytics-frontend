@@ -77,6 +77,8 @@ export default function TeamDetailPage() {
   // Debug: Log when component renders
   console.log('TeamDetailPage rendering with teamData:', !!teamData)
   console.log('TeamDetailPage teamData.team:', teamData?.team)
+  console.log('Team record:', teamData?.team?.record)
+  console.log('Team name:', teamData?.team?.name)
   console.log('Clear Cache button should be visible:', !!teamData)
 
   useEffect(() => {
@@ -117,6 +119,8 @@ export default function TeamDetailPage() {
             // Debug Week 1 specifically
             const week1Game = data.schedule.find((game: ScheduleItem) => game.week === 1)
             console.log('Week 1 game details:', week1Game)
+            console.log('Week 1 result:', week1Game?.result)
+            console.log('Week 1 score:', week1Game?.score)
             
             // Debug all games with their opponents
             console.log('All games with opponents:', data.schedule.map((game: ScheduleItem) => ({
