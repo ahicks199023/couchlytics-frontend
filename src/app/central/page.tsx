@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { getAnnouncementImageUrl, handleImageError } from '@/lib/imageUtils'
 
 interface Announcement {
   id: number
@@ -13,6 +14,8 @@ interface Announcement {
   created_at: string
   priority: 'low' | 'medium' | 'high'
   category: 'announcement' | 'update' | 'maintenance' | 'feature'
+  cover_photo?: string
+  coverPhoto?: string
 }
 
 interface UserLeaderboard {
@@ -247,9 +250,35 @@ export default function CouchlyticsCentral() {
                           {announcement.priority.toUpperCase()}
                         </span>
                       </div>
-                      <p className="text-gray-300 leading-relaxed">
-                        {announcement.content}
-                      </p>
+                      
+                      {/* Cover Photo */}
+                      {(announcement.coverPhoto || announcement.cover_photo) && (
+                        <div className="mb-4">
+                          <img 
+                            src={getAnnouncementImageUrl(announcement.coverPhoto || announcement.cover_photo) || ''} 
+                            alt="Cover" 
+                            className="w-full h-48 object-cover rounded-lg"
+                            onError={handleImageError}
+                          />
+                        </div>
+                      )}
+                      
+                      <div className="text-gray-300 leading-relaxed">
+                        {announcement.content.split(/\n\s*\n/).map((paragraph, paragraphIndex) => (
+                          <div key={paragraphIndex} className="mb-4">
+                            {paragraph.split('\n').map((line, lineIndex) => {
+                              if (line.trim()) {
+                                return (
+                                  <p key={lineIndex} className="mb-2 leading-relaxed">
+                                    {line}
+                                  </p>
+                                );
+                              }
+                              return null;
+                            })}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>
