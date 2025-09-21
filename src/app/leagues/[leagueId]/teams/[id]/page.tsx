@@ -37,50 +37,42 @@ const getTeamConfig = (teamName: string) => {
   return getTeamByName(teamName) || getTeamByPartialName(teamName)
 }
 
-// Mapping from team names to database team IDs (used in URLs)
-const TEAM_NAME_TO_DB_ID: Record<string, number> = {
-  'Bills': 17,
-  'Dolphins': 18,
-  'Patriots': 19,
-  'Jets': 20,
-  'Bengals': 21,
-  'Browns': 22,
-  'Ravens': 23,
-  'Steelers': 24,
-  'Colts': 25,
-  'Jaguars': 26,
-  'Texans': 27,
-  'Titans': 28,
-  'Broncos': 29,
-  'Chiefs': 30,
-  'Raiders': 31,
-  'Chargers': 32,
-  'Giants': 1,
-  'Cowboys': 2,
-  'Eagles': 3,
-  'Commanders': 4,
-  'Bears': 5,
-  'Lions': 6,
-  'Packers': 7,
-  'Vikings': 8,
-  'Buccaneers': 9,
-  'Falcons': 10,
-  'Panthers': 11,
-  'Saints': 12,
-  'Cardinals': 13,
-  'Rams': 14,
-  '49ers': 15,
-  'Seahawks': 16
+// State for team name to ID mapping
+const [teamNameToIdMap, setTeamNameToIdMap] = useState<Record<string, number>>({})
+
+// Function to fetch teams and create mapping
+const fetchTeamsMapping = async (leagueId: string) => {
+  try {
+    const response = await authenticatedFetch(`${API_BASE}/leagues/${leagueId}/teams`)
+    if (response.ok) {
+      const data = await response.json()
+      const teams = data.teams || []
+      
+      // Create mapping from team name to team ID
+      const mapping: Record<string, number> = {}
+      teams.forEach((team: any) => {
+        if (team.name && team.id) {
+          mapping[team.name] = team.id
+        }
+      })
+      
+      console.log('Team name to ID mapping created:', mapping)
+      setTeamNameToIdMap(mapping)
+    }
+  } catch (error) {
+    console.error('Error fetching teams mapping:', error)
+  }
 }
 
 // Helper function to get opponent team ID for linking
 const getOpponentTeamId = (game: ScheduleItem): number | null => {
   const opponentName = game.opponent
-  const dbTeamId = TEAM_NAME_TO_DB_ID[opponentName]
+  const dbTeamId = teamNameToIdMap[opponentName]
   
   // Debug logging
   console.log(`Looking up opponent: "${opponentName}"`)
   console.log(`Database team ID:`, dbTeamId)
+  console.log(`Available team mappings:`, Object.keys(teamNameToIdMap))
   
   return dbTeamId || null
 }
@@ -135,6 +127,9 @@ export default function TeamDetailPage() {
       try {
         setLoading(true)
         setError(null)
+
+        // Fetch teams mapping first
+        await fetchTeamsMapping(leagueIdString)
 
         // Fetch team detail information from the new single endpoint with cache busting
         const timestamp = new Date().getTime()
