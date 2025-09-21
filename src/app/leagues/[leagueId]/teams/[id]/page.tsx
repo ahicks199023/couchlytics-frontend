@@ -37,50 +37,51 @@ const getTeamConfig = (teamName: string) => {
   return getTeamByName(teamName) || getTeamByPartialName(teamName)
 }
 
-// State for team name to ID mapping
-const [teamNameToIdMap, setTeamNameToIdMap] = useState<Record<string, number>>({})
-
-// Function to fetch teams and create mapping
-const fetchTeamsMapping = async (leagueId: string) => {
-  try {
-    const response = await authenticatedFetch(`${API_BASE}/leagues/${leagueId}/teams`)
-    if (response.ok) {
-      const data = await response.json()
-      const teams = data.teams || []
-      
-      // Create mapping from team name to team ID
-      const mapping: Record<string, number> = {}
-      teams.forEach((team: any) => {
-        if (team.name && team.id) {
-          mapping[team.name] = team.id
-        }
-      })
-      
-      console.log('Team name to ID mapping created:', mapping)
-      setTeamNameToIdMap(mapping)
-    }
-  } catch (error) {
-    console.error('Error fetching teams mapping:', error)
-  }
-}
-
-// Helper function to get opponent team ID for linking
-const getOpponentTeamId = (game: ScheduleItem): number | null => {
-  const opponentName = game.opponent
-  const dbTeamId = teamNameToIdMap[opponentName]
-  
-  // Debug logging
-  console.log(`Looking up opponent: "${opponentName}"`)
-  console.log(`Database team ID:`, dbTeamId)
-  console.log(`Available team mappings:`, Object.keys(teamNameToIdMap))
-  
-  return dbTeamId || null
-}
 
 export default function TeamDetailPage() {
   const { leagueId, id: teamId } = useParams()
   const leagueIdString = leagueId as string
   const teamIdString = teamId as string
+
+  // State for team name to ID mapping
+  const [teamNameToIdMap, setTeamNameToIdMap] = useState<Record<string, number>>({})
+
+  // Function to fetch teams and create mapping
+  const fetchTeamsMapping = async (leagueId: string) => {
+    try {
+      const response = await authenticatedFetch(`${API_BASE}/leagues/${leagueId}/teams`)
+      if (response.ok) {
+        const data = await response.json()
+        const teams = data.teams || []
+        
+        // Create mapping from team name to team ID
+        const mapping: Record<string, number> = {}
+        teams.forEach((team: { name: string; id: number }) => {
+          if (team.name && team.id) {
+            mapping[team.name] = team.id
+          }
+        })
+        
+        console.log('Team name to ID mapping created:', mapping)
+        setTeamNameToIdMap(mapping)
+      }
+    } catch (error) {
+      console.error('Error fetching teams mapping:', error)
+    }
+  }
+
+  // Helper function to get opponent team ID for linking
+  const getOpponentTeamId = (game: ScheduleItem): number | null => {
+    const opponentName = game.opponent
+    const dbTeamId = teamNameToIdMap[opponentName]
+    
+    // Debug logging
+    console.log(`Looking up opponent: "${opponentName}"`)
+    console.log(`Database team ID:`, dbTeamId)
+    console.log(`Available team mappings:`, Object.keys(teamNameToIdMap))
+    
+    return dbTeamId || null
+  }
   
   // Debug logging for URL parameters
   console.log('TeamDetailPage - URL params:', { leagueId, teamId })
