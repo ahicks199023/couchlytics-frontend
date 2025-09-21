@@ -490,11 +490,11 @@ export default function TeamDetailPage() {
                   </tr>
                 ) : (
                   schedule
-                    .filter(g => g.week !== 22 && g.week !== 23) // Exclude Pro Bowl and Super Bowl weeks
+                    .filter(g => g.week !== 22) // Only exclude Pro Bowl week (no team plays in Pro Bowl)
                     .map((g) => {
                     const isByeWeek = (g as ScheduleItem & { isByeWeek?: boolean }).isByeWeek || g.opponent === 'Bye Week'
-                    const isSpecialByeWeek = g.week === 22 || g.week === 23
-                    const isPlayoffWeek = g.week >= 19 && g.week <= 21
+                    const isSpecialByeWeek = g.week === 22 // Only Pro Bowl is a special bye week
+                    const isPlayoffWeek = g.week >= 19 && g.week <= 23 // Include Super Bowl (Week 23) as playoff week
                     
                     return (
                     <tr key={g.gameId} className="border-b border-gray-200 dark:border-gray-800">

@@ -44,7 +44,8 @@ const getWeekLabel = (week: number, weekLabel?: string): string => {
 ```
 
 ### 3. **Updated Schedule Table Rendering**
-- **Excludes Pro Bowl and Super Bowl weeks** (Week 22 & 23) from display
+- **Excludes only Pro Bowl week** (Week 22) from display (no team plays in Pro Bowl)
+- **Includes Super Bowl week** (Week 23) for teams that made it to the Super Bowl
 - **Uses backend weekLabel** when available, falls back to frontend logic
 - **Special styling** for playoff weeks (gold/yellow text)
 - **Proper handling** of special bye weeks
@@ -84,8 +85,13 @@ Week 18: @ Ravens - L 14-28
 21 (Conference): @ Colts - L 7-28
 ```
 
-### **Special Bye Weeks (Weeks 22-23)**
-- **Excluded from display** (Pro Bowl and Super Bowl weeks)
+### **Super Bowl (Week 23)**
+```
+23 (Super Bowl): VS Chiefs - W 31-28
+```
+
+### **Special Bye Week (Week 22)**
+- **Excluded from display** (Pro Bowl week - no team plays in Pro Bowl)
 - **Not shown** in the schedule table
 
 ## 🔄 **Backend Integration**
