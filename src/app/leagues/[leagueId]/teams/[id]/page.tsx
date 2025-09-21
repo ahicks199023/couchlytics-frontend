@@ -37,11 +37,52 @@ const getTeamConfig = (teamName: string) => {
   return getTeamByName(teamName) || getTeamByPartialName(teamName)
 }
 
+// Mapping from team names to database team IDs (used in URLs)
+const TEAM_NAME_TO_DB_ID: Record<string, number> = {
+  'Bills': 17,
+  'Dolphins': 18,
+  'Patriots': 19,
+  'Jets': 20,
+  'Bengals': 21,
+  'Browns': 22,
+  'Ravens': 23,
+  'Steelers': 24,
+  'Colts': 25,
+  'Jaguars': 26,
+  'Texans': 27,
+  'Titans': 28,
+  'Broncos': 29,
+  'Chiefs': 30,
+  'Raiders': 31,
+  'Chargers': 32,
+  'Giants': 1,
+  'Cowboys': 2,
+  'Eagles': 3,
+  'Commanders': 4,
+  'Bears': 5,
+  'Lions': 6,
+  'Packers': 7,
+  'Vikings': 8,
+  'Buccaneers': 9,
+  'Falcons': 10,
+  'Panthers': 11,
+  'Saints': 12,
+  'Cardinals': 13,
+  'Rams': 14,
+  '49ers': 15,
+  'Seahawks': 16
+}
+
 // Helper function to get opponent team ID for linking
 const getOpponentTeamId = (game: ScheduleItem): number | null => {
   const opponentName = game.opponent
-  const teamConfig = getTeamConfig(opponentName)
-  return teamConfig?.id || null
+  const dbTeamId = TEAM_NAME_TO_DB_ID[opponentName]
+  
+  // Debug logging
+  console.log(`Looking up opponent: "${opponentName}"`)
+  console.log(`Database team ID:`, dbTeamId)
+  
+  return dbTeamId || null
 }
 
 export default function TeamDetailPage() {
