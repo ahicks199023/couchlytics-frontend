@@ -37,6 +37,13 @@ const getTeamConfig = (teamName: string) => {
   return getTeamByName(teamName) || getTeamByPartialName(teamName)
 }
 
+// Helper function to get opponent team ID for linking
+const getOpponentTeamId = (game: ScheduleItem): number | null => {
+  const opponentName = game.opponent
+  const teamConfig = getTeamConfig(opponentName)
+  return teamConfig?.id || null
+}
+
 export default function TeamDetailPage() {
   const { leagueId, id: teamId } = useParams()
   const leagueIdString = leagueId as string
@@ -508,9 +515,19 @@ export default function TeamDetailPage() {
                             <span className="text-gray-500 italic">Bye Week</span>
                           ) : isSpecialByeWeek ? (
                             <span className="text-gray-400 italic">Bye Week</span>
-                          ) : (
-                            g.opponent
-                          )}
+                          ) : (() => {
+                            const opponentTeamId = getOpponentTeamId(g)
+                            return opponentTeamId ? (
+                              <Link 
+                                href={`/leagues/${leagueIdString}/teams/${opponentTeamId}`}
+                                className="text-blue-600 dark:text-blue-400 hover:text-neon-green hover:underline transition-colors"
+                              >
+                                {g.opponent}
+                              </Link>
+                            ) : (
+                              <span>{g.opponent}</span>
+                            )
+                          })()}
                         </td>
                         <td className="py-2 px-2">
                           {isByeWeek || isSpecialByeWeek ? (
