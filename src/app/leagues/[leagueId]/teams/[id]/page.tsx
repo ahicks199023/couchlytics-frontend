@@ -11,6 +11,7 @@ import TeamLogo from '@/components/TeamLogo'
 // Schedule item interface
 interface ScheduleItem {
   week: number
+  weekLabel?: string  // Add weekLabel field for special week labels
   home: string
   away: string
   opponent: string
@@ -195,13 +196,19 @@ export default function TeamDetailPage() {
   }
 
   // Get week label with playoff information
-  const getWeekLabel = (week: number): string => {
+  const getWeekLabel = (week: number, weekLabel?: string): string => {
+    // Use backend weekLabel if available, otherwise fallback to frontend logic
+    if (weekLabel) {
+      return weekLabel
+    }
+    
     if (week >= 19) {
       switch (week) {
-        case 19: return '19 (Wildcard)'
+        case 19: return '19 (Wild Card)'
         case 20: return '20 (Divisional)'
         case 21: return '21 (Conference)'
-        case 22: return '22 (Super Bowl)'
+        case 22: return '22 (Pro Bowl)'
+        case 23: return '23 (Super Bowl)'
         default: return `${week} (Playoff)`
       }
     }
@@ -234,6 +241,7 @@ export default function TeamDetailPage() {
         // This is a bye week
         return {
           week,
+          weekLabel: getWeekLabel(week), // Add weekLabel for bye weeks too
           home: '',
           away: '',
           opponent: 'Bye Week',
@@ -481,27 +489,38 @@ export default function TeamDetailPage() {
                     </td>
                   </tr>
                 ) : (
-                  schedule.map((g) => {
+                  schedule
+                    .filter(g => g.week !== 22 && g.week !== 23) // Exclude Pro Bowl and Super Bowl weeks
+                    .map((g) => {
                     const isByeWeek = (g as ScheduleItem & { isByeWeek?: boolean }).isByeWeek || g.opponent === 'Bye Week'
+                    const isSpecialByeWeek = g.week === 22 || g.week === 23
+                    const isPlayoffWeek = g.week >= 19 && g.week <= 21
+                    
                     return (
                     <tr key={g.gameId} className="border-b border-gray-200 dark:border-gray-800">
-                        <td className="py-2 px-2 font-medium">{getWeekLabel(g.week ?? 0)}</td>
+                        <td className="py-2 px-2 font-medium">
+                          <span className={`${isPlayoffWeek ? 'text-yellow-400 font-bold' : isSpecialByeWeek ? 'text-gray-400' : ''}`}>
+                            {getWeekLabel(g.week ?? 0, g.weekLabel)}
+                          </span>
+                        </td>
                       <td className="py-2 px-2">
                           {isByeWeek ? (
                             <span className="text-gray-500 italic">Bye Week</span>
+                          ) : isSpecialByeWeek ? (
+                            <span className="text-gray-400 italic">Bye Week</span>
                           ) : (
                             g.opponent
                           )}
                         </td>
                         <td className="py-2 px-2">
-                          {isByeWeek ? (
+                          {isByeWeek || isSpecialByeWeek ? (
                             <span className="text-gray-500">-</span>
                           ) : (
                             g.isHome ? 'Home' : 'Away'
                           )}
                         </td>
                         <td className="py-2 px-2">
-                          {isByeWeek ? (
+                          {isByeWeek || isSpecialByeWeek ? (
                             <span className="text-gray-500">-</span>
                           ) : (
                             <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
@@ -515,14 +534,14 @@ export default function TeamDetailPage() {
                           )}
                         </td>
                         <td className="py-2 px-2">
-                          {isByeWeek ? (
+                          {isByeWeek || isSpecialByeWeek ? (
                             <span className="text-gray-500">-</span>
                           ) : (
                             g.score ?? '-'
                           )}
                         </td>
                         <td className="py-2 px-2">
-                          {isByeWeek ? (
+                          {isByeWeek || isSpecialByeWeek ? (
                             <span className="text-gray-500">-</span>
                           ) : (
                         <Link className="text-blue-600 dark:text-blue-400 hover:text-neon-green" href={`/leagues/${leagueIdString}/games/${g.gameId}/comments`}>
@@ -531,7 +550,7 @@ export default function TeamDetailPage() {
                           )}
                       </td>
                       <td className="py-2 px-2">
-                          {isByeWeek ? (
+                          {isByeWeek || isSpecialByeWeek ? (
                             <span className="text-gray-500">-</span>
                           ) : (
                         <Link className="text-blue-600 dark:text-blue-400 hover:text-neon-green" href={`/leagues/${leagueIdString}/schedule/box-score/${g.gameId}`}>
